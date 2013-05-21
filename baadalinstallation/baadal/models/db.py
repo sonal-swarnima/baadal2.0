@@ -1,57 +1,35 @@
 # Static analyzer import helpers:
-from gluon.dal import SQLField
 if 0: 
     import gluon
-    from gluon.validators import *
-    from gluon.sql import Field,Field
+    from gluon.validators import IS_EMAIL
+    from gluon.sql import Field
     global DAL; DAL = gluon.dal()
     global request; request = gluon.globals.Request()
     global response; response = gluon.globals.Response()
 
 # -*- coding: utf-8 -*-
 
-db = DAL('mysql://root:dbadmin@localhost/baadal_02')
-
-## by default give a view/generic.extension to all actions from localhost
-## none otherwise. a pattern can be 'controller/function.extension'
-response.generic_patterns = ['*'] if request.is_local else []
-## (optional) optimize handling of static files
-# response.optimize_css = 'concat,minify,inline'
-# response.optimize_js = 'concat,minify,inline'
+db = DAL('mysql://root:dbadmin@localhost/baadal_db_2')
 
 #########################################################################
-## Here is sample code if you need for
-## - email capabilities
-## - authentication (registration, login, logout, ... )
-## - authorization (role based authorization)
-## - services (xml, csv, json, xmlrpc, jsonrpc, amf, rss)
-## - old style crud actions
-## (more options discussed in gluon/tools.py)
-#########################################################################
 
-from gluon.tools import Auth, Crud, Service, PluginManager
+from gluon.tools import Auth
 auth = Auth(db)
-crud, service, plugins = Crud(db), Service(), PluginManager()
 
-## configure auth policy
-auth.settings.registration_requires_verification = False
-auth.settings.registration_requires_approval = False
-auth.settings.reset_password_requires_verification = True
-
+#########################################################################
 
 db.define_table('constants',
-    Field('name','string',notnull=True),
-    Field('value1','string',notnull=True))
+    Field('name','string', notnull=True, unique=True),
+    Field('value','string',notnull=True))
 
 db.define_table('organisation',
-    Field('name','string',notnull=True),
+    Field('name','string', notnull=True),
     Field('details','string',))
 
 db.define_table('role',
     Field('role_id','id'),
-    Field('name','string',length=100,notnull=True),
-    Field('description','string',length=255),
-    primarykey=['role_id'])
+    Field('name','string',length=100,notnull=True, unique=True),
+    Field('description','string',length=255))
 
 db.define_table('user',
     Field('user_id','id'),
@@ -61,12 +39,12 @@ db.define_table('user',
     Field('username','string',length=30,notnull=True),
     Field('password','string',length=512,notnull=True),
     Field('organisation_id','integer',notnull=True),
-    Field('block_user','boolean',default=False,notnull=True),
-    primarykey=['user_id'])
+    Field('block_user','boolean',default=False,notnull=True))
 
 db.define_table('user_role_map',
     Field('user_id', db.user),
-    Field('role_id', db.role))
+    Field('role_id', db.role),
+    primarykey=['user_id','role_id'])
 
 db.define_table('host',
     Field('host_id','id'),
@@ -77,8 +55,7 @@ db.define_table('host',
     Field('RAM','integer'),
     Field("category","string"),
     Field('status','integer'),
-    Field('vm_count','integer'),
-    primarykey=['host_id'])
+    Field('vm_count','integer'))
 
 db.define_table('datastore',
     Field('datastore_id','id'),
@@ -97,12 +74,11 @@ db.define_table('template',
     Field('hdd','integer',notnull=True),
     Field('hdfile','string',notnull=True),
     Field('type','string',notnull=True),
-    Field('datastore_id',db.datastore,notnull=True),
-    primarykey=['template_id'])
+    Field('datastore_id',db.datastore))
 
 db.define_table('vm_data',
     Field('vm_id','id'),
-    Field('vm_name','string',length=512,notnull=True),
+    Field('vm_name','string',length=512,notnull=True, unique=True),
     Field('user_id',db.user),
     Field('host_id',db.host),
     Field('RAM','integer'),
@@ -121,8 +97,12 @@ db.define_table('vm_data',
     Field('next_run_level','integer'),
     Field('start_time','time'),
     Field('end_time','time'),
-    Field('status','integer'),
-    primarykey=['vm_id'])
+    Field('status','integer'))
+
+db.define_table('user_vm_map',
+    Field('user_id', db.user),
+    Field('vm_id', db.vm_data),
+    primarykey=['user_id','vm_id'])
 
 db.define_table('vm_data_event',
     Field('vm_event_id','id'),
@@ -146,30 +126,26 @@ db.define_table('vm_data_event',
     Field('next_run_level','integer'),
     Field('start_time','time'),
     Field('end_time','time'),
-    Field('status','integer'),
-    primarykey=['vm_event_id'])
+    Field('status','integer'))
 
 db.define_table('attached_disks',
     Field('disk_id','id'),
     Field('vm_id',db.vm_data,notnull=True),
     Field('datastore_id',db.datastore,notnull=True),
-    Field('capacity','string',length=45),
-    primarykey=['disk_id'])
+    Field('capacity','string',length=45))
 
 db.define_table('snapshot',
     Field('snapshot_id','id'),
     Field('vm_id',db.vm_data,notnull=True),
     Field('datastore_id',db.datastore,notnull=True),
-    Field('path','string',notnull=True),
-    primarykey=['snapshot_id'])
+    Field('path','string',notnull=True))
 
 db.define_table('task_queue',
     Field('task_id','id'),
     Field('task_type','string',length=30,notnull=True),
     Field('vm_id',db.vm_data),
     Field('priority','integer',default=1, notnull=True),
-    Field('status','integer',notnull=True),
-    primarykey=['task_id'])
+    Field('status','integer',notnull=True))
 
 db.define_table('task_queue_event',
     Field('task_event_id','id'),
@@ -180,8 +156,7 @@ db.define_table('task_queue_event',
     Field('error','string', length=512),
     Field('start_time','time',notnull=True),
     Field('end_time','time',notnull=True),
-    Field('attention_time','time',notnull=True),
-    primarykey=['task_event_id'])
+    Field('attention_time','time',notnull=True))
 
 db.define_table('vlan_map',
     Field('vlan_id','id'),
@@ -189,8 +164,7 @@ db.define_table('vlan_map',
 
 db.define_table('vnc_server',
     Field('vnc_server_id','id'),
-    Field('ip_addr','string',length=15,notnull=True),
-    primarykey=['vnc_server_id'])
+    Field('ip_addr','string',length=15,notnull=True))
 
 db.define_table('vnc_access',
     Field('vm_id',db.vm_data),
@@ -199,10 +173,4 @@ db.define_table('vnc_access',
     Field('duration','integer'),
     Field('time_requested','integer'))
 
-
-
-
 #########################################################################
-
-
-
