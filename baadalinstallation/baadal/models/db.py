@@ -2,7 +2,7 @@
 
 db = DAL('mysql://root:dbadmin@localhost/')
 
-from gluon.tools import Auth, Crud, Service, PluginManager
+from gluon.tools import Auth
 auth = Auth(globals(),db)
 
 db.define_table('constants',
