@@ -1,9 +1,60 @@
 #### THINGS TO INCLUDE:
 
-# 1. Mailing Config
-# 2. DB Config
-# 3. SSl Certificate Config
-# 4. Web2py Config
-# 5. Network Config
-# 6. Authentication Setup Config
-#
+# 1. DB Config
+# 2. SSl Certificate Config
+# 3. Web2py Config
+# 4. Network Config
+# 5. Authentication Setup Config
+
+
+#####################################################################################
+#####################################################################################
+############################# OLD INSTALLATION CONFIG ###############################
+#####################################################################################
+#####################################################################################
+
+[GENERAL_CONF]
+database_type=sqlite
+webserver_ip=10.22.6.80
+
+# Specify the authentication mechanism to be used
+[AUTHENTICATION_CONF]
+authentication_type=ldap
+
+# Mail sending configurations
+[MAIL_CONF]
+smtp_server=smtp.iitd.ernet.in
+smtp_port=25
+email_to=amohan.visitor@cse.iitd.ac.in,sonals.visitor@cse.iitd.ernet.in
+email_from=noreply@cse.iitd.ac.in
+email_sender_account_username=
+email_sender_account_password=
+
+# Specify the ssl certificate certifications to be used
+[SSL_CERTIFICATE_CONF]
+[ req ]
+default_bits=1024
+distinguished_name=req_distinguished_name
+prompt=no
+[ req_distinguished_name ]
+C=IN
+ST=New Delhi
+L=Delhi
+O=IITD
+OU=CSED
+CN=Baadal
+emailAddress=baadal@cse.iitd.ac.in
+
+# If database to be used is "mysql" fill the below details
+[MYSQL_CONF]
+mysql_password=baadal
+mysql_reinstall=n
+
+# Web2py setup configurations
+[WEB2PY_CONF]
+web2py_password=web2py
+reinstall_web2py=y
+use_old_web2py_version=y
+
+#######################################################################################
+#######################################################################################
