@@ -5,12 +5,17 @@ db = DAL('mysql://root:dbadmin@localhost/')
 from gluon.tools import Auth
 auth = Auth(globals(),db)
 
+db.define_yable('user_vm_map',
+    Field('user_id', db.user),
+    Field('vm_id', db.vm_data))    
+
 db.define_table('constants',
     Field('name','string',notnull=True),
     Field('value1','string',notnull=True))
 
 db.define_table('organisation',
     Field('name','string',notnull=True),
+    Field('public_ip','string',length=15),
     Field('details','string',))
 
 db.define_table('role',
@@ -69,7 +74,6 @@ db.define_table('template',
 db.define_table('vm_data',
     Field('vm_id','id'),
     Field('vm_name','string',length=512,notnull=True),
-    Field('user_id',db.user),
     Field('host_id',db.host),
     Field('RAM','integer'),
     Field('HDD','integer'),
@@ -94,7 +98,6 @@ db.define_table('vm_data_event',
     Field('vm_event_id','id'),
     Field('vm_id',db.vm_data),
     Field('vm_name','string',length=512,notnull=True),
-    Field('user_id',db.user),
     Field('host_id',db.host),
     Field('RAM','integer'),
     Field('HDD','integer'),
