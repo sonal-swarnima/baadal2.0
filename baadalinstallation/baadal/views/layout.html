@@ -1,0 +1,48 @@
+<!--[if HTML5]><![endif]-->
+<head>
+<title>{{=response.title or request.application}}</title>
+	   
+  <meta charset="utf-8" />
+
+</head>
+
+<body>
+  <!-- Navbar ================================================== -->
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="flash">{{=response.flash or ''}}</div>
+  </div><!--/top navbar -->
+
+  <div class="container">
+    <!-- Masthead ================================================== -->
+    <header class="mastheader row" id="header">
+        <div class="page-header">
+            <h3>Test Page</h3>
+        </div>
+    </header>
+
+    <section id="main" class="main row">
+
+        <div>
+            {{block center}}
+            {{include}}
+            {{end}}
+        </div>
+
+    </section><!--/main-->
+
+    <!-- Footer ================================================== -->
+    <div class="row">
+        <footer class="footer span12" id="footer">
+            <div class="footer-content">
+                {{block footer}} <!-- this is default footer -->
+                
+                {{end}}
+            </div>
+        </footer>
+    </div>
+
+  </div> <!-- /container -->
+
+</body>
+</html>
+

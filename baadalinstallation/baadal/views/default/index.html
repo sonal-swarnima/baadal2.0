@@ -1,0 +1,10 @@
+
+{{extend 'layout.html'}}
+
+<b>{{=T('Auth Test')}}</b><br/><hr/>
+{{if auth.is_logged_in():}}
+Welcome <b>{{=auth.user.username}}</b><br/>
+<a href="/baadal/default/user/logout">Logout</a><br/>
+{{else:}}
+<a href="/baadal/default/user/login">Login</a><br/>
+{{pass}}
