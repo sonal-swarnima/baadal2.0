@@ -1,48 +1,75 @@
-<!--[if HTML5]><![endif]-->
-<head>
-<title>{{=response.title or request.application}}</title>
-	   
-  <meta charset="utf-8" />
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title id="title">{{=response.title or request.application}}</title>
+<link href="{{=URL(r=request,c='static',f='css/style.css')}}" rel="stylesheet" type="text/css" media="screen" />
 </head>
 
 <body>
-  <!-- Navbar ================================================== -->
-  <div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="flash">{{=response.flash or ''}}</div>
-  </div><!--/top navbar -->
+	<div id="header">
+		<div id="logo">
+			<h1><a href="{{=URL('default','index')}}">BAADAL</a></h1>
+			<p id="desc">IITD's Academic Cloud</p>
+			<p id="login">
+				{{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','user'))}}{{except:pass}}
+			</p>
+		</div>
+	</div>
+	<!-- end #header -->
+	<div id="menu">
+		<ul>
+			<li class="first"><a href="#">Home</a></li>
+			<li><a href="#">Blog</a></li>
+			<li><a href="#">Photos</a></li>
+			<li><a href="#">Team Baadal</a></li>
+			<li><a href="#">Contact</a></li>
+		</ul>
+	</div>
+	<!-- end #menu -->
+<div id="wrapper" >
+<div class="btm">
+	<div id="page">
+		<div id="content">
+			{{include}} <!-- Content of all pages that extend layout.html is replaced by {{include}} and then displayed on the screen-->
+		</div>
+		<!-- end #content -->
+		<div id="sidebar">
+			<ul>
+				<li>
+					<h2>User Options</h2>
+					<ul>
+						<li><a href="#">Request VM</a> <span>Click Above to request for a new VM</span></li>
+						<li><a href="#">Pending Request</a>&nbsp;(2)<span>See all your pending requests.</span></li>
+						<li><a href="#">Mail Admin</a><span>Mail admin</span> </li>
+					</ul>
+				</li>	
+			</ul>
+			<ul>
+				<li>
+					<h2>Admin Options</h2>
+					<ul>
+						<li><a href="#">Request VM</a> <span>Click Above to request for a new VM</span></li>
+						<li><a href="#">Pending Request</a>&nbsp;(2)<span>See all your pending requests.</span></li>
+						<li><a href="#">Mail Admin</a><span>Mail admin</span> </li>
+					</ul>
+				</li>	
+			</ul>
 
-  <div class="container">
-    <!-- Masthead ================================================== -->
-    <header class="mastheader row" id="header">
-        <div class="page-header">
-            <h3>Test Page</h3>
-        </div>
-    </header>
-
-    <section id="main" class="main row">
-
-        <div>
-            {{block center}}
-            {{include}}
-            {{end}}
-        </div>
-
-    </section><!--/main-->
-
-    <!-- Footer ================================================== -->
-    <div class="row">
-        <footer class="footer span12" id="footer">
-            <div class="footer-content">
-                {{block footer}} <!-- this is default footer -->
-                
-                {{end}}
-            </div>
-        </footer>
-    </div>
-
-  </div> <!-- /container -->
-
+		</div>
+		<!-- end #sidebar -->
+		<div style="clear: both;">&nbsp;</div>
+	</div>
+	<!-- end #page -->
+</div>
+</div>
+	<div id="footer">
+		<p>Copyright (c) 2011 Indian Institute of Technology, Delhi. All rights reserved. </p>
+	</div>
+	<!-- end #footer -->
 </body>
 </html>
 

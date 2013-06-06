@@ -37,10 +37,8 @@ auth.settings.table_membership_name = 'user_membership'
 ## configure auth policy
 auth.settings.allow_basic_login = config.getboolean("AUTH_CONF","allow_basic_login")
 auth.settings.login_after_registration = config.getboolean("AUTH_CONF","login_after_registration")
-auth.settings.create_user_groups = config.get("AUTH_CONF","create_user_groups")
 auth.settings.actions_disabled=config.get("AUTH_CONF",config.get("AUTH_CONF","actions_disabled"))
 auth.settings.remember_me_form = config.getboolean("AUTH_CONF","remember_me_form")
-auth.settings.everybody_group_id= config.getint("AUTH_CONF","everybody_group_id")
 
 db.define_table(
     auth.settings.table_user_name,
@@ -200,15 +198,3 @@ db.define_table('vnc_access',
     Field('duration','integer'),
     Field('time_requested','integer'))
 
-import json
-if not db(db.user_group).count():
-    items = json.loads(config.get('AUTH_CONF','group_startup_data'))
-    for val in items:
-        db.user_group.insert(role=val,description=items[val])
-
-if not db(db.organisation).count():
-    items = json.loads(config.get('AUTH_CONF','org_startup_data'))
-    for val in items:
-        db.organisation.insert(name=val,details=items[val])
-
-        

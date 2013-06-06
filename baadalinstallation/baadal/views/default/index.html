@@ -1,10 +1,9 @@
-
 {{extend 'layout.html'}}
 
-<b>{{=T('Auth Test')}}</b><br/><hr/>
-{{if auth.is_logged_in():}}
-Welcome <b>{{=auth.user.username}}</b><br/>
-<a href="/baadal/default/user/logout">Logout</a><br/>
-{{else:}}
-<a href="/baadal/default/user/login">Login</a><br/>
-{{pass}}
+<div class="post">
+	<h1 class="title"><a href="#">Welcome to Baadal </a></h1>
+	<div class="entry">
+		<p>This is <strong>Compromise</strong>, a free, fully standards-compliant CSS template designed by FreeCssTemplates<a href="http://www.nodethirtythree.com/"></a> for <a href="http://www.freecsstemplates.org/">Free CSS Templates</a>. The photo used in this design is from <a href="http://www.pdphoto.org/">PDPhoto.rog</a>. This free template is released under a <a href="http://creativecommons.org/licenses/by/2.5/">Creative Commons Attributions 2.5</a> license, so you’re pretty much free to do whatever you want with it (even use it commercially) provided you keep the links in the footer intact. Aside from that, have fun with it :)</p>
+		<p>Sed lacus. Donec lectus. Nullam pretium nibh ut turpis. Nam bibendum. In nulla tortor, elementum ipsum. Proin imperdiet est. Phasellus dapibus semper urna. Pellentesque ornare, orci in felis. Donec ut ante. In id eros. Suspendisse lacus turpis, cursus egestas at sem.</p>
+	</div>
+</div>
