@@ -5,15 +5,11 @@ if 0:
     from gluon import *  # @UnusedWildImport
     from authuser import login_callback
 ###################################################################################
+from helper import get_config_file
 
-import ConfigParser
-import os
-
-ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
-
-config = ConfigParser.ConfigParser()
-config.read(os.path.join(ctx_path, 'static/config-db.cfg'));
-conn_str = config.get("MYSQL_CONF","mysql_conn")
+config = get_config_file()
+db_type=config.get("GENERAL_CONF","database_type")
+conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
 db = DAL(conn_str)
 
 db.define_table('constants',
@@ -107,7 +103,8 @@ db.define_table('template',
     Field('hdd','integer',notnull=True),
     Field('hdfile','string',notnull=True),
     Field('type','string',notnull=True),
-    Field('datastore_id',db.datastore))
+    Field('datastore_id',db.datastore),
+    format='%(name)s')
 
 db.define_table('vm_data',
     Field('vm_name','string',length=512,notnull=True, unique=True),

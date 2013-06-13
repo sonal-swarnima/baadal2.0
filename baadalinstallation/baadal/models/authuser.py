@@ -4,11 +4,11 @@
 if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
-    import logger
     global auth; auth = gluon.tools.Auth()
+    global db; db = gluon.sql.DAL()
 ###################################################################################
 
 def login_callback(form):
-    print(form.vars.username)
-    logger.warn(auth.is_logged_in())
-    logger.debug(auth.user.username)
+    if auth.is_logged_in():
+        if db(db.user.username==auth.user.username).select(db.user.last_name)[0]['last_name'] == "": 
+            db(db.user.username==auth.user.username).update(first_name='test',last_name='test')
