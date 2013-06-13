@@ -1,0 +1,35 @@
+{{extend 'layout.html'}}
+
+<b>{{=T('Request VM')}}</b><br/>
+{{=form}}
+
+<script>
+jQuery(document).ready(function(){
+   jQuery('#vm_data_purpose__row').hide();
+   jQuery('#vm_data_HDD__row').hide();
+   jQuery('[id^=config_row__]').hide();
+});
+
+jQuery('#vm_data_template_id').change(function(){
+
+	var _value=$('#vm_data_template_id').val();
+	
+	if (_value == ''){
+	   jQuery('#vm_data_purpose__row').hide();
+	   jQuery('#vm_data_HDD__row').hide();
+	   jQuery('[id^=config_row__]').hide();
+	}
+	else if(jQuery('#config_row__'+_value).length != 0){
+	   jQuery('#vm_data_purpose__row').show();
+	   jQuery('#vm_data_HDD__row').show();
+	   jQuery('[id^=config_row__]').hide();
+	   jQuery('#config_row__'+_value).show();
+	}
+	else{
+	   jQuery('#vm_data_purpose__row').show();
+	   jQuery('#vm_data_HDD__row').show();
+	   jQuery('[id^=config_row__]').hide();
+	   jQuery('#config_row__0').show();
+	}
+});
+</script>
