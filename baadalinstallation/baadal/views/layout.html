@@ -2,75 +2,179 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta name="keywords" content="" />
-<meta name="description" content="" />
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<title id="title">{{=response.title or request.application}}</title>
-<link href="{{=URL(r=request,c='static',f='css/style.css')}}" rel="stylesheet" type="text/css" media="screen" />
-{{include 'web2py_ajax.html'}}
-</head>
 
-<body>
-	<div id="header">
-		<div id="logo">
-			<h1><a href="{{=URL('default','index')}}">BAADAL</a></h1>
-			<p id="desc">IITD's Academic Cloud</p>
-			<p id="login">
-				{{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','user'))}}{{except:pass}}
-			</p>
-		</div>
-	</div>
-	<!-- end #header -->
-	<div id="menu">
-		<ul>
-			<li class="first"><a href="#">Home</a></li>
-			<li><a href="#">Blog</a></li>
-			<li><a href="#">Photos</a></li>
-			<li><a href="#">Team Baadal</a></li>
-			<li><a href="#">Contact</a></li>
-		</ul>
-	</div>
-	<!-- end #menu -->
-<div id="wrapper" >
-<div class="btm">
-	<div id="page">
-		<div id="content">
-			{{include}} <!-- Content of all pages that extend layout.html is replaced by {{include}} and then displayed on the screen-->
-		</div>
-		<!-- end #content -->
-		<div id="sidebar">
-			<ul>
-				<li>
-					<h2>User Options</h2>
-					<ul>
-						<li><a href="{{=URL(request.application,'vm','request_vm')}}">Request VM</a> <span>Click Above to request for a new VM</span></li>
-						<li><a href="#">Pending Request</a>&nbsp;(2)<span>See all your pending requests.</span></li>
-						<li><a href="#">Mail Admin</a><span>Mail admin</span> </li>
-					</ul>
-				</li>	
-			</ul>
-			<ul>
-				<li>
-					<h2>Admin Options</h2>
-					<ul>
-						<li><a href="#">Request VM</a> <span>Click Above to request for a new VM</span></li>
-						<li><a href="#">Pending Request</a>&nbsp;(2)<span>See all your pending requests.</span></li>
-						<li><a href="#">Mail Admin</a><span>Mail admin</span> </li>
-					</ul>
-				</li>	
-			</ul>
 
-		</div>
-		<!-- end #sidebar -->
-		<div style="clear: both;">&nbsp;</div>
+  <title>
+   {{=response.title or request.application}}
+  </title>
+  {{response.files.append(URL(request.application,'static','plugin_layouts/layouts/Simpletex/default.css'))}}
+  {{response.files.append(URL('static','plugin_layouts/superfish.js'))}}
+  {{include 'web2py_ajax.html'}}
+
+
+ </head>
+ <body>
+  <!-- start header -->
+
+<div id="header">
+	<div id="logo">
+		<h1><a href="#"><b>BAADAL</b></a></h1>
+    <h2><b>An Academic Cloud</b></h2>
 	</div>
-	<!-- end #page -->
-</div>
-</div>
-	<div id="footer">
-		<p>Copyright (c) 2011 Indian Institute of Technology, Delhi. All rights reserved. </p>
+
+	<div id="login">
+		{{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','user'))}}{{except:pass}}
 	</div>
-	<!-- end #footer -->
-</body>
+
+</div>
+
+
+<div id="menu">
+	<ul>
+		<li class="active"><a href="#">Home</a></li>
+		<li><a href="#">About</a></li>
+		<li><a href="#">Blog</a></li>
+		<li><a href="#">Photos</a></li>
+		<li><a href="#">Team Baadal</a></li>
+		<li><a href="#">Contact</a></li>
+	</ul>
+</div>
+
+<hr />
+
+<div id="page">
+	<div id="content">
+		<div class="flash">{{=response.flash or ''}}</div>
+	    {{include}}
+	</div>
+
+   <div id="sidebar">
+    <ul>
+		 <li>
+      <h2>
+       USER MENU
+      </h2>
+
+    	<ul>
+       <li>
+        <a href="#">
+         Home
+        </a>
+       </li>
+       <li>
+        <a href="#">
+         Request VM
+        </a>
+       </li>
+       <li>
+        <a href="#">
+         Mail Admin
+        </a>
+       </li>
+       <li>
+        <a href="#">
+         File Bug
+        </a>
+       </li>
+       <li>
+        <a href="#">
+         List My VM's
+        </a>
+       </li>
+       <li>
+        <a href="#">
+         Pending Requests
+        </a>
+       </li>
+      </ul>
+     </li>
+
+     <li>
+      <h2>
+       FACULTY MENU
+      </h2>
+
+      <ul>
+       <li>
+        <a href="#">
+         Add User to VM
+        </a>
+       </li>       
+      </ul>
+     </li>
+
+     <li>
+      <h2>
+       ADMIN MENU
+      </h2>
+
+      <ul>
+       <li>
+        <a href="#">
+         All VM's
+        </a>
+       </li>
+       <li>
+        <a href="#">
+					Hosts And VM's
+        </a>
+       </li>
+       <li>
+        <a href="#">
+					Pending Request's
+        </a>
+       </li>
+       <li>
+        <a href="#">
+					Tasks
+        </a>
+       </li>
+       <li>
+        <a href="#">
+					Sanity Check
+        </a>
+       </li>
+       <li>
+        <a href="#">
+         Configure System
+        </a>
+				<ul id="configure">
+					<li><a href="#">Add Host</a></li>				
+					<li><a href="#">Add Disk</a></li>				
+					<li><a href="#">Add Template</a></li>				
+					<li><a href="#">Add Datastore</a></li>				
+					<li><a href="#">Add ISO</a></li>				
+				<ul>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </div>
+
+   <div style="clear: both;">
+    &nbsp;
+   </div>
+
+  </div>
+  <hr />
+  <div id="footer">
+   <p id="legal">
+    Copyright &copy; 2011 Baadal. All Rights Reserved | Developed by
+    <a href="http://www.freecsstemplates.org/">
+     Indian Institute of technology, Delhi, India.
+    </a>
+   </p>
+   <p id="links">
+    <a href="#">
+     Privacy Policy
+    </a>
+    |
+    <a href="#">
+     Terms of Use
+    </a>
+
+   </p>
+  </div>
+ </body>
 </html>
-

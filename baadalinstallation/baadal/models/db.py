@@ -7,6 +7,7 @@ if 0:
 ###################################################################################
 from helper import get_config_file
 
+
 config = get_config_file()
 db_type=config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")

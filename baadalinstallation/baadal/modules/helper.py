@@ -21,8 +21,8 @@ def is_faculty():
     return False    
 
 def get_config_file():
-    import ConfigParser
-    
+
+    import ConfigParser    
     config = ConfigParser.ConfigParser()
     config.read(os.path.join(get_context_path(), 'static/config-db.cfg'));
     return config

@@ -7,6 +7,7 @@ if 0:
     import gluon
     global db; db = gluon.sql.DAL()
 ###################################################################################
+from helper import get_vm_template_config
 
 def get_configuration_elem(form):
     
