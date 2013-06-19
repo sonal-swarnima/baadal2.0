@@ -24,5 +24,8 @@ def user():
 def index():
 	return dict()
 
+def contact():
+	return dict()
+
 def error():
 	return dict(error="This is the Error!!!")

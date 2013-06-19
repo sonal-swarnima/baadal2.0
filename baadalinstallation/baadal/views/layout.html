@@ -2,24 +2,39 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
-
-  <title>
-   {{=response.title or request.application}}
-  </title>
   {{response.files.append(URL(request.application,'static','plugin_layouts/layouts/Simpletex/default.css'))}}
   {{response.files.append(URL('static','plugin_layouts/superfish.js'))}}
   {{include 'web2py_ajax.html'}}
 
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
+	<script>
+		jQuery(document).ready(function(){
+
+			{{if not auth.is_logged_in():}}
+				jQuery("#sidebar").css("display","none");
+				jQuery("#line").css("display","none");
+			{{pass}}
+	
+			jQuery('#configurelist').toggle();
+
+			jQuery('#configure').click(function(){ 
+				jQuery('#configurelist').slideToggle();
+			});
+		});
+	</script>
+
+  <title>
+   {{=response.title or request.application}}
+  </title>
  </head>
  <body>
   <!-- start header -->
 
 <div id="header">
 	<div id="logo">
-		<h1><a href="#"><b>BAADAL</b></a></h1>
+		<h1><a href="{{=URL('default','index')}}"><b>BAADAL</b></a></h1>
     <h2><b>An Academic Cloud</b></h2>
 	</div>
 
@@ -32,12 +47,11 @@
 
 <div id="menu">
 	<ul>
-		<li class="active"><a href="#">Home</a></li>
-		<li><a href="#">About</a></li>
-		<li><a href="#">Blog</a></li>
-		<li><a href="#">Photos</a></li>
-		<li><a href="#">Team Baadal</a></li>
-		<li><a href="#">Contact</a></li>
+		<li class="active"><a href="{{=URL('default','index')}}">About</a></li>
+		<li><a href="{{=URL('default','index')}}">Blog</a></li>
+		<li><a href="{{=URL('default','index')}}">Photos</a></li>
+		<li><a href="{{=URL('default','index')}}">Team Baadal</a></li>
+		<li><a href="{{=URL('default','contact')}}">Contact</a></li>
 	</ul>
 </div>
 
@@ -49,115 +63,60 @@
 	    {{include}}
 	</div>
 
-   <div id="sidebar">
-    <ul>
-		 <li>
-      <h2>
-       USER MENU
-      </h2>
-
+<div id="sidebar">
+	<ul>
+		<li>
+			<h2>USER MENU</h2>
     	<ul>
-       <li>
-        <a href="#">
-         Home
-        </a>
-       </li>
-       <li>
-        <a href="#">
-         Request VM
-        </a>
-       </li>
-       <li>
-        <a href="#">
-         Mail Admin
-        </a>
-       </li>
-       <li>
-        <a href="#">
-         File Bug
-        </a>
-       </li>
-       <li>
-        <a href="#">
-         List My VM's
-        </a>
-       </li>
-       <li>
-        <a href="#">
-         Pending Requests
-        </a>
-       </li>
+      	<li><a href="{{=URL('default','index')}}">Home</a></li>
+      	<li><a href="{{=URL(request.application,'vm','request_vm')}}">Request VM</a></li>
+    		<li><a href="#">Mail Admin</a></li>
+    		<li><a href="#">File Bug</a></li>
+    		<li><a href="#">List My VM's</a></li>
+    		<li><a href="#">Pending Requests</a></li>
+    	</ul>
+    </li>
+
+    <li>
+    	<h2>FACULTY MENU</h2>
+    	<ul>
+    		<li><a href="#">Add User to VM</a></li>       
+      </ul>
+    </li>
+
+    <li>
+    	<h2>ADMIN MENU</h2>
+    	<ul>
+      	<li><a href="#">All VM's</a></li>
+        <li><a href="#">Hosts And VM's</a></li>
+        <li><a href="#">Pending Request's</a></li>
+        <li><a href="#">Tasks</a></li>
+        <li><a href="#">Sanity Check</a></li>
+        <li id="configure"><a href="#">Configure System</a>
+					<ul id="configurelist">
+						<li><a href="#">Add Host</a></li>				
+						<li><a href="#">Add Disk</a></li>				
+						<li><a href="#">Add Template</a></li>				
+						<li><a href="#">Add Datastore</a></li>				
+						<li><a href="#">Add ISO</a></li>				
+					<ul>
+      	 </li>
       </ul>
      </li>
 
-     <li>
-      <h2>
-       FACULTY MENU
-      </h2>
+	</ul>
 
-      <ul>
-       <li>
-        <a href="#">
-         Add User to VM
-        </a>
-       </li>       
-      </ul>
-     </li>
+</div>
 
-     <li>
-      <h2>
-       ADMIN MENU
-      </h2>
+<div id ="line" style="clear: both;">
+		&nbsp;
+</div>
 
-      <ul>
-       <li>
-        <a href="#">
-         All VM's
-        </a>
-       </li>
-       <li>
-        <a href="#">
-					Hosts And VM's
-        </a>
-       </li>
-       <li>
-        <a href="#">
-					Pending Request's
-        </a>
-       </li>
-       <li>
-        <a href="#">
-					Tasks
-        </a>
-       </li>
-       <li>
-        <a href="#">
-					Sanity Check
-        </a>
-       </li>
-       <li>
-        <a href="#">
-         Configure System
-        </a>
-				<ul id="configure">
-					<li><a href="#">Add Host</a></li>				
-					<li><a href="#">Add Disk</a></li>				
-					<li><a href="#">Add Template</a></li>				
-					<li><a href="#">Add Datastore</a></li>				
-					<li><a href="#">Add ISO</a></li>				
-				<ul>
-       </li>
-      </ul>
-     </li>
-    </ul>
-   </div>
 
-   <div style="clear: both;">
-    &nbsp;
-   </div>
+</div>
 
-  </div>
   <hr />
+
   <div id="footer">
    <p id="legal">
     Copyright &copy; 2011 Baadal. All Rights Reserved | Developed by

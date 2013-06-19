@@ -115,10 +115,11 @@ img.right {
 	color: #FFFFFF;
 }
 
-/* Search */
+/* Login */
 
 #login {
 	float: right;
+	padding-top:1%;
 
 }
 
@@ -129,6 +130,7 @@ img.right {
 	width: 770px;
 	height: 70px;
 	margin: -30px auto 0 auto;
+	padding-right: 12%;
 }
 
 #menu ul {
@@ -176,7 +178,7 @@ html>body #menu a {
 #page {
 	width: 80%;
 	margin: 0 auto 20px auto;
-	background: url(images/img07.gif) repeat-y 260px 0;
+	background:  url(images/img07.gif) repeat-y 260px 0;
 }
 
 /* Content */
@@ -184,7 +186,7 @@ html>body #menu a {
 #content {
 	float: right;
 	width: 55%;
-	padding-right: 9%;
+	padding-right: 7%;
 	padding-top: 1%;
 }
 
@@ -266,20 +268,22 @@ html>body #menu a {
 	text-decoration: underline;
 }
 
-
-#configure li{
-list-style-type:disc;
-list-style-position:inside;
-color: #1D5B7F;
+#configurelist li {
+	list-style-type:disc;
+	list-style-position:inside;
+	color: #1D5B7F;
 }
+
+
 /* Footer */
 
 #footer {
   position: fixed;
   bottom: 0;
   width: 100%;
-  height: 5%;
-	padding-top: 10px;
+  height: 4%;
+	padding-top: 5px;
+	padding-bottom: 5px;
 	background: #EDEBD5 url(images/img08.gif) repeat-x;
 /*	clear: both;*/
 }
