@@ -1,34 +1,11 @@
-#### THINGS TO INCLUDE:
-
-# 1. DB Config
-# 2. SSl Certificate Config
-# 3. Web2py Config
-# 4. Network Config
-# 5. Authentication Setup Config
-
-
-#####################################################################################
-#####################################################################################
-############################# OLD INSTALLATION CONFIG ###############################
-#####################################################################################
-#####################################################################################
-
 [GENERAL_CONF]
-database_type=sqlite
-webserver_ip=10.22.6.80
+database_type=mysql
+webserver_ip=10.20.18.67
 
 # Specify the authentication mechanism to be used
+## options are "ldap" and "localdb"
 [AUTHENTICATION_CONF]
-authentication_type=ldap
-
-# Mail sending configurations
-[MAIL_CONF]
-smtp_server=smtp.iitd.ernet.in
-smtp_port=25
-email_to=amohan.visitor@cse.iitd.ac.in,sonals.visitor@cse.iitd.ernet.in
-email_from=noreply@cse.iitd.ac.in
-email_sender_account_username=
-email_sender_account_password=
+authentication_type=ldap 
 
 # Specify the ssl certificate certifications to be used
 [SSL_CERTIFICATE_CONF]
@@ -43,18 +20,15 @@ L=Delhi
 O=IITD
 OU=CSED
 CN=Baadal
-emailAddress=baadal@cse.iitd.ac.in
+emailAddress=baadalsupport@cse.iitd.ac.in
 
 # If database to be used is "mysql" fill the below details
 [MYSQL_CONF]
 mysql_password=baadal
-mysql_reinstall=n
+mysql_database_name=newbaadal
 
 # Web2py setup configurations
 [WEB2PY_CONF]
 web2py_password=web2py
 reinstall_web2py=y
-use_old_web2py_version=y
 
-#######################################################################################
-#######################################################################################
