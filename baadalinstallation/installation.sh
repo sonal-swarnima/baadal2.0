@@ -298,6 +298,7 @@ Enbl_Modules()
 	a2enmod ssl
 	a2enmod proxy
 	a2enmod proxy_http
+	a2enmod rewrite
 	a2enmod headers
 	a2enmod expires
 
@@ -372,37 +373,9 @@ Rewrite_Apache_Conf()
 		WSGIDaemonProcess web2py user=www-data group=www-data
 
 		<VirtualHost *:80>
-		  WSGIProcessGroup web2py
-		  WSGIScriptAlias / /home/www-data/web2py/wsgihandler.py
-		  WSGIPassAuthorization On
-		
-		  <Directory /home/www-data/web2py>
-		    AllowOverride None
-		    Order Allow,Deny
-		    Deny from all
-		    <Files wsgihandler.py>
-		      Allow from all
-		    </Files>
-		  </Directory>
-		
-		  AliasMatch ^/([^/]+)/static/(.*) \
-		           /home/www-data/web2py/applications/$1/static/$2
-		  <Directory /home/www-data/web2py/applications/*/static/>
-		    Options -Indexes
-		    Order Allow,Deny
-		    Allow from all
-		  </Directory>
-		
-		  <Location /admin>
-		  Deny from all
-		  </Location>
-		
-		  <LocationMatch ^/([^/]+)/appadmin>
-		  Deny from all
-		  </LocationMatch>
-		
-		  CustomLog /var/log/apache2/access.log common
-		  ErrorLog /var/log/apache2/error.log
+		  RewriteEngine On
+          RewriteCond %{SERVER_PORT} ^80$
+          RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R,L] 
 		</VirtualHost>
 
 		<VirtualHost *:443>
@@ -439,29 +412,9 @@ Rewrite_Apache_Conf()
 		</VirtualHost>
 		' > /etc/apache2/sites-available/default
 
-#	echo "Enabling rewrite-mod to rewrite http request to https..........."
-
-#	a2enmod rewrite
-	
 	echo "Restarting Apache................................................"
 	
 	/etc/init.d/apache2 restart
-
-#	echo "writing rule to redirect http requests to https.................."		
-
-#	echo '
-#		<VirtualHost *:80>
-#		  RewriteEngine On
-#		  RewriteCond %{SERVER_PORT} ^80$
-#		  RewriteRule .* https://%{SERVER_NAME}%{REQUEST_URI} [R,L]
-#		</VirtualHost>
-#	' >> /etc/apache2/sites-enabled/web2py
-
-#	echo "Restarting Apache................................................"
-	
-#	/etc/init.d/apache2 restart
-
-
 	if test $? -ne 0; then
 		echo "UNABLE TO RESTART APACHE!!!"
 		echo "CHECK APACHE LOGS FOR DETAILS!!!"
