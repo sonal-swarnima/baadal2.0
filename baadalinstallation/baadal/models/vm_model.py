@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 # Added to enable code completion in IDE's.
-from applications.baadal.modules.helper import get_vm_template_config
 if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
