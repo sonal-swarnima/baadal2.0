@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 # Added to enable code completion in IDE's.
+from applications.baadal.modules.helper import get_vm_template_config
 if 0:
     from gluon import *  # @UnusedWildImport
-    from helper import get_vm_template_config
     import gluon
     global db; db = gluon.sql.DAL()
 ###################################################################################
+
 
 def get_configuration_elem(form):
     
