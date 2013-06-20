@@ -7,7 +7,6 @@ if 0:
     import gluon
     global db; db = gluon.sql.DAL()
 ###################################################################################
-from helper import get_vm_template_config
 
 def get_configuration_elem(form):
     
@@ -51,3 +50,8 @@ def get_create_vm_form():
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels)
     get_configuration_elem(form)
     return form
+
+def add_request_vm_queue(_vm_id):
+    
+    db.task_queue.insert(task_type=TASK_TYPE_REQUEST_VM, vm_id=_vm_id, priority=TASK_QUEUE_PRIORITY_NORMAL, status=TASK_QUEUE_STATUS_PENDING)  # @UndefinedVariable
+    

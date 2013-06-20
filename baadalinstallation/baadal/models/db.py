@@ -7,7 +7,6 @@ if 0:
 ###################################################################################
 from helper import get_config_file
 
-
 config = get_config_file()
 db_type=config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
@@ -81,6 +80,7 @@ if config.get("AUTH_CONF","auth_type") == 'ldap':
 
 db.define_table('host',
     Field('host_ip','string',length=15,notnull=True),
+    Field('host_name','string',length=100,notnull=True),
     Field('mac_addr','string',length=100,notnull=True),
     Field('HDD','integer'),
     Field('CPUs','integer'),
@@ -99,8 +99,8 @@ db.define_table('datastore',
 
 db.define_table('template',
     Field('name','string',notnull=True),
-    Field('os_type','string',length=30,notnull=True),
-    Field('arch','string',notnull=True),
+    Field('os_type', default="Linux", requires=IS_IN_SET(('Linux', 'Others'))),
+    Field('arch', default="amd64", requires=IS_IN_SET(('amd64','i386'))),
     Field('hdd','integer',notnull=True),
     Field('hdfile','string',notnull=True),
     Field('type','string',notnull=True),
@@ -195,4 +195,9 @@ db.define_table('vnc_access',
     Field('vnc_proxy_port','integer',notnull=True),
     Field('duration','integer'),
     Field('time_requested','integer'))
+
+if not db(db.constants).count():
+    _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]  # @UndefinedVariable
+    for val in _dict:
+        db.constants.insert(name=val.get(0),value=val.get(1))
 

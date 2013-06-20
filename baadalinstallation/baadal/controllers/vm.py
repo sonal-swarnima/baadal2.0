@@ -7,7 +7,7 @@ if 0:
     import gluon
     global request; request = gluon.globals.Request
     global session; session = gluon.globals.Session()
-    from vm_helper import get_create_vm_form,set_configuration_elem
+    from vm_model import get_create_vm_form,set_configuration_elem,add_request_vm_queue
     import logger
 ###################################################################################
 
@@ -16,7 +16,8 @@ def request_vm():
     form = get_create_vm_form()
     
     if form.accepts(request.vars, session, onvalidation=set_configuration_elem):
-        set_configuration_elem(form)
         logger.debug('VM requested successfully')
+        add_request_vm_queue(form.vars.id)
         redirect(URL(c='default', f='index'))
     return dict(form=form)
+
