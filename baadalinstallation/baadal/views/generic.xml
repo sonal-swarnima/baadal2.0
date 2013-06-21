@@ -1,11 +1,1 @@
-{{
-###
-# response._vars contains the dictionary returned by thecontroller action
-###
-try:
-   from gluon.serializers import xml
-   response.write(xml(response._vars),escape=False)
-   response.headers['Content-Type']='text/xml'
-except:
-   raise HTTP(405,'no xml')
-}}
+{{from gluon.serializers import xml}}{{=XML(xml(response._vars,quote=False))}}
