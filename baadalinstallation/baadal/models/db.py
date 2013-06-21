@@ -3,9 +3,10 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from authuser import login_callback
-		from helper import get_config_file
+
 ###################################################################################
+from authuser import login_callback
+from helper import get_config_file
 
 config = get_config_file()  # @UndefinedVariable
 db_type=config.get("GENERAL_CONF","database_type")
