@@ -1,0 +1,46 @@
+{{extend 'layout.html'}}
+{{
+  if not vmlist:
+}}
+  <center>No VM running</center>
+{{else:}}
+  <h3>All VMs</h3>
+  <table>
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Host</th>
+        <th>IP</th>
+		<th>RAM</th>
+		<th>vCPUs</th>
+        <th>Level</th>
+		<th>Cost</th>
+        <th>Settings</th>
+      </tr>
+  {{for vm in vmlist:}}
+      <form>
+      <tr>
+        <td>{{=vm['name']}}</td>
+        <input type = "hidden" name = "vm" value="{{=vm['name']}}"/>
+        <td>{{=get_fullname(vm['owner'])}}</td>
+        <td>{{=vm['hostip']}}</td>
+		<td>{{=vm['ip']}}</td>
+        <td>{{=vm['RAM']}}</td>
+		<td>{{=vm['vcpus']}}</td>
+        <td>{{=vm['level']}}</td>
+        <td>{{=round(float(vm['cost']),2)}}</td>
+        <td>
+        <div id = '{{=vm['name']}}'>
+        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+        _href=URL(r=request, f='settings', args=[vm['name']]), 
+        _title="Settings", 
+        _alt="Settings")}}
+        {{vm=vm['name']}}
+        <img alt="Operations" title="Operations" src="../static/images/lock.png" height="18" onclick="ajax('{{=URL('dominfo/'+vm)}}', ['{{=vm}}'],'{{=vm}}');"/>
+        </div>
+        </td>
+      </tr>
+      </form>
+  {{pass}}
+  </table>
+{{pass}}
