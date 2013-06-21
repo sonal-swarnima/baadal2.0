@@ -62,7 +62,7 @@ def add_vm_request_to_queue(_vm_id):
                                task_type=TASK_TYPE_REQUEST_VM,
                                vm_id=_vm_id, 
                                status=TASK_QUEUE_STATUS_PENDING,
-                               start_time=time())
+                               start_time=time.ctime())
     
 def add_user_to_vm(_vm_id):
     db(db.vm_data.id == _vm_id).update(user_id=auth.user.id, status=VM_STATUS_REQUESTED)
@@ -72,9 +72,9 @@ def addtocost(vm_name):
     vm = db(db.vm_data.vm_name==vm_name).select()[0]
     oldtime = vm.start_time
     newtime = time()
-    if(oldtime==None or len(oldtime.split('|'))>1):oldtime=newtime
-    hours = float((float(newtime)-float(oldtime))/3600)
-    
+#     if(oldtime==None or len(oldtime.split('|'))>1):oldtime=newtime
+#     hours = float((float(newtime)-float(oldtime))/3600)
+    hours=1
     scale=0
     
     if(vm.current_run_level==0):scale=0
@@ -98,11 +98,10 @@ def get_vm_list(vm_data):
 
 def get_all_vm_list():
 
-    vms = db(db.vm_data.status != VM_STATUS_REQUESTED).select()
+    vms = db((db.vm_data.status != VM_STATUS_REQUESTED)&(db.vm_data.status != VM_STATUS_APPROVED)).select()
     return get_vm_list(vms)
     
 def get_my_vm_list():
-    vms = db(db.vm_data.id>=0).select(user_id=auth.user.id)
+    vms = db((db.vm_data.status != VM_STATUS_REQUESTED)&(db.vm_data.status != VM_STATUS_APPROVED)&(db.vm_data.user_id==auth.user.id)).select()
     return get_vm_list(vms)
-    
-    
+
