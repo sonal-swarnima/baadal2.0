@@ -12,6 +12,12 @@ if 0:
     from admin_model import *  # @UnusedWildImport
 ###################################################################################
 
+
+def list_all_vm():
+    vm_list = get_all_vm_list()
+    return dict(vmlist=vm_list)
+
+
 def add_template():
 
     form = get_add_template_form()
