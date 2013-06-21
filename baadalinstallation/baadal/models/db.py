@@ -4,6 +4,7 @@
 if 0:
     from gluon import *  # @UnusedWildImport
     from authuser import login_callback
+		from helper import get_config_file
 ###################################################################################
 
 config = get_config_file()  # @UndefinedVariable
