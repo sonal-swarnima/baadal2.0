@@ -72,7 +72,7 @@
       	<li><a href="{{=URL(request.application,'vm','request_vm')}}">Request VM</a></li>
     		<li><a href="#">Mail Admin</a></li>
     		<li><a href="#">File Bug</a></li>
-    		<li><a href="#">List My VM's</a></li>
+    		<li><a href="{{=URL(request.application,'vm','list_my_vm')}}">List My VM's</a></li>
     		<li><a href="#">Pending Requests</a></li>
     	</ul>
     </li>
@@ -87,7 +87,7 @@
     <li>
     	<h2>ADMIN MENU</h2>
     	<ul>
-      	<li><a href="#">All VM's</a></li>
+      	<li><a href="{{=URL(request.application,'vm','list_all_vm')}}">All VM's</a></li>
         <li><a href="#">Hosts And VM's</a></li>
         <li><a href="#">Pending Request's</a></li>
         <li><a href="#">Tasks</a></li>
@@ -97,7 +97,7 @@
 						<li><a href="{{=URL(request.application,'admin','add_host')}}">Add Host</a></li>				
 						<li><a href="#">Add Disk</a></li>				
 						<li><a href="{{=URL(request.application,'admin','add_template')}}">Add Template</a></li>				
-						<li><a href="#">Add Datastore</a></li>				
+						<li><a href="{{=URL(request.application,'admin','add_datastore')}}">Add Datastore</a></li>				
 						<li><a href="#">Add ISO</a></li>				
 					<ul>
       	 </li>

@@ -7,17 +7,35 @@ TASK_QUEUE_STATUS_PROCESSED=3
 TASK_TYPE_REQUEST_VM='Request_VM'
 TASK_TYPE_DELETE_VM='Delete_VM'
 
+#Task Queue Priority
 TASK_QUEUE_PRIORITY_NORMAL=1
 
+#Host Status
 HOST_STATUS_DOWN=0
 HOST_STATUS_UP=1
 HOST_STATUS_MAINTENANCE=2
 
+COST_CPU=1.0
+COST_RAM=1.0
+COST_SCALE=1.2
+COST_RUNLEVEL_0=0
+COST_RUNLEVEL_1=5
+COST_RUNLEVEL_2=15
+COST_RUNLEVEL_3=30
+
+#VM Status
+VM_STATUS_REQUESTED=0
+VM_STATUS_APPROVED=1
+VM_STATUS_RUNNING=2
+VM_STATUS_SUSPENDED=3
+VM_STATUS_PAUSED=4
+VM_STATUS_REJECTED=5
+
+#Startup Data
 GROUP_DATA=[['admin','Super User'],
             ['faculty','Faculty User'],
             ['user','Normal User']]
 
 ORG_DATA=[['IIT Delhi','Indian Institude of Technology, Delhi']]
 
-DB_CONSTANTS=[['ifbaadaldown','0'],
-              ['ifbaadaldown1','1']]
+DB_CONSTANTS=[['ifbaadaldown','0']]

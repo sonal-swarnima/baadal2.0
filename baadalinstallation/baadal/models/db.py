@@ -6,7 +6,7 @@ if 0:
     from authuser import login_callback
 ###################################################################################
 
-config = get_config_file()
+config = get_config_file()  # @UndefinedVariable
 db_type=config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
 db = DAL(conn_str)
@@ -120,8 +120,8 @@ db.define_table('vm_data',
     Field('datastore_id',db.datastore),
     Field('purpose','text'),
     Field('expiry_date','date'),
-    Field('total_cost','integer'),
-    Field('current_run_level','integer'),
+    Field('total_cost','integer',default=0),
+    Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
     Field('start_time','time'),
@@ -148,7 +148,7 @@ db.define_table('vm_data_event',
     Field('datastore_id',db.datastore),
     Field('purpose','text'),
     Field('expiry_date','date'),
-    Field('total_cost','integer'),
+    Field('total_cost','integer',default=0),
     Field('current_run_level','integer'),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),

@@ -6,9 +6,10 @@ if 0:
     import gluon
     global db; db = gluon.sql.DAL()
     global request; request = gluon.globals.Request
+    global response; request = gluon.globals.Response
     global session; session = gluon.globals.Session()
     import logger
-    from admin_model import get_add_template_form, get_add_host_form
+    from admin_model import *  # @UnusedWildImport
 ###################################################################################
 
 def add_template():
@@ -38,8 +39,19 @@ def add_host():
     if form.accepts(request.vars, session):
         db(db.host.id == form.vars.id).update(status=HOST_STATUS_DOWN)  # @UndefinedVariable
         logger.debug('New Host Added')
+        response.flash = 'New Host Added'
         redirect(URL(c='default', f='index'))
     elif form.errors:
         logger.error('Error in form')
     return dict(form=form)
     
+def add_datastore():
+
+    form = get_add_datastore_form()
+
+    if form.accepts(request.vars, session):
+        logger.debug('New datastore added')
+        redirect(URL(c='default', f='index'))
+    elif form.errors:
+        logger.error('Error in form')
+    return dict(form=form)

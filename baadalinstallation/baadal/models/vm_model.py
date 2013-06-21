@@ -5,12 +5,13 @@ if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
     global db; db = gluon.sql.DAL()
+    global auth; auth = gluon.tools.Auth()
 ###################################################################################
 
 
 def get_configuration_elem(form):
     
-    xmldoc = get_vm_template_config()
+    xmldoc = get_vm_template_config()  # @UndefinedVariable
     itemlist = xmldoc.getElementsByTagName('template')
     _id=0
     for item in itemlist:
@@ -51,7 +52,57 @@ def get_create_vm_form():
     get_configuration_elem(form)
     return form
 
-def add_request_vm_queue(_vm_id):
+def add_vm_request_to_queue(_vm_id):
+    import time
+    _task_id = db.task_queue.insert(task_type=TASK_TYPE_REQUEST_VM,  
+                                    vm_id=_vm_id, 
+                                    priority=TASK_QUEUE_PRIORITY_NORMAL,  
+                                    status=TASK_QUEUE_STATUS_PENDING)
+    db.task_queue_event.insert(task_id=_task_id,
+                               task_type=TASK_TYPE_REQUEST_VM,
+                               vm_id=_vm_id, 
+                               status=TASK_QUEUE_STATUS_PENDING,
+                               start_time=time())
     
-    db.task_queue.insert(task_type=TASK_TYPE_REQUEST_VM, vm_id=_vm_id, priority=TASK_QUEUE_PRIORITY_NORMAL, status=TASK_QUEUE_STATUS_PENDING)  # @UndefinedVariable
+def add_user_to_vm(_vm_id):
+    db(db.vm_data.id == _vm_id).update(user_id=auth.user.id, status=VM_STATUS_REQUESTED)
+
+def addtocost(vm_name):
+    from time import time
+    vm = db(db.vm_data.vm_name==vm_name).select()[0]
+    oldtime = vm.start_time
+    newtime = time()
+    if(oldtime==None or len(oldtime.split('|'))>1):oldtime=newtime
+    hours = float((float(newtime)-float(oldtime))/3600)
+    
+    scale=0
+    
+    if(vm.current_run_level==0):scale=0
+    elif(vm.current_run_level==1):scale=1
+    elif(vm.current_run_level==2):scale=.5
+    elif(vm.current_run_level==3):scale=.25
+
+    totalcost = float(hours*(vm.vCPU*float(COST_CPU)+vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
+    db(db.vm_data.vm_name == vm_name).update(start_time=time(),total_cost=totalcost)
+    return totalcost
+
+def get_vm_list(vm_data): 
+    vmlist=[]
+    for vm in vm_data:
+        print vm.id
+        total_cost = addtocost(vm.vm_name)
+        element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':vm.user_id, 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+        vmlist.append(element)
+
+    return vmlist
+
+def get_all_vm_list():
+
+    vms = db(db.vm_data.status != VM_STATUS_REQUESTED).select()
+    return get_vm_list(vms)
+    
+def get_my_vm_list():
+    vms = db(db.vm_data.id>=0).select(user_id=auth.user.id)
+    return get_vm_list(vms)
+    
     
