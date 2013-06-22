@@ -47,3 +47,6 @@ GROUP_DATA=[['admin','Super User'],
 ORG_DATA=[['IIT Delhi','Indian Institude of Technology, Delhi']]
 
 DB_CONSTANTS=[['ifbaadaldown','0']]
+
+#Added so that changes in modules are instantlly loaded and reflected.
+from gluon.custom_import import track_changes; track_changes(True)

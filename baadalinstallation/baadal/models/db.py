@@ -26,6 +26,11 @@ db.define_table('organisation',
 from gluon.tools import Auth
 auth = Auth(db)
 
+#added ti make auth and db objects available in modules 
+from gluon import current
+current.auth = auth
+current.db = db
+
 ## configure custom auth tables
 auth.settings.table_user_name = 'user'
 auth.settings.table_group_name = 'user_group'
