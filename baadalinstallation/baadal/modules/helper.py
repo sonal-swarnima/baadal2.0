@@ -20,10 +20,6 @@ def is_faculty():
         return True
     return False    
 
-def get_fullname(_user_id):
-    user  = db(db.user.id==_user_id).select()[0]
-    return user.first_name + ' ' + user.last_name;
-
 def get_config_file():
 
     import ConfigParser    
