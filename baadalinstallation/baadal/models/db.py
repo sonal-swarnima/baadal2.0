@@ -3,10 +3,9 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-
 ###################################################################################
+from helper import get_config_file, get_date
 from authuser import login_callback
-from helper import get_config_file
 
 config = get_config_file()  # @UndefinedVariable
 db_type=config.get("GENERAL_CONF","database_type")
@@ -26,8 +25,8 @@ db.define_table('organisation',
 from gluon.tools import Auth
 auth = Auth(db)
 
-#added ti make auth and db objects available in modules 
-from gluon import current
+#added to make auth and db objects available in modules 
+from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
 
@@ -101,7 +100,8 @@ db.define_table('datastore',
     Field('path','string'),
     Field('username','string'),
     Field('password','string'),
-    Field('capacity','integer'))
+    Field('capacity','integer'),
+    format='%(ds_name)s')
 
 db.define_table('template',
     Field('name','string',notnull=True),
@@ -109,7 +109,7 @@ db.define_table('template',
     Field('arch', default="amd64", requires=IS_IN_SET(('amd64','i386'))),
     Field('hdd','integer',notnull=True),
     Field('hdfile','string',notnull=True),
-    Field('type','string',notnull=True),
+    Field('type','string',notnull=True, requires=IS_IN_SET(('QCOW', 'RAW', 'ISO'))),
     Field('datastore_id',db.datastore),
     format='%(name)s')
 
@@ -156,7 +156,7 @@ db.define_table('vm_data_event',
     Field('purpose','text'),
     Field('expiry_date','date'),
     Field('total_cost','integer',default=0),
-    Field('current_run_level','integer'),
+    Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
     Field('start_time','time'),
@@ -203,7 +203,32 @@ db.define_table('vnc_access',
     Field('time_requested','integer'))
 
 if not db(db.constants).count():
-    _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]  # @UndefinedVariable
+    _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]
     for val in _dict:
         db.constants.insert(name=val.get(0),value=val.get(1))
+
+if not db(db.user_group).count():
+    _dict=[dict(enumerate(i)) for i in GROUP_DATA]
+    for val in _dict:
+        db.user_group.insert(role=val.get(0),description=val.get(1))
+
+def vm_data_insert_callback(fields,_id):
+    db.vm_data_event.insert(vm_id=_id,
+                            vm_name=fields['vm_name'],
+                            vCPU=fields['vCPU'],
+                            RAM=fields['RAM'],
+                            HDD=fields['HDD'],
+                            purpose=fields['purpose'],
+                            template_id=fields['template_id'])
+
+db.vm_data._after_insert=[vm_data_insert_callback]
+
+def task_queue_insert_callback(fields,_id):
+    db.task_queue_event.insert(task_id=_id,
+                            task_type=fields['task_type'],
+                            vm_id=fields['vm_id'],
+                            status=fields['status'],
+                            start_time=get_date())
+
+db.task_queue._after_insert=[task_queue_insert_callback]
 

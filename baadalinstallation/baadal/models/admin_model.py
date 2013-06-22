@@ -9,8 +9,8 @@ if 0:
 
 def get_add_template_form():
     
-    form_fields = ['name','os_type','arch','hdd','hdfile']
-    form_labels = {'name':'Name of Template','hdd':'Harddisk(GB)','os_type':'Operating System','arch':'Architecture', 'hdfile':'HD File'}
+    form_fields = ['name','os_type','arch','hdd','hdfile','type','datastore_id']
+    form_labels = {'name':'Name of Template','hdd':'Harddisk(GB)','os_type':'Operating System','arch':'Architecture', 'hdfile':'HD File','type':'Template Type', 'datastore_id':'Datastore'}
 
     form =SQLFORM(db.template, fields = form_fields, labels = form_labels, submit_button='Add Template')
     return form

@@ -4,12 +4,11 @@
 if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
-    global db; db = gluon.sql.DAL()
     global request; request = gluon.globals.Request
     global response; request = gluon.globals.Response
     global session; session = gluon.globals.Session()
-    import logger
-    from admin_model import *  # @UnusedWildImport
+    global db; db = gluon.sql.DAL()
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
 
