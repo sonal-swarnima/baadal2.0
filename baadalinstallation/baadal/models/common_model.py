@@ -43,7 +43,7 @@ def set_configuration_elem(form):
     return
 
 
-def get_create_vm_form():
+def get_request_vm_form():
     
     form_fields = ['vm_name','template_id','HDD','purpose']
     form_labels = {'vm_name':'Name of VM','HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}

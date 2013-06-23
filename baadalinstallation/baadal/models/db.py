@@ -131,8 +131,9 @@ db.define_table('vm_data',
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','time'),
-    Field('end_time','time'),
+    Field('start_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now),
+    Field('end_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')),
+		Field('parent_name','string'),
     Field('status','integer'))
 
 db.define_table('user_vm_map',
@@ -159,8 +160,9 @@ db.define_table('vm_data_event',
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','time'),
-    Field('end_time','time'),
+    Field('start_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now),
+    Field('end_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')),
+		Field('parent_name','string'),
     Field('status','integer'))
 
 db.define_table('attached_disks',
@@ -185,9 +187,9 @@ db.define_table('task_queue_event',
     Field('vm_id',db.vm_data,notnull=True),
     Field('status','integer',notnull=True),
     Field('error','string', length=512),
-    Field('start_time','time',notnull=True),
-    Field('end_time','time',notnull=True),
-    Field('attention_time','time',notnull=True))
+    Field('start_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now),
+    Field('end_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')),
+    Field('attention_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')))
 
 db.define_table('vlan_map',
     Field('vm_id',db.vm_data))
@@ -200,7 +202,7 @@ db.define_table('vnc_access',
     Field('vnc_server_id',db.vnc_server,length=15, notnull=True),
     Field('vnc_proxy_port','integer',notnull=True),
     Field('duration','integer'),
-    Field('time_requested','integer'))
+    Field('time_requested','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now))
 
 if not db(db.constants).count():
     _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]
@@ -227,8 +229,7 @@ def task_queue_insert_callback(fields,_id):
     db.task_queue_event.insert(task_id=_id,
                             task_type=fields['task_type'],
                             vm_id=fields['vm_id'],
-                            status=fields['status'],
-                            start_time=get_date())
+                            status=TASK_QUEUE_STATUS_PENDING)
 
 db.task_queue._after_insert=[task_queue_insert_callback]
 

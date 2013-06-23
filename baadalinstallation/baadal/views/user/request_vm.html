@@ -1,7 +1,12 @@
 {{extend 'layout.html'}}
 
-<b>{{=T('Request VM')}}</b><br/>
-{{=form}}
+<div class="post">
+	<h1 class="title">{{=T('Request VM')}}</h1>
+	<div class="entry">
+		{{=form}}
+	</div>
+</div>
+
 
 <script>
 jQuery(document).ready(function(){

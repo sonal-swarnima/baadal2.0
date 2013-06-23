@@ -1,0 +1,27 @@
+{{extend layout.html}}
+
+{{if __len__(error) == 0:}}
+
+<div class="post">
+	<h1>OOPS!!!</h1>
+	<div class="entry">
+		<p>Something went wrong. Please retry or report to admin using REPORT BUG or MAIL ADMIN option.<br/>
+			We regret for the inconvinience caused. 
+		</p>
+	</div>
+</div>
+
+{{else:}}
+
+<div class="post">
+	<h1 class="title">ERROR</h1>
+	<div class="entry">
+		<p>
+			{{=error}}
+		</p>
+	</div>
+</div>
+
+
+{{pass}}
+{{pass}}

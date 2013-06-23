@@ -34,7 +34,7 @@ def get_context_path():
 
 def get_date():
     import datetime
-    return datetime.datetime.now()
+    return datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
 
 def get_vm_template_config():

@@ -11,7 +11,7 @@ if 0:
 
 def request_vm():
 
-    form = get_create_vm_form()
+    form = get_request_vm_form()
     
     if form.accepts(request.vars, session, onvalidation=set_configuration_elem):
         add_user_to_vm(form.vars.id)
