@@ -78,27 +78,7 @@ def add_to_cost(vm_name):
     db(db.vm_data.vm_name == vm_name).update(start_time=get_date(),total_cost=totalcost)
     return totalcost
 
-def get_vm_list(vm_data): 
-    vmlist=[]
-    for vm in vm_data:
-        total_cost = add_to_cost(vm.vm_name)
-        element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':vm.user_id, 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
-        vmlist.append(element)
-
-    return vmlist
-
-def get_all_vm_list():
-
-    vms = db((db.vm_data.status != VM_STATUS_REQUESTED) and (db.vm_data.status != VM_STATUS_APPROVED)).select()
-    return get_vm_list(vms)
-    
-def get_my_vm_list():
-    
-    vms = db((db.vm_data.status != VM_STATUS_REQUESTED)&(db.vm_data.status != VM_STATUS_APPROVED)&(db.vm_data.user_id==auth.user.id)).select()
-    return get_vm_list(vms)
-
 def get_fullname(_user_id):
-    
     row = db(db.user.id==_user_id).select().first()    
     return row['first_name'] + ' ' + row['last_name']
 

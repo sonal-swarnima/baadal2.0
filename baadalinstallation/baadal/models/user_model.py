@@ -9,15 +9,24 @@ if 0:
     from common_model import *  # @UnusedWildImport
 ###################################################################################
 
-def get_vm_list(vm_data): 
+def get_my_vm_list():
+    vms = db((db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)) 
+             & (db.vm_data.id==db.user_vm_map.vm_id) 
+             & (db.user_vm_map.user_id==auth.user.id)).select()
+
     vmlist=[]
-    for vm in vm_data:
-        total_cost = add_to_cost(vm.vm_name)
-        element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':vm.user_id, 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+    for vm in vms:
+        print vm
+        total_cost = add_to_cost(vm.vm_data.vm_name)
+        element = {'name':vm.vm_data.vm_name,
+                   'ip':vm.vm_data.vm_ip, 
+                   'owner':vm.vm_data.user_id, 
+                   'ip':vm.vm_data.vm_ip, 
+                   'hostip':'hostip',
+                   'RAM':vm.vm_data.RAM,
+                   'vcpus':vm.vm_data.vCPU,
+                   'level':vm.vm_data.current_run_level,
+                   'cost':total_cost}
         vmlist.append(element)
 
     return vmlist
-
-def get_my_vm_list():
-    vms = db((db.vm_data.status != VM_STATUS_REQUESTED)and(db.vm_data.status != VM_STATUS_APPROVED)and(db.vm_data.user_id==auth.user.id)).select()
-    return get_vm_list(vms)
