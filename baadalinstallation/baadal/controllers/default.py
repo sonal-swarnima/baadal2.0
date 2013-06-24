@@ -29,3 +29,6 @@ def contact():
 
 def error():
     return dict(error="This is the Error!!!")
+
+def test():
+		return db().select(db.template.datastore_id)

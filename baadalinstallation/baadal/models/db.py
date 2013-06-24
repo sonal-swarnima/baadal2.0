@@ -6,7 +6,7 @@ if 0:
     import gluon
     global request; request = gluon.globals.Request
 ###################################################################################
-from helper import get_config_file,get_date
+from helper import get_config_file, get_date
 from authuser import login_callback
 
 config = get_config_file()  # @UndefinedVariable
@@ -128,14 +128,14 @@ db.define_table('vm_data',
     Field('mac_addr','string',length=100),
     Field('datastore_id',db.datastore),
     Field('purpose','text'),
-    Field('expiry_date','date'),
+    Field('expiry_date','datetime'),
     Field('total_cost','integer',default=0),
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','datetime', default=get_date()),
+    Field('start_time','datetime',notnull=True,default=request.now),
     Field('end_time','datetime'),
-		Field('parent_name','string'),
+	Field('parent_name','string'),
     Field('status','integer'))
 
 db.define_table('user_vm_map',
@@ -157,12 +157,12 @@ db.define_table('vm_data_event',
     Field('mac_addr','string',length=100),
     Field('datastore_id',db.datastore),
     Field('purpose','text'),
-    Field('expiry_date','date'),
+    Field('expiry_date','datetime'),
     Field('total_cost','integer',default=0),
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','datetime',default=get_date()),
+    Field('start_time','datetime',notnull=True,default=request.now),
     Field('end_time','datetime'),
 		Field('parent_name','string'),
     Field('status','integer'))
@@ -189,9 +189,9 @@ db.define_table('task_queue_event',
     Field('vm_id',db.vm_data,notnull=True),
     Field('status','integer',notnull=True),
     Field('error','string', length=512),
-    Field('start_time','datetime',default=get_date()),
-    Field('attention_time','datetime'),
-    Field('end_time','datetime'))
+    Field('start_time','datetime',notnull=True,default=request.now),
+    Field('end_time','datetime'),
+    Field('attention_time','datetime'))
 
 db.define_table('vlan_map',
     Field('vm_id',db.vm_data))
@@ -204,7 +204,7 @@ db.define_table('vnc_access',
     Field('vnc_server_id',db.vnc_server,length=15, notnull=True),
     Field('vnc_proxy_port','integer',notnull=True),
     Field('duration','integer'),
-    Field('time_requested','datetime',default=get_date()))
+    Field('time_requested','datetime'))
 
 if not db(db.constants).count():
     _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]

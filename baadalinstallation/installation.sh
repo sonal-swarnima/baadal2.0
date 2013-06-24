@@ -450,10 +450,9 @@ Start_Web2py()
 	sudo -u www-data python -c "from gluon.widget import console; console();"
 	sudo -u www-data python -c "from gluon.main import save_password; save_password(\"$web2py_password\",443)"
 
-	cd applications/baadal/
+	cd /home/www-data/web2py/logs/
 
-#	nohup python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py/applications/baadal/private/hostpower.py &
-#	nohup python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py/applications/baadal/private/process.py >> process.out &
+	nohup python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py/applications/baadal/modules/process.py >> baadal.out &
 	
 #	val=`cat /etc/crontab | grep "\*\/45 \* \* \* \* www-data python /home/www-data/web2py/applications/baadal/cron/check_baadal_status.py" | wc -l`
 

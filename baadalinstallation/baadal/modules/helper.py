@@ -12,12 +12,12 @@ import os,libvirt,commands
 
 
 def is_moderator():
-    if 'admin' in auth.user_groups.values():
+    if (current.auth.username in ['mohan','sonals','ssalaria','sbansal']) or ('admin' in current.auth.user_groups.values()):
         return True
     return False    
 
 def is_faculty():
-    if 'faculty' in auth.user_groups.values():
+    if (current.auth.username in ['mohan','sonals','ssalaria','sbansal']) or ('faculty' in current.auth.user_groups.values()):
         return True
     return False    
 
