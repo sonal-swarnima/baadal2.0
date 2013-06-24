@@ -6,7 +6,7 @@ if 0:
     import gluon
     global request; request = gluon.globals.Request
 ###################################################################################
-from helper import get_config_file, get_date
+from helper import get_config_file,get_date
 from authuser import login_callback
 
 config = get_config_file()  # @UndefinedVariable
@@ -22,7 +22,7 @@ db.define_table('organisation',
     Field('name','string', notnull=True),
     Field('details','string'),
     Field('public_ip','string',length=15), 
-    format='%(name)s (%(id)s)')
+    format='%(details)s')
 
 from gluon.tools import Auth
 auth = Auth(db)
@@ -40,6 +40,7 @@ auth.settings.table_membership_name = 'user_membership'
 ## configure auth policy
 auth.settings.allow_basic_login = config.getboolean("AUTH_CONF","allow_basic_login")
 auth.settings.login_after_registration = config.getboolean("AUTH_CONF","login_after_registration")
+auth.settings.create_user_groups = config.getboolean("AUTH_CONF","create_user_groups")
 auth.settings.actions_disabled=config.get("AUTH_CONF",config.get("AUTH_CONF","actions_disabled"))
 auth.settings.remember_me_form = config.getboolean("AUTH_CONF","remember_me_form")
 
@@ -128,14 +129,14 @@ db.define_table('vm_data',
     Field('mac_addr','string',length=100),
     Field('datastore_id',db.datastore),
     Field('purpose','text'),
-    Field('expiry_date','datetime'),
+    Field('expiry_date','date'),
     Field('total_cost','integer',default=0),
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','datetime',notnull=True,default=request.now),
+    Field('start_time','datetime', default=get_date()),
     Field('end_time','datetime'),
-	Field('parent_name','string'),
+		Field('parent_name','string'),
     Field('status','integer'))
 
 db.define_table('user_vm_map',
@@ -157,12 +158,12 @@ db.define_table('vm_data_event',
     Field('mac_addr','string',length=100),
     Field('datastore_id',db.datastore),
     Field('purpose','text'),
-    Field('expiry_date','datetime'),
+    Field('expiry_date','date'),
     Field('total_cost','integer',default=0),
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','datetime',notnull=True,default=request.now),
+    Field('start_time','datetime',default=get_date()),
     Field('end_time','datetime'),
 		Field('parent_name','string'),
     Field('status','integer'))
@@ -189,9 +190,9 @@ db.define_table('task_queue_event',
     Field('vm_id',db.vm_data,notnull=True),
     Field('status','integer',notnull=True),
     Field('error','string', length=512),
-    Field('start_time','datetime',notnull=True,default=request.now),
-    Field('end_time','datetime'),
-    Field('attention_time','datetime'))
+    Field('start_time','datetime',default=get_date()),
+    Field('attention_time','datetime'),
+    Field('end_time','datetime'))
 
 db.define_table('vlan_map',
     Field('vm_id',db.vm_data))
@@ -204,17 +205,22 @@ db.define_table('vnc_access',
     Field('vnc_server_id',db.vnc_server,length=15, notnull=True),
     Field('vnc_proxy_port','integer',notnull=True),
     Field('duration','integer'),
-    Field('time_requested','datetime'))
+    Field('time_requested','datetime',default=get_date()))
 
 if not db(db.constants).count():
-    _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]
-    for val in _dict:
-        db.constants.insert(name=val.get(0),value=val.get(1))
+    _dict = dict(DB_CONSTANTS)
+    for _key in _dict.keys():
+        db.constants.insert(name=_key,value=_dict[_key])
 
 if not db(db.user_group).count():
-    _dict=[dict(enumerate(i)) for i in GROUP_DATA]
-    for val in _dict:
-        db.user_group.insert(role=val.get(0),description=val.get(1))
+    _dict = dict(GROUP_DATA)
+    for _key in _dict.keys():
+        db.user_group.insert(role=_key,description=_dict[_key])
+
+if not db(db.organisation).count():
+    _dict = dict(ORG_DATA)
+    for _key in _dict.keys():
+        db.organisation.insert(name=_key,details=_dict[_key])
 
 def vm_data_insert_callback(fields,_id):
     db.vm_data_event.insert(vm_id=_id,

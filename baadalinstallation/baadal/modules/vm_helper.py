@@ -25,15 +25,15 @@ def install(vmid):
         set_constant("defined_vms", vmcount)
         (newmac,newip,vncport) = new_mac_ip(vmcount)
 
-        print "VMCount = " + str(vmcount) + " MAC: " + str(newmac) + " NEW IP: " + newip + " VNCPort: " + vncport
+        logger.debug("VMCount = " + str(vmcount) + " MAC: " + str(newmac) + " NEW IP: " + newip + " VNCPort: " + vncport)
 
         #Check if a vm with same name already exists
         if check_vm_with_same_name(vmname) == False:
 
-            print "No vm with the same name exists already in the database. Starting the process..."
+            logger.debug("No vm with the same name exists already in the database. Starting the process...")
             machine = db(db.host.id == vm_details.host_id).select()[0]
             
-            print "Creating directory"
+            logger.debug("Creating directory")
             if not os.path.exists (get_constant('vmfiles_path') + '/'+ vmname):
                 os.makedirs(get_constant('vmfiles_path') + '/' + vmname)
 
@@ -43,20 +43,20 @@ def install(vmid):
             template_hdfile = template.hdfile
             template_location = get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + template_hdfile
             
-            print "Copy in progress..."
+            logger.debug("Copy in progress...")
             command = 'ssh root@'+ datastore.ip + ' ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template_hdfile + ' ' + datastore.path + '/' + get_constant("templates_dir") + '/tmp'
-            print command
+            logger.debug(command)
             a = commands.getstatusoutput(command)
-            print a
+            logger.debug(a)
             errormsg = errormsg + a[1]
             
-            print 'Move in progress...'
+            logger.debug('Move in progress...')
             command = 'mv '+ get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + 'tmp' + '/' + template_hdfile + ' ' + get_constant('vmfiles_path') + '/' + vmname + '/' + vmname + '.qcow2'
-            print command
+            logger.debug(command)
             a = commands.getstatusoutput(command) 
-            print a
+            logger.debug(a)
             errormsg = errormsg+a[1]
-            print "Copied!!!"        
+            logger.debug("Copied!!!")        
  
             (ram, vcpus) = computeeffres (vm_details.RAM, vm_details.vCPU, 1)
             optional = ' --import --os-type=' + template.os_type #what its use?
@@ -64,17 +64,17 @@ def install(vmid):
                 optional = optional + ' --arch=' + template.arch + ' '
   
             # Finds out the type of image (raw or qcow2)
-            print "Find the type out image.." 
+            logger.debug("Find the type out image..") 
             location_test_image = get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + template_hdfile
-            print "location_test_image :" + location_test_image
+            logger.debug("location_test_image :" + location_test_image)
             command_test_image = "qemu-img info %s" % location_test_image
-            print "command_test_image :" + command_test_image
+            logger.debug("command_test_image :" + command_test_image)
             output_test_image = commands.getstatusoutput(str(command_test_image))
-            print "output_test_image :" + output_test_image[1]
+            logger.debug("output_test_image :" + output_test_image[1])
             image_info = output_test_image[1]
-            print "image info :" + image_info
+            logger.debug("image info :" + image_info)
             match = re.search(r"(?:file format:[\s])(?P<image_type>[\w]+)",image_info)
-            print match.groupdict()
+            logger.debug(match.groupdict())
 
             if (match.group('image_type') == 'raw'):
                 install_cmd = 'virt-install \
@@ -102,14 +102,14 @@ def install(vmid):
                                  --autostart \
                                  --force'
 
-            print "Installation started..."
-            print "Host is "+ machine.ip
-            print "Installation command : " + install_cmd
+            logger.debug("Installation started...")
+            logger.debug("Host is "+ machine.ip)
+            logger.debug("Installation command : " + install_cmd)
             out = commands.getstatusoutput("ssh root@"+ machine.ip + " " + install_cmd)
-            print out
+            logger.debug(out)
             errormsg = errormsg + out[1]
 
-            print "Checking if VM has been successfully created..."
+            logger.debug("Checking if VM has been successfully created...")
             if (check_if_vm_defined(machine.ip, vmname)):
 
                 # Update vm_data table
@@ -173,8 +173,8 @@ def install(vmid):
         import traceback
         etype, value, tb = sys.exc_info()
         msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-        print "Exception"
-        print e
+        logger.error("Exception")
+        logger.error(e)
 
 # start
 def start(vm_id):
@@ -184,7 +184,7 @@ def start(vm_id):
         dom = conn.lookupByName(vm_details.vm_name)
         if dom != 'None':
             dom.create()
-            print "%s is started successfully." % dom
+            logger.debug("%s is started successfully." % dom)
         else:
             return "%s does not exist." % (vm_details.vm_name)
     except:
@@ -198,7 +198,7 @@ def suspend(vmid):
         dom = conn.lookupByName(vm_details.vm_name)
         if dom != 'None':
             dom.suspend()
-            print "%s is suspended successfully." % dom
+            logger.debug("%s is suspended successfully." % dom)
         else:
             return "%s does not exist." % (vm_details.vm_name)
     except:
@@ -212,7 +212,7 @@ def resume(vmid):
         dom = conn.lookupByName(vm_details.vm_name)
         if dom != 'None':
             dom.resume()
-            print "%s is resumed successfully." % dom
+            logger.debug("%s is resumed successfully." % dom)
         else:
             return "%s does not exist." % (vm_details.vm_name)
     except:
@@ -226,7 +226,7 @@ def destroy(vmid):
         dom = conn.lookupByName(vm_details.vm_name)
         if dom != 'None':
             dom.destroy()
-            print "%s is destroyed successfully." % dom
+            logger.debug("%s is destroyed successfully." % dom)
         else:
             return "%s does not exist." % (vm_details.vm_name)
     except:
@@ -240,7 +240,7 @@ def delete(vmid):
         dom = conn.lookupByName(vm_details.vm_name)
         if dom != 'None':
             dom.undefine()
-            print "%s is deleted successfully." % dom
+            logger.debug("%s is deleted successfully." % dom)
         else:
             return "%s does not exist." % (vm_details.vm_name)
     except:

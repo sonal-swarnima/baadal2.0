@@ -41,21 +41,23 @@ VM_STATUS_RUNNING=2
 VM_STATUS_SUSPENDED=3
 VM_STATUS_PAUSED=4
 VM_STATUS_REJECTED=5
+abc={'1':'2'}
 
+abc['1']
 #Startup Data
-GROUP_DATA=[['admin','Super User'],
-            ['faculty','Faculty User'],
-            ['user','Normal User']]
+GROUP_DATA={'admin':'Super User',
+            'faculty':'Faculty User',
+            'user':'Normal User'}
 
-ORG_DATA=[['IIT Delhi','Indian Institude of Technology, Delhi']]
+ORG_DATA={'IIT Delhi':'Indian Institude of Technology, Delhi'}
 
-DB_CONSTANTS=[['ifbaadaldown','0'],
-              ['vmfiles_path','/mnt/testdatastore'],
-              ['datastore_int','ds_'],
-              ['ip_range','10.20.'],
-              ['vncport_range','5920'],
-              ['templates_dir','vm_templates'],
-              ['mac_range','54:52:00:01:']]
+DB_CONSTANTS={'ifbaadaldown':'0',
+              'vmfiles_path':'/mnt/testdatastore',
+              'datastore_int':'ds_',
+              'ip_range':'10.20.',
+              'vncport_range':'5920',
+              'templates_dir':'vm_templates',
+              'mac_range':'54:52:00:01:'}
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

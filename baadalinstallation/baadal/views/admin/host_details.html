@@ -1,8 +1,9 @@
 {{extend 'layout.html'}}
 {{if not hosts:}}
-<h3>No Machines There Yet.</h3>
+<center><h4>No Machines There Yet.</h4></center>
 {{else:}}
-<h3>Host Details</h3>
+<h1 class="title">{{=T('Host Details')}}</h1>
+<div class="TABLE">
   <table>
       <tr>
         <th>Name</th>
@@ -67,3 +68,4 @@
   {{pass}}
   </table>
 {{pass}}
+</div>

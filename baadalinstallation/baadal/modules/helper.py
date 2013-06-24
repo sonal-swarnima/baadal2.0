@@ -7,6 +7,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     global db; db = gluon.sql.DAL()
     global session; session = gluon.globals.Session()
+    import logger
 ###################################################################################
 import os,libvirt,commands
 
@@ -133,25 +134,25 @@ def attach_disk(vmname, size):
         else:
             diskpath= get_constant('vmfiles_path') + get_constant('datastore_int')+vm.datastore.name+"/"+vmname+"/"+vmname+str(alreadyattached
                       +1)+ ".raw"
-            print "Above IF"
+            logger.debug("Above IF")
             if not os.path.exists (get_constant('vmfiles_path')+ get_constant('datastore_int') + vm.datastore_id.ds_name+ '/' +vmname):
-                print "Making Directory"          
+                logger.debug("Making Directory")          
                 os.makedirs(get_constant('vmfiles_path') + get_constant('datastore_int') + vm.datastore_id.ds_name+'/'+vmname)
            
             command= "qemu-img create -f raw "+ diskpath+ " " + str(size) + "G"
-            print command
+            logger.debug(command)
             out = commands.getstatusoutput(command)
-            print out
+            logger.debug(out)
             command = "ssh root@"+vm.host_id.host_ip + " virsh attach-disk " + vmname + " " + diskpath + " vd" + chr(97+alreadyattached+1) + " --type disk"
-            print command
+            logger.debug(command)
             out = commands.getstatusoutput(command)
-            print out
+            logger.debug(out)
             xmlfile = dom.XMLDesc(0)
             dom = conn.defineXML(xmlfile)
             out1 = dom.isActive()
-            print out1
+            logger.debug(out1)
             if(out1 == 1): 
-                print "Most probably the disk has been attached successfully. Reboot your vm to see it."
+                logger.debug("Most probably the disk has been attached successfully. Reboot your vm to see it.")
         conn.close()
         return str(out)
     except:
@@ -159,7 +160,7 @@ def attach_disk(vmname, size):
         etype, value, tb = sys.exc_info()
         msg = ''.join(traceback.format_exception(etype, value, tb, 10))
         out = "Some Error Occured\n"+msg
-        print out
+        logger.error(out)
         return str(out) 
 
 

@@ -28,6 +28,3 @@ def get_add_datastore_form():
 
     form = SQLFORM(db.datastore, fields=form_fields, labels=form_labels, submit_button='Add Datastore')
     return form   
-
-def get_all_vm_list():    
-    return db((db.vm_data.status != VM_STATUS_REQUESTED)&(db.vm_data.status != VM_STATUS_APPROVED)).select()
