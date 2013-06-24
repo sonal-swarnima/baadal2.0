@@ -10,13 +10,18 @@
 
 <script>
 jQuery(document).ready(function(){
-   jQuery('#vm_data_purpose__row').hide();
-   jQuery('#vm_data_HDD__row').hide();
-   jQuery('[id^=config_row__]').hide();
+    jQuery('#vm_data_purpose__row').hide();
+    jQuery('#vm_data_HDD__row').hide();
+    jQuery('[id^=config_row__]').hide();
+
+	template_check()
 });
 
 jQuery('#vm_data_template_id').change(function(){
+	template_check()
+});
 
+function template_check() {
 	var _value=$('#vm_data_template_id').val();
 	
 	if (_value == ''){
@@ -36,5 +41,5 @@ jQuery('#vm_data_template_id').change(function(){
 	   jQuery('[id^=config_row__]').hide();
 	   jQuery('#config_row__0').show();
 	}
-});
+  }
 </script>

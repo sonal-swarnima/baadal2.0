@@ -3,8 +3,10 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
+    import gluon
+    global request; request = gluon.globals.Request
 ###################################################################################
-from helper import get_config_file, get_date
+from helper import get_config_file,get_date
 from authuser import login_callback
 
 config = get_config_file()  # @UndefinedVariable
@@ -99,7 +101,7 @@ db.define_table('datastore',
     Field('ds_ip','string',length=15),
     Field('path','string'),
     Field('username','string'),
-    Field('password','string'),
+    Field('password','password'),
     Field('capacity','integer'),
     format='%(ds_name)s')
 
@@ -131,8 +133,8 @@ db.define_table('vm_data',
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now),
-    Field('end_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')),
+    Field('start_time','datetime', default=get_date()),
+    Field('end_time','datetime'),
 		Field('parent_name','string'),
     Field('status','integer'))
 
@@ -160,8 +162,8 @@ db.define_table('vm_data_event',
     Field('current_run_level','integer',default=0),
     Field('last_run_level','integer'),
     Field('next_run_level','integer'),
-    Field('start_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now),
-    Field('end_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')),
+    Field('start_time','datetime',default=get_date()),
+    Field('end_time','datetime'),
 		Field('parent_name','string'),
     Field('status','integer'))
 
@@ -187,9 +189,9 @@ db.define_table('task_queue_event',
     Field('vm_id',db.vm_data,notnull=True),
     Field('status','integer',notnull=True),
     Field('error','string', length=512),
-    Field('start_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now),
-    Field('end_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')),
-    Field('attention_time','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S')))
+    Field('start_time','datetime',default=get_date()),
+    Field('attention_time','datetime'),
+    Field('end_time','datetime'))
 
 db.define_table('vlan_map',
     Field('vm_id',db.vm_data))
@@ -202,7 +204,7 @@ db.define_table('vnc_access',
     Field('vnc_server_id',db.vnc_server,length=15, notnull=True),
     Field('vnc_proxy_port','integer',notnull=True),
     Field('duration','integer'),
-    Field('time_requested','datetime',requires=IS_DATETIME(format='%d/%m/%Y %H:%M:%S'),default=request.now))
+    Field('time_requested','datetime',default=get_date()))
 
 if not db(db.constants).count():
     _dict=[dict(enumerate(i)) for i in DB_CONSTANTS]
@@ -229,7 +231,7 @@ def task_queue_insert_callback(fields,_id):
     db.task_queue_event.insert(task_id=_id,
                             task_type=fields['task_type'],
                             vm_id=fields['vm_id'],
-                            status=TASK_QUEUE_STATUS_PENDING)
+                            status=fields['status'])
 
 db.task_queue._after_insert=[task_queue_insert_callback]
 

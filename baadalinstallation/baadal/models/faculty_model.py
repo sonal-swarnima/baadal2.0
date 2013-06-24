@@ -8,5 +8,5 @@ if 0:
 ###################################################################################
 
 def approve_vm_request(_vm_id):
-    add_vm_request_to_queue(_vm_id, TASK_TYPE_REQUEST_VM)
+    add_vm_request_to_queue(_vm_id, TASK_TYPE_CREATE_VM)
     db(db.vm_data.id == _vm_id).update(status=VM_STATUS_APPROVED)

@@ -6,11 +6,14 @@ TASK_QUEUE_STATUS_FAILED=4
 TASK_QUEUE_STATUS_RETRY=5
 
 #Task type
-TASK_TYPE_REQUEST_VM='Request VM'
-TASK_TYPE_DELETE_VM='Delete VM'
+TASK_TYPE_CREATE_VM='Create VM'
 TASK_TYPE_MIGRATE_VM='Migrate VM'
 TASK_TYPE_START_VM='Start VM'
 TASK_TYPE_STOP_VM='Stop VM'
+TASK_TYPE_SUSPEND_VM='Suspend VM'
+TASK_TYPE_RESUME_VM='Resume VM'
+TASK_TYPE_DELETE_VM='Delete VM'
+TASK_TYPE_DESTROY_VM='Destroy VM'
 
 #Task Queue Priority
 TASK_QUEUE_PRIORITY_LOW=0
@@ -46,7 +49,13 @@ GROUP_DATA=[['admin','Super User'],
 
 ORG_DATA=[['IIT Delhi','Indian Institude of Technology, Delhi']]
 
-DB_CONSTANTS=[['ifbaadaldown','0']]
+DB_CONSTANTS=[['ifbaadaldown','0'],
+              ['vmfiles_path','/mnt/testdatastore'],
+              ['datastore_int','ds_'],
+              ['ip_range','10.20.'],
+              ['vncport_range','5920'],
+              ['templates_dir','vm_templates'],
+              ['mac_range','54:52:00:01:']]
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

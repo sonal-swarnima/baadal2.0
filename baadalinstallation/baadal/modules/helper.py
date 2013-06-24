@@ -8,7 +8,7 @@ if 0:
     global db; db = gluon.sql.DAL()
     global session; session = gluon.globals.Session()
 ###################################################################################
-import os,strings,libvirt,commands
+import os,libvirt,commands
 
 
 def is_moderator():
@@ -35,7 +35,7 @@ def get_context_path():
 
 def get_date():
     import datetime
-    return datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    return datetime.datetime.now()
 
 
 def get_vm_template_config():
@@ -49,7 +49,7 @@ def give_datastore():
     datastores = db(db.datastore.id >= 0).select()
     if(len(datastores) == 0):
         return None
-    minused = datastore[0]
+    minused = datastores[0]
     #for d in datastores:
         #if(d.used < minused.used):minused=d
     return minused
@@ -106,8 +106,8 @@ def check_if_vm_defined(hostip, vmname):
     try:
         conn = libvirt.openReadOnly('qemu+ssh://root@'+ hostip +'/system')
         ids = conn.listDomainsID()
-        for id in ids:
-            domains.append(conn.lookupByID(id))
+        for _id in ids:
+            domains.append(conn.lookupByID(_id))
         names = conn.listDefinedDomains()
         for name in names:
             domains.append(conn.lookupByName(name))
@@ -131,19 +131,18 @@ def attach_disk(vmname, size):
             out="Cannot attach disk to inactive domain."
             return out
         else:
-            diskpath= getconstant('vmfiles_path') + getconstant('datastore_int')+vm.datastore.name+"/"+vmname+"/"+vmname+str(alreadyattached
+            diskpath= get_constant('vmfiles_path') + get_constant('datastore_int')+vm.datastore.name+"/"+vmname+"/"+vmname+str(alreadyattached
                       +1)+ ".raw"
             print "Above IF"
-            if not os.path.exists (getconstant('vmfiles_path')+ getconstant('datastore_int') + vm.datastore_id.ds_name+ '/' +vmname):
+            if not os.path.exists (get_constant('vmfiles_path')+ get_constant('datastore_int') + vm.datastore_id.ds_name+ '/' +vmname):
                 print "Making Directory"          
-                os.makedirs(getconstant('vmfiles_path') + getconstant('datastore_int') + vm.datastore_id.ds_name+'/'+vmname)
+                os.makedirs(get_constant('vmfiles_path') + get_constant('datastore_int') + vm.datastore_id.ds_name+'/'+vmname)
            
             command= "qemu-img create -f raw "+ diskpath+ " " + str(size) + "G"
             print command
             out = commands.getstatusoutput(command)
             print out
-            command = "ssh root@"+vm.host_id.host_ip + " virsh attach-disk " + vmname + " " + diskpath + " vd" + chr(97+alreadyattached+1) +
-                      " --type disk"
+            command = "ssh root@"+vm.host_id.host_ip + " virsh attach-disk " + vmname + " " + diskpath + " vd" + chr(97+alreadyattached+1) + " --type disk"
             print command
             out = commands.getstatusoutput(command)
             print out

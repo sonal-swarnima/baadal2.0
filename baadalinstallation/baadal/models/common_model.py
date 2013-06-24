@@ -90,7 +90,7 @@ def get_vm_list(vm_data):
 
 def get_all_vm_list():
 
-    vms = db((db.vm_data.status != VM_STATUS_REQUESTED)&(db.vm_data.status != VM_STATUS_APPROVED)).select()
+    vms = db((db.vm_data.status != VM_STATUS_REQUESTED) and (db.vm_data.status != VM_STATUS_APPROVED)).select()
     return get_vm_list(vms)
     
 def get_my_vm_list():
