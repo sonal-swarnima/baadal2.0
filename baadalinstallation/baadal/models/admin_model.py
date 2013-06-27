@@ -35,7 +35,6 @@ def get_all_vm_list():
     vms = db(db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)).select()
     vmlist=[]
     for vm in vms:
-        print vm
         total_cost = add_to_cost(vm.vm_name)
         element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':vm.user_id, 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
         vmlist.append(element)

@@ -9,18 +9,14 @@
 
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
+
 	<script>
 		jQuery(document).ready(function(){
-
-			{{if not auth.is_logged_in():}}
-				jQuery("#sidebar").css("display","none");
-				jQuery("#line").css("display","none");
-			{{pass}}
 	
-			jQuery('#configurelist').toggle();
+			jQuery('.web2py-menu-vertical').toggle();
 
 			jQuery('#configure').click(function(){ 
-				jQuery('#configurelist').slideToggle();
+				jQuery('.web2py-menu-vertical').slideToggle();
 			});
 		});
 	</script>
@@ -44,15 +40,10 @@
 
 </div>
 
-
 <div id="menu">
-	<ul>
-		<li class="active"><a href="{{=URL('default','index')}}">About</a></li>
-		<li><a href="{{=URL('default','index')}}">Blog</a></li>
-		<li><a href="{{=URL('default','index')}}">Photos</a></li>
-		<li><a href="{{=URL('default','index')}}">Team Baadal</a></li>
-		<li><a href="{{=URL('default','contact')}}">Contact</a></li>
-	</ul>
+  {{if response.top_menu:}}
+  {{=MENU(response.top_menu, _class='nav', li_first='active')}}
+  {{pass}}
 </div>
 
 <hr />
@@ -65,46 +56,21 @@
 
 <div id="sidebar">
 	<ul>
+		{{if response.user_menu:}}
 		<li>
-			<h2>USER MENU</h2>
-    	<ul>
-      	<li><a href="{{=URL('default','index')}}">Home</a></li>
-      	<li><a href="{{=URL('user','request_vm')}}">Request VM</a></li>
-    		<li><a href="#">Mail Admin</a></li>
-    		<li><a href="#">File Bug</a></li>
-    		<li><a href="{{=URL('user','list_my_vm')}}">List My VM's</a></li>
-    		<li><a href="#">Pending Requests</a></li>
-    	</ul>
-    </li>
-
-    <li>
-    	<h2>FACULTY MENU</h2>
-    	<ul>
-    		<li><a href="#">Add User to VM</a></li>       
-      </ul>
-    </li>
-
-    <li>
-    	<h2>ADMIN MENU</h2>
-    	<ul>
-      	<li><a href="{{=URL('admin','list_all_vm')}}">All VM's</a></li>
-        <li><a href="#">Hosts And VM's</a></li>
-        <li><a href="#">Pending Request's</a></li>
-        <li><a href="#">Tasks</a></li>
-        <li><a href="#">Sanity Check</a></li>
-				<li><a href="#">Emergency</a></li>
-        <li id="configure"><a href="#">Configure System</a>
-					<ul id="configurelist">
-						<li><a href="{{=URL('admin','add_host')}}">Add Host</a></li>				
-						<li><a href="#">Add Disk</a></li>				
-						<li><a href="{{=URL('admin','add_template')}}">Add Template</a></li>				
-						<li><a href="{{=URL('admin','add_datastore')}}">Add Datastore</a></li>				
-						<li><a href="#">Add ISO</a></li>				
-					<ul>
-      	 </li>
-      </ul>
-     </li>
-
+			{{=MENU(response.user_menu, _class='nav',no_link_url=URL('None','None'))}}
+		</li>
+		{{pass}}
+		{{if response.faculty_menu:}}
+		<li>
+			{{=MENU(response.faculty_menu, _class='nav',no_link_url=URL('None','None'))}}
+		</li>
+		{{pass}}
+		{{if response.admin_menu:}}
+		<li>
+			{{=MENU(response.admin_menu, _class='nav',no_link_url=URL('None','None'))}}
+		</li>
+		{{pass}}
 	</ul>
 
 </div>

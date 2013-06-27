@@ -6,7 +6,9 @@ if 0:
     import gluon
     global request; request = gluon.globals.Request
     global session; session = gluon.globals.Session()
-    from applications.baadal.models import *  # @UnusedWildImport
+    from common_model import *  # @UnusedWildImport
+    from faculty_model import *  # @UnusedWildImport
+    from user_model import *  # @UnusedWildImport
 ###################################################################################
 
 def request_vm():
