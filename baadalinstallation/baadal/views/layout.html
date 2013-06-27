@@ -7,100 +7,89 @@
   {{response.files.append(URL('static','plugin_layouts/superfish.js'))}}
   {{include 'web2py_ajax.html'}}
 
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
-
-	<script>
-		jQuery(document).ready(function(){
+  <script>
+    jQuery(document).ready(function(){
 	
-			jQuery('.web2py-menu-vertical').toggle();
+      jQuery('.web2py-menu-vertical').toggle();
 
-			jQuery('#configure').click(function(){ 
-				jQuery('.web2py-menu-vertical').slideToggle();
-			});
-		});
-	</script>
+      jQuery('#configure').click(function(){ 
+        jQuery('.web2py-menu-vertical').slideToggle();
+      });
+    });
+  </script>
 
   <title>
-   {{=response.title or request.application}}
+    {{=response.title or request.application}}
   </title>
- </head>
- <body>
-  <!-- start header -->
+</head>
+
+<body>
 
 <div id="header">
-	<div id="logo">
-		<h1><a href="{{=URL('default','index')}}"><b>BAADAL</b></a></h1>
+  <div id="logo">
+    <h1><a href="{{=URL('default','index')}}"><b>BAADAL</b></a></h1>
     <h2><b>An Academic Cloud</b></h2>
-	</div>
+  </div>
 
-	<div id="login">
-		{{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','login'))}}{{except:pass}}
-	</div>
-
+  <div id="login">
+    {{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','login'))}}{{except:pass}}
+  </div>
 </div>
 
 <div id="menu">
   {{if response.top_menu:}}
-  {{=MENU(response.top_menu, _class='nav', li_first='active')}}
+    {{=MENU(response.top_menu, _class='nav', li_first='active')}}
   {{pass}}
 </div>
 
-<hr />
+<hr/>
 
 <div id="page">
-	<div id="content">
-		<div class="flash">{{=response.flash or ''}}</div>
-	    {{include}}
-	</div>
-
-<div id="sidebar">
-	<ul>
-		{{if response.user_menu:}}
-		<li>
-			{{=MENU(response.user_menu, _class='nav',no_link_url=URL('None','None'))}}
-		</li>
-		{{pass}}
-		{{if response.faculty_menu:}}
-		<li>
-			{{=MENU(response.faculty_menu, _class='nav',no_link_url=URL('None','None'))}}
-		</li>
-		{{pass}}
-		{{if response.admin_menu:}}
-		<li>
-			{{=MENU(response.admin_menu, _class='nav',no_link_url=URL('None','None'))}}
-		</li>
-		{{pass}}
-	</ul>
-
-</div>
-
-<div id ="line" style="clear: both;">
-		&nbsp;
-</div>
-
-
-</div>
-
-  <hr />
-
-  <div id="footer">
-   <p id="legal">
-    Copyright &copy; 2011 Baadal. All Rights Reserved | Developed by
-    <a href="http://www.freecsstemplates.org/">
-     Indian Institute of technology, Delhi, India.
-    </a>
-   </p>
-   <p id="links">
-    <a href="#">
-     Privacy Policy
-    </a>
-    |
-    <a href="#">
-     Terms of Use
-    </a>
-
-   </p>
+  <div id="content">
+    <div class="flash">{{=response.flash or ''}}
+    </div>
+    {{include}}
   </div>
- </body>
+
+  <div id="sidebar">
+    <ul>
+    {{if response.user_menu:}}
+      <li>
+        {{=MENU(response.user_menu, _class='nav',no_link_url=URL('None','None'))}}
+      </li>
+    {{pass}}
+    {{if response.faculty_menu:}}
+      <li>
+        {{=MENU(response.faculty_menu, _class='nav',no_link_url=URL('None','None'))}}
+      </li>
+    {{pass}}
+    {{if response.admin_menu:}}
+      <li>
+        {{=MENU(response.admin_menu, _class='nav',no_link_url=URL('None','None'))}}
+      </li>
+    {{pass}}
+	</ul>
+  </div>
+
+  <div id ="line" style="clear: both;">
+		&nbsp;
+  </div>
+
+</div>
+
+<hr/>
+
+<div id="footer">
+  <p id="legal">
+    Copyright &copy; 2011 Baadal. All Rights Reserved | Developed by
+    <a href="http://www.iitd.ac.in/">Indian Institute of technology, Delhi, India.</a>
+  </p>
+  <p id="links">
+    <a href="#">Privacy Policy</a> | <a href="#">Terms of Use</a>
+  </p>
+</div>
+
+</body>
 </html>

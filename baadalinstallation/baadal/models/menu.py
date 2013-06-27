@@ -5,6 +5,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
     import gluon.languages.translator as T
+    global auth; auth = gluon.tools.Auth()
     global request; request = gluon.globals.Request
     global response; request = gluon.globals.Response
     global session; session = gluon.globals.Session()
@@ -20,7 +21,7 @@ response.top_menu = [
     (T('Team Baadal'), False, URL('default','index')),
     (T('Contact'), False, URL('default','index'))
     ]
-if current.auth.is_logged_in():
+if auth.is_logged_in():
     response.user_menu = [
         (H2('USER MENU'),False,URL('None','None')),
         (T('Home'), False, URL('default','index')),
@@ -31,13 +32,13 @@ if current.auth.is_logged_in():
         (T('Report Bug'), False, URL('default','index'))
         ]
     
-    if ('faculty' in current.auth.user_groups.values() or 'admin' in current.auth.user_groups.values()):
+    if ('faculty' in auth.user_groups.values() or 'admin' in auth.user_groups.values()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False,URL('None','None')),
             (T('Add User to VM'), False, URL('default','index'))
             ]
         
-        if ('admin' in current.auth.user_groups.values()):
+        if ('admin' in auth.user_groups.values()):
             response.admin_menu = [
                 (H2('ADMIN MENU'),False,URL('None','None')),
                 (T('All VM''s'), False, URL('admin','list_all_vm')),
