@@ -5,8 +5,9 @@ if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
     global db; db = gluon.sql.DAL()
-    from common_model import *  # @UnusedWildImport
+    from user_model import add_to_cost
 ###################################################################################
+from helper import get_fullname
 
 def get_add_template_form():
     
@@ -36,7 +37,7 @@ def get_all_vm_list():
     vmlist=[]
     for vm in vms:
         total_cost = add_to_cost(vm.vm_name)
-        element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':vm.user_id, 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+        element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
         vmlist.append(element)
 
     return vmlist

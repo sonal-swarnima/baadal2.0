@@ -11,7 +11,3 @@ def approve_vm_request(_vm_id):
     add_vm_request_to_queue(_vm_id, TASK_TYPE_CREATE_VM)
     db(db.vm_data.id == _vm_id).update(status=VM_STATUS_APPROVED)
     db.user_vm_map.insert(user_id=auth.user.id,vm_id=_vm_id);
-
-def add_user_to_vm(_vm_id):
-    db(db.vm_data.id == _vm_id).update(user_id=auth.user.id, status=VM_STATUS_REQUESTED)
-

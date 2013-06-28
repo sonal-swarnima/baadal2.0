@@ -11,7 +11,6 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-
 def list_all_vm():
     vm_list = get_all_vm_list()
     return dict(vmlist=vm_list)

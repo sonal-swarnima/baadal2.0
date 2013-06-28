@@ -6,9 +6,7 @@ if 0:
     import gluon
     global request; request = gluon.globals.Request
     global session; session = gluon.globals.Session()
-    from common_model import *  # @UnusedWildImport
-    from faculty_model import *  # @UnusedWildImport
-    from user_model import *  # @UnusedWildImport
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
 def request_vm():
@@ -24,8 +22,6 @@ def request_vm():
         redirect(URL(c='default', f='index'))
     return dict(form=form)
 
-
 def list_my_vm():
     vm_list = get_my_vm_list()
     return dict(vmlist=vm_list)
-
