@@ -163,6 +163,8 @@ def attach_disk(vmname, size):
         logger.error(out)
         return str(out) 
 
-def get_fullname(_user_id):
-    row = current.db(current.db.user.id==_user_id).select().first()    
-    return row['first_name'] + ' ' + row['last_name']
+def get_fullname(_user_id):	
+	row = current.db(current.db.user.id==_user_id).select()
+	if row :
+		row=row.first()
+		return row['first_name'] + ' ' + row['last_name']

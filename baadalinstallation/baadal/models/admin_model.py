@@ -32,12 +32,49 @@ def get_add_datastore_form():
     return form
 
 def get_all_vm_list():
+	vms = db(db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)).select()
+	vmlist=[]
+	for vm in vms:
+		total_cost = add_to_cost(vm.vm_name)
+		hostip=gethostinfo_fromhostid(vm.host_id).host_ip        
+		element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 'hostip':hostip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+		vmlist.append(element)
 
-    vms = db(db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)).select()
-    vmlist=[]
-    for vm in vms:
-        total_cost = add_to_cost(vm.vm_name)
-        element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 'hostip':'hostip','RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
-        vmlist.append(element)
+	return vmlist
 
-    return vmlist
+def get_all_vm_ofhost(hostid):
+	vms = db((db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)) & (db.vm_data.host_id == hostid )).select()
+	vmlist=[]
+	for vm in vms:
+		total_cost = add_to_cost(vm.vm_name)
+		hostip=gethostinfo_fromhostid(vm.host_id).host_ip        
+		element = {'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 'hostip':hostip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+		vmlist.append(element)
+
+	return vmlist
+
+def deleteuser_accesstovm(vmid,uid) :	
+	db((db.user_vm_map.vm_id==vmid) & (db.user_vm_map.user_id==uid)).delete()		
+
+def lockandunlockvm(flag) :
+	#if flag == True lock the vm else unlock
+	if flag == True :
+		db(db.vm_data.id==vminfo.id).update(locked=True)
+	else :
+		 db(db.vm_data.id==vminfo.id).update(locked=False)
+
+def check_moderator() :
+	if not is_moderator() :
+		response.flash="You don't have admin privileges"
+		redirect_listvm() # @ user_models.py
+def getallhosts() :
+	return db().select(db.host.ALL) 
+
+def getvm_groupbyhosts() :
+		hosts = getallhosts()              
+		hostvmlist=[]
+		for host in hosts:    # for each host get all the vm's that runs on it and add them to list              			
+			vmlist=get_all_vm_ofhost(host.id)
+			hostvms={'hostIP':host.host_ip,'details':vmlist,'ram':host.RAM,'cpus':host.CPUs}
+			hostvmlist.append(hostvms)	
+		return (hostvmlist)

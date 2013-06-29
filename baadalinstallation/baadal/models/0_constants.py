@@ -14,6 +14,7 @@ TASK_TYPE_SUSPEND_VM='Suspend VM'
 TASK_TYPE_RESUME_VM='Resume VM'
 TASK_TYPE_DELETE_VM='Delete VM'
 TASK_TYPE_DESTROY_VM='Destroy VM'
+TASK_TYPE_CHANGELEVEL_VM='changelevel'
 
 #Task Queue Priority
 TASK_QUEUE_PRIORITY_LOW=0
@@ -58,6 +59,10 @@ DB_CONSTANTS={'ifbaadaldown':'0',
               'vncport_range':'5920',
               'templates_dir':'vm_templates',
               'mac_range':'54:52:00:01:'}
+
+ADMIN = 'admin'
+FACULTY = 'faculty'
+USER = 'user'
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

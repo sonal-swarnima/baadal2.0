@@ -1,0 +1,173 @@
+{{extend 'layout.html'}}
+<h3>VM Configuration</h3>
+	<table >
+		<tr>
+			<td>Name : {{=data['name']}}</td>
+			<td>Harddisk : {{=data['hdd']}}</td>
+			<td>RAM : {{=data['ram']}}</td>
+			<td>No. of VCPUs : {{=data['vcpus']}}</td>
+			<td>Status : {{=data['status']}}</td>
+			<td>Expiry : {{=data['expire_date']}}</td>
+          {{
+            if is_moderator() :}}
+            <td>Host : {{=data['hostip']}}</td>
+            <td>VNCPort: {{=data['port']}}</td>
+            <td>OS Type: {{=data['ostype']}}</td>
+          {{pass}}
+          {{pass}}
+
+		</tr>
+	</table>
+	<table><tr><td>Purpose : {{=data['purpose']}}</td></tr></table>	
+	
+		<h4>Commands</h4>
+		<table>
+		<tr>
+			 {{ if(data['status'] == VM_STATUS_SUSPENDED): }}
+	<td>		{{=A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
+               	 	_href=URL(r=request, f='start_machine', args=[data['name']]), 
+                	_title="Turn on this virtual machine",
+                	_alt="Turn on this virtual machine")}}
+          </td>		{{ pass }}
+          {{ if(data['status'] == VM_STATUS_PAUSED): }}
+	<td>
+              {{=A(IMG(_src=URL('static','images/play2.png'), _height=20, _width=20),
+                _href=URL(r=request, f='resume_machine', args=[data['name']]), 
+                _title="Unpause this virtual machine",
+                _alt="Unpause on this virtual machine")}}
+	</td>
+          {{ pass }}
+
+          {{ if(data['status'] == VM_STATUS_RUNNING): }}
+	<td>
+            {{=A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
+                    _href=URL(r=request, f='pause_machine', args=[data['name']]), 
+                    _title="Pause this virtual machine",
+                    _alt="Pause this virtual machine")}}
+        </td>  {{ pass }}
+
+          {{ if(not data['status'] == VM_STATUS_SUSPENDED): }}
+	<td>{{=A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
+                    _href=URL(r=request, f='shutdown_machine', args=[data['name']]), 
+                    _title="Gracefully shut down this virtual machine",
+                    _alt="Gracefully shut down this virtual machine")}}
+         </td> {{ pass }}
+
+          {{ if((data['status'] == VM_STATUS_RUNNING) or (data['status'] == VM_STATUS_PAUSED)): }}
+          <td>    {{=A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
+                    _href=URL(r=request, f='destroy_machine', args= [data['name']]), 
+                    _title="Forcefully power off this virtual machine",
+                    _alt="Forcefully power off this virtual machine")}}
+          </td>{{ pass }}
+
+		{{
+        if is_moderator() :
+        }}
+	<td><a href=# alt="Migrate this Virtual Machine" title="Migrate this virtual machine." onClick="if(confirm('Are you sure you want to migrate the virtual machine. You might end up disturbing the scheduling algorithm.'))
+                                {
+                                	window.location ='{{=URL(r=request, f='migrate_vm', args=[data['name']])}}'
+                                }
+          ">{{=IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20)}}
+                {{=A(_title="Migrate this virtual machine",_alt="Migrate this virtual machine")}}</a>
+	</td>{{pass}}
+	{{pass}}
+
+
+          {{ if(data['status'] == VM_STATUS_SUSPENDED): }}
+          <td>{{=A(IMG(_src=URL('static','images/cpu.png'), _height=20, _width=20),
+                _href=URL(r=request, f='adjrunlevel', args=data['name']), 
+                _title="Adjust your machines resource utilization", 
+                _alt="Adjust your machines resource utilization")}} 
+	</td>
+	{{pass}}
+
+	<td>{{=A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
+                _href=URL(r=request,c='default', f='request_clonevm', args=data['name']), 
+                _title="Request Clone vm",
+                _alt="Request Clone vm")}} 
+	</td>
+  {{
+        if is_moderator() :}}	
+       <td>{{=A(IMG(_src=URL('static','images/lockvm.png'), _height=20, _width=20),
+                _href=URL(r=request, f='lockvm', args=data['name']), 
+                _title="Lock VM", 
+                _alt="Lock VM")}}
+        </td>
+       <td>{{=A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
+                _href=URL(r=request,c='admin', f='edit_vmconfig', args=data['name']),
+                _title="Edit VM Config",
+                _alt="Edit VM Config")}}
+       </td>
+           {{email_users="-".join(users)+"-cloudgroup"}}
+        <td>{{=A(IMG(_src=URL('static','images/mail.png'), _height=20, _width=20),
+                _href=URL(r=request,c='admin', f='mailToGUI', args=email_users),
+                _title="Email to users of this VM",
+                _alt="Email to users of this VM")}}
+        </td>
+	{{pass}}
+	{{pass}}
+
+	{{
+        if is_moderator() :}}
+        <!--td>{{=A(IMG(_src=URL('static','images/template.png'), _height=20, _width=20),
+                _href=URL(r=request, f='maketemplate', args=data['name']), 
+                _title="Make template of vm", 
+                _alt="Make template of vm")}} 
+        </td-->
+        <td>
+            <a href=# title="Delete the Virtual Machine" onClick="if(confirm('Are you sure you want to delete it'))
+               {
+                    if(confirm('Do you want to delete hard disk as well?'))
+                    {
+                       window.location ='{{=URL(r=request, f='delete_machine', args=[data['name'],True])}}'
+                    }
+                    else
+                    {
+                       window.location ='{{=URL(r=request, f='delete_machine', args=[data['name'],False])}}'
+                    }
+               }
+          ">{{=IMG(_src=URL('static','images/delete.png'), _height=20, _width=20)}}
+                {{=A(_title="Delete this virtual machine",_alt="Delete this virtual machine")}}</a>
+         </td>
+	{{pass}}
+	{{pass}}
+        </table>
+ 
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    (Shutdown your VM, either from above or from within your VM, to change the resource utilization level)
+
+	{{
+        if is_moderator() :}}
+	<h4>Users</h4>
+	<table>
+	{{for user in users:}}
+		<tr><td>{{=(user)}}</td>
+		<td>{{=A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
+                _href=URL(request.application, 'admin','delete_user_vm', args=[data['name'],user]),
+                _title="Remove the user permissions",
+                _alt="Remove the user permissions")}}</td></tr>
+	{{pass}}
+	</table>
+	{{pass}}
+	{{pass}}
+
+<h3>Resource Utilization Graphs</h3>
+<div id="selectgraph">
+<form>
+<INPUT TYPE="radio" NAME="graphs" VALUE="all" CHECKED onclick="ajax('{{=URL('plotgraphs/'+data['name']+'/all')}}', [],'graphs');"/><a>All</a> &nbsp;&nbsp;
+<INPUT TYPE="radio" NAME="graphs" VALUE="level" onclick="ajax('{{=URL('plotgraphs/'+data['name']+'/level/LEVEL')}}', [],'graphs');"/><a>LEVEL</a> &nbsp;&nbsp;
+<INPUT TYPE="radio" NAME="graphs" VALUE="cpu" onclick="ajax('{{=URL('plotgraphs/'+data['name']+'/cpu/CPU')}}', [],'graphs');"/><a>CPU</a> &nbsp;&nbsp;
+<INPUT TYPE="radio" NAME="graphs" VALUE="disk" onclick="ajax('{{=URL('plotgraphs/'+data['name']+'/disk/DISK')}}', [],'graphs');"/><a>DISK</a> &nbsp;&nbsp;
+<INPUT TYPE="radio" NAME="graphs" VALUE="net" onclick="ajax('{{=URL('plotgraphs/'+data['name']+'/net/NETWORK')}}', [],'graphs');"/><a>NET</a> &nbsp;&nbsp;
+<INPUT TYPE="radio" NAME="graphs" VALUE="mem" onclick="ajax('{{=URL('plotgraphs/'+data['name']+'/mem/MEMORY')}}', [],'graphs');"/><a>MEM</a> &nbsp;&nbsp;
+</form>
+</div>
+<div id="graphs">
+<table>
+<tr><td><h4>Daily Level Settings</h4><img src="{{="https://baadal.iitd.ernet.in/cloudrrd1/"+data['name']+"/level-d.png"}}"/></td></tr>
+<tr><td><h4>Daily CPU Utilization</h4><img src="{{="https://baadal.iitd.ernet.in/cloudrrd1/"+data['name']+"/cpu-d.png"}}"/></td></tr>
+<tr><td><h4>Daily MEMORY Utilization</h4><img src="{{="https://baadal.iitd.ernet.in/cloudrrd1/"+data['name']+"/mem-d.png"}}"/></td></tr>
+<tr><td><h4>Daily DISK Utilization</h4><img src="{{="https://baadal.iitd.ernet.in/cloudrrd1/"+data['name']+"/disk-d.png"}}"/></td></tr>
+<tr><td><h4>Daily NETWORK Utilization</h4><img src="{{="https://baadal.iitd.ernet.in/cloudrrd1/"+data['name']+"/net-d.png"}}"/></td></tr>
+</table>
+</div>

@@ -43,7 +43,7 @@ if auth.is_logged_in():
             response.admin_menu = [
                 (H2('ADMIN MENU'),False,URL('None','None')),
                 (T('All VM''s'), False, URL('admin','list_all_vm')),
-                (T('Host and VMs'), False, URL('default','index')),
+                (T('Host and VMs'), False, URL('admin','hosts_vms')),
                 (T('Tasks'), False, URL('default','index')),
                 (T('Sanity Check'), False, URL('default','index')),
                 (T('Emergency'), False, URL('default','index')),

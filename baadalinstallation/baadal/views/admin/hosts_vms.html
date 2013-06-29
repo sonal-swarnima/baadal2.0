@@ -1,39 +1,32 @@
 {{extend 'layout.html'}}
-{{
-  if not vmlist:
-}}
-<center><h4>No VM running</h4></center>
-{{else:}}
-<h1 class="title">{{=T('All VMs')}}</h1>
-<div class="TABLE">
-  <table>
+  {{for vmhosts in hostvmlist:}}
+   <h3>Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}MB, vCPUs= {{=vmhosts['cpus']}}]</h3>
+    <table>
       <tr>
         <th>Name</th>
-        <th>Owner</th>
-        <th>Host</th>
+        <th>Owner</th>              
         <th>IP</th>
-		<th>RAM</th>
-		<th>vCPUs</th>
+	<th>RAM</th>
+	<th>vCPUs</th>
         <th>Level</th>
-		<th>Cost</th>
+	<th>Cost</th>
         <th>Settings</th>
       </tr>
-  {{for vm in vmlist:}}
+  {{for vm in vmhosts['details']:}}
       <form>
       <tr>
         <td>{{=vm['name']}}</td>
         <input type = "hidden" name = "vm" value="{{=vm['name']}}"/>
-        <td>{{=(vm['owner'])}}</td>
-        <td>{{=vm['hostip']}}</td>
-		<td>{{=vm['ip']}}</td>
+        <td>{{=vm['owner']}}</td>                
+	<td>{{=vm['ip']}}</td>
         <td>{{=vm['RAM']}}</td>
-		<td>{{=vm['vcpus']}}</td>
+	<td>{{=vm['vcpus']}}</td>
         <td>{{=vm['level']}}</td>
         <td>{{=round(float(vm['cost']),2)}}</td>
         <td>
         <div id = '{{=vm['name']}}'>
         {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-        _href=URL(r=request, c='user',f='settings', args=[vm['name']]), 
+        _href=URL(r=request,c='user' ,f='settings', args=[vm['name']]), 
         _title="Settings", 
         _alt="Settings")}}
         {{vm=vm['name']}}
@@ -44,5 +37,8 @@
       </form>
   {{pass}}
   </table>
-{{pass}}
-</div>
+  <!--<br>
+    <p> Host: {{=vmhosts['hostIP']}}has {{=vmhosts['ram']}}MB RAM and {{=vmhosts['cpus']}}vCPUs used</p>
+      --><br>
+      <br>
+  {{pass}}

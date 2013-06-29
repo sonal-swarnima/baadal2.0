@@ -2,7 +2,7 @@
 {{
   if not vmlist:
 }}
-<center><h4>No VM running</h4></center>
+<center><h3>No VM running</h3></center>
 {{else:}}
 <h1 class="title">{{=T('My VMs')}}</h1>
 <div class="TABLE">
@@ -23,7 +23,7 @@
       <tr>
         <td>{{=vm['name']}}</td>
         <input type = "hidden" name = "vm" value="{{=vm['name']}}"/>
-        <td>{{=get_fullname(vm['owner'])}}</td>
+        <td>{{=(vm['owner'])}}</td>
         <td>{{=vm['hostip']}}</td>
 		<td>{{=vm['ip']}}</td>
         <td>{{=vm['RAM']}}</td>
