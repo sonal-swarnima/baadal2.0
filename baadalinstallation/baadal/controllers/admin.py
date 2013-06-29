@@ -92,7 +92,6 @@ def lockvm():
 	#modify db.py to include extra attribute locked in vm_data as its not existing 
 	#then enable this code
 	check_moderator()
-	"""
 	vmname=request.args[0]
 	vminfo =prerequisite_check(vmname)        
     if(not vminfo.locked):	    
@@ -104,7 +103,8 @@ def lockvm():
             session.flash = "Lock Released. Start VM yourself."
     except:
 			exp_handlr_errorpage()
-	redirect_listvm()     """   
+	redirect_listvm()
+	   
 @auth.requires_login()	
 def edit_vmconfig():
 	check_moderator()

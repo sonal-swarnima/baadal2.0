@@ -104,6 +104,7 @@ db.define_table('datastore',
     Field('path','string'),
     Field('username','string'),
     Field('password','password'),
+    Field('used','integer'),
     Field('capacity','integer'),
     format='%(ds_name)s')
 
@@ -137,7 +138,8 @@ db.define_table('vm_data',
     Field('next_run_level','integer'),
     Field('start_time','datetime', default=get_date()),
     Field('end_time','datetime'),
-		Field('parent_name','string'),
+    Field('parent_name','string'),
+    Filed('locked','boolean'),
     Field('status','integer'))
 
 db.define_table('user_vm_map',
