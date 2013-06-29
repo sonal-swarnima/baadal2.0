@@ -6,9 +6,8 @@ if 0:
     import gluon
     global db; db = gluon.sql.DAL()
     global auth; auth = gluon.tools.Auth()
-    from common_model import add_to_cost
 ###################################################################################
-import helper
+from helper import get_vm_template_config,get_date, get_fullname
 
 def get_my_vm_list():
     vms = db((db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)) 
@@ -19,7 +18,7 @@ def get_my_vm_list():
         total_cost = add_to_cost(vm.vm_data.vm_name)
         element = {'name':vm.vm_data.vm_name,
                    'ip':vm.vm_data.vm_ip, 
-                   'owner':vm.vm_data.user_id, 
+                   'owner':get_fullname(vm.vm_data.user_id), 
                    'ip':vm.vm_data.vm_ip, 
                    'hostip':'hostip',
                    'RAM':vm.vm_data.RAM,
@@ -30,13 +29,47 @@ def get_my_vm_list():
 
     return vmlist
 
+def get_configuration_elem(form):
+    
+    xmldoc = get_vm_template_config()
+    itemlist = xmldoc.getElementsByTagName('template')
+    _id=0
+    for item in itemlist:
+        if item.attributes['default'].value != 'true':
+            _id=item.attributes['id'].value
+        select=SELECT(_name='configuration_'+str(_id))
+        cfglist = item.getElementsByTagName('config')
+        i=0
+        for cfg in cfglist:
+            select.insert(i,OPTION(cfg.attributes['display'].value,_value=cfg.attributes['value'].value))
+            i+=1
+        
+        config_elem = TR(LABEL('Configuration:'),select,_id='config_row__'+str(_id))
+        form[0].insert(2,config_elem)
+
+def set_configuration_elem(form):
+
+    configVal = form.vars.configuration_0
+    template = form.vars.template_id
+    
+    if eval('form.vars.configuration_'+str(template)) != None:
+        configVal = eval('form.vars.configuration_'+str(template))
+
+    configVal = configVal.split(',')
+    
+    form.vars.vCPU = int(configVal[0])
+    form.vars.RAM = int(configVal[1])*1024
+    form.vars.HDD = int(configVal[2])
+    return
+
+
 def get_request_vm_form():
     
     form_fields = ['vm_name','template_id','HDD','purpose']
     form_labels = {'vm_name':'Name of VM','HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}
 
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels)
-    helper.get_configuration_elem(form)
+    get_configuration_elem(form)
     return form
 
 def add_vm_request_to_queue(_vm_id, _task_type):
@@ -45,6 +78,9 @@ def add_vm_request_to_queue(_vm_id, _task_type):
                          vm_id=_vm_id, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
+    
+def add_user_to_vm(_vm_id):
+    db(db.vm_data.id == _vm_id).update(user_id=auth.user.id, status=VM_STATUS_REQUESTED)
 
 def add_to_cost(vm_name):
     vm = db(db.vm_data.vm_name==vm_name).select()[0]
@@ -62,6 +98,3 @@ def add_to_cost(vm_name):
     db(db.vm_data.vm_name == vm_name).update(start_time=get_date(),total_cost=totalcost)
     return totalcost
 
-
-
-    

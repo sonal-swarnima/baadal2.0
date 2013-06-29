@@ -10,6 +10,7 @@ if 0:
     global response; request = gluon.globals.Response
     global session; session = gluon.globals.Session()
 ###################################################################################
+from helper import is_moderator,is_faculty
 
 response.title = request.application
 response.google_analytics_id = None
@@ -32,13 +33,13 @@ if auth.is_logged_in():
         (T('Report Bug'), False, URL('default','index'))
         ]
     
-    if ('faculty' in auth.user_groups.values() or 'admin' in auth.user_groups.values()):
+    if (is_moderator() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False,URL('None','None')),
             (T('Add User to VM'), False, URL('default','index'))
             ]
         
-        if ('admin' in auth.user_groups.values()):
+        if is_moderator():
             response.admin_menu = [
                 (H2('ADMIN MENU'),False,URL('None','None')),
                 (T('All VM''s'), False, URL('admin','list_all_vm')),

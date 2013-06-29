@@ -7,9 +7,9 @@ if 0:
     global request; request = gluon.globals.Request
 ###################################################################################
 from helper import get_config_file,get_date
-from authuser import login_callback
+from authuser import login_callback,login_ldap_callback
 
-config = get_config_file()  # @UndefinedVariable
+config = get_config_file()
 db_type=config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
 db = DAL(conn_str)
@@ -82,8 +82,9 @@ auth.define_tables(username=True)
 if config.get("AUTH_CONF","auth_type") == 'ldap':
     from gluon.contrib.login_methods.pam_auth import pam_auth
     auth.settings.login_methods=[pam_auth()]
+    auth.settings.login_onaccept= [login_ldap_callback]  
+else:
     auth.settings.login_onaccept= [login_callback]  
-    
 ###############################################################################
 
 db.define_table('host',
