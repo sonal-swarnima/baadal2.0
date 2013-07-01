@@ -57,17 +57,17 @@
     <ul>
     {{if response.user_menu:}}
       <li>
-        {{=MENU(response.user_menu, _class='nav',no_link_url=URL('None','None'))}}
+        {{=MENU(response.user_menu, _class='nav',no_link_url=request.url)}}
       </li>
     {{pass}}
     {{if response.faculty_menu:}}
       <li>
-        {{=MENU(response.faculty_menu, _class='nav',no_link_url=URL('None','None'))}}
+        {{=MENU(response.faculty_menu, _class='nav',no_link_url=request.url)}}
       </li>
     {{pass}}
     {{if response.admin_menu:}}
       <li>
-        {{=MENU(response.admin_menu, _class='nav',no_link_url=URL('None','None'))}}
+        {{=MENU(response.admin_menu, _class='nav',no_link_url=request.url)}}
       </li>
     {{pass}}
 	</ul>

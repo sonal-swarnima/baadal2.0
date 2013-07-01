@@ -2,10 +2,10 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import auth
+    from gluon import db,auth
 ###################################################################################
 
-def user():
+def login():
     """
     exposes:
     http://..../[app]/default/user/login 
@@ -31,4 +31,4 @@ def error():
     return dict(error="This is the Error!!!")
 
 def test():
-		return db().select(db.template.datastore_id)
+    return db().select(db.template.datastore_id)

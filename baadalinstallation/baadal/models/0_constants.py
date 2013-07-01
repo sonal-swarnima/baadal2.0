@@ -14,7 +14,7 @@ TASK_TYPE_SUSPEND_VM='Suspend VM'
 TASK_TYPE_RESUME_VM='Resume VM'
 TASK_TYPE_DELETE_VM='Delete VM'
 TASK_TYPE_DESTROY_VM='Destroy VM'
-TASK_TYPE_CHANGELEVEL_VM='changelevel'
+TASK_TYPE_CHANGELEVEL_VM='Changelevel VM'
 
 #Task Queue Priority
 TASK_QUEUE_PRIORITY_LOW=0
@@ -42,9 +42,7 @@ VM_STATUS_RUNNING=2
 VM_STATUS_SUSPENDED=3
 VM_STATUS_PAUSED=4
 VM_STATUS_REJECTED=5
-abc={'1':'2'}
 
-abc['1']
 #Startup Data
 GROUP_DATA={'admin':'Super User',
             'faculty':'Faculty User',

@@ -3,8 +3,6 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    import gluon
-    global request; request = gluon.globals.Request
 ###################################################################################
 from helper import get_config_file,get_date
 from authuser import login_callback,login_ldap_callback
@@ -48,7 +46,7 @@ db.define_table(
     auth.settings.table_user_name,
     Field('first_name', length=128, default=''),
     Field('last_name', length=128, default=''),
-    Field('email', length=128, default='', unique=True), # required
+    Field('email', length=128, unique=True), # required
     Field('username', length=128, default='', unique=True),
     Field('password', 'password', length=512, readable=False, label='Password'), # required
     Field('organisation_id', db.organisation, label='Organisation'),
@@ -139,7 +137,7 @@ db.define_table('vm_data',
     Field('start_time','datetime', default=get_date()),
     Field('end_time','datetime'),
     Field('parent_name','string'),
-    Filed('locked','boolean'),
+    Field('locked','boolean',default=False),
     Field('status','integer'))
 
 db.define_table('user_vm_map',

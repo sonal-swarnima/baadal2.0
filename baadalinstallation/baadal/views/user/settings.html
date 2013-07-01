@@ -1,4 +1,5 @@
 {{extend 'layout.html'}}
+
 <h3>VM Configuration</h3>
 	<table >
 		<tr>
@@ -25,14 +26,14 @@
 		<tr>
 			 {{ if(data['status'] == VM_STATUS_SUSPENDED): }}
 	<td>		{{=A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-               	 	_href=URL(r=request, f='start_machine', args=[data['name']]), 
+               	 	_href=URL(r=request, f='start_machine', args=[data['id']]), 
                 	_title="Turn on this virtual machine",
                 	_alt="Turn on this virtual machine")}}
           </td>		{{ pass }}
           {{ if(data['status'] == VM_STATUS_PAUSED): }}
 	<td>
               {{=A(IMG(_src=URL('static','images/play2.png'), _height=20, _width=20),
-                _href=URL(r=request, f='resume_machine', args=[data['name']]), 
+                _href=URL(r=request, f='resume_machine', args=[data['id']]), 
                 _title="Unpause this virtual machine",
                 _alt="Unpause on this virtual machine")}}
 	</td>
@@ -41,21 +42,21 @@
           {{ if(data['status'] == VM_STATUS_RUNNING): }}
 	<td>
             {{=A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='pause_machine', args=[data['name']]), 
+                    _href=URL(r=request, f='pause_machine', args=[data['id']]), 
                     _title="Pause this virtual machine",
                     _alt="Pause this virtual machine")}}
         </td>  {{ pass }}
 
           {{ if(not data['status'] == VM_STATUS_SUSPENDED): }}
 	<td>{{=A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='shutdown_machine', args=[data['name']]), 
+                    _href=URL(r=request, f='shutdown_machine', args=[data['id']]), 
                     _title="Gracefully shut down this virtual machine",
                     _alt="Gracefully shut down this virtual machine")}}
          </td> {{ pass }}
 
           {{ if((data['status'] == VM_STATUS_RUNNING) or (data['status'] == VM_STATUS_PAUSED)): }}
           <td>    {{=A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='destroy_machine', args= [data['name']]), 
+                    _href=URL(r=request, f='destroy_machine', args= [data['id']]), 
                     _title="Forcefully power off this virtual machine",
                     _alt="Forcefully power off this virtual machine")}}
           </td>{{ pass }}
@@ -65,7 +66,7 @@
         }}
 	<td><a href=# alt="Migrate this Virtual Machine" title="Migrate this virtual machine." onClick="if(confirm('Are you sure you want to migrate the virtual machine. You might end up disturbing the scheduling algorithm.'))
                                 {
-                                	window.location ='{{=URL(r=request, f='migrate_vm', args=[data['name']])}}'
+                                	window.location ='{{=URL(r=request, f='migrate_vm', args=[data['id']])}}'
                                 }
           ">{{=IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20)}}
                 {{=A(_title="Migrate this virtual machine",_alt="Migrate this virtual machine")}}</a>
@@ -75,34 +76,30 @@
 
           {{ if(data['status'] == VM_STATUS_SUSPENDED): }}
           <td>{{=A(IMG(_src=URL('static','images/cpu.png'), _height=20, _width=20),
-                _href=URL(r=request, f='adjrunlevel', args=data['name']), 
+                _href=URL(r=request, f='adjrunlevel', args=data['id']), 
                 _title="Adjust your machines resource utilization", 
                 _alt="Adjust your machines resource utilization")}} 
 	</td>
 	{{pass}}
 
 	<td>{{=A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
-                _href=URL(r=request,c='default', f='request_clonevm', args=data['name']), 
+                _href=URL(r=request,c='default', f='request_clonevm', args=data['id']), 
                 _title="Request Clone vm",
                 _alt="Request Clone vm")}} 
 	</td>
   {{
         if is_moderator() :}}	
        <td>{{=A(IMG(_src=URL('static','images/lockvm.png'), _height=20, _width=20),
-                _href=URL(r=request, f='lockvm', args=data['name']), 
+                _href=URL(r=request, f='lockvm', args=data['id']), 
                 _title="Lock VM", 
                 _alt="Lock VM")}}
         </td>
        <td>{{=A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
-                _href=URL(r=request,c='admin', f='edit_vmconfig', args=data['name']),
+                _href=URL(r=request,c='admin', f='edit_vmconfig', args=data['id']),
                 _title="Edit VM Config",
                 _alt="Edit VM Config")}}
        </td>
-           {{email_users="-".join(users)+"-cloudgroup"}}
-        <td>{{=A(IMG(_src=URL('static','images/mail.png'), _height=20, _width=20),
-                _href=URL(r=request,c='admin', f='mailToGUI', args=email_users),
-                _title="Email to users of this VM",
-                _alt="Email to users of this VM")}}
+        <td>
         </td>
 	{{pass}}
 	{{pass}}
@@ -110,7 +107,7 @@
 	{{
         if is_moderator() :}}
         <!--td>{{=A(IMG(_src=URL('static','images/template.png'), _height=20, _width=20),
-                _href=URL(r=request, f='maketemplate', args=data['name']), 
+                _href=URL(r=request, f='maketemplate', args=data['id']), 
                 _title="Make template of vm", 
                 _alt="Make template of vm")}} 
         </td-->
@@ -119,11 +116,11 @@
                {
                     if(confirm('Do you want to delete hard disk as well?'))
                     {
-                       window.location ='{{=URL(r=request, f='delete_machine', args=[data['name'],True])}}'
+                       window.location ='{{=URL(r=request, f='delete_machine', args=[data['id'],True])}}'
                     }
                     else
                     {
-                       window.location ='{{=URL(r=request, f='delete_machine', args=[data['name'],False])}}'
+                       window.location ='{{=URL(r=request, f='delete_machine', args=[data['id'],False])}}'
                     }
                }
           ">{{=IMG(_src=URL('static','images/delete.png'), _height=20, _width=20)}}
@@ -140,10 +137,10 @@
         if is_moderator() :}}
 	<h4>Users</h4>
 	<table>
-	{{for user in users:}}
-		<tr><td>{{=(user)}}</td>
+	{{for user_id in users:}}
+		<tr><td>{{=get_full_name(user_id)}}</td>
 		<td>{{=A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
-                _href=URL(request.application, 'admin','delete_user_vm', args=[data['name'],user]),
+                _href=URL(request.application, 'admin','delete_user_vm', args=[data['id'],user_id]),
                 _title="Remove the user permissions",
                 _alt="Remove the user permissions")}}</td></tr>
 	{{pass}}

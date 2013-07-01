@@ -3,12 +3,9 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
+    from gluon import T,request,response
     import gluon
-    import gluon.languages.translator as T
     global auth; auth = gluon.tools.Auth()
-    global request; request = gluon.globals.Request
-    global response; request = gluon.globals.Response
-    global session; session = gluon.globals.Session()
 ###################################################################################
 from helper import is_moderator,is_faculty
 
