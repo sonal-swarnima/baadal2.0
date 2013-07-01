@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db,auth,request,response,session
+    from gluon import auth,request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
@@ -131,3 +131,7 @@ def mailToGUI():
     check_moderator()
     request.flash="Has to be implemented"
 
+@auth.requires_login()    
+def add_disk():
+    check_moderator()
+    request.flash="Has to be implemented"

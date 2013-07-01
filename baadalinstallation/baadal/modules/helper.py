@@ -29,7 +29,7 @@ def get_context_path():
     ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
     return ctx_path
 
-def get_date():
+def get_datetime():
     import datetime
     return datetime.datetime.now()
 

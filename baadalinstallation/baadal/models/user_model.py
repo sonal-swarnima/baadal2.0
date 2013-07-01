@@ -7,7 +7,7 @@ if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
-from helper import get_vm_template_config,get_date, get_fullname
+from helper import get_vm_template_config,get_datetime, get_fullname
 
 def get_my_vm_list():
     vms = db((db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)) 
@@ -90,7 +90,7 @@ def add_to_cost(vm_name):
     vm = db(db.vm_data.vm_name==vm_name).select()[0]
 
     oldtime = vm.start_time
-    newtime = get_date()
+    newtime = get_datetime()
     
     if(oldtime==None):oldtime=newtime
     
@@ -101,7 +101,7 @@ def add_to_cost(vm_name):
     elif(vm.current_run_level==3):scale=.25
 
     totalcost = float(hours*(vm.vCPU*float(COST_CPU)+vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
-    db(db.vm_data.vm_name == vm_name).update(start_time=get_date(),total_cost=totalcost)
+    db(db.vm_data.vm_name == vm_name).update(start_time=get_datetime(),total_cost=totalcost)
     return totalcost
 
 def get_vm_user_list(vm_id) :		

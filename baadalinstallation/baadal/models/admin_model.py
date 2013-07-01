@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db,response
+    from gluon import response,db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_fullname,is_moderator

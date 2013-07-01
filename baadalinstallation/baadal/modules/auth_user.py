@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import logger
+###################################################################################
+# Added to enable code completion in IDE's.
+if 0:
+    import logger
+###################################################################################
 from gluon import current
 from helper import get_config_file
 
