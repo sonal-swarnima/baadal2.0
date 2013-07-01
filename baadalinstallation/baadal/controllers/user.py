@@ -12,20 +12,17 @@ from helper import is_moderator
 
 @auth.requires_login()
 def request_vm():
-    try:       
-        form = get_request_vm_form()
+    form = get_request_vm_form()
+    
+    # After validation, read selected configuration and set RAM, CPU and HDD accordingly
+    if form.accepts(request.vars, session, onvalidation=set_configuration_elem):
+        add_user_to_vm(form.vars.id)
+        logger.debug('VM requested successfully')
         
-        # After validation, read selected configuration and set RAM, CPU and HDD accordingly
-        if form.accepts(request.vars, session, onvalidation=set_configuration_elem):
-            add_user_to_vm(form.vars.id)
-            logger.debug('VM requested successfully')
-            
-            #TODO:Approve functionality to be implemented
-            approve_vm_request(form.vars.id)
-            redirect(URL(c='default', f='index'))
-        return dict(form=form)
-    except:
-        exp_handlr_errorpage()
+        #TODO:Approve functionality to be implemented
+        approve_vm_request(form.vars.id)
+        redirect(URL(c='default', f='index'))
+    return dict(form=form)
 
 @auth.requires_login()
 def list_my_vm():

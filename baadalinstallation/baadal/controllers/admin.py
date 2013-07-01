@@ -27,18 +27,15 @@ def hosts_vms():
 
 @auth.requires_login()
 def add_template():
-    check_moderator()
-    try:
-        form = get_add_template_form()
-        
-        if form.accepts(request.vars, session):
-            logger.debug('New Template Created')
-            redirect(URL(c='default', f='index'))
-        elif form.errors:
-            logger.error('Error in form')
-        return dict(form=form)
-    except:
-        exp_handlr_errorpage()
+
+    form = get_add_template_form()
+    
+    if form.accepts(request.vars, session):
+        logger.debug('New Template Created')
+        redirect(URL(c='default', f='index'))
+    elif form.errors:
+        logger.error('Error in form')
+    return dict(form=form)
 
 @auth.requires_login()
 def host_details():
@@ -55,35 +52,28 @@ def host_details():
 
 @auth.requires_login()
 def add_host():
-    check_moderator()
-    try:
-        form = get_add_host_form()
-    
-        if form.accepts(request.vars, session):
-            db(db.host.id == form.vars.id).update(status=HOST_STATUS_DOWN)  # @UndefinedVariable
-            logger.debug('New Host Added')
-            response.flash = 'New Host Added'
-            redirect(URL(c='default', f='index'))
-        elif form.errors:
-            logger.error('Error in form')
-        return dict(form=form)
-    except:
-        exp_handlr_errorpage()
+
+    form = get_add_host_form()
+
+    if form.accepts(request.vars, session):
+        db(db.host.id == form.vars.id).update(status=HOST_STATUS_DOWN)  # @UndefinedVariable
+        logger.debug('New Host Added')
+        redirect(URL(c='default', f='index'))
+    elif form.errors:
+        logger.error('Error in form')
+    return dict(form=form)
 
 @auth.requires_login()    
 def add_datastore():
-    check_moderator()
-    try:
-        form = get_add_datastore_form()
-    
-        if form.accepts(request.vars, session):
-            logger.debug('New datastore added')
-            redirect(URL(c='default', f='index'))
-        elif form.errors:
-            logger.error('Error in form')
-        return dict(form=form)
-    except:
-        exp_handlr_errorpage()
+
+    form = get_add_datastore_form()
+
+    if form.accepts(request.vars, session):
+        logger.debug('New datastore added')
+        redirect(URL(c='default', f='index'))
+    elif form.errors:
+        logger.error('Error in form')
+    return dict(form=form)
 
 @auth.requires_login()
 def delete_user_vm():	
