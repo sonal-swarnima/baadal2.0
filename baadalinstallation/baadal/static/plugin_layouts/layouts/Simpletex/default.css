@@ -228,6 +228,12 @@ html>body #menu a {
 	border-bottom: 2px solid #000000;
 }
 
+.subtitle {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #000000;
+}
+
 .twocols {
 }
 

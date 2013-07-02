@@ -226,6 +226,15 @@ if not db(db.organisation).count():
     for _key in _dict.keys():
         db.organisation.insert(name=_key,details=_dict[_key])
 
+def schedule_task(fields,_id):
+    db.task_queue_event.insert(task_id=_id,
+                            task_type=fields['task_type'],
+                            vm_id=fields['vm_id'],
+                            status=TASK_QUEUE_STATUS_PENDING)
+    #Schedule the task in the scheduler 
+    scheduler.queue_task('vm_task', pvars=dict(task_id=_id),start_time=request.now)  # @UndefinedVariable
+
+
 def vm_data_insert_callback(fields,_id):
     db.vm_data_event.insert(vm_id=_id,
                             vm_name=fields['vm_name'],
@@ -238,12 +247,14 @@ def vm_data_insert_callback(fields,_id):
 db.vm_data._after_insert=[vm_data_insert_callback]
 
 def task_queue_insert_callback(fields,_id):
-    db.task_queue_event.insert(task_id=_id,
-                            task_type=fields['task_type'],
-                            vm_id=fields['vm_id'],
-                            status=fields['status'])
-    #Schedule the task in the scheduler 
-    scheduler.queue_task('vm_task', pvars=dict(task_id=_id),start_time=request.now)  # @UndefinedVariable
+    schedule_task(fields,_id)
 
 db.task_queue._after_insert=[task_queue_insert_callback]
+
+def task_queue_update_callback(dbset,new_fields):
+    if new_fields['status'] == TASK_QUEUE_STATUS_RETRY:
+        fields = dbset.select().first()
+        schedule_task(fields,fields['id'])
+
+db.task_queue._after_update=[task_queue_update_callback]
 

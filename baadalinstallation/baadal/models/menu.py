@@ -21,27 +21,27 @@ response.top_menu = [
     ]
 if auth.is_logged_in():
     response.user_menu = [
-        (H2('USER MENU'),False,URL('None','None')),
+        (H2('USER MENU'),False,None),
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
         (T('List My VMs'), False, URL('user','list_my_vm')),
-        (T('Pending Requests'), False, URL('default','index')),
         (T('Mail Admin'), False, URL('default','index')),
         (T('Report Bug'), False, URL('default','index'))
         ]
     
     if (is_moderator() | is_faculty()):
         response.faculty_menu = [
-            (H2('FACULTY MENU'),False,URL('None','None')),
+            (H2('FACULTY MENU'),False,None),
+            (T('Pending Requests'), False, URL('default','index')),
             (T('Add User to VM'), False, URL('default','index'))
             ]
         
         if is_moderator():
             response.admin_menu = [
-                (H2('ADMIN MENU'),False,URL('None','None')),
+                (H2('ADMIN MENU'),False,None),
                 (T('All VM''s'), False, URL('admin','list_all_vm')),
                 (T('Host and VMs'), False, URL('admin','hosts_vms')),
-                (T('Tasks'), False, URL('default','index')),
+                (T('Tasks'), False, URL('admin','task_list')),
                 (T('Sanity Check'), False, URL('default','index')),
                 (T('Emergency'), False, URL('default','index')),
                 (T('Configure System'), False,dict(_href='#', _id='configure'),[

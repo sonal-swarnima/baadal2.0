@@ -40,7 +40,17 @@ def settings():
         #TODO : Analyze
         # as state attr is not the live state of the machine              
         state=vminfo.status  #current state of VM
-        data={'id':vminfo.id,'name':vminfo.vm_name,'hdd':vminfo.HDD,'ram':vminfo.RAM,'vcpus':vminfo.vCPU,'status':state,'hostip':vminfo.host_id.host_ip,'port':vminfo.vnc_port,'ostype':vminfo.template_id.ostype,'expire_date':vminfo.expiry_date,'purpose':vminfo.purpose}
+        data={'id':vminfo.id,
+              'name':vminfo.vm_name,
+              'hdd':vminfo.HDD,
+              'ram':vminfo.RAM,
+              'vcpus':vminfo.vCPU,
+              'status':state,
+              'hostip':vminfo.host_id.host_ip,
+              'port':vminfo.vnc_port,
+              'ostype':vminfo.template_id.ostype,
+              'expire_date':vminfo.expiry_date,
+              'purpose':vminfo.purpose}
         if is_moderator() :
             return dict(data=data,users=get_vm_user_list(vm_id))
         else :
@@ -113,7 +123,7 @@ def clonevm():
     try:
         vm_id=request.args[0]
         vminfo = vm_permission_check(vm_id)        
-        #TODO should know more about workflow
+        #TODO: to be implemented
         return dict(vm=vminfo)
     except:
         exp_handlr_errorpage()

@@ -111,7 +111,39 @@ def lockvm():
         exp_handlr_errorpage()    
 
 @auth.requires_login()
-#Delete a virtual machine
+def task_list():
+    check_moderator()
+    try:
+        #TODO:Pagination to be implemented
+        pending = get_task_list(TASK_QUEUE_STATUS_PENDING)
+        success = get_task_list(TASK_QUEUE_STATUS_SUCCESS)
+        failed = get_task_list(TASK_QUEUE_STATUS_FAILED)
+        
+        return dict(pending=pending, success=success, failed=failed)
+    except:
+        exp_handlr_errorpage()    
+
+@auth.requires_login()
+def ignore_task():
+    try:
+        task_id=request.args[0]
+        update_task_ignore(task_id)
+    except:
+        exp_handlr_errorpage()    
+    
+    redirect(URL(r=request,c='admin',f='task_list'))
+
+@auth.requires_login()
+def retry_task():
+    try:
+        task_id=request.args[0]
+        update_task_retry(task_id)
+    except:
+        exp_handlr_errorpage()    
+    
+    redirect(URL(r=request,c='admin',f='task_list'))
+
+@auth.requires_login()
 def delete_machine():   
     check_moderator()
     try:
@@ -120,7 +152,7 @@ def delete_machine():
     except:
         exp_handlr_errorpage()
     redirect_listvm()
-     
+
 @auth.requires_login()	
 def edit_vmconfig():
     check_moderator()

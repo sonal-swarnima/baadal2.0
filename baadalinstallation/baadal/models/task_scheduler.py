@@ -24,20 +24,23 @@ def processTaskQueue(task_id):
         if(len(processes) >= 1):
             try:
                 process=processes.first() 
+                
+                task_queue_query = db(db.task_queue.id==task_id)
+                task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
                 #Update attention_time for task in the event table
-                db(db.task_queue_event.task_id==task_id).update(attention_time=get_datetime())
+                task_event_query.update(attention_time=get_datetime())
                 #Call the corresponding function from vm_helper
                 ret = task[process['task_type']](process['vm_id'])
                 #On return, update the status and end time in task event table
-                db(db.task_queue_event.task_id==task_id).update(status=ret[0], end_time=get_datetime())
+                task_event_query.update(status=ret[0], end_time=get_datetime())
                 if ret[0] == TASK_QUEUE_STATUS_FAILED:
-                    #For failed task, change task status to RETRY
-                    db(db.task_queue.id==task_id).update(status=TASK_QUEUE_STATUS_RETRY)
+                    #For failed task, change task status to Failed, it can be marked for retry by admin later
+                    task_queue_query.update(status=TASK_QUEUE_STATUS_FAILED)
                     #Update task event with the error message
-                    db(db.task_queue_event.task_id==task_id).update(error=ret[1],status=TASK_QUEUE_STATUS_FAILED)
+                    task_event_query.update(error=ret[1],status=TASK_QUEUE_STATUS_FAILED)
                 elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
                     # For successful task, delete the task from queue 
-                    db(db.task_queue.id==task_id).delete()
+                    task_queue_query.delete()
                 db.commit()
                 logger.debug("Task done")
             except Exception as e:

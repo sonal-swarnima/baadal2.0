@@ -4,6 +4,7 @@ TASK_QUEUE_STATUS_PROCESSING=2
 TASK_QUEUE_STATUS_SUCCESS=3
 TASK_QUEUE_STATUS_FAILED=4
 TASK_QUEUE_STATUS_RETRY=5
+TASK_QUEUE_STATUS_IGNORE=6
 
 #Task type
 TASK_TYPE_CREATE_VM='Create VM'
@@ -56,6 +57,7 @@ DB_CONSTANTS={'ifbaadaldown':'0',
               'ip_range':'10.20.',
               'vncport_range':'5920',
               'templates_dir':'vm_templates',
+              'defined_vms':'1700',
               'mac_range':'54:52:00:01:'}
 
 ADMIN = 'admin'

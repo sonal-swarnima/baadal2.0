@@ -67,3 +67,30 @@ def get_vm_groupby_hosts() :
         hostvms={'hostIP':host.host_ip,'details':vmlist,'ram':host.RAM,'cpus':host.CPUs}
         hostvmlist.append(hostvms)    
     return (hostvmlist)
+
+def get_task_list(task_status):
+    events = db(db.task_queue_event.status == task_status).select(orderby= ~db.task_queue_event.start_time)
+
+    tasks=[]
+    for event in events:
+        element = {'task_type':event.task_type,
+                   'task_id':event.task_id,
+                   'vm_name':event.vm_id.vm_name,
+                   'user_name':get_full_name(event.vm_id.user_id),
+                   'start_time':event.start_time,
+                   'end_time':event.end_time,
+                   'error_msg':event.error}
+        tasks.append(element)
+    return tasks
+    
+def update_task_retry(_task_id):
+    #Mark current task event for the task as IGNORE. 
+    db(db.task_queue_event.task_id==_task_id).update(status=TASK_QUEUE_STATUS_IGNORE)
+    #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task
+    db(db.task_queue.id==_task_id).update(status=TASK_QUEUE_STATUS_RETRY)
+
+def update_task_ignore(_task_id):
+    db(db.task_queue_event.task_id==_task_id).update(status=TASK_QUEUE_STATUS_IGNORE)
+    #Delete task from task_queue
+    db(db.task_queue.id==_task_id).delete()
+        

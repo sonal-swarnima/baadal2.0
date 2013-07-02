@@ -1,0 +1,107 @@
+{{extend 'layout.html'}}
+
+{{
+  counter=0;
+  if not pending:
+}}
+<script>
+function clicker(content){
+        var thediv=document.getElementById("error"+content.toString());
+        if(thediv.style.display == "none"){
+                thediv.style.display = "";
+                thediv.innerHTML = "<span id=\"overlayblock\"><div style=\"color:cyan;font-weight:bold;font-size-adjust:1;font-family:monospace;\">"+document.getElementById("errorcontent"+content.toString()).innerHTML+"</div></br></br></br><a href='#' onclick='return clicker("+content+");'>CLOSE WINDOW</a></span>";
+        }else{
+                thediv.style.display = "none";
+                thediv.innerHTML = '';
+        }
+        return false;
+}
+</script>
+<h2 class="subtitle">No Pending Tasks</h2>
+{{else:}}
+<h2 class="subtitle">Pending Tasks</h2>
+  <div class="TABLE">
+  <table>
+      <tr>
+        <th>Task</th>
+        <th>VM</th>
+        <th>User</th>
+        <th>Request Time</th>
+        <th>Final Time</th>
+      </tr>
+	{{for task in pending:}}
+      <tr>
+        <td>{{=task['task_type']}}</td>
+        <td>{{=task['vm_name']}}</td>
+        <td>{{=task['user_name']}}</td>
+        <td>{{=task['start_time']}}</td>
+        <td>{{=task['end_time']}}</td>
+      </tr>
+	{{pass}}
+</table>
+</div>
+{{pass}}
+<br/>
+<br/>
+{{
+  if not success:
+}}
+<h2 class="subtitle">No Completed Tasks</h2>
+{{else:}}
+<h2 class="subtitle">Completed Tasks</h2>
+  <div class="TABLE">
+  <table>
+      <tr>
+        <th>Task</th>
+        <th>VM</th>
+        <th>User</th>
+        <th>Request Time</th>
+        <th>Final Time</th>
+      </tr>
+	{{for task in success:}}
+      <tr>
+        <td>{{=task['task_type']}}</td>
+        <td>{{=task['vm_name']}}</td>
+        <td>{{=task['user_name']}}</td>
+        <td>{{=task['start_time']}}</td>
+        <td>{{=task['end_time']}}</td>
+      </tr>
+	{{pass}}
+</table>
+</div>
+{{pass}}
+<br/>
+<br/>
+{{
+  if not failed:
+}}
+<h2 class="subtitle">No Failed Tasks</h2>
+{{else:}}
+<h2 class="subtitle">Failed Tasks</h2>
+  <div class="TABLE">
+  <table>
+      <tr>
+        <th>Task</th>
+        <th>VM</th>
+        <th>User</th>
+        <th>Debug Info</th>
+        <th>Request Time</th>
+        <th>Final Time</th>
+        <th>Action</th>
+      </tr>
+	{{for task in failed:}}
+      <tr>
+        <td>{{=task['task_type']}}</td>
+        <td>{{=task['vm_name']}}</td>
+        <td>{{=task['user_name']}}</td>
+        <div id="errorcontent{{=str(counter)}}" style="display:none;">{{=task['error_msg']}}</div>
+        <td><div id="error{{=str(counter)}}" style="display: none;"></div><a href='#' onclick='return clicker("{{=counter}}");'>Error</a></td>
+        <td>{{=task['start_time']}}</td>
+        <td>{{=task['end_time']}}</td>
+        <td><a href="{{=URL(request.application,'admin','retry_task',args=[task['task_id']])}}">TRY AGAIN</a> | <a href="{{=URL(request.application,'admin','ignore_task',args=[task['task_id']])}}">IGNORE</a></td>
+      </tr>
+      {{counter=counter+1}}
+	{{pass}}
+</table>
+</div>
+{{pass}}

@@ -34,7 +34,7 @@ def get_configuration_elem(form):
     
     xmldoc = get_vm_template_config() # Read vm_template_config.xml
     itemlist = xmldoc.getElementsByTagName('template')
-    _id=0 #for default configurations set, id will be configuration_0 
+    _id=0 #for default configurations set, select box id will be configuration_0 
     for item in itemlist:
         if item.attributes['default'].value != 'true': #if not default, get the id 
             _id=item.attributes['id'].value
@@ -93,8 +93,9 @@ def add_to_cost(vm_name):
     newtime = get_datetime()
     
     if(oldtime==None):oldtime=newtime
-    
+    #Calculate hour difference between start_time and current_time
     hours  = ((newtime - oldtime).total_seconds()) / 3600
+    
     if(vm.current_run_level==0):scale=0
     elif(vm.current_run_level==1):scale=1
     elif(vm.current_run_level==2):scale=.5
@@ -114,11 +115,14 @@ def get_vm_user_list(vm_id) :
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #check if VM exists
-    vm_info=db(db.vm_data.id==_vm_id).select()
+    print 'In get_vm_info'
+    #Get VM Info, if it is not locked
+    vm_info=db(db.vm_data.id==_vm_id and db.vm_data.locked == 'False').select()
     if not vm_info:
         return None
     return vm_info.first()
 
+# Generic error handler
 def exp_handlr_errorpage():
     import sys, traceback
     etype, value, tb = sys.exc_info()
