@@ -9,6 +9,9 @@ import logging
 logger = logging.getLogger("web2py.app.baadal")
 logger.setLevel(logging.DEBUG)
 
+from gluon import current
+current.logger = logger
+
 def debug(message):
     logger.log(message, level='DEBUG')
 
@@ -20,3 +23,4 @@ def warn(message):
     
 def error(message):
     logger.log(message, level='ERROR')
+

@@ -5,7 +5,7 @@ if 0:
     from gluon import db,auth
 ###################################################################################
 
-def login():
+def user():
     """
     exposes:
     http://..../[app]/default/user/login 
