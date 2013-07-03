@@ -4,19 +4,6 @@
   counter=0;
   if not pending:
 }}
-<script>
-function clicker(content){
-        var thediv=document.getElementById("error"+content.toString());
-        if(thediv.style.display == "none"){
-                thediv.style.display = "";
-                thediv.innerHTML = "<span id=\"overlayblock\"><div style=\"color:cyan;font-weight:bold;font-size-adjust:1;font-family:monospace;\">"+document.getElementById("errorcontent"+content.toString()).innerHTML+"</div></br></br></br><a href='#' onclick='return clicker("+content+");'>CLOSE WINDOW</a></span>";
-        }else{
-                thediv.style.display = "none";
-                thediv.innerHTML = '';
-        }
-        return false;
-}
-</script>
 <h2 class="subtitle">No Pending Tasks</h2>
 {{else:}}
 <h2 class="subtitle">Pending Tasks</h2>
@@ -77,6 +64,20 @@ function clicker(content){
 }}
 <h2 class="subtitle">No Failed Tasks</h2>
 {{else:}}
+<script>
+function clicker(content){
+        var thediv=document.getElementById("error"+content.toString());
+        if(thediv.style.display == "none"){
+                thediv.style.display = "";
+                thediv.innerHTML = "<span id=\"overlayblock\"><div style=\"color:cyan;font-weight:bold;font-size-adjust:1;font-family:monospace;\">"+document.getElementById("errorcontent"+content.toString()).innerHTML+"</div></br></br></br><a href='#' onclick='return clicker("+content+");'>CLOSE WINDOW</a></span>";
+        }else{
+                thediv.style.display = "none";
+                thediv.innerHTML = '';
+        }
+        return false;
+}
+</script>
+
 <h2 class="subtitle">Failed Tasks</h2>
   <div class="TABLE">
   <table>
