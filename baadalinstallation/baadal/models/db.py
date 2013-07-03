@@ -96,7 +96,7 @@ db.define_table('host',
     Field('RAM','integer'),
     Field("category","string"),
     Field('status','integer'),
-    Field('vm_count','integer'))
+    Field('vm_count','integer',default=0))
 
 db.define_table('datastore',
     Field('ds_name','string'),
