@@ -12,7 +12,7 @@ from paramiko import SSHClient, SSHException
 import xml.etree.ElementTree as etree
 from helper import *
 from gluon import *
-db = current.db
+db = current.db 
 logger = current.logger
 TASK_QUEUE_STATUS_SUCCESS = current.TASK_QUEUE_STATUS_SUCCESS
 TASK_QUEUE_STATUS_FAILED = current.TASK_QUEUE_STATUS_FAILED
@@ -187,7 +187,7 @@ def host_resources_used(hostid):
 #Function to find new host for a vm to be installed
 def find_new_host(runlevel,RAM,vCPU):
 
-    hosts = db(db.host.status == HOST_STATUS_UP).select()
+    hosts = db(db.host.status == HOST_STATUS_UP).select() 
     if (len(hosts) == 0):
         logger.error("No host found.")
         raise
@@ -240,7 +240,9 @@ def exec_command_on_host(machine_ip, user_name, command):
     ssh.connect(machine_ip, username = user_name)
     stdin,stdout,stderr = ssh.exec_command(command)
     logger.debug(stdout.readlines())
-    logger.error(stderr.readlines())
+    if stderr.readlines():
+        logger.error(stderr.readlines())
+        raise
     return
     
 
