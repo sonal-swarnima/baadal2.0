@@ -106,7 +106,7 @@ db.define_table('datastore',
     Field('password','password'),
     Field('used','integer'),
     Field('capacity','integer'),
-    Field('used','integer'),
+    Field('used','integer',default=0),
     format='%(ds_name)s')
 
 db.define_table('template',
