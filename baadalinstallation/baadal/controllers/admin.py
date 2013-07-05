@@ -44,24 +44,39 @@ def host_details():
         hosts = get_all_hosts()
         results = []
         for host in hosts:
-            results.append({'ip':host.host_ip, 'id':host.id, 'name':host.host_name, 'status':host.status})
-    
-        return dict(hosts=results)
+            results.append({'ip':host.host_ip, 'id':host.id, 'name':host.host_name, 'status':host.status})    
     except:
         exp_handlr_errorpage()
 
+    form=get_search_host_form()
+    if form.accepts(request.vars,session):
+        session.flash='Check the details'
+        redirect(URL(c='admin', f='add_host',args=form.vars.host_ip))
+    elif form.errors:
+        response.flash='Error in form'
+        
+    return dict(form=form,hosts=results)
+        
+
 @auth.requires_login()
 def add_host():
+    if_redirect = False
+    try:
+        check_moderator()
+        host_ip = request.args[0]
+        form = get_host_form(host_ip)
+        if form.accepts(request.vars,session):
+            session.flash='New Host added'
+            if_redirect = True
+        elif form.errors:
+            response.flash='Error in form'
+    except:
+        exp_handlr_errorpage()
+    if if_redirect :
+        redirect(URL(c='admin', f='host_details'))
+    else :
+        return dict(form=form)
 
-    form = get_add_host_form()
-
-    if form.accepts(request.vars, session):
-        db(db.host.id == form.vars.id).update(status=HOST_STATUS_DOWN)  # @UndefinedVariable
-        logger.debug('New Host Added')
-        redirect(URL(c='default', f='index'))
-    elif form.errors:
-        logger.error('Error in form')
-    return dict(form=form)
 
 @auth.requires_login()    
 def add_datastore():

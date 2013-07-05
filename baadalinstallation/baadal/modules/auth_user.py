@@ -15,7 +15,7 @@ def login_callback(form):
 def login_ldap_callback(form):
     if current.auth.is_logged_in():
         if current.db(current.db.user.username==current.auth.user.username).select(current.db.user.last_name)[0]['last_name'] == "": 
-            fetch_ldap_user()
+            fetch_ldap_user(current.auth.user.username)
 
     
 def add_group_test():
@@ -24,7 +24,7 @@ def add_group_test():
         add_membership_db('admin')
 
 
-def fetch_ldap_user():
+def fetch_ldap_user(username):
     config = get_config_file()
     ldap_url=config.get("LDAP_CONF","ldap_url")
     base_dn = config.get("LDAP_CONF","ldap_dn")
@@ -38,7 +38,7 @@ def fetch_ldap_user():
 
     searchScope = ldap.SCOPE_SUBTREE
     retrieveAttributes = None
-    searchFilter="uid="+current.auth.user.username
+    searchFilter="uid="+username
     _first_name=''
     _last_name=''
     _email=''

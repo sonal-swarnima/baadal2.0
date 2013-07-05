@@ -32,3 +32,6 @@ def error():
 
 def test():
     return db().select(db.template.datastore_id)
+
+def page_under_construction():
+    return dict()

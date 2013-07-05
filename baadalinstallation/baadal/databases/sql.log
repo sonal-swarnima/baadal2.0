@@ -1,0 +1,304 @@
+timestamp: 2013-07-01T18:02:20.622912
+CREATE TABLE constants(
+    id INT AUTO_INCREMENT NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    value VARCHAR(255) NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:20.706310
+CREATE TABLE organisation(
+    id INT AUTO_INCREMENT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    details VARCHAR(255),
+    public_ip VARCHAR(15),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:20.783717
+CREATE TABLE user(
+    id INT AUTO_INCREMENT NOT NULL,
+    first_name VARCHAR(128),
+    last_name VARCHAR(128),
+    email VARCHAR(128) UNIQUE,
+    username VARCHAR(128) UNIQUE,
+    password VARCHAR(255),
+    organisation_id INT, INDEX organisation_id__idx (organisation_id), FOREIGN KEY (organisation_id) REFERENCES organisation (id) ON DELETE CASCADE,
+    block_user CHAR(1) NOT NULL DEFAULT 'F',
+    registration_key VARCHAR(255),
+    reset_password_key VARCHAR(255),
+    registration_id VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:20.865022
+CREATE TABLE user_group(
+    id INT AUTO_INCREMENT NOT NULL,
+    role VARCHAR(100) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:20.939760
+CREATE TABLE user_membership(
+    id INT AUTO_INCREMENT NOT NULL,
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+    group_id INT, INDEX group_id__idx (group_id), FOREIGN KEY (group_id) REFERENCES user_group (id) ON DELETE CASCADE,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.058950
+CREATE TABLE auth_permission(
+    id INT AUTO_INCREMENT NOT NULL,
+    group_id INT, INDEX group_id__idx (group_id), FOREIGN KEY (group_id) REFERENCES user_group (id) ON DELETE CASCADE,
+    name VARCHAR(255),
+    table_name VARCHAR(255),
+    record_id INT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.148540
+CREATE TABLE auth_event(
+    id INT AUTO_INCREMENT NOT NULL,
+    time_stamp DATETIME,
+    client_ip VARCHAR(255),
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+    origin VARCHAR(255),
+    description LONGTEXT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.239100
+CREATE TABLE auth_cas(
+    id INT AUTO_INCREMENT NOT NULL,
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+    created_on DATETIME,
+    service VARCHAR(255),
+    ticket VARCHAR(255),
+    renew CHAR(1),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.337057
+CREATE TABLE host(
+    id INT AUTO_INCREMENT NOT NULL,
+    host_ip VARCHAR(15) NOT NULL,
+    host_name VARCHAR(100) NOT NULL,
+    mac_addr VARCHAR(100) NOT NULL,
+    HDD INT,
+    CPUs INT,
+    RAM INT,
+    category VARCHAR(255),
+    status INT,
+    vm_count INT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.408214
+CREATE TABLE datastore(
+    id INT AUTO_INCREMENT NOT NULL,
+    ds_name VARCHAR(255),
+    ds_ip VARCHAR(15),
+    path VARCHAR(255),
+    username VARCHAR(255),
+    password VARCHAR(255),
+    used INT,
+    capacity INT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.500038
+CREATE TABLE template(
+    id INT AUTO_INCREMENT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    os_type VARCHAR(255),
+    arch VARCHAR(255),
+    hdd INT NOT NULL,
+    hdfile VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    datastore_id INT, INDEX datastore_id__idx (datastore_id), FOREIGN KEY (datastore_id) REFERENCES datastore (id) ON DELETE CASCADE,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.584557
+CREATE TABLE vm_data(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_name VARCHAR(255) NOT NULL UNIQUE,
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+    host_id INT, INDEX host_id__idx (host_id), FOREIGN KEY (host_id) REFERENCES host (id) ON DELETE CASCADE,
+    RAM INT,
+    HDD INT,
+    vCPU INT,
+    template_id INT, INDEX template_id__idx (template_id), FOREIGN KEY (template_id) REFERENCES template (id) ON DELETE CASCADE,
+    vm_ip VARCHAR(15),
+    vnc_port INT,
+    mac_addr VARCHAR(100),
+    datastore_id INT, INDEX datastore_id__idx (datastore_id), FOREIGN KEY (datastore_id) REFERENCES datastore (id) ON DELETE CASCADE,
+    purpose LONGTEXT,
+    expiry_date DATE,
+    total_cost INT,
+    current_run_level INT,
+    last_run_level INT,
+    next_run_level INT,
+    start_time DATETIME,
+    end_time DATETIME,
+    parent_name VARCHAR(255),
+    locked CHAR(1),
+    status INT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.774125
+CREATE TABLE user_vm_map(
+    user_id INT,
+    vm_id INT,
+    PRIMARY KEY(user_id, vm_id))  ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:21.842267
+CREATE TABLE vm_data_event(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    vm_name VARCHAR(255) NOT NULL,
+    user_id INT, INDEX user_id__idx (user_id), FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
+    host_id INT, INDEX host_id__idx (host_id), FOREIGN KEY (host_id) REFERENCES host (id) ON DELETE CASCADE,
+    RAM INT,
+    HDD INT,
+    vCPU INT,
+    template_id INT, INDEX template_id__idx (template_id), FOREIGN KEY (template_id) REFERENCES template (id) ON DELETE CASCADE,
+    vm_ip VARCHAR(15),
+    vnc_port INT,
+    mac_addr VARCHAR(100),
+    datastore_id INT, INDEX datastore_id__idx (datastore_id), FOREIGN KEY (datastore_id) REFERENCES datastore (id) ON DELETE CASCADE,
+    purpose LONGTEXT,
+    expiry_date DATE,
+    total_cost INT,
+    current_run_level INT,
+    last_run_level INT,
+    next_run_level INT,
+    start_time DATETIME,
+    end_time DATETIME,
+    parent_name VARCHAR(255),
+    status INT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.066019
+CREATE TABLE attached_disks(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    datastore_id INT, INDEX datastore_id__idx (datastore_id), FOREIGN KEY (datastore_id) REFERENCES datastore (id) ON DELETE CASCADE,
+    capacity VARCHAR(45),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.164862
+CREATE TABLE snapshot(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    datastore_id INT, INDEX datastore_id__idx (datastore_id), FOREIGN KEY (datastore_id) REFERENCES datastore (id) ON DELETE CASCADE,
+    path VARCHAR(255) NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.290129
+CREATE TABLE task_queue(
+    id INT AUTO_INCREMENT NOT NULL,
+    task_type VARCHAR(30) NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    priority INT NOT NULL DEFAULT 1,
+    status INT NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.382189
+CREATE TABLE task_queue_event(
+    id INT AUTO_INCREMENT NOT NULL,
+    task_id INT NOT NULL,
+    task_type VARCHAR(30) NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    status INT NOT NULL,
+    error VARCHAR(255),
+    start_time DATETIME,
+    attention_time DATETIME,
+    end_time DATETIME,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.464336
+CREATE TABLE vlan_map(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.547446
+CREATE TABLE vnc_server(
+    id INT AUTO_INCREMENT NOT NULL,
+    ip_addr VARCHAR(15) NOT NULL,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.639171
+CREATE TABLE vnc_access(
+    id INT AUTO_INCREMENT NOT NULL,
+    vm_id INT, INDEX vm_id__idx (vm_id), FOREIGN KEY (vm_id) REFERENCES vm_data (id) ON DELETE CASCADE,
+    vnc_server_id INT, INDEX vnc_server_id__idx (vnc_server_id), FOREIGN KEY (vnc_server_id) REFERENCES vnc_server (id) ON DELETE CASCADE,
+    vnc_proxy_port INT NOT NULL,
+    duration INT,
+    time_requested DATETIME,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.789458
+CREATE TABLE scheduler_task(
+    id INT AUTO_INCREMENT NOT NULL,
+    application_name VARCHAR(255),
+    task_name VARCHAR(255),
+    group_name VARCHAR(255),
+    status VARCHAR(255),
+    function_name VARCHAR(255),
+    uuid VARCHAR(255) UNIQUE,
+    args LONGTEXT,
+    vars LONGTEXT,
+    enabled CHAR(1),
+    start_time DATETIME,
+    next_run_time DATETIME,
+    stop_time DATETIME,
+    repeats INT,
+    retry_failed INT,
+    period INT,
+    timeout INT,
+    sync_output INT,
+    times_run INT,
+    times_failed INT,
+    last_run_time DATETIME,
+    assigned_worker_name VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.898296
+CREATE TABLE scheduler_run(
+    id INT AUTO_INCREMENT NOT NULL,
+    task_id INT, INDEX task_id__idx (task_id), FOREIGN KEY (task_id) REFERENCES scheduler_task (id) ON DELETE CASCADE,
+    status VARCHAR(255),
+    start_time DATETIME,
+    stop_time DATETIME,
+    run_output LONGTEXT,
+    run_result LONGTEXT,
+    traceback LONGTEXT,
+    worker_name VARCHAR(255),
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!
+timestamp: 2013-07-01T18:02:22.990995
+CREATE TABLE scheduler_worker(
+    id INT AUTO_INCREMENT NOT NULL,
+    worker_name VARCHAR(255) UNIQUE,
+    first_heartbeat DATETIME,
+    last_heartbeat DATETIME,
+    status VARCHAR(255),
+    is_ticker CHAR(1),
+    group_names LONGTEXT,
+    PRIMARY KEY(id)
+) ENGINE=InnoDB CHARACTER SET utf8;
+success!

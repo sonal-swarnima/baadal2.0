@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    from gluon import *  # @UnusedWildImport
-###################################################################################
+
 import os
 from gluon import current  # @Reimport
 
