@@ -17,101 +17,10 @@ logger = current.logger
 TASK_QUEUE_STATUS_SUCCESS = current.TASK_QUEUE_STATUS_SUCCESS
 TASK_QUEUE_STATUS_FAILED = current.TASK_QUEUE_STATUS_FAILED
 HOST_STATUS_UP = current.HOST_STATUS_UP
-HOST_STATUS_DOWN = current.HOST_STATUS_DOWN
+VM_STATUS_RUNNING = current.VM_STATUS_RUNNING
+VM_STATUS_SUSPENDED = current.VM_STATUS_SUSPENDED
+VM_STATUS_SHUTDOWN = current.VM_STATUS_SHUTDOWN
 
-# Function to start a vm
-def start(vm_id):
-    vm_details = db(db.vm_data.id == vm_id).select().first()
-    logger.debug(str(vm_details))
-    try:
-        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        dom = conn.lookupByName(vm_details.vm_name)
-        if dom != 'None':
-            dom.create()
-            message = vm_details.vm_name + " is started successfully." 
-            return (TASK_QUEUE_STATUS_SUCCESS, message)
-        else:
-            message = vm_details.vm_name + "does not exist."
-            return (TASK_QUEUE_STATUS_FAILED, message)
-    except:
-        message = "Connection with host could not be established."
-        return(TASK_QUEUE_STATUS_FAILED, message)
-
-# Function to suspend a vm
-def suspend(vmid):
-    vm_details = db(db.vm_data.id == vmid).select().first()
-    logger.debug(str(vm_details))
-    try:
-        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        dom = conn.lookupByName(vm_details.vm_name)
-        if dom != 'None':
-            dom.suspend()
-            message = vm_details.vm_name + " is suspended successfully." 
-            logger.debug(message)
-            return (TASK_QUEUE_STATUS_SUCCESS, message)
-        else:
-            message = vm_details.vm_name + "does not exist."
-            return (TASK_QUEUE_STATUS_FAILED, message)
-    except:
-        message = "Connection with host could not be established."
-        return(TASK_QUEUE_STATUS_FAILED, message)
-
-# Function to resume a vm
-def resume(vmid):
-    vm_details = db(db.vm_data.id == vmid).select().first()
-    logger.debug(str(vm_details))
-    try:
-        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        dom = conn.lookupByName(vm_details.vm_name)
-        if dom != 'None':
-            dom.resume()
-            message = vm_details.vm_name + " is resumed successfully."
-            logger.debug(message)
-            return (TASK_QUEUE_STATUS_SUCCESS, message)
-        else:
-            message = vm_details.vm_name + "does not exist."
-            return (TASK_QUEUE_STATUS_FAILED, message)
-    except:
-        message = "Connection with host could not be established."
-        return(TASK_QUEUE_STATUS_FAILED, message)
-
-# Function to destroy forcefully
-def destroy(vmid):
-    vm_details = db(db.vm_data.id == vmid).select().first()
-    logger.debug(str(vm_details))
-    try:
-        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        dom = conn.lookupByName(vm_details.vm_name)
-        if dom != 'None':
-            dom.destroy()
-            message = vm_details.vm_name + " is destroyed successfully."
-            logger.debug(message)
-            return (TASK_QUEUE_STATUS_SUCCESS, message)
-        else:
-            message = vm_details.vm_name + "does not exist."
-            return (TASK_QUEUE_STATUS_FAILED, message)
-    except:
-        message = "Connection with host could not be established."
-        return(TASK_QUEUE_STATUS_FAILED, message)
-        
-#Function to delete a vm
-def delete(vmid):
-    vm_details = db(db.vm_data.id == vmid).select().first()
-    logger.debug(str(vm_details))
-    try:
-        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id + "/system")
-        dom = conn.lookupByName(vm_details.vm_name)
-        if dom != 'None':
-            dom.undefine()
-            message = vm_details.vm_name + " is deleted successfully."
-            logger.debug(message)
-            return (TASK_QUEUE_STATUS_SUCCESS, message)
-        else:
-            message = vm_details.vm_name + "does not exist."
-            return (TASK_QUEUE_STATUS_FAILED, message)
-    except:
-        message = "Connection with host could not be established."
-        return(TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to check if vm name already exists
 def check_vm_name_exist(vmname):
@@ -204,7 +113,7 @@ def find_new_host(runlevel,RAM,vCPU):
     if host_selected != None:
         return host_selected
     else:
-        log.error("No active host is available for a new vm.")
+        logger.error("No active host is available for a new vm.")
         raise
 
 # Function to find vm configuration ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
@@ -240,9 +149,10 @@ def exec_command_on_host(machine_ip, user_name, command):
     ssh.connect(machine_ip, username = user_name)
     stdin,stdout,stderr = ssh.exec_command(command)
     logger.debug(stdout.readlines())
-    if stderr.readlines():
-        logger.error(stderr.readlines())
-        raise
+    logger.error(stderr.readlines())
+    #if stderr.readlines():
+    #logger.error(stderr.readlines())
+    #raise
     return
     
 
@@ -380,7 +290,7 @@ def generate_xml(diskpath,target_disk):
     root_element = etree.Element('disk',attrib = {'type':'file','device':'disk'})
     etree.SubElement(root_element, 'driver',attrib = {'name':'qemu','cache':'none'})
     etree.SubElement(root_element, 'source', attrib = {'file':diskpath})
-    etree.SubElement(root_element, 'target', attrib = {'dev': target_device})
+    etree.SubElement(root_element, 'target', attrib = {'dev': target_disk})
     return (etree.tostring(root_element))
     
 
@@ -492,7 +402,7 @@ def install(vmid):
                                                     current_run_level = 3, \
                                                     last_run_level = 3,\
                                                     total_cost = 0, \
-                                                    status = 2 )
+                                                    status = VM_STATUS_RUNNING)
                                     
                     """
                     # Serving HDD request
@@ -523,10 +433,92 @@ def install(vmid):
         except Exception as e:
             import traceback
             etype, value, tb = sys.exc_info()
-            msg = ''.join(traceback.format_exception(etype, value, tb, 10))
+            message = ''.join(traceback.format_exception(etype, value, tb, 10))
             logger.error("Exception")
-            logger.error(e)
-            message = "Check logs for error"
+            logger.error(message)
+            #message = "Check logs for error"
             return (TASK_QUEUE_STATUS_FAILED, message)
+
+# Function to start a vm
+def start(vm_id):
+    vm_details = db(db.vm_data.id == vm_id).select().first()
+    try:
+        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        dom = conn.lookupByName(vm_details.vm_name)
+        dom.create()
+        db(db.vm_data.id == vmid).update(status = VM_STATUS_RUNNING)  
+        message = vm_details.vm_name + " is started successfully." 
+        return (TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return(TASK_QUEUE_STATUS_FAILED, message)
+
+# Function to suspend a vm
+def suspend(vmid):
+    vm_details = db(db.vm_data.id == vmid).select().first()
+    try:
+        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        dom = conn.lookupByName(vm_details.vm_name)
+        dom.suspend()
+        db(db.vm_data.id == vmid).update(status = VM_STATUS_SUSPENDED)       
+        message = vm_details.vm_name + " is suspended successfully." 
+        logger.debug(message)       
+        return (TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return(TASK_QUEUE_STATUS_FAILED, message)
+
+# Function to resume a vm
+def resume(vmid):
+    vm_details = db(db.vm_data.id == vmid).select().first()
+    try:
+        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        dom = conn.lookupByName(vm_details.vm_name)
+        dom.resume()
+        db(db.vm_data.id == vmid).update(status = VM_STATUS_RUNNING) 
+        message = vm_details.vm_name + " is resumed successfully."
+        logger.debug(message)
+        return (TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return(TASK_QUEUE_STATUS_FAILED, message)
+
+# Function to destroy a vm forcefully
+def destroy(vmid):
+    vm_details = db(db.vm_data.id == vmid).select().first()
+    logger.debug(str(vm_details))
+    try:
+        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        dom = conn.lookupByName(vm_details.vm_name)
+        dom.destroy()
+        db(db.vm_data.id == vmid).update(status = VM_STATUS_SHUTDOWN) 
+        message = vm_details.vm_name + " is destroyed successfully."
+        return (TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return(TASK_QUEUE_STATUS_FAILED, message)
+        
+#Function to delete a vm
+def delete(vmid):
+    vm_details = db(db.vm_data.id == vmid).select().first()
+    logger.debug(str(vm_details))
+    try:
+        conn = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        dom = conn.lookupByName(vm_details.vm_name)
+        vm_status = dom.info()[0]
+        if (vm_status == 1 | vm_status == 3):
+            dom.destroy()
+        dom.undefine()
+        message = vm_details.vm_name + " is deleted successfully."
+        archive_filename = vm_details.vm_name + str(get_datetime())
+        logger.debug(archive_filename)
+        command = 'mv ' + '/mnt/testdatastore/' + vm_details.vm_name + ' ' + '/mnt/testdatastore/vm_archives/' + archive_filename
+        exec_command_on_host(vm_details.host_id.host_ip,'root',command)
+        return (TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return(TASK_QUEUE_STATUS_FAILED, message)
+
+
 
 

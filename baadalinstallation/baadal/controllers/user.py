@@ -109,6 +109,16 @@ def pause_machine():
     redirect_listvm()
 
 @auth.requires_login()     
+def delete_machine():
+    try:
+        vm_id = request.args[0]
+        vm_permission_check(vm_id)        
+        add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
+    except:
+        exp_handlr_errorpage()
+    redirect_listvm()
+
+@auth.requires_login()     
 #Adjust the run level of the virtual machine
 def adjrunlevel():
     try:

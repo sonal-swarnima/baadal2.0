@@ -24,13 +24,13 @@
 		<h4>Commands</h4>
 		<table>
 		<tr>
-			 {{ if(data['status'] == VM_STATUS_SUSPENDED): }}
+			 {{ if(data['status'] == VM_STATUS_SHUTDOWN): }}
 	<td>		{{=A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
                	 	_href=URL(r=request, f='start_machine', args=[data['id']]), 
                 	_title="Turn on this virtual machine",
                 	_alt="Turn on this virtual machine")}}
           </td>		{{ pass }}
-          {{ if(data['status'] == VM_STATUS_PAUSED): }}
+          {{ if(data['status'] == VM_STATUS_SUSPENDED): }}
 	<td>
               {{=A(IMG(_src=URL('static','images/play2.png'), _height=20, _width=20),
                 _href=URL(r=request, f='resume_machine', args=[data['id']]), 
@@ -47,14 +47,14 @@
                     _alt="Pause this virtual machine")}}
         </td>  {{ pass }}
 
-          {{ if(not data['status'] == VM_STATUS_SUSPENDED): }}
+          {{ if(not data['status'] == VM_STATUS_SHUTDOWN): }}
 	<td>{{=A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
                     _href=URL(r=request, f='shutdown_machine', args=[data['id']]), 
                     _title="Gracefully shut down this virtual machine",
                     _alt="Gracefully shut down this virtual machine")}}
          </td> {{ pass }}
 
-          {{ if((data['status'] == VM_STATUS_RUNNING) or (data['status'] == VM_STATUS_PAUSED)): }}
+          {{ if((data['status'] == VM_STATUS_RUNNING) or (data['status'] == VM_STATUS_SUSPENDED)): }}
           <td>    {{=A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
                     _href=URL(r=request, f='destroy_machine', args= [data['id']]), 
                     _title="Forcefully power off this virtual machine",
