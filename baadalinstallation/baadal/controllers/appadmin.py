@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
+###################################################################################
+# Added to enable code completion in IDE's.
+if 0:
+    from gluon import *  # @UnusedWildImport
+    from gluon import request,response,session,T,cache
+    from gluon.sql import GQLDB,SQLDB
+###################################################################################
 
 # ##########################################################
 # ## make sure administrator is on localhost
 # ###########################################################
 
-import os
-import socket
-import datetime
 import copy
+import datetime
 import gluon.contenttype
 import gluon.fileutils
+import os
+import socket
 
 # ## critical --- make a copy of the environment
 
@@ -307,10 +314,10 @@ def ccache():
             clear_disk = True
             
         if clear_ram:
-            cache.ram.clear()
+            cache.ram.clear()  # @UndefinedVariable
             session.flash += "Ram Cleared "
         if clear_disk:
-            cache.disk.clear()
+            cache.disk.clear()  # @UndefinedVariable
             session.flash += "Disk Cleared"
             
         redirect(URL(r=request))
@@ -334,7 +341,7 @@ def ccache():
     disk = copy.copy(ram)
     total = copy.copy(ram)
     
-    for key, value in cache.ram.storage.items():
+    for key, value in cache.ram.storage.items():  # @UndefinedVariable @UnusedVariable
         if isinstance(value, dict):
             ram['hits'] = value['hit_total'] - value['misses']
             ram['misses'] = value['misses']

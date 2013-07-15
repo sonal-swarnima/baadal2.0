@@ -1,7 +1,7 @@
 {{extend 'layout.html'}}
 
 <div class="post">
-	<h1 class="title">{{=T('Request VM')}}</h1>
+	<h2 class="subtitle">{{=T('Request VM')}}</h2>
 	<div class="entry">
 		{{=form}}
 	</div>
@@ -13,6 +13,7 @@ jQuery(document).ready(function(){
     jQuery('#vm_data_purpose__row').hide();
     jQuery('#vm_data_HDD__row').hide();
     jQuery('[id^=config_row__]').hide();
+    jQuery('#faculty_row').hide();
 
 	template_check()
 });
@@ -28,18 +29,44 @@ function template_check() {
 	   jQuery('#vm_data_purpose__row').hide();
 	   jQuery('#vm_data_HDD__row').hide();
 	   jQuery('[id^=config_row__]').hide();
+       jQuery('#faculty_row').hide();
 	}
 	else if(jQuery('#config_row__'+_value).length != 0){
 	   jQuery('#vm_data_purpose__row').show();
 	   jQuery('#vm_data_HDD__row').show();
 	   jQuery('[id^=config_row__]').hide();
 	   jQuery('#config_row__'+_value).show();
+       jQuery('#faculty_row').show();
 	}
 	else{
 	   jQuery('#vm_data_purpose__row').show();
 	   jQuery('#vm_data_HDD__row').show();
 	   jQuery('[id^=config_row__]').hide();
 	   jQuery('#config_row__0').show();
+       jQuery('#faculty_row').show();
 	}
   }
+  
+  function verify_faculty() {
+  	var verify_url = "{{=URL('verify_faculty')}}";
+  	var faculty_user = jQuery('#faculty_user').val();
+  	jQuery.post(verify_url, {keywords:faculty_user},
+  		function(result){
+  			faculty_info = result;
+  			if(result != 'None'){
+  				jQuery('[name="user_name"]').val(faculty_user);
+				jQuery('#faculty_user').val(faculty_info);
+			}else
+			{
+  				jQuery('[name="user_name"]').val('');
+				jQuery('.flash').html('Faculty Approver Username is not valid').slideDown();
+			}
+		}
+	);
+
+  }
+
+jQuery('form').submit(function(){
+});
+
 </script>

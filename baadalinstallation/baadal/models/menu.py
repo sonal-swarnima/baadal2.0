@@ -14,7 +14,7 @@ response.google_analytics_id = None
 
 response.top_menu = [
     (T('About'), False, URL('default','index')),
-    (T('Blog'), False, URL('default','page_under_construction.html')),
+    (T('Blog'), False, URL('default','test')),
     (T('Photos'), False, URL('default','page_under_construction.html')),
     (T('Team Baadal'), False, URL('default','page_under_construction.html')),
     (T('Contact'), False, URL('default','page_under_construction.html'))
@@ -32,7 +32,7 @@ if auth.is_logged_in():
     if (is_moderator() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False,None),
-            (T('Pending Requests'), False, URL('default','page_under_construction.html')),
+            (T('Pending Requests'), False, URL('faculty','pending_requests')),
             (T('Add User to VM'), False, URL('default','page_under_construction.html'))
             ]
         

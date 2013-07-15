@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import auth,request,session,response
+    from gluon import auth,request,session
     import gluon
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
@@ -15,14 +15,18 @@ def request_vm():
     form = get_request_vm_form()
     
     # After validation, read selected configuration and set RAM, CPU and HDD accordingly
-    if form.accepts(request.vars, session, onvalidation=set_configuration_elem):
-        add_user_to_vm(form.vars.id)
+    if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         logger.debug('VM requested successfully')
         
-        #TODO:Approve functionality to be implemented
-        approve_vm_request(form.vars.id)
         redirect(URL(c='default', f='index'))
     return dict(form=form)
+
+def verify_faculty():
+
+    username = request.vars.keywords
+    faculty_info = get_faculty_info(username)
+    if faculty_info != None:
+        return faculty_info[1]
 
 @auth.requires_login()
 def list_my_vm():
@@ -66,7 +70,7 @@ def start_machine():
         add_vm_task_to_queue(vm_id,TASK_TYPE_START_VM)
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
 
 @auth.requires_login()
 def shutdown_machine():
@@ -76,7 +80,7 @@ def shutdown_machine():
         add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
 
 @auth.requires_login()     
 def destroy_machine():
@@ -86,7 +90,7 @@ def destroy_machine():
         add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
 
 @auth.requires_login()             
 def resume_machine():
@@ -96,17 +100,7 @@ def resume_machine():
         add_vm_task_to_queue(vm_id,TASK_TYPE_RESUME_VM)        
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
-
-@auth.requires_login()     
-def pause_machine():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
 
 @auth.requires_login()     
 def delete_machine():
@@ -116,7 +110,17 @@ def delete_machine():
         add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
+
+@auth.requires_login()     
+def pause_machine():
+    try:
+        vm_id=request.args[0]
+        vm_permission_check(vm_id)        
+        add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
+    except:
+        exp_handlr_errorpage()
+    redirect_list_vm()
 
 @auth.requires_login()     
 #Adjust the run level of the virtual machine
@@ -137,7 +141,7 @@ def clonevm():
         return dict(vm=vminfo)
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
 
 @auth.requires_login()
 def changelevel():
@@ -147,17 +151,25 @@ def changelevel():
         add_vm_task_to_queue(vm_id,TASK_TYPE_CHANGELEVEL_VM)        
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect_list_vm()
     
 def vm_permission_check(vm_id):
     vminfo = get_vm_info(vm_id)
     if vminfo == None:
         session.vm_status = "No such vm exists any more"        
-        redirect_listvm()
+        redirect_list_vm()
     else:
         if (not is_moderator()): #moderator has access rights on all vms 
             if auth.user.id not in get_vm_user_list(vm_id): 
                 session.vm_status = "Not authorized"
-                response.flash="Not authorized"
-                redirect_listvm()
+                session.flash="Not authorized"
+                redirect_list_vm()
     return vminfo    
+
+
+def redirect_list_vm():
+    if (session.prev_url != None):
+        redirect(URL(r=request,f=session.prev_url))
+    else :
+        redirect(URL(r=request,c='user',f='list_my_vm'))
+        

@@ -31,6 +31,7 @@ auth = Auth(db)
 from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
+current.auth_type = config.get("AUTH_CONF","auth_type")
 
 ## configure custom auth tables
 auth.settings.table_user_name = 'user'
@@ -55,7 +56,8 @@ db.define_table(
     Field('block_user', 'boolean', default = False, notnull = True, writable = False, readable = False),
     Field('registration_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('reset_password_key', length = 512, writable = False, readable = False, default = ''), # required
-    Field('registration_id', length = 512, writable = False, readable = False, default = '')) # required
+    Field('registration_id', length = 512, writable = False, readable = False, default = ''),
+    format = '%(username)s') # required
 
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
@@ -79,7 +81,7 @@ auth.settings.table_membership = db.define_table(
 ###############################################################################
 auth.define_tables(username = True)
 ###############################################################################
-if config.get("AUTH_CONF","auth_type") == 'ldap':
+if current.auth_type == 'ldap':
     from gluon.contrib.login_methods.pam_auth import pam_auth
     auth.settings.login_methods = [pam_auth()]
     auth.settings.login_onaccept = [login_ldap_callback]  
@@ -120,12 +122,13 @@ db.define_table('template',
 
 db.define_table('vm_data',
     Field('vm_name', 'string',length = 512,notnull = True, unique = True),
-    Field('user_id', db.user),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),
     Field('vCPU', 'integer'),
     Field('template_id', db.template),
+    Field('requester_id',db.user),
+    Field('owner_id', db.user),
     Field('vm_ip', 'string',length = 15),
     Field('vnc_port', 'integer'),
     Field('mac_addr', 'string',length = 100),
@@ -148,14 +151,15 @@ db.define_table('user_vm_map',
     primarykey = ['user_id', 'vm_id'])
 
 db.define_table('vm_data_event',
-    Field('vm_id', db.vm_data),
+    Field('vm_id', 'integer'),
     Field('vm_name', 'string',length = 512,notnull = True),
-    Field('user_id', db.user),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),
     Field('vCPU', 'integer'),
     Field('template_id', db.template),
+    Field('requester_id',db.user),
+    Field('owner_id', db.user),
     Field('vm_ip', 'string',length = 15),
     Field('vnc_port', 'integer'),
     Field('mac_addr', 'string',length = 100),

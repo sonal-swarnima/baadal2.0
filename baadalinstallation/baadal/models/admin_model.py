@@ -3,11 +3,10 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import response,db
+    from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import paramiko
-from helper import get_fullname,is_moderator
+from helper import get_fullname, get_datetime
 
 def get_add_template_form():
     form_fields = ['name','os_type','arch','hdd','hdfile','type','datastore_id']
@@ -24,31 +23,54 @@ def get_add_datastore_form():
     return form
 
 def get_all_vm_list():
-    vms = db(db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)).select()
+    vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
     return get_vm_list(vms)
 
 def get_all_vm_ofhost(hostid):
-    vms = db((db.vm_data.status != (VM_STATUS_REQUESTED|VM_STATUS_APPROVED)) & (db.vm_data.host_id == hostid )).select()
+    vms = db((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id == hostid )).select()
     return get_vm_list(vms)
 
 def get_vm_list(vms):
     vmlist = []
     for vm in vms:
         total_cost = add_to_cost(vm.vm_name)
-        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.owner_id), 'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
         vmlist.append(element)
     return vmlist
+
+def add_to_cost(vm_name):
+    vm = db(db.vm_data.vm_name==vm_name).select()[0]
+
+    oldtime = vm.start_time
+    newtime = get_datetime()
+    
+    if(oldtime==None):oldtime=newtime
+    #Calculate hour difference between start_time and current_time
+    hours  = ((newtime - oldtime).total_seconds()) / 3600
+    
+    if(vm.current_run_level==0):scale=0
+    elif(vm.current_run_level==1):scale=1
+    elif(vm.current_run_level==2):scale=.5
+    elif(vm.current_run_level==3):scale=.25
+
+    totalcost = float(hours*(vm.vCPU*float(COST_CPU)+vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
+    db(db.vm_data.vm_name == vm_name).update(start_time=get_datetime(),total_cost=totalcost)
+    return totalcost
+
+def approve_vm_request(vm_id):
+    
+    db(db.vm_data.id == vm_id).update(status=VM_STATUS_APPROVED)
+    
+    vm_data = db(db.vm_data.id == vm_id).select()
+    add_user_to_vm(vm_data.owner_id, vm_id)
+    add_user_to_vm(vm_data.requester_id, vm_id)
+    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM)
 
 def delete_user_vm_access(vm_id,user_id) :    
     db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()        
 
 def update_vm_lock(vminfo,flag) :
         db(db.vm_data.id == vminfo.id).update(locked = flag)
-
-def check_moderator() :
-    if not is_moderator() :
-        response.flash = "You don't have admin privileges"
-        redirect_listvm() # @ user_models.py
 
 def get_all_hosts() :
     return db().select(db.host.ALL) 
@@ -121,7 +143,6 @@ def is_host_available(host_ip):
     except:
         return False
 
-# TODO: rewrite the implementation
 def get_mac_address(host_ip):
     command = "ifconfig -a | grep eth0 | head -n 1"
     ret = exec_command_on_host(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
@@ -129,13 +150,11 @@ def get_mac_address(host_ip):
     mac_addr = ret[ret.rindex(' '):].lstrip()
     return mac_addr
 
-# TODO: rewrite the implementation
 def get_cpu_num(host_ip):
     command = "cat /proc/cpuinfo | grep processor | wc -l"
     ret = exec_command_on_host(host_ip, 'root',command)
     return int(ret)/2
     
-# TODO: rewrite the implementation
 def get_ram(host_ip):
     command = "cat /proc/meminfo | grep MemTotal"
     ret = exec_command_on_host(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
@@ -146,10 +165,12 @@ def get_ram(host_ip):
 def exec_command_on_host(machine_ip, user_name, command):
 
     logger.debug("Starting to establish SSH connection with host" + str(machine_ip))
+    import paramiko
+
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(machine_ip, username = user_name)
-    stdin,stdout,stderr = ssh.exec_command(command)
+    stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
     output = stdout.readlines()
     logger.debug(output)
     if stderr.readlines():

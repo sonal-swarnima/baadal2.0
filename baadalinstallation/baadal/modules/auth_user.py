@@ -14,14 +14,16 @@ def login_callback(form):
 
 def login_ldap_callback(form):
     if current.auth.is_logged_in():
-        if current.db(current.db.user.username==current.auth.user.username).select(current.db.user.last_name)[0]['last_name'] == "": 
-            fetch_ldap_user(current.auth.user.username)
+        user_name = current.auth.user.username
+        if current.db(current.db.user.username==user_name).select(current.db.user.last_name)[0]['last_name'] == "": 
+            result = fetch_ldap_user(user_name)
+            create_or_update_user(user_name, result[0], result[1], result[2], result[3], True)
 
     
 def add_group_test():
     member = current.db(current.db.user_membership.user_id==current.auth.user.id).select().first()
     if not member:
-        add_membership_db('admin')
+        add_membership_db(current.auth.user.id, 'admin', True)
 
 
 def fetch_ldap_user(username):
@@ -41,7 +43,7 @@ def fetch_ldap_user(username):
     searchFilter="uid="+username
     _first_name=''
     _last_name=''
-    _email=''
+    _email=None
     is_faculty=False
 
     try:
@@ -62,32 +64,54 @@ def fetch_ldap_user(username):
                                 else:
                                     _last_name = vals[0][vals[0].index(' '):].lstrip()
                             if k == 'altEmail':
-                                _email=vals[0]
-                            if k == 'category':
-                                if vals[0] == 'faculty':
+                                if vals[0] != 'none':
+                                    _email=vals[0]
+                            if k == 'homeDirectory':
+                                try:
+                                    vals[0].index('/faculty/')
                                     is_faculty=True
+                                except:
+                                    is_faculty=False
     except ldap.LDAPError, e:
         logger.error(e)
 
     if(_first_name != ''):
-        current.db(current.db.user.username==current.auth.user.username).update(
-                                                                                first_name=_first_name,
-                                                                                last_name=_last_name,
-                                                                                email=_email)
-        add_user_membership(is_faculty, config)
-        
-def add_user_membership(is_faculty, config):
-
-    admin_users = config.get("GENERAL_CONF","admin_uid")
-    if current.auth.user.username in admin_users:
-        add_membership_db('admin')
+        return(_first_name, _last_name, _email, is_faculty)
     else:
-        if is_faculty:
-            add_membership_db('faculty')
-        else:
-            add_membership_db('user')
+        return None
+        
+#This method is called only when user logs in for the first time
+#or when faculty name is verified on 'request VM' screen
+def create_or_update_user(user_name, first_name, last_name, email, is_faculty, update_session):
 
-def add_membership_db(role):
+    user = current.db(current.db.user.username==user_name).select().first()
+    if not user:
+        #create user
+        user = current.db.user.insert(username=user_name, registration_id=user_name)
+    
+    current.db(current.db.user.username==user_name).update(first_name = first_name,
+                                                          last_name = last_name,
+                                                          email = email)
+    add_user_membership(user.id, user_name, is_faculty, update_session)   
+
+def add_user_membership(user_id, user_name, is_faculty, update_session):
+    
+    config = get_config_file()
+    admin_users = config.get("GENERAL_CONF","admin_uid")
+
+    if user_name in admin_users:
+        add_membership_db(user_id, 'admin', update_session)
+
+    if is_faculty:
+        add_membership_db(user_id, 'faculty', update_session)
+    elif user_name not in admin_users:
+        add_membership_db(user_id, 'user', update_session)
+
+def add_membership_db(_user_id, role, update_session):
+    #Find the group_id for the given role
     _group_id = current.db(current.db.user_group.role==role).select(current.db.user_group.id).first()['id']
-    current.db.user_membership.insert(user_id=current.auth.user.id,group_id=_group_id)
-    current.auth.user_groups[long(_group_id)]=role
+    if _group_id !=0:
+        current.db.user_membership.insert(user_id=_user_id,group_id=_group_id)
+        if update_session:
+            # add role to the current session
+            current.auth.user_groups[long(_group_id)]=role

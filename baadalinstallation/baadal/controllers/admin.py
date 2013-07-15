@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import auth,request,response,session
+    from gluon import auth,request,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
@@ -53,7 +53,7 @@ def host_details():
         session.flash='Check the details'
         redirect(URL(c='admin', f='add_host',args=form.vars.host_ip))
     elif form.errors:
-        response.flash='Error in form'
+        session.flash='Error in form'
         
     return dict(form=form,hosts=results)
         
@@ -69,7 +69,7 @@ def add_host():
             session.flash='New Host added'
             if_redirect = True
         elif form.errors:
-            response.flash='Error in form'
+            session.flash='Error in form'
     except:
         exp_handlr_errorpage()
     if if_redirect :
@@ -97,7 +97,7 @@ def delete_user_vm():
         vm_id=request.args[0]
         user_id=request.args[1]
         delete_user_vm_access(vm_id,user_id)				
-        response.flash = 'User access is eradicated.'
+        session.flash = 'User access is eradicated.'
     except:
         exp_handlr_errorpage()	
     redirect(URL(r=request,c='user',f='settings', args=[vm_id]))
@@ -121,7 +121,7 @@ def lockvm():
         else:
             update_vm_lock(vm_id,False)
             session.flash = "Lock Released. Start VM yourself."
-        redirect_listvm()
+        redirect(URL(r=request,c='admin',f='list_all_vm'))
     except:
         exp_handlr_errorpage()    
 
@@ -166,19 +166,26 @@ def delete_machine():
         add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)
     except:
         exp_handlr_errorpage()
-    redirect_listvm()
+    redirect(URL(r=request,c='admin',f='list_all_vm'))
 
 @auth.requires_login()	
 def edit_vmconfig():
     check_moderator()
-    request.flash="Has to be implemented"
+    session.flash="Has to be implemented"
 
 @auth.requires_login()	
 def mailToGUI():
     check_moderator()
-    request.flash="Has to be implemented"
+    session.flash="Has to be implemented"
 
 @auth.requires_login()    
 def add_disk():
     check_moderator()
-    request.flash="Has to be implemented"
+    session.flash="Has to be implemented"
+
+def check_moderator() :
+    from helper import is_moderator
+    if not is_moderator() :
+        session.flash = "You don't have admin privileges"
+        redirect(URL(c='default', f='index'))
+

@@ -1,8 +1,8 @@
 {{extend 'layout.html'}}
 {{if not hosts:}}
-<center><h4>No Machines There Yet.</h4></center>
+<center><h4>No Host Configured Yet.</h4></center>
 {{else:}}
-<h1 class="title">{{=T('Host Details')}}</h1>
+<h2 class="subtitle">{{=T('Host Details')}}</h2>
 <div class="TABLE">
   <table>
       <tr>
@@ -67,7 +67,9 @@
       </tr>
   {{pass}}
   </table>
-{{pass}}
 </div>
+{{pass}}
+<br/>
+<br/>
 <h2 class="subtitle">Add New Host</h2>
 {{=form}}
