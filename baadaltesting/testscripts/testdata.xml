@@ -1,0 +1,239 @@
+<?xml version= "1.0"?>
+<test_scripts>
+	<test_script1 id="login_test" url="http://10.208.21.111/baadal" href="Login" query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC"  name ="login_test">
+		<test_case1 value="Checking for empty fields">
+			<user_name id="user_username" type="input"></user_name>
+			<password id="user_password" type="input"></password>
+			<submit type="submit">//input[@type='submit']</submit>
+		</test_case1>
+
+		<test_case2  value="Checking for invalid user name and invalid password">
+			<user_name id="user_username" type="input">monika</user_name>
+			<password id="user_password" type="input">monika</password>
+			<submit type="submit">//input[@type='submit']</submit>
+		</test_case2>
+
+		<test_case3  value="Checking for invalid password and valid user name">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">monika</password>
+			<submit type="submit">//input[@type='submit']</submit>
+		</test_case3>
+
+		<test_case4  value="Checking for  invalid user name and valid password">
+			<user_name id="user_username" type="input">monika</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+		</test_case4>
+
+		<test_case5  value="Checking for bad data">
+			<user_name id="user_username" type="input">baddadrvcgbhhncuygfeygfbrywertyuigfbgta</user_name>
+			<password id="user_password" type="input">sadfgjunk,sdhjmngtqwertyuiofrvhjunmfdgtvhjnjk</password>
+			<submit type="submit">//input[@type='submit']</submit>
+		</test_case5> 
+	
+		<test_case6  value="Checking for correct inputs">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+		</test_case6>
+	</test_script1>
+
+  <test_script2 id="request_vm_test" url="https://10.208.21.111/baadal/default/index" href="Login"  query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC" name="request_vm" >
+
+		<test_case1  value="Checking for empty fields">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+
+			<vm_name type="input" id="vm_data_vm_name"></vm_name>
+			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case1>
+
+        <test_case2  value="Checking for empty template image">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+
+			<vm_name type="input" id="vm_data_vm_name"></vm_name>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case2>
+
+        	<test_case3  value="Checking for already existing vm name">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+
+			<vm_name type="input" id="vm_data_vm_name"></vm_name>
+			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case3>
+
+		<test_case4  value="Checking for unique vm name">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+
+			<vm_name type="input" id="vm_data_vm_name"></vm_name>
+			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case4>
+
+		<test_case5  value="Checking for bad data in additional hdd feild">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+
+			<vm_name type="input" id="vm_data_vm_name"></vm_name>
+			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<additional_hdd type="input" id="vm_data_HDD">11111111111111111111111111111111111111111111</additional_hdd>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case5>
+	
+		<test_case6  value="Checking for bad data in purpose feild">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+			<vm_name type="input" id="vm_data_vm_name">testing3</vm_name>
+			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<additional_hdd type="input" id="vm_data_HDD">11</additional_hdd>
+			<purpose type="input" id="vm_data_purpose">aaaaaaaaaaaaaaaaaaaaaaaaaaaaa</purpose>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case6>
+		
+		<test_case7  value="Checking for correct data">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+			<vm_name type="input" id="vm_data_vm_name"></vm_name>
+			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<additional_hdd type="input" id="vm_data_HDD">10</additional_hdd>
+			<purpose type="input" id="vm_data_purpose">ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd</purpose>
+			<submit type="button">//input[@type='submit']</submit>
+		</test_case7>
+
+	</test_script2>
+	<test_script3 id="list_all_vm" url="http://10.208.21.111/baadal" href="Login" query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC" query3="SELECT vm_data.vm_name  FROM vm_data JOIN user ON user.id= vm_data.user_id WHERE vm_data.status=2 OR vm_data.status=5 OR vm_data.status=3 " name="list_all_vm">
+		<test_case1 value="Checking for correct entries">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class" id="2"></vm_name>
+		</test_case1>
+		</test_script3>
+		<test_script4 id="list_my_vm" url="http://10.208.21.111/baadal" href="Login" query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC" query3="SELECT vm_data.vm_name FROM vm_data JOIN user ON user.id= vm_data.user_id WHERE (vm_data.status=2 OR vm_data.status=5 OR vm_data.status=3) AND user.username=%s" name="list_my_vm">
+		<test_case1 value="Checking for correct entries">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">List My VMs</list_vm>
+			<vm_name type="class" id="1"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Pause">//a[@title='Turn on this virtual machine']</setting>
+		</test_case1>
+		</test_script4>
+		
+		
+	<test_script5 id="setting" url="http://10.208.21.111/baadal" href="Login" query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC" query3="SELECT * FROM vm_data JOIN user ON user.id= vm_data.user_id WHERE vm_data.status=2 OR vm_data.status=5 OR vm_data.status=3" name="setting">
+		<test_case1 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Pause">//a[@title='Turn on this virtual machine']</setting>
+		</test_case1>
+		<test_case2 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Pause">//a[@title='Turn on this virtual machine']</setting>
+			<setting type="img" name="Resume">//a[@title='Turn on this virtual machine']</setting>
+		</test_case2>
+		<test_case3 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Adjust">//a[@title='Adjust your machines resource utilization]</setting>
+		</test_case3>
+		<test_case4 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Migrate">//a[@title='Migrate this virtual machine']</setting>
+		</test_case4>
+		<test_case5 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Request">//a[@title='Request Clone vm']</setting>
+		</test_case5>
+		<test_case6 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Lock">//a[@title='Lock VM']</setting>
+		</test_case6>
+		<test_case7 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Edit">//a[@title='Edit VM Config']</setting>
+		</test_case7>
+		<test_case8 value="Checking for all the images">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<vm_name type="class"></vm_name>
+			<setting type="img" name="Setting">//a[@title='Settings']</setting>
+			<setting type="img" name="Delete">//a[@title='Delete this virtual machine']</setting>
+		</test_case8>
+		</test_script5>
+		
+		<test_script6 id="host_and_vm" url="http://10.208.21.111/baadal" href="Login" query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC"  query3="select host_ip from host" query4="select host.host_ip,vm_data.vm_name from host join vm_data on vm_data.host_id=host.id" name="setting">
+		<test_case1 value="Checking for Host IP">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">Host and VMs</list_vm>
+			<host_ip type="tagname"></host_ip>
+		</test_case1>
+		</test_script6>
+		<test_script6 id="tasks" url="http://10.208.21.111/baadal" href="Login" query1="SELECT id FROM user where username=%s" query2="SELECT time_stamp,description FROM auth_event WHERE user_id=%s ORDER BY time_stamp DESC"  query3="select host_ip from host" query4="select host.host_ip,vm_data.vm_name from host join vm_data on vm_data.host_id=host.id" name="setting">
+		<test_case1 value="Checking for Host IP">
+			<user_name id="user_username" type="input">monikay</user_name>
+			<password id="user_password" type="input">sainijyoti</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">Tasks</list_vm>
+			<host_ip type="tagname"></host_ip>
+		</test_case1>
+		</test_script6>
+	</test_scripts> 
