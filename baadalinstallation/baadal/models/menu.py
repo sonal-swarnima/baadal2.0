@@ -40,6 +40,7 @@ if auth.is_logged_in():
             response.admin_menu = [
                 (H2('ADMIN MENU'),False,None),
                 (T('All VM''s'), False, URL('admin','list_all_vm')),
+                (T('Approve VM''s'), False, URL('admin','pending_requests')),
                 (T('Host and VMs'), False, URL('admin','hosts_vms')),
                 (T('Tasks'), False, URL('admin','task_list')),
                 (T('Sanity Check'), False, URL('default','page_under_construction.html')),

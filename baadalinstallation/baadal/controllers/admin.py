@@ -183,9 +183,34 @@ def add_disk():
     check_moderator()
     session.flash="Has to be implemented"
 
+@auth.requires_login()
+def pending_requests():
+    pending_requests = get_verified_vm_list()
+    return dict(pending_requests=pending_requests)
+        
+@auth.requires_login()
+def approve_request():
+    
+    vm_id=request.args[0]
+    check_moderator()
+    
+    approve_vm_request(vm_id);
+    session.flash = 'Request Approved'
+    redirect(URL(c='admin', f='pending_requests'))
+    
+@auth.requires_login()
+def reject_request():
+
+    vm_id=request.args[0]
+    check_moderator()
+
+    reject_vm_request(vm_id);
+    session.flash = 'Request Rejected'
+    redirect(URL(c='admin', f='pending_requests'))
+
+
 def check_moderator() :
     from helper import is_moderator
     if not is_moderator() :
         session.flash = "You don't have admin privileges"
         redirect(URL(c='default', f='index'))
-

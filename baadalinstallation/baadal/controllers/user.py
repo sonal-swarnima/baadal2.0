@@ -31,8 +31,10 @@ def verify_faculty():
 @auth.requires_login()
 def list_my_vm():
     try:       
-        vm_list = get_my_vm_list()
-        return dict(vmlist=vm_list)
+        pending_vm = get_my_pending_vm()
+        hosted_vm = get_my_hosted_vm()        
+        
+        return dict(pending_vm = pending_vm, hosted_vm = hosted_vm)
     except:
         exp_handlr_errorpage()
 

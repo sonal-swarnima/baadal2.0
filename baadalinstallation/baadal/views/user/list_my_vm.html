@@ -1,8 +1,39 @@
 {{extend 'layout.html'}}
+
+{{if not pending_vm:}}
+<h2 class="subtitle">No Pending Requests</h2>
+    {{else:}}
+<h2 class="subtitle">Pending Requests</h2>
+  <div class="TABLE">
+    <table>
+      <tr>
+        <th>VM Name</th>
+        <th>RAM</th>
+        <th>Faculty</th>
+        <th>HDD</th>
+        <th>vCPUs</th>
+        <th>Status</th>
+      </tr> 
+      {{for vm in pending_vm:}}
+       <tr>
+            <td>{{=vm['vm_name']}}</td>
+            <td>{{=vm['RAM']}}</td>
+            <td>{{=vm['faculty_name']}}</td>
+            <td>{{=vm['HDD']}}</td>
+            <td>{{=vm['vCPUs']}}</td>
+            <td>
+            </td>
+          </tr>
+      {{pass}}
+    </table>
+    </div>
+{{pass}}
+<br/>
+<br/>
 {{
-  if not vmlist:
+  if not hosted_vm:
 }}
-<center><h3>No VM running</h3></center>
+<h2 class="subtitle">No VM Running</h2>
 {{else:}}
 <h2 class="subtitle">{{=T('My VMs')}}</h2>
 <div class="TABLE">
@@ -18,7 +49,7 @@
 		<th>Cost</th>
         <th>Settings</th>
       </tr>
-  {{for vm in vmlist:}}
+  {{for vm in hosted_vm:}}
       <form>
       <tr>
         <td>{{=vm['name']}}</td>

@@ -43,10 +43,9 @@ def reject_request():
     redirect(URL(c='faculty', f='pending_requests'))
 
 def vm_owner_check(vm_id):
-    vminfo = get_vm_info(vm_id)
-#     allowed = False;
-    if vminfo != None:
-        if is_moderator() or vminfo.owner_id == auth.user.id:
+    vm_info = get_vm_info(vm_id)
+    if vm_info != None:
+        if is_moderator() or (vm_info.owner_id == auth.user.id):
             return
         
     session.flash="Not authorized"

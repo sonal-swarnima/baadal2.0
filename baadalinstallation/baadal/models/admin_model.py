@@ -24,13 +24,18 @@ def get_add_datastore_form():
 
 def get_all_vm_list():
     vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
-    return get_vm_list(vms)
+    return get_hosted_vm_list(vms)
+
+def get_verified_vm_list():
+
+    vms = db(db.vm_data.status == VM_STATUS_VERIFIED).select()
+    return get_pending_vm_list(vms)
 
 def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id == hostid )).select()
-    return get_vm_list(vms)
+    return get_hosted_vm_list(vms)
 
-def get_vm_list(vms):
+def get_hosted_vm_list(vms):
     vmlist = []
     for vm in vms:
         total_cost = add_to_cost(vm.vm_name)
@@ -61,9 +66,11 @@ def approve_vm_request(vm_id):
     
     db(db.vm_data.id == vm_id).update(status=VM_STATUS_APPROVED)
     
-    vm_data = db(db.vm_data.id == vm_id).select()
+    vm_data = db(db.vm_data.id == vm_id).select().first()
+    print vm_data
     add_user_to_vm(vm_data.owner_id, vm_id)
-    add_user_to_vm(vm_data.requester_id, vm_id)
+    if(vm_data.owner_id != vm_data.requester_id):
+        add_user_to_vm(vm_data.requester_id, vm_id)
     add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM)
 
 def delete_user_vm_access(vm_id,user_id) :    

@@ -11,12 +11,20 @@ if 0:
 from helper import is_moderator, is_faculty, get_vm_template_config, get_fullname
 from auth_user import fetch_ldap_user, create_or_update_user
 
-def get_my_vm_list():
+def get_my_pending_vm():
+    vms = db(((db.vm_data.status == VM_STATUS_REQUESTED) | (db.vm_data.status == VM_STATUS_VERIFIED)) 
+             & (db.vm_data.requester_id==auth.user.id)).select(db.vm_data.ALL)
+
+    return get_pending_vm_list(vms)
+    
+
+def get_my_hosted_vm():
     vms = db((db.vm_data.status > VM_STATUS_APPROVED) 
              & (db.vm_data.id==db.user_vm_map.vm_id) 
              & (db.user_vm_map.user_id==auth.user.id)).select(db.vm_data.ALL)
 
-    return get_vm_list(vms)
+    return get_hosted_vm_list(vms)
+
 
 #Create configuration dropdowns
 def get_configuration_elem(form):
@@ -135,7 +143,7 @@ def get_vm_user_list(vm_id) :
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    vm_info=db(db.vm_data.id==_vm_id and db.vm_data.locked == 'False').select()
+    vm_info=db((db.vm_data.id==_vm_id) & (db.vm_data.locked == 'False')).select()
     if not vm_info:
         return None
     return vm_info.first()

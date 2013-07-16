@@ -21,15 +21,25 @@ def add_user_to_vm(_user_id, _vm_id):
     db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
     
 def get_pending_requests():
-    
-    if is_moderator:
+
+    if is_moderator():
         vm_query = db(db.vm_data.status == VM_STATUS_REQUESTED)
     else:
-        vm_query = db(db.vm_data.status == VM_STATUS_REQUESTED & db.vm_data.owner_id == auth.user.id)
-
+        vm_query = db((db.vm_data.status == VM_STATUS_REQUESTED) & (db.vm_data.owner_id == auth.user.id))
+    
     vms = vm_query.select(db.vm_data.ALL)
+    return get_pending_vm_list(vms)
+
+def get_pending_vm_list(vms):
     vmlist = []
     for vm in vms:
-        element = {'id':vm.id,'vm_name':vm.vm_name, 'faculty_name':get_fullname(vm.owner_id), 'requester_name':get_fullname(vm.requester_id), 'RAM':vm.RAM, 'vCPUs':vm.vCPU, 'HDD':vm.HDD, 'status':vm.status}
+        element = {'id' : vm.id,
+                   'vm_name' : vm.vm_name, 
+                   'faculty_name' : get_fullname(vm.owner_id), 
+                   'requester_name' : get_fullname(vm.requester_id), 
+                   'RAM' : vm.RAM, 
+                   'vCPUs' : vm.vCPU, 
+                   'HDD' : vm.HDD, 
+                   'status' : vm.status}
         vmlist.append(element)
     return vmlist
