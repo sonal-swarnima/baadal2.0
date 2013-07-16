@@ -7,7 +7,7 @@ if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
-from helper import is_moderator,is_faculty,is_orgadmin,get_pending_req_count,get_pending_approval_count
+from helper import is_moderator,is_faculty,is_orgadmin
 
 response.title = request.application
 response.google_analytics_id = None
@@ -33,7 +33,7 @@ if auth.is_logged_in():
     if (is_moderator() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False,None),
-            (T('Pending Requests {'+str(get_pending_req_count())+'} '), False, URL('default','page_under_construction.html')),
+            (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests')),
             (T('Add User to VM'), False, URL('default','page_under_construction.html'))
             ]
             

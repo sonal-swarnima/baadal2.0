@@ -22,6 +22,11 @@
             <td>{{=vm['HDD']}}</td>
             <td>{{=vm['vCPUs']}}</td>
             <td>
+            {{if vm['status'] == VM_STATUS_VERIFIED:}}
+            	Waiting for admin approval
+            {{else:}}
+            	Waiting for approval
+            {{pass}}
             </td>
           </tr>
       {{pass}}

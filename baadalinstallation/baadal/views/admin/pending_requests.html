@@ -23,9 +23,13 @@
             <td>{{=pending_request['HDD']}}</td>
             <td>{{=pending_request['vCPUs']}}</td>
             <td>
-				{{=A('Approve',_href=URL(r=request,f='approve_request',args=[pending_request['id']]))}}
-				&nbsp;|&nbsp;
-				{{=A('Reject',_href=URL(r=request,f='reject_request',args=[pending_request['id']]))}}
+            	{{if pending_request['status'] == VM_STATUS_APPROVED:}}
+            		Installation In Progress
+            	{{else:}}
+					{{=A('Approve',_href=URL(r=request,f='approve_request',args=[pending_request['id']]))}}
+					&nbsp;|&nbsp;
+					{{=A('Reject',_href=URL(r=request,f='reject_request',args=[pending_request['id']]))}}
+            	{{pass}}
             </td>
           </tr>
       {{pass}}
