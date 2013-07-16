@@ -69,6 +69,11 @@
         {{=MENU(response.faculty_menu, _class='nav',no_link_url=request.url)}}
       </li>
     {{pass}}
+    {{if response.orgadmin_menu:}}
+      <li>
+        {{=MENU(response.orgadmin_menu, _class='nav',no_link_url=request.url)}}
+      </li>
+    {{pass}}
     {{if response.admin_menu:}}
       <li>
         {{=MENU(response.admin_menu, _class='nav',no_link_url=request.url)}}

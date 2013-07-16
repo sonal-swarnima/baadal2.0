@@ -58,6 +58,7 @@ current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
 
 #Startup Data
 GROUP_DATA = {'admin':'Super User',
+            'orgadmin' : 'Organisation Level Admin',
             'faculty':'Faculty User',
             'user':'Normal User'}
 
@@ -73,8 +74,14 @@ DB_CONSTANTS = {'ifbaadaldown':'0',
               'mac_range':'54:52:00:01:'}
 
 ADMIN = 'admin'
+ORGADMIN = 'orgadmin'
 FACULTY = 'faculty'
 USER = 'user'
+
+current.ADMIN = ADMIN
+current.ORGADMIN = ORGADMIN
+current.FACULTY = FACULTY
+current.USER = USER
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

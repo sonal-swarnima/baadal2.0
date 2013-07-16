@@ -5,14 +5,19 @@ import os
 from gluon import current  # @Reimport
 
 def is_moderator():
-    if 'admin' in current.auth.user_groups.values():
+    if current.ADMIN in current.auth.user_groups.values():
         return True
     return False    
 
 def is_faculty():
-    if 'faculty' in current.auth.user_groups.values():
+    if current.FACULTY in current.auth.user_groups.values():
         return True
-    return False    
+    return False 
+    
+def is_orgadmin():
+    if current.ORGADMIN in current.auth.user_groups.values():
+        return True
+    return False        
 
 def get_config_file():
 
@@ -50,3 +55,11 @@ def get_fullname(_user_id):
     if row :
         row=row.first()
         return row['first_name'] + ' ' + row['last_name']
+#TODO: to be implemented        
+def get_pending_approval_count():
+    return 0
+    
+#TODO: to be implemented
+def get_pending_req_count():
+    return 0	
+

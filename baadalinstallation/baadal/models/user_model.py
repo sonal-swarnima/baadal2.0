@@ -133,6 +133,28 @@ def add_vm_task_to_queue(_vm_id, _task_type):
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
     
+def add_user_to_vm(_vm_id):
+    db(db.vm_data.id == _vm_id).update(user_id=auth.user.id, status=VM_STATUS_REQUESTED)
+
+def add_to_cost(vm_name):
+    vm = db(db.vm_data.vm_name==vm_name).select()[0]
+
+    oldtime = vm.start_time
+    newtime = get_datetime()
+    
+    if(oldtime==None):oldtime=newtime
+    #Calculate hour difference between start_time and current_time
+    hours  = ((newtime - oldtime).total_seconds()) / 3600
+    
+    if(vm.current_run_level==0):scale=0
+    elif(vm.current_run_level==1):scale=1
+    elif(vm.current_run_level==2):scale=.5
+    elif(vm.current_run_level==3):scale=.25
+
+    totalcost = float(hours*(vm.vCPU*float(COST_CPU)+vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
+    db(db.vm_data.vm_name == vm_name).update(start_time=get_datetime(),total_cost=totalcost)
+    return totalcost
+
 def get_vm_user_list(vm_id) :		
     vm_users=db(vm_id == db.user_vm_map.vm_id ).select()
     user_id_lst =[]
@@ -143,7 +165,7 @@ def get_vm_user_list(vm_id) :
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    vm_info=db((db.vm_data.id==_vm_id) & (db.vm_data.locked == 'False')).select()
+    vm_info=db((db.vm_data.id == _vm_id) & (db.vm_data.locked == False)).select()
     if not vm_info:
         return None
     return vm_info.first()
