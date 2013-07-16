@@ -18,8 +18,6 @@ def request_vm():
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         logger.debug('VM requested successfully')
         
-        #TODO:Approve functionality to be implemented
-        approve_vm_request(form.vars.id)
         redirect(URL(c='default', f='index'))
     return dict(form=form)
 
