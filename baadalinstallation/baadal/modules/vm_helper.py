@@ -88,7 +88,7 @@ def host_resources_used(hostid):
 #Function to find new host for a vm to be installed
 def find_new_host(runlevel,RAM,vCPU):
 
-    hosts = current.db(current.db.host.status == HOST_STATUS_UP).select() 
+    hosts = current.db(current.db.host.status == current.HOST_STATUS_UP).select() 
     if (len(hosts) == 0):
         current.logger.error("No host found.")
         raise
@@ -394,7 +394,7 @@ def install(vmid):
                                                     current_run_level = 3, \
                                                     last_run_level = 3,\
                                                     total_cost = 0, \
-                                                    status = VM_STATUS_RUNNING)
+                                                    status = current.VM_STATUS_RUNNING)
                                     
                     """
                     # Serving HDD request
