@@ -29,13 +29,13 @@ def hosts_vms():
 def add_template():
 
     form = get_add_template_form()
-    
+    templates = get_templates()
     if form.accepts(request.vars, session):
-        logger.debug('New Template Created')
-        redirect(URL(c='default', f='index'))
+        session.flash = 'New Template Created'
+        redirect(URL(c='admin', f='add_template'))
     elif form.errors:
         logger.error('Error in form')
-    return dict(form=form)
+    return dict(form=form, templates=templates)
 
 @auth.requires_login()
 def host_details():
@@ -82,13 +82,14 @@ def add_host():
 def add_datastore():
 
     form = get_add_datastore_form()
+    datastores = get_datastores()
 
     if form.accepts(request.vars, session):
         logger.debug('New datastore added')
-        redirect(URL(c='default', f='index'))
+        redirect(URL(c='admin', f='add_datastore'))
     elif form.errors:
         logger.error('Error in form')
-    return dict(form=form)
+    return dict(form=form, datastores=datastores)
 
 @auth.requires_login()
 def delete_user_vm():	

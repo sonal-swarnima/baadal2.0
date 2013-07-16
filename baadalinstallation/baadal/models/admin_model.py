@@ -15,12 +15,18 @@ def get_add_template_form():
     form = SQLFORM(db.template, fields = form_fields, labels = form_labels, submit_button = 'Add Template')
     return form
 
+def get_templates():
+    return db().select(db.template.ALL) 
+
 def get_add_datastore_form():
     form_fields = ['ds_name', 'ds_ip', 'capacity', 'username', 'password', 'path']
     form_labels = {'ds_name':'Name', 'ds_ip':'Mount IP', 'capacity':'Capacity (GB)', 'username':'Username', 'password':'Password', 'path':'Path'}
 
     form = SQLFORM(db.datastore, fields = form_fields, labels = form_labels, submit_button = 'Add Datastore')
     return form
+
+def get_datastores():
+    return db().select(db.datastore.ALL) 
 
 def get_all_vm_list():
     vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
@@ -67,7 +73,6 @@ def approve_vm_request(vm_id):
     db(db.vm_data.id == vm_id).update(status=VM_STATUS_APPROVED)
     
     vm_data = db(db.vm_data.id == vm_id).select().first()
-    print vm_data
     add_user_to_vm(vm_data.owner_id, vm_id)
     if(vm_data.owner_id != vm_data.requester_id):
         add_user_to_vm(vm_data.requester_id, vm_id)

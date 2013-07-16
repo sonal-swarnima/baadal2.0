@@ -6,3 +6,32 @@
 		{{=form}}
 	</div>
 </div>
+<br/>
+<br/>
+{{if not datastores:}}
+	<center><h4>No Datastore Configured Yet.</h4></center>
+	
+{{else:}}
+<h2 class="subtitle">{{=T('Datastores')}}</h2>
+<div class="TABLE">
+  <table>
+      <tr>
+        <th>Name</th>
+        <th>Mount IP</th>
+        <th>Capacity (GB)</th>
+        <th>Username</th>
+        <th>Path</th>
+      </tr>
+  {{for datastore in datastores:}}
+      <tr>
+        <td>{{=datastore['ds_name']}}</td>
+        <td>{{=datastore['ds_ip']}}</td>
+        <td>{{=datastore['capacity']}}</td>
+        <td>{{=datastore['username']}}</td>
+        <td>{{=datastore['path']}}</td>
+      </tr>
+  {{pass}}
+  </table>
+</div>
+{{pass}}
+	

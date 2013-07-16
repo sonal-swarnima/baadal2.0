@@ -1,4 +1,10 @@
 {{extend 'layout.html'}}
+
+<h2 class="subtitle">Add New Host</h2>
+{{=form}}
+<br/>
+<br/>
+
 {{if not hosts:}}
 <center><h4>No Machines There Yet.</h4></center>
 {{else:}}
@@ -69,7 +75,3 @@
   </table>
 </div>
 {{pass}}
-<br/>
-<br/>
-<h2 class="subtitle">Add New Host</h2>
-{{=form}}
