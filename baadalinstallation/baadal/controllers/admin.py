@@ -196,7 +196,7 @@ def approve_request():
     check_moderator()
     
     approve_vm_request(vm_id);
-    session.flash = 'Request Approved'
+    session.flash = 'Installation request added to queue'
     redirect(URL(c='admin', f='pending_requests'))
     
 @auth.requires_login()
