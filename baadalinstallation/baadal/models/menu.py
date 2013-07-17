@@ -2,10 +2,10 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import *  # @UnusedWildImport
-    from gluon import T,request,response
     import gluon
     global auth; auth = gluon.tools.Auth()
+    from gluon import T,request,response,URL,H2
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import is_moderator,is_faculty,is_orgadmin
 
@@ -25,8 +25,8 @@ if auth.is_logged_in():
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
         (T('List My VMs'), False, URL('user','list_my_vm')),
+        (T('My Tasks'), False, URL('user','list_my_task')),
         (T('Mail Admin'), False, URL('default','page_under_construction.html')),
-        (T('My Tasks'), False, URL('default','page_under_construction.html')),
         (T('Report Bug'), False, URL('default','page_under_construction.html'))
         ]
     

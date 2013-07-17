@@ -15,12 +15,10 @@ def add_user_to_vm():
     return dict()
 
 @auth.requires_login()
+@handle_exception
 def pending_requests():
-    try:
-        pending_requests = get_pending_requests()
-        return dict(pending_requests=pending_requests,is_moderator=is_moderator())
-    except:
-        exp_handlr_errorpage()
+    pending_requests = get_pending_requests()
+    return dict(pending_requests=pending_requests,is_moderator=is_moderator())
         
 @auth.requires_login()
 def approve_request():

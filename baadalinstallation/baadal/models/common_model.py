@@ -1,0 +1,103 @@
+# -*- coding: utf-8 -*-
+###################################################################################
+# Added to enable code completion in IDE's.
+if 0:
+    import gluon
+    global auth; auth = gluon.tools.Auth()
+    from gluon import db,URL,session,redirect
+###################################################################################
+from helper import get_fullname, get_datetime, is_moderator
+
+
+def get_hosted_vm_list(vms):
+    vmlist = []
+    for vm in vms:
+        total_cost = add_to_cost(vm.vm_name)
+        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_full_name(vm.owner_id), 'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+        vmlist.append(element)
+    return vmlist
+
+
+def get_pending_vm_list(vms):
+    vmlist = []
+    for vm in vms:
+        element = {'id' : vm.id,
+                   'vm_name' : vm.vm_name, 
+                   'faculty_name' : get_fullname(vm.owner_id), 
+                   'requester_name' : get_fullname(vm.requester_id), 
+                   'RAM' : vm.RAM, 
+                   'vCPUs' : vm.vCPU, 
+                   'HDD' : vm.HDD, 
+                   'status' : vm.status}
+        vmlist.append(element)
+    return vmlist
+
+
+def add_to_cost(vm_name):
+    vm = db(db.vm_data.vm_name==vm_name).select()[0]
+
+    oldtime = vm.start_time
+    newtime = get_datetime()
+    
+    if(oldtime==None):oldtime=newtime
+    #Calculate hour difference between start_time and current_time
+    hours  = ((newtime - oldtime).total_seconds()) / 3600
+    
+    if(vm.current_run_level==0):scale=0
+    elif(vm.current_run_level==1):scale=1
+    elif(vm.current_run_level==2):scale=.5
+    elif(vm.current_run_level==3):scale=.25
+
+    totalcost = float(hours*(vm.vCPU*float(COST_CPU)+vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
+    db(db.vm_data.vm_name == vm_name).update(start_time=get_datetime(),total_cost=totalcost)
+    return totalcost
+
+def get_full_name(user_id):
+    return get_fullname(user_id)
+
+# Returns VM info, if VM exist
+def get_vm_info(_vm_id):
+    #Get VM Info, if it is not locked
+    vm_info=db((db.vm_data.id==_vm_id) & (db.vm_data.locked == False)).select()
+    if not vm_info:
+        return None
+    return vm_info.first()
+
+def get_task_list(events):
+
+    tasks = []
+    for event in events:
+        element = {'task_type':event.task_type,
+                   'task_id':event.task_id,
+                   'vm_name':event.vm_id.vm_name,
+                   'user_name':get_full_name(event.vm_id.owner_id),
+                   'start_time':event.start_time,
+                   'end_time':event.end_time,
+                   'error_msg':event.error}
+        tasks.append(element)
+    return tasks
+
+# Generic error handler decorator
+def handle_exception(fn):
+    def decorator(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except:
+            import sys, traceback
+            etype, value, tb = sys.exc_info()
+            msg = ''.join(traceback.format_exception(etype, value, tb, 10))
+            session.flash=msg
+            redirect(URL(c='default', f='error'))
+    return decorator    
+
+
+# Generic check moderator decorator
+def check_moderator(fn):
+    def decorator(*args, **kwargs):
+        if (auth.is_logged_in()) & is_moderator():
+            return fn(*args, **kwargs)
+        else:
+            session.flash = "You don't have admin privileges"
+            redirect(URL(c='default', f='index'))
+    return decorator    
+
