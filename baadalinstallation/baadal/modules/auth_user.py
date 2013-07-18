@@ -110,7 +110,7 @@ def add_user_membership(user_id, user_name, is_faculty, update_session):
 
     if is_faculty:
         add_membership_db(user_id, current.FACULTY, update_session)
-    elif user_name not in admin_users:
+    elif user_name not in admin_users_testing:
         add_membership_db(user_id, current.USER, update_session)
 
 def add_membership_db(_user_id, role, update_session):
