@@ -53,7 +53,7 @@ if auth.is_logged_in():
                     (T('Emergency'), False, URL('default','page_under_construction.html')),
                     (T('Configure System'), False,dict(_href='#', _id='configure'),[
                         (T('Add Host'), False, URL('admin','host_details')),
-                        (T('Add Disk'), False, URL('admin','add_disk')),
+                        (T('Add Disk'), False, URL('default','page_under_construction.html')),
                         (T('Add Template'), False, URL('admin','add_template')),
                         (T('Add Datastore'), False, URL('admin','add_datastore'))
                         ])

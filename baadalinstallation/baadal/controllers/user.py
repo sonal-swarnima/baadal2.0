@@ -17,7 +17,6 @@ def request_vm():
     # After validation, read selected configuration and set RAM, CPU and HDD accordingly
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         logger.debug('VM requested successfully')
-        
         redirect(URL(c='default', f='index'))
     return dict(form=form)
 
@@ -28,7 +27,7 @@ def verify_faculty():
     if faculty_info != None:
         return faculty_info[1]
 
-@handle_exception
+@exception_handler
 def list_my_vm():
     pending_vm = get_my_pending_vm()
     hosted_vm = get_my_hosted_vm()        
@@ -37,7 +36,7 @@ def list_my_vm():
 
 
 @auth.requires_login()
-@handle_exception
+@exception_handler
 def settings():
     vm_id=request.args[0]
     vminfo = vm_permission_check(vm_id)     
@@ -62,7 +61,7 @@ def settings():
 
 
 @auth.requires_login()
-@handle_exception
+@exception_handler
 def start_machine():
     vm_id=request.args[0]
     vm_permission_check(vm_id)        
@@ -71,7 +70,7 @@ def start_machine():
 
 
 @auth.requires_login()
-@handle_exception
+@exception_handler
 def shutdown_machine():
     vm_id=request.args[0]
     vm_permission_check(vm_id)        
@@ -80,7 +79,7 @@ def shutdown_machine():
 
 
 @auth.requires_login()
-@handle_exception
+@exception_handler
 def destroy_machine():
     vm_id=request.args[0]
     vm_permission_check(vm_id)        
@@ -89,7 +88,7 @@ def destroy_machine():
 
 
 @auth.requires_login()
-@handle_exception       
+@exception_handler       
 def resume_machine():
     vm_id=request.args[0]
     vm_permission_check(vm_id)        
@@ -98,7 +97,7 @@ def resume_machine():
 
 
 @auth.requires_login()
-@handle_exception       
+@exception_handler       
 def delete_machine():
     vm_id = request.args[0]
     vm_permission_check(vm_id)        
@@ -107,7 +106,7 @@ def delete_machine():
 
 
 @auth.requires_login()
-@handle_exception       
+@exception_handler       
 def pause_machine():
     vm_id=request.args[0]
     vm_permission_check(vm_id)        
@@ -116,7 +115,7 @@ def pause_machine():
 
 
 @auth.requires_login()
-@handle_exception       
+@exception_handler       
 def adjrunlevel():
     #Adjust the run level of the virtual machine
     vm_id=request.args[0]
@@ -130,7 +129,7 @@ def clonevm():
 
 
 @auth.requires_login()
-@handle_exception       
+@exception_handler       
 def changelevel():
     vm_id=request.args[0]
     vm_permission_check(vm_id)        

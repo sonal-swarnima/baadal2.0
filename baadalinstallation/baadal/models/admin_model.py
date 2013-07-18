@@ -60,15 +60,25 @@ def update_vm_lock(vminfo,flag) :
 
 
 def get_all_hosts() :
-    return db().select(db.host.ALL) 
+    
+    hosts = db().select(db.host.ALL) 
+    results = []
+    for host in hosts:
+        results.append({'ip':host.host_ip, 
+                        'id':host.id, 
+                        'name':host.host_name, 
+                        'status':host.status, 
+                        'RAM':host.RAM,
+                        'CPUs':host.CPUs})    
+    return results
 
 
 def get_vm_groupby_hosts() :
     hosts = get_all_hosts()              
     hostvmlist = []
     for host in hosts:    # for each host get all the vm's that runs on it and add them to list                          
-        vmlist = get_all_vm_ofhost(host.id)
-        hostvms = {'hostIP':host.host_ip,'details':vmlist,'ram':host.RAM,'cpus':host.CPUs}
+        vmlist = get_all_vm_ofhost(host['id'])
+        hostvms = {'hostIP':host['ip'], 'details':vmlist, 'ram':host['RAM'], 'cpus':host['CPUs']}
         hostvmlist.append(hostvms)    
     return (hostvmlist)
 

@@ -11,18 +11,18 @@ if 0:
 from helper import is_moderator
 
 @check_faculty
-@handle_exception
+@exception_handler
 def add_user_to_vm():
     return dict()
 
 @check_faculty
-@handle_exception
+@exception_handler
 def pending_requests():
     pending_requests = get_pending_requests()
     return dict(pending_requests=pending_requests,is_moderator=is_moderator())
         
 @check_faculty
-@handle_exception
+@exception_handler
 def approve_request():
     vm_id=request.args[0]
     vm_owner_check(vm_id)  
@@ -31,7 +31,7 @@ def approve_request():
     redirect(URL(c='faculty', f='pending_requests'))
     
 @check_faculty
-@handle_exception
+@exception_handler
 def reject_request():
     vm_id=request.args[0]
     vm_owner_check(vm_id)
@@ -40,7 +40,7 @@ def reject_request():
     redirect(URL(c='faculty', f='pending_requests'))
 
 @check_faculty
-@handle_exception
+@exception_handler
 def vm_owner_check(vm_id):
     vm_info = get_vm_info(vm_id)
     if vm_info != None:
