@@ -28,133 +28,116 @@ def verify_faculty():
     if faculty_info != None:
         return faculty_info[1]
 
-@auth.requires_login()
+@handle_exception
 def list_my_vm():
-    try:       
-        pending_vm = get_my_pending_vm()
-        hosted_vm = get_my_hosted_vm()        
-        
-        return dict(pending_vm = pending_vm, hosted_vm = hosted_vm)
-    except:
-        exp_handlr_errorpage()
-
-@auth.requires_login()
-def settings():
-    try:       
-        vm_id=request.args[0]
-        vminfo = vm_permission_check(vm_id)     
-        #TODO : Analyze
-        # as state attr is not the live state of the machine              
-        state=vminfo.status  #current state of VM
-        data={'id':vminfo.id,
-              'name':vminfo.vm_name,
-              'hdd':vminfo.HDD,
-              'ram':vminfo.RAM,
-              'vcpus':vminfo.vCPU,
-              'status':state,
-              'hostip':vminfo.host_id.host_ip,
-              'port':vminfo.vnc_port,
-              'ostype':vminfo.template_id.ostype,
-              'expire_date':vminfo.expiry_date,
-              'purpose':vminfo.purpose}
-        if is_moderator() :
-            return dict(data=data,users=get_vm_user_list(vm_id))
-        else :
-            return dict(data=data)
-    except:
-        exp_handlr_errorpage()
-
-@auth.requires_login()
-def start_machine():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_START_VM)
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()
-def shutdown_machine():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()     
-def destroy_machine():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()             
-def resume_machine():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_RESUME_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()     
-def delete_machine():
-    try:
-        vm_id = request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()     
-def pause_machine():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()     
-#Adjust the run level of the virtual machine
-def adjrunlevel():
-    try:
-        vm_id=request.args[0]
-        vminfo = vm_permission_check(vm_id)        
-        return dict(vm=vminfo)
-    except:
-        exp_handlr_errorpage()
-
-@auth.requires_login()             
-def clonevm():    
-    try:
-        vm_id=request.args[0]
-        vminfo = vm_permission_check(vm_id)        
-        #TODO: to be implemented
-        return dict(vm=vminfo)
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
-
-@auth.requires_login()
-def changelevel():
-    try:
-        vm_id=request.args[0]
-        vm_permission_check(vm_id)        
-        add_vm_task_to_queue(vm_id,TASK_TYPE_CHANGELEVEL_VM)        
-    except:
-        exp_handlr_errorpage()
-    redirect_list_vm()
+    pending_vm = get_my_pending_vm()
+    hosted_vm = get_my_hosted_vm()        
     
+    return dict(pending_vm = pending_vm, hosted_vm = hosted_vm)
+
+
+@auth.requires_login()
+@handle_exception
+def settings():
+    vm_id=request.args[0]
+    vminfo = vm_permission_check(vm_id)     
+    #TODO : Analyze
+    # as state attr is not the live state of the machine              
+    state=vminfo.status  #current state of VM
+    data={'id':vminfo.id,
+          'name':vminfo.vm_name,
+          'hdd':vminfo.HDD,
+          'ram':vminfo.RAM,
+          'vcpus':vminfo.vCPU,
+          'status':state,
+          'hostip':vminfo.host_id.host_ip,
+          'port':vminfo.vnc_port,
+          'ostype':vminfo.template_id.ostype,
+          'expire_date':vminfo.expiry_date,
+          'purpose':vminfo.purpose}
+    if is_moderator() :
+        return dict(data=data,users=get_vm_user_list(vm_id))
+    else :
+        return dict(data=data)
+
+
+@auth.requires_login()
+@handle_exception
+def start_machine():
+    vm_id=request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_START_VM)
+    redirect_list_vm()
+
+
+@auth.requires_login()
+@handle_exception
+def shutdown_machine():
+    vm_id=request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
+    redirect_list_vm()
+
+
+@auth.requires_login()
+@handle_exception
+def destroy_machine():
+    vm_id=request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
+    redirect_list_vm()
+
+
+@auth.requires_login()
+@handle_exception       
+def resume_machine():
+    vm_id=request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_RESUME_VM)        
+    redirect_list_vm()
+
+
+@auth.requires_login()
+@handle_exception       
+def delete_machine():
+    vm_id = request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
+    redirect_list_vm()
+
+
+@auth.requires_login()
+@handle_exception       
+def pause_machine():
+    vm_id=request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
+    redirect_list_vm()
+
+
+@auth.requires_login()
+@handle_exception       
+def adjrunlevel():
+    #Adjust the run level of the virtual machine
+    vm_id=request.args[0]
+    vminfo = vm_permission_check(vm_id)        
+    return dict(vm=vminfo)
+
+
+@auth.requires_login()
+def clonevm():    
+    session.flash="Has to be implemented"
+
+
+@auth.requires_login()
+@handle_exception       
+def changelevel():
+    vm_id=request.args[0]
+    vm_permission_check(vm_id)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_CHANGELEVEL_VM)        
+    redirect_list_vm()
+
+
 def vm_permission_check(vm_id):
     vminfo = get_vm_info(vm_id)
     if vminfo == None:
@@ -174,4 +157,12 @@ def redirect_list_vm():
         redirect(URL(r=request,f=session.prev_url))
     else :
         redirect(URL(r=request,c='user',f='list_my_vm'))
+        
+def list_my_task():
+    #TODO:Pagination to be implemented
+    pending = get_my_task_list(TASK_QUEUE_STATUS_PENDING)
+    success = get_my_task_list(TASK_QUEUE_STATUS_SUCCESS)
+    failed = get_my_task_list(TASK_QUEUE_STATUS_FAILED)
+    
+    return dict(pending=pending, success=success, failed=failed)
         

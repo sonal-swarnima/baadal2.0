@@ -2,10 +2,10 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import *  # @UnusedWildImport
-    from gluon import T,request,response
     import gluon
     global auth; auth = gluon.tools.Auth()
+    from gluon import T,request,response,URL,H2
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import is_moderator,is_faculty,is_orgadmin
 
@@ -25,30 +25,28 @@ if auth.is_logged_in():
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
         (T('List My VMs'), False, URL('user','list_my_vm')),
+        (T('My Tasks'), False, URL('user','list_my_task')),
         (T('Mail Admin'), False, URL('default','page_under_construction.html')),
-        (T('My Tasks'), False, URL('default','page_under_construction.html')),
         (T('Report Bug'), False, URL('default','page_under_construction.html'))
         ]
     
     if (is_moderator() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False,None),
-            (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests')),
-            (T('Add User to VM'), False, URL('default','page_under_construction.html'))
+            (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests'))
             ]
             
         if (is_moderator() | is_orgadmin()):
             response.orgadmin_menu = [
                 (H2('ORG-ADMIN MENU'),False,None),
-                (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm.html')),
-                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('default','page_under_construction.html'))
+                (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm')),
+                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('orgadmin','pending_approvals'))
                 ]
         
             if is_moderator():
                 response.admin_menu = [
                     (H2('ADMIN MENU'),False,None),
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
-                    (T('Approve VM''s'), False, URL('admin','pending_requests')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
                     (T('Sanity Check'), False, URL('default','page_under_construction.html')),

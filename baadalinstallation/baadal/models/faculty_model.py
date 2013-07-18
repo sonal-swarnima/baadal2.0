@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, get_fullname
+from helper import is_moderator
 
 def verify_vm_request(vm_id):
     db(db.vm_data.id == vm_id).update(status=VM_STATUS_VERIFIED)
@@ -30,16 +30,3 @@ def get_pending_requests():
     vms = vm_query.select(db.vm_data.ALL)
     return get_pending_vm_list(vms)
 
-def get_pending_vm_list(vms):
-    vmlist = []
-    for vm in vms:
-        element = {'id' : vm.id,
-                   'vm_name' : vm.vm_name, 
-                   'faculty_name' : get_fullname(vm.owner_id), 
-                   'requester_name' : get_fullname(vm.requester_id), 
-                   'RAM' : vm.RAM, 
-                   'vCPUs' : vm.vCPU, 
-                   'HDD' : vm.HDD, 
-                   'status' : vm.status}
-        vmlist.append(element)
-    return vmlist
