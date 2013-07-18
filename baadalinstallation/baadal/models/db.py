@@ -9,6 +9,8 @@ if 0:
 from helper import get_config_file,get_datetime
 from auth_user import login_callback,login_ldap_callback
 
+#### Connection Pooling of Db is also possible
+
 config = get_config_file()
 db_type = config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
@@ -19,9 +21,10 @@ db.define_table('constants',
     Field('value', 'string', notnull = True))
 
 db.define_table('organisation',
-    Field('name', 'string', notnull = True),
+    Field('name', 'string', notnull = True, unique = True),
     Field('details', 'string'),
     Field('public_ip', 'string',length = 15), 
+    Field('admin_mailid', 'string', lenght = 50)
     format = '%(details)s')
 
 from gluon.tools import Auth
@@ -75,8 +78,10 @@ auth.settings.table_group = db.define_table(
 
 auth.settings.table_membership = db.define_table(
     auth.settings.table_membership_name,
+    Field('id','autoincrement'),
     Field('user_id', db.user),
-    Field('group_id', db.user_group))
+    Field('group_id', db.user_group),
+    primarykey = ['user_id', 'group_id'])
 
 ###############################################################################
 auth.define_tables(username = True)
@@ -90,9 +95,9 @@ else:
 ###############################################################################
 
 db.define_table('host',
-    Field('host_ip', 'string',length = 15,notnull = True),
-    Field('host_name', 'string',length = 100,notnull = True),
-    Field('mac_addr', 'string',length = 100,notnull = True),
+    Field('host_ip', 'string',length = 15,notnull = True, unique = True),
+    Field('host_name', 'string',length = 100,notnull = True, unique = True),
+    Field('mac_addr', 'string',length = 100,notnull = True, unique = True),
     Field('HDD', 'integer'),
     Field('CPUs', 'integer'),
     Field('RAM', 'integer'),
@@ -101,8 +106,8 @@ db.define_table('host',
     Field('vm_count', 'integer', default = 0))
 
 db.define_table('datastore',
-    Field('ds_name', 'string'),
-    Field('ds_ip', 'string',length = 15),
+    Field('ds_name', 'string', unique = True),
+    Field('ds_ip', 'string',length = 15, unique = True),
     Field('path', 'string'),
     Field('username', 'string'),
     Field('password', 'password'),
@@ -111,7 +116,7 @@ db.define_table('datastore',
     format = '%(ds_name)s')
 
 db.define_table('template',
-    Field('name', 'string', notnull = True),
+    Field('name', 'string', notnull = True, unique = True),
     Field('os_type', default = "Linux", requires = IS_IN_SET(('Linux', 'Others'))),
     Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386'))),
     Field('hdd', 'integer', notnull = True),
@@ -146,6 +151,7 @@ db.define_table('vm_data',
     Field('status', 'integer'))
 
 db.define_table('user_vm_map',
+    Field('id','autoincrement'),
     Field('user_id', db.user),
     Field('vm_id', db.vm_data),
     primarykey = ['user_id', 'vm_id'])
@@ -172,13 +178,15 @@ db.define_table('vm_data_event',
     Field('next_run_level', 'integer'),
     Field('start_time', 'datetime', default = get_datetime()),
     Field('end_time', 'datetime'),
-	Field('parent_name', 'string'),
+    Field('parent_name', 'string'),
     Field('status', 'integer'))
 
 db.define_table('attached_disks',
+    Field('id','autoincrement'),
     Field('vm_id', db.vm_data,notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
-    Field('capacity', 'string',length = 45))
+    Field('capacity', 'string',length = 45),
+    primarykey = ['datastore_id', 'vm_id'])
 
 db.define_table('snapshot',
     Field('vm_id', db.vm_data,notnull = True),
@@ -196,17 +204,20 @@ db.define_table('task_queue_event',
     Field('task_type', 'string',length = 30,notnull = True),
     Field('vm_id', db.vm_data,notnull = True),
     Field('status', 'integer', notnull = True),
-    Field('error', 'string', length = 512),
+    Field('error', 'string', length = 1024),
     Field('start_time', 'datetime', default = get_datetime()),
     Field('attention_time', 'datetime'),
     Field('end_time', 'datetime'))
 
+#TODO: to be modified after networking details have been finalized 
 db.define_table('vlan_map',
     Field('vm_id', db.vm_data))
 
+#TODO: to be modified after networking details have been finalized 
 db.define_table('vnc_server',
     Field('ip_addr', 'string',length = 15,notnull = True))
 
+#TODO: to be modified after networking details have been finalized 
 db.define_table('vnc_access',
     Field('vm_id', db.vm_data),
     Field('vnc_server_id', db.vnc_server,length = 15, notnull = True),
