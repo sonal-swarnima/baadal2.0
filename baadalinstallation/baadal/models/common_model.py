@@ -4,11 +4,11 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect
+    from gluon import db,URL,session,redirect,HTTP
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from urllib2 import HTTPError
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
-
 
 def get_hosted_vm_list(vms):
     vmlist = []
@@ -83,6 +83,8 @@ def exception_handler(fn):
     def decorator(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
+        except HTTP:
+            raise
         except:
             handle_exception()
     return decorator    
