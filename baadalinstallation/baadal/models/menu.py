@@ -33,22 +33,20 @@ if auth.is_logged_in():
     if (is_moderator() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False,None),
-            (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests')),
-            (T('Add User to VM'), False, URL('default','page_under_construction.html'))
+            (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests'))
             ]
             
         if (is_moderator() | is_orgadmin()):
             response.orgadmin_menu = [
                 (H2('ORG-ADMIN MENU'),False,None),
-                (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm.html')),
-                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('default','page_under_construction.html'))
+                (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm')),
+                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('admin','approve_requests'))
                 ]
         
             if is_moderator():
                 response.admin_menu = [
                     (H2('ADMIN MENU'),False,None),
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
-                    (T('Approve VM''s'), False, URL('admin','pending_requests')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
                     (T('Sanity Check'), False, URL('default','page_under_construction.html')),

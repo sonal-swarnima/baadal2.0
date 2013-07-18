@@ -80,14 +80,17 @@ def get_task_list(events):
 # Generic error handler decorator
 def handle_exception(fn):
     def decorator(*args, **kwargs):
+        error = ''
         try:
             return fn(*args, **kwargs)
         except:
             import sys, traceback
             etype, value, tb = sys.exc_info()
-            msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-            session.flash=msg
-            redirect(URL(c='default', f='error'))
+            msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
+            if is_moderator():
+                error = msg
+            logger.error(msg)                 
+            redirect(URL(c='default', f='error',vars={'error':error}))
     return decorator    
 
 

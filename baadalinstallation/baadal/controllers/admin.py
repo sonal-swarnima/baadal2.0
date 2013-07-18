@@ -160,7 +160,7 @@ def add_disk():
 
 @check_moderator
 @handle_exception
-def pending_requests():
+def approve_requests():
     pending_requests = get_verified_vm_list()
     return dict(pending_requests=pending_requests)
 
