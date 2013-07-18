@@ -35,13 +35,6 @@ def get_all_vm_list():
     vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
     return get_hosted_vm_list(vms)
 
-
-def get_verified_vm_list():
-
-    vms = db((db.vm_data.status == VM_STATUS_VERIFIED) | (db.vm_data.status == VM_STATUS_APPROVED)).select()
-    return get_pending_vm_list(vms)
-
-
 def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)

@@ -10,36 +10,37 @@ if 0:
 ###################################################################################
 from helper import is_moderator
 
-@auth.requires_login()
+@check_faculty
+@handle_exception
 def add_user_to_vm():
     return dict()
 
-@auth.requires_login()
+@check_faculty
 @handle_exception
 def pending_requests():
     pending_requests = get_pending_requests()
     return dict(pending_requests=pending_requests,is_moderator=is_moderator())
         
-@auth.requires_login()
+@check_faculty
+@handle_exception
 def approve_request():
-    
     vm_id=request.args[0]
-    vm_owner_check(vm_id)
-    
+    vm_owner_check(vm_id)  
     verify_vm_request(vm_id);
     session.flash = 'Request Approved'
     redirect(URL(c='faculty', f='pending_requests'))
     
-@auth.requires_login()
+@check_faculty
+@handle_exception
 def reject_request():
-
     vm_id=request.args[0]
     vm_owner_check(vm_id)
-
     reject_vm_request(vm_id);
     session.flash = 'Request Rejected'
     redirect(URL(c='faculty', f='pending_requests'))
 
+@check_faculty
+@handle_exception
 def vm_owner_check(vm_id):
     vm_info = get_vm_info(vm_id)
     if vm_info != None:

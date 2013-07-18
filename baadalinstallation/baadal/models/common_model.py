@@ -103,4 +103,27 @@ def check_moderator(fn):
             session.flash = "You don't have admin privileges"
             redirect(URL(c='default', f='index'))
     return decorator    
+   
+    
+# Generic check orgadmin decorator
+def check_orgadmin(fn):
+    def decorator(*args, **kwargs):
+        if (auth.is_logged_in()) & (is_moderator() | is_orgadmin()):
+            return fn(*args, **kwargs)
+        else:
+            session.flash = "You don't have admin privileges"
+            redirect(URL(c='default', f='index'))
+    return decorator    
+
+
+# Generic check faculty decorator
+def check_faculty(fn):
+    def decorator(*args, **kwargs):
+        if (auth.is_logged_in()) & (is_moderator() | is_orgadmin() | is_faculty()):
+            return fn(*args, **kwargs)
+        else:
+            session.flash = "You don't have admin privileges"
+            redirect(URL(c='default', f='index'))
+    return decorator    
+
 

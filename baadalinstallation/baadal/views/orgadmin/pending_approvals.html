@@ -1,0 +1,39 @@
+{{extend 'layout.html'}}
+{{if not pending_approvals:}}
+<h2 class="subtitle">No Pending Requests</h2>
+    {{else:}}
+<h2 class="subtitle">Requests Pending for your Approval</h2>
+  <div class="TABLE">
+    <table>
+      <tr>
+        <th>User ID</th>
+        <th>VM Name</th>
+        <th>RAM</th>
+        <th>Faculty</th>
+        <th>HDD</th>
+        <th>vCPUs</th>
+        <th>Status</th>
+      </tr> 
+      {{for pending_approval in pending_approvals:}}
+       <tr>
+            <td>{{=pending_approval['requester_name']}}</td>
+            <td>{{=pending_approval['vm_name']}}</td>
+            <td>{{=pending_approval['RAM']}}</td>
+            <td>{{=pending_approval['faculty_name']}}</td>
+            <td>{{=pending_approval['HDD']}}</td>
+            <td>{{=pending_approval['vCPUs']}}</td>
+            <td>
+            	{{if pending_approval['status'] == VM_STATUS_APPROVED:}}
+            		Installation In Progress
+            	{{else:}}
+					{{=A('Approve',_href=URL(r=request,f='approve_request',args=[pending_approval['id']]))}}
+					&nbsp;|&nbsp;
+					{{=A('Reject',_href=URL(r=request,f='reject_request',args=[pending_approval['id']]))}}
+            	{{pass}}
+            </td>
+          </tr>
+      {{pass}}
+    </table>
+    </div>
+{{pass}}
+

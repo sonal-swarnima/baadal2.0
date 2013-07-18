@@ -11,26 +11,25 @@ if 0:
 @handle_exception
 def list_all_vm():
     vm_list = get_all_vm_list()
-    return dict(vmlist=vm_list)
+    return dict(vmlist = vm_list)
 
 @check_moderator
 @handle_exception
 def hosts_vms():
-    hostvmlist=get_vm_groupby_hosts()        
-    return dict(hostvmlist=hostvmlist)
+    hostvmlist = get_vm_groupby_hosts()        
+    return dict(hostvmlist = hostvmlist)
 
 @check_moderator
 @handle_exception
 def add_template():
-
     form = get_add_template_form()
     templates = get_templates()
     if form.accepts(request.vars, session):
         session.flash = 'New Template Created'
-        redirect(URL(c='admin', f='add_template'))
+        redirect(URL(c = 'admin', f = 'add_template'))
     elif form.errors:
         logger.error('Error in form')
-    return dict(form=form, templates=templates)
+    return dict(form = form, templates = templates)
 
 @check_moderator
 @handle_exception
@@ -68,7 +67,6 @@ def add_host():
 @check_moderator
 @handle_exception
 def add_datastore():
-
     form = get_add_datastore_form()
     datastores = get_datastores()
 
@@ -81,8 +79,7 @@ def add_datastore():
 
 @check_moderator
 @handle_exception
-def delete_user_vm():	
-    check_moderator()
+def delete_user_vm():
     try:
         vm_id=request.args[0]
         user_id=request.args[1]
@@ -90,9 +87,10 @@ def delete_user_vm():
         session.flash = 'User access is eradicated.'
     except:
         handle_exception()	
-    redirect(URL(r=request,c='user',f='settings', args=[vm_id]))
+    redirect(URL(r=request,c = 'user',f = 'settings', args = [vm_id]))
 
 @check_moderator
+@handle_exception
 def migrate_vm():
     session.flash="Has to be implemented"
 
@@ -145,45 +143,17 @@ def delete_machine():
     redirect(URL(r=request,c='admin',f='list_all_vm'))
 
 @check_moderator
+@handle_exception
 def edit_vmconfig():
     session.flash="Has to be implemented"
 
 @check_moderator
+@handle_exception
 def mailToGUI():
     session.flash="Has to be implemented"
 
 
 @check_moderator
+@handle_exception
 def add_disk():
     session.flash="Has to be implemented"
-
-
-@check_moderator
-@handle_exception
-def approve_requests():
-    pending_requests = get_verified_vm_list()
-    return dict(pending_requests=pending_requests)
-
-
-@check_moderator
-@handle_exception
-def approve_request():
-    
-    vm_id=request.args[0]
-    check_moderator()
-    
-    approve_vm_request(vm_id);
-    session.flash = 'Installation request added to queue'
-    redirect(URL(c='admin', f='pending_requests'))
-
-    
-@check_moderator
-@handle_exception
-def reject_request():
-
-    vm_id=request.args[0]
-    check_moderator()
-
-    reject_vm_request(vm_id);
-    session.flash = 'Request Rejected'
-    redirect(URL(c='admin', f='pending_requests'))

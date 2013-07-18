@@ -40,7 +40,7 @@ if auth.is_logged_in():
             response.orgadmin_menu = [
                 (H2('ORG-ADMIN MENU'),False,None),
                 (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm')),
-                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('admin','approve_requests'))
+                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('orgadmin','pending_approvals'))
                 ]
         
             if is_moderator():

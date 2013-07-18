@@ -45,7 +45,7 @@ def fetch_ldap_user(username):
     _last_name=''
     _email=None
     is_faculty=False
-
+#TODO: changes for orgadmin yet to be implemented
     try:
         ldap_result_id = l.search(base_dn, searchScope, searchFilter, retrieveAttributes)
         while 1:
@@ -83,7 +83,7 @@ def fetch_ldap_user(username):
 #This method is called only when user logs in for the first time
 #or when faculty name is verified on 'request VM' screen
 def create_or_update_user(user_name, first_name, last_name, email, is_faculty, update_session):
-
+#TODO: changes for orgadmin yet to be implemented
     user = current.db(current.db.user.username==user_name).select().first()
     if not user:
         #create user
@@ -97,15 +97,21 @@ def create_or_update_user(user_name, first_name, last_name, email, is_faculty, u
 def add_user_membership(user_id, user_name, is_faculty, update_session):
     
     config = get_config_file()
-    admin_users = config.get("GENERAL_CONF","admin_uid")
+    admin_users_testing = config.get("GENERAL_CONF","admin_uid")
+    faculty_users_testing = config.get("GENERAL_CONF","faculty_uid")
 
-    if user_name in admin_users:
-        add_membership_db(user_id, 'admin', update_session)
+    if user_name in admin_users_testing:
+        add_membership_db(user_id, current.ADMIN, update_session)
+
+    if user_name in faculty_users_testing:
+        add_membership_db(user_id, current.FACULTY, update_session)
+
+#TODO: changes for orgadmin yet to be implemented
 
     if is_faculty:
-        add_membership_db(user_id, 'faculty', update_session)
+        add_membership_db(user_id, current.FACULTY, update_session)
     elif user_name not in admin_users:
-        add_membership_db(user_id, 'user', update_session)
+        add_membership_db(user_id, current.USER, update_session)
 
 def add_membership_db(_user_id, role, update_session):
     #Find the group_id for the given role
