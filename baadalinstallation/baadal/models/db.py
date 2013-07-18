@@ -78,7 +78,6 @@ auth.settings.table_group = db.define_table(
 
 auth.settings.table_membership = db.define_table(
     auth.settings.table_membership_name,
-    Field('id','autoincrement'),
     Field('user_id', db.user),
     Field('group_id', db.user_group),
     primarykey = ['user_id', 'group_id'])
@@ -151,7 +150,6 @@ db.define_table('vm_data',
     Field('status', 'integer'))
 
 db.define_table('user_vm_map',
-    Field('id','autoincrement'),
     Field('user_id', db.user),
     Field('vm_id', db.vm_data),
     primarykey = ['user_id', 'vm_id'])
@@ -182,7 +180,6 @@ db.define_table('vm_data_event',
     Field('status', 'integer'))
 
 db.define_table('attached_disks',
-    Field('id','autoincrement'),
     Field('vm_id', db.vm_data,notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
     Field('capacity', 'string',length = 45),
