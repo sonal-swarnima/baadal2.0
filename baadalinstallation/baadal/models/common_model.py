@@ -4,10 +4,11 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect
+    from gluon import db,URL,session,redirect,HTTP
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_fullname, get_datetime, is_moderator
-
+from urllib2 import HTTPError
+from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
 
 def get_hosted_vm_list(vms):
     vmlist = []
@@ -77,23 +78,28 @@ def get_task_list(events):
         tasks.append(element)
     return tasks
 
-# Generic error handler decorator
-def handle_exception(fn):
+# Generic exception handler decorator
+def exception_handler(fn):
     def decorator(*args, **kwargs):
-        error = ''
         try:
             return fn(*args, **kwargs)
+        except HTTP:
+            raise
         except:
-            import sys, traceback
-            etype, value, tb = sys.exc_info()
-            msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
-            if is_moderator():
-                error = msg
-            logger.error(msg)                 
-            redirect(URL(c='default', f='error',vars={'error':error}))
+            handle_exception()
     return decorator    
 
-
+def handle_exception():
+    import sys, traceback
+    etype, value, tb = sys.exc_info()
+    error = ''
+    msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
+    if is_moderator():
+        error = msg
+    logger.error(msg)                 
+    redirect(URL(c='default', f='error',vars={'error':error}))    
+    
+    
 # Generic check moderator decorator
 def check_moderator(fn):
     def decorator(*args, **kwargs):
@@ -111,7 +117,7 @@ def check_orgadmin(fn):
         if (auth.is_logged_in()) & (is_moderator() | is_orgadmin()):
             return fn(*args, **kwargs)
         else:
-            session.flash = "You don't have admin privileges"
+            session.flash = "You don't have org admin privileges"
             redirect(URL(c='default', f='index'))
     return decorator    
 
@@ -122,7 +128,7 @@ def check_faculty(fn):
         if (auth.is_logged_in()) & (is_moderator() | is_orgadmin() | is_faculty()):
             return fn(*args, **kwargs)
         else:
-            session.flash = "You don't have admin privileges"
+            session.flash = "You don't have faculty privileges"
             redirect(URL(c='default', f='index'))
     return decorator    
 

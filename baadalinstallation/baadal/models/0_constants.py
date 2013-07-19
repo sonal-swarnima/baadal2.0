@@ -67,11 +67,10 @@ ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi'}
 DB_CONSTANTS = {'ifbaadaldown':'0',
               'vmfiles_path':'/mnt/testdatastore',
               'datastore_int':'ds_',
-              'ip_range':'10.20.',
-              'vncport_range':'5920',
+              'vncport_range':'20000',
               'templates_dir':'vm_templates',
-              'defined_vms':'1700',
-              'mac_range':'54:52:00:01:'}
+              'archives_dir' : 'vm_archives',
+              'vmcount' : '1' }
 
 ADMIN = 'admin'
 ORGADMIN = 'orgadmin'
@@ -82,6 +81,24 @@ current.ADMIN = ADMIN
 current.ORGADMIN = ORGADMIN
 current.FACULTY = FACULTY
 current.USER = USER
+
+MAC_IP_POOL = { '54:52:00:01:17:89' : '10.208.21.75',
+                '54:52:00:01:17:88' : '10.208.21.76',
+                '54:52:00:01:17:87' : '10.208.21.77',
+                '54:52:00:01:17:86' : '10.208.21.78',
+                '54:52:00:01:17:85' : '10.208.21.79',
+                '54:52:00:01:17:84' : '10.208.21.80',
+                '54:52:00:01:17:83' : '10.208.21.81',
+                '54:52:00:01:17:82' : '10.208.21.82',
+                '54:52:00:01:17:81' : '10.208.21.83',
+                '54:52:00:01:17:80' : '10.208.21.84',
+                '54:52:00:01:17:79' : '10.208.21.86',
+                '54:52:00:01:17:78' : '10.208.21.87',
+                '54:52:00:01:17:77' : '10.208.21.88',
+                '54:52:00:01:17:76' : '10.208.21.89' } 
+
+current.MAC_IP_POOL = MAC_IP_POOL
+
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
