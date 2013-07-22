@@ -26,7 +26,7 @@ def approve_request():
     vm_id=request.args[0] 
     approve_vm_request(vm_id);
     session.flash = 'Installation request added to queue'
-    redirect(URL(c='admin', f='pending_requests'))
+    redirect(URL(c='orgadmin', f='pending_approvals'))
 
 @check_orgadmin
 @exception_handler
@@ -34,6 +34,6 @@ def reject_request():
     vm_id=request.args[0]
     reject_vm_request(vm_id);
     session.flash = 'Request Rejected'
-    redirect(URL(c='admin', f='pending_requests'))
+    redirect(URL(c='orgadmin', f='pending_approvals'))
     
 
