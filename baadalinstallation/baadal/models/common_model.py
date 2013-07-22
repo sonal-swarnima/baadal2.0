@@ -63,6 +63,7 @@ def get_vm_info(_vm_id):
         return None
     return vm_info.first()
 
+
 def get_task_list(events):
 
     tasks = []
@@ -76,6 +77,22 @@ def get_task_list(events):
                    'error_msg':event.error}
         tasks.append(element)
     return tasks
+
+
+def add_vm_task_to_queue(_vm_id, _task_type, dest_host=None, mig_type=None):
+    _dict = {}
+    _dict['vm_id'] = _vm_id
+    if dest_host != None:
+        _dict['dest_host'] = dest_host
+    if mig_type != None:
+        _dict['mig_type'] = mig_type
+        
+    db.task_queue.insert(task_type=_task_type,
+                         vm_id=_vm_id, 
+                         parameters=str(_dict), 
+                         priority=TASK_QUEUE_PRIORITY_NORMAL,  
+                         status=TASK_QUEUE_STATUS_PENDING)
+    
 
 # Generic exception handler decorator
 def handle_exception(fn):
