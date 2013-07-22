@@ -7,13 +7,12 @@ if 0:
     from gluon import db,URL,session,redirect,HTTP
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from urllib2 import HTTPError
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
 
 def get_hosted_vm_list(vms):
     vmlist = []
     for vm in vms:
-        total_cost = add_to_cost(vm.vm_name)
+        total_cost = add_to_cost(vm.id)
         element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_full_name(vm.owner_id), 'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
         vmlist.append(element)
     return vmlist
@@ -34,8 +33,8 @@ def get_pending_vm_list(vms):
     return vmlist
 
 
-def add_to_cost(vm_name):
-    vm = db(db.vm_data.vm_name==vm_name).select()[0]
+def add_to_cost(vm_id):
+    vm = db.vm_data[vm_id]
 
     oldtime = vm.start_time
     newtime = get_datetime()
@@ -44,13 +43,13 @@ def add_to_cost(vm_name):
     #Calculate hour difference between start_time and current_time
     hours  = ((newtime - oldtime).total_seconds()) / 3600
     
-    if(vm.current_run_level==0):scale=0
-    elif(vm.current_run_level==1):scale=1
-    elif(vm.current_run_level==2):scale=.5
-    elif(vm.current_run_level==3):scale=.25
+    if(vm.current_run_level == 0): scale = 0
+    elif(vm.current_run_level == 1): scale = 1
+    elif(vm.current_run_level == 2): scale = .5
+    elif(vm.current_run_level == 3): scale = .25
 
-    totalcost = float(hours*(vm.vCPU*float(COST_CPU)+vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
-    db(db.vm_data.vm_name == vm_name).update(start_time=get_datetime(),total_cost=totalcost)
+    totalcost = float(hours*(vm.vCPU*float(COST_CPU) + vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
+    db(db.vm_data.id == vm_id).update(start_time=get_datetime(),total_cost=totalcost)
     return totalcost
 
 def get_full_name(user_id):

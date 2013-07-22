@@ -2,7 +2,7 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import db,auth
+    from gluon import db,auth,request
 ###################################################################################
 
 def user():

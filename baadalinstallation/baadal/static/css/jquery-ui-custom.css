@@ -23,4 +23,5 @@
 } 
 #tabs-task .ui-tabs-nav .ui-state-active a { 
     color: #000000;
+    font-weight:bold;
 }
