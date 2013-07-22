@@ -24,7 +24,7 @@ db.define_table('organisation',
     Field('name', 'string', notnull = True, unique = True),
     Field('details', 'string'),
     Field('public_ip', 'string',length = 15), 
-    Field('admin_mailid', 'string', lenght = 50)
+    Field('admin_mailid', 'string', length = 50),
     format = '%(details)s')
 
 from gluon.tools import Auth

@@ -156,6 +156,7 @@ def exec_command_on_host(machine_ip, user_name, command):
             ssh.close()
     return
     
+
 # Function to create vm image
 def create_vm_image(vm_details, datastore):
 
@@ -219,6 +220,7 @@ def get_install_command(template,vm_details,vm_image_location,ram,vcpus,new_mac_
 
     return install_command 
 
+
 # Function to generate xml
 def generate_xml(diskpath,target_disk):
 
@@ -228,6 +230,7 @@ def generate_xml(diskpath,target_disk):
     etree.SubElement(root_element, 'target', attrib = {'dev': target_disk})
     return (etree.tostring(root_element))
     
+
 # Function to attach disk with vm
 def attach_disk(vmname, size, hostip, datastore):
    

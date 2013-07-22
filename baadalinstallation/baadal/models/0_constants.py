@@ -64,8 +64,7 @@ GROUP_DATA = {'admin':'Super User',
 
 ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi'}
 
-DB_CONSTANTS = {'ifbaadaldown':'0',
-              'vmfiles_path':'/mnt/testdatastore',
+DB_CONSTANTS = {'vmfiles_path':'/mnt/testdatastore',
               'datastore_int':'ds_',
               'vncport_range':'20000',
               'templates_dir':'vm_templates',
