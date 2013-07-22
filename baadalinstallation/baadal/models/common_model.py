@@ -78,17 +78,17 @@ def get_task_list(events):
     return tasks
 
 # Generic exception handler decorator
-def exception_handler(fn):
+def handle_exception(fn):
     def decorator(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
         except HTTP:
             raise
         except:
-            handle_exception()
+            exception_handler()
     return decorator    
 
-def handle_exception():
+def exception_handler():
     import sys, traceback
     etype, value, tb = sys.exc_info()
     error = ''

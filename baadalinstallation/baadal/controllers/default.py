@@ -2,7 +2,7 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import db,auth,request
+    from gluon import auth,request
 ###################################################################################
 
 def user():
@@ -29,9 +29,6 @@ def contact():
 
 def error():
     return dict(error=request.vars['error'])
-
-def test():
-    return db().select(db.template.datastore_id)
 
 def page_under_construction():
     return dict()
