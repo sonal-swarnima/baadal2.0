@@ -24,7 +24,7 @@ if auth.is_logged_in():
         (H2('USER MENU'),False,None),
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
-        (T('List My VMs'), False, URL('user','list_my_vm')),
+        (T('My VMs'), False, URL('user','list_my_vm')),
         (T('My Tasks'), False, URL('user','list_my_task')),
         (T('Mail Admin'), False, URL('default','page_under_construction.html')),
         (T('Report Bug'), False, URL('default','page_under_construction.html'))
