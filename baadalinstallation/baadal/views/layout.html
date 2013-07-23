@@ -23,41 +23,60 @@
       });
       
       if(jQuery('#menu_admin').length != 0){
-      	loadMenu(jQuery('#menu_orgadmin'));
+      	loadMenu(jQuery('#menu_admin'), true);
+      	loadMenu(jQuery('#menu_orgadmin'), false);
+      	loadMenu(jQuery('#menu_faculty'), false);
+      	loadMenu(jQuery('#menu_user'), false);
       }
-      if(jQuery('#menu_orgadmin').length != 0){
-      	loadMenu(jQuery('#menu_faculty'));
+      else if(jQuery('#menu_orgadmin').length != 0){
+      	loadMenu(jQuery('#menu_orgadmin'), true);
+      	loadMenu(jQuery('#menu_faculty'), false);
+      	loadMenu(jQuery('#menu_user'), false);
       }
-      if(jQuery('#menu_faculty').length != 0){
-      	loadMenu(jQuery('#menu_user'));
+      else if(jQuery('#menu_faculty').length != 0){
+      	loadMenu(jQuery('#menu_faculty'), true);
+      	loadMenu(jQuery('#menu_user'), false);
+      }
+      else{
+      	loadMenu(jQuery('#menu_user'), true);
       }
 
       jQuery('[id^=menu_]').click(function(){
 		toggleMenu($(this))
-	  });        
+      });        
 
       jQuery('#tabs-task').tabs();
-	});
+    });
     
     function toggleMenu(obj){
-    	obj_id = obj.attr('id');
     	obj.parent().siblings().toggle();
-    	jQuery.cookie(obj_id, obj.parent().next().is(':hidden'))
+    	addToCookie(obj);
     }
     
-    function loadMenu(obj){
+    function loadMenu(obj, show){
     	obj_id = obj.attr('id');
+    	objs = obj.parent().siblings();
     	saved_hidden = jQuery.cookie(obj_id);
     	if(saved_hidden == 'true'){
-    		obj.parent().siblings().hide();
+    		objs.hide();
     	}else if(saved_hidden == 'false'){
-    		obj.parent().siblings().show();
+    		objs.show();
     	}else{
-    		obj.parent().siblings().toggle();
+    		if(show){
+    			objs.show();
+    		}else{
+    			objs.hide();
+    		}
     	}
-    	jQuery.cookie(obj_id, obj.parent().next().is(':hidden'))
+    	addToCookie(obj);
     }
 	
+    function addToCookie(obj){
+    	obj_id = obj.attr('id');
+    	is_hidden = obj.parent().next().is(':hidden');
+    	jQuery.removeCookie(obj_id);
+    	jQuery.cookie(obj_id, is_hidden, {path: '/' });
+    }
   </script>
 
   <title>
