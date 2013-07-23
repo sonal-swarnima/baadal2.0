@@ -55,11 +55,12 @@ def get_fullname(_user_id):
     if row :
         row=row.first()
         return row['first_name'] + ' ' + row['last_name']
-#TODO: to be implemented        
+        
 def get_pending_approval_count():
-    return 0
-    
-#TODO: to be implemented
-def get_pending_req_count():
-    return 0	
+
+    users_of_same_org = current.db(current.auth.user.organisation_id == current.db.user.organisation_id).select(current.db.user.id)
+
+    return current.db((current.db.vm_data.status == current.VM_STATUS_VERIFIED)
+            & (current.db.vm_data.requester_id.belongs(users_of_same_org))).count()
+             
 

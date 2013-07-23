@@ -125,7 +125,7 @@ def get_faculty_info(username):
         if current.auth_type == 'ldap':
             result = fetch_ldap_user(username)
             if (result != None) and (result[3] == True):
-                create_or_update_user(username, result[0], result[1], result[2], result[3], False)
+                create_or_update_user(user_name, result[0], result[1], result[2], result[3], result[4], False)
                 user = user_query.select().first()
     
     if user:
