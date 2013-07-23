@@ -139,11 +139,18 @@ def changelevel():
 @auth.requires_login()
 @handle_exception       
 def list_my_task():
-    pending = get_my_task_list(TASK_QUEUE_STATUS_PENDING)
-    success = get_my_task_list(TASK_QUEUE_STATUS_SUCCESS)
-    failed = get_my_task_list(TASK_QUEUE_STATUS_FAILED)
+    form = get_task_num_form()
+    task_num = TASK_PER_PAGE
+    form.vars.task_num = task_num
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        task_num = int(form.vars.task_num)
     
-    return dict(pending=pending, success=success, failed=failed)
+    pending = get_my_task_list(TASK_QUEUE_STATUS_PENDING, task_num)
+    success = get_my_task_list(TASK_QUEUE_STATUS_SUCCESS, task_num)
+    failed = get_my_task_list(TASK_QUEUE_STATUS_FAILED, task_num)
+
+    return dict(pending=pending, success=success, failed=failed, form=form)
 
 def vm_permission_check(vm_id):
     vminfo = get_vm_info(vm_id)

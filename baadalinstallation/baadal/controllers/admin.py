@@ -105,11 +105,18 @@ def lockvm():
 @handle_exception
 def task_list():
 
-    pending = get_task_by_status(TASK_QUEUE_STATUS_PENDING)
-    success = get_task_by_status(TASK_QUEUE_STATUS_SUCCESS)
-    failed = get_task_by_status(TASK_QUEUE_STATUS_FAILED)
+    form = get_task_num_form()
+    task_num = TASK_PER_PAGE
+    form.vars.task_num = task_num
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        task_num = int(form.vars.task_num)
     
-    return dict(pending=pending, success=success, failed=failed)
+    pending = get_task_by_status(TASK_QUEUE_STATUS_PENDING, task_num)
+    success = get_task_by_status(TASK_QUEUE_STATUS_SUCCESS, task_num)
+    failed = get_task_by_status(TASK_QUEUE_STATUS_FAILED, task_num)
+    
+    return dict(pending=pending, success=success, failed=failed, form=form)
 
 @check_moderator
 @handle_exception

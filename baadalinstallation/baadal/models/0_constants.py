@@ -98,6 +98,6 @@ MAC_IP_POOL = { '54:52:00:01:17:89' : '10.208.21.75',
 
 current.MAC_IP_POOL = MAC_IP_POOL
 
-
+TASK_PER_PAGE=20
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

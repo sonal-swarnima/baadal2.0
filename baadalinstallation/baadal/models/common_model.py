@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect,HTTP
+    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_NOT_EMPTY, IS_INT_IN_RANGE
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
@@ -78,6 +78,12 @@ def get_task_list(events):
         tasks.append(element)
     return tasks
 
+def get_task_num_form():
+    form = FORM('Show:',
+                INPUT(_name = 'task_num', _size=2, requires = IS_INT_IN_RANGE(1,101)),
+                INPUT(_type = 'submit', _value = 'Refresh'))
+    return form
+    
 
 def add_vm_task_to_queue(_vm_id, _task_type, dest_host=None, mig_type=None):
     _dict = {}

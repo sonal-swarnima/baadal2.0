@@ -140,11 +140,11 @@ def get_vm_user_list(vm_id) :
     return user_id_lst		
 
 
-def get_my_task_list(task_status):
+def get_my_task_list(task_status, task_num):
     task_query = db((db.task_queue_event.status == task_status) 
                     & (db.task_queue_event.vm_id == db.vm_data.id) 
                     & (db.vm_data.requester_id==auth.user.id))
 
-    events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time)
+    events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)
