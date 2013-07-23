@@ -16,14 +16,48 @@
 	    jQuery('.flash').hide();
       {{pass}}
       
-      jQuery('.web2py-menu-vertical').toggle();
+      jQuery('#configure').siblings().hide();
 
-      jQuery('#configure').click(function(){ 
-        jQuery('.web2py-menu-vertical').slideToggle();
+      jQuery('#configure').click(function(){
+      	$(this).siblings().slideToggle();
       });
       
+      if(jQuery('#menu_admin').length != 0){
+      	loadMenu(jQuery('#menu_orgadmin'));
+      }
+      if(jQuery('#menu_orgadmin').length != 0){
+      	loadMenu(jQuery('#menu_faculty'));
+      }
+      if(jQuery('#menu_faculty').length != 0){
+      	loadMenu(jQuery('#menu_user'));
+      }
+
+      jQuery('[id^=menu_]').click(function(){
+		toggleMenu($(this))
+	  });        
+
       jQuery('#tabs-task').tabs();
-    });
+	});
+    
+    function toggleMenu(obj){
+    	obj_id = obj.attr('id');
+    	obj.parent().siblings().toggle();
+    	jQuery.cookie(obj_id, obj.parent().next().is(':hidden'))
+    }
+    
+    function loadMenu(obj){
+    	obj_id = obj.attr('id');
+    	saved_hidden = jQuery.cookie(obj_id);
+    	if(saved_hidden == 'true'){
+    		obj.parent().siblings().hide();
+    	}else if(saved_hidden == 'false'){
+    		obj.parent().siblings().show();
+    	}else{
+    		obj.parent().siblings().toggle();
+    	}
+    	jQuery.cookie(obj_id, obj.parent().next().is(':hidden'))
+    }
+	
   </script>
 
   <title>
