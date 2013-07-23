@@ -7,27 +7,27 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator,is_faculty,is_orgadmin
+from helper import is_moderator, is_faculty, is_orgadmin, get_pending_approval_count
 
 response.title = request.application
 response.google_analytics_id = None
 
 response.top_menu = [
     (T('About'), False, URL('default','index')),
-    (T('Blog'), False, URL('default','test')),
-    (T('Photos'), False, URL('default','page_under_construction.html')),
-    (T('Team Baadal'), False, URL('default','page_under_construction.html')),
-    (T('Contact'), False, URL('default','page_under_construction.html'))
+    (T('Blog'), False, URL('default','page_under_construction')),
+    (T('Photos'), False, URL('default','page_under_construction')),
+    (T('Team Baadal'), False, URL('default','page_under_construction')),
+    (T('Contact'), False, URL('default','page_under_construction'))
     ]
 if auth.is_logged_in():
     response.user_menu = [
         (H2('USER MENU'),False,None),
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
-        (T('List My VMs'), False, URL('user','list_my_vm')),
+        (T('My VMs'), False, URL('user','list_my_vm')),
         (T('My Tasks'), False, URL('user','list_my_task')),
-        (T('Mail Admin'), False, URL('default','page_under_construction.html')),
-        (T('Report Bug'), False, URL('default','page_under_construction.html'))
+        (T('Mail Admin'), False, URL('default','page_under_construction')),
+        (T('Report Bug'), False, URL('default','page_under_construction'))
         ]
     
     if (is_moderator() | is_faculty()):
@@ -40,7 +40,7 @@ if auth.is_logged_in():
             response.orgadmin_menu = [
                 (H2('ORG-ADMIN MENU'),False,None),
                 (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm')),
-                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('orgadmin','pending_approvals'))
+                (T('Pending Org-Level VM Approvals {'+str(get_pending_approval_count())+'}'), False, URL('orgadmin','pending_approvals'))
                 ]
         
             if is_moderator():
@@ -49,11 +49,11 @@ if auth.is_logged_in():
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
-                    (T('Sanity Check'), False, URL('default','page_under_construction.html')),
-                    (T('Emergency'), False, URL('default','page_under_construction.html')),
+                    (T('Sanity Check'), False, URL('default','page_under_construction')),
+                    (T('Emergency'), False, URL('default','page_under_construction')),
                     (T('Configure System'), False,dict(_href='#', _id='configure'),[
                         (T('Add Host'), False, URL('admin','host_details')),
-                        (T('Add Disk'), False, URL('default','page_under_construction.html')),
+                        (T('Add Disk'), False, URL('default','page_under_construction')),
                         (T('Add Template'), False, URL('admin','add_template')),
                         (T('Add Datastore'), False, URL('admin','add_datastore'))
                         ])

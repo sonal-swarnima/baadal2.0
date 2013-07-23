@@ -24,7 +24,7 @@ db.define_table('organisation',
     Field('name', 'string', notnull = True, unique = True),
     Field('details', 'string'),
     Field('public_ip', 'string',length = 15), 
-    Field('admin_mailid', 'string', lenght = 50)
+    Field('admin_mailid', 'string', length = 50),
     format = '%(details)s')
 
 from gluon.tools import Auth
@@ -139,7 +139,7 @@ db.define_table('vm_data',
     Field('datastore_id', db.datastore),
     Field('purpose', 'text'),
     Field('expiry_date', 'date'),
-    Field('total_cost', 'integer', default = 0),
+    Field('total_cost', 'float', default = 0),
     Field('current_run_level', 'integer', default = 0),
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
@@ -193,6 +193,7 @@ db.define_table('snapshot',
 db.define_table('task_queue',
     Field('task_type', 'string',length = 30,notnull = True),
     Field('vm_id', db.vm_data),
+    Field('parameters', 'string', length = 100),
     Field('priority', 'integer', default = 1, notnull = True),
     Field('status', 'integer', notnull = True))
 
@@ -200,6 +201,7 @@ db.define_table('task_queue_event',
     Field('task_id', 'integer', notnull = True),
     Field('task_type', 'string',length = 30,notnull = True),
     Field('vm_id', db.vm_data,notnull = True),
+    Field('parameters', 'string', length = 100),
     Field('status', 'integer', notnull = True),
     Field('error', 'string', length = 1024),
     Field('start_time', 'datetime', default = get_datetime()),
@@ -241,6 +243,7 @@ def schedule_task(fields, _id):
     db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             vm_id = fields['vm_id'],
+                            parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 
     scheduler.queue_task('vm_task', pvars = dict(task_id = _id),start_time = request.now)  # @UndefinedVariable

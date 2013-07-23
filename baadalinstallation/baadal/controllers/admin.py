@@ -8,19 +8,19 @@ if 0:
 ###################################################################################
 
 @check_moderator
-@exception_handler
+@handle_exception
 def list_all_vm():
     vm_list = get_all_vm_list()
     return dict(vmlist = vm_list)
 
 @check_moderator
-@exception_handler
+@handle_exception
 def hosts_vms():
     hostvmlist = get_vm_groupby_hosts()        
     return dict(hostvmlist = hostvmlist)
 
 @check_moderator
-@exception_handler
+@handle_exception
 def add_template():
     form = get_add_template_form()
     templates = get_templates()
@@ -32,6 +32,7 @@ def add_template():
     return dict(form = form, templates = templates)
 
 @check_moderator
+@handle_exception
 def host_details():
     hosts = get_all_hosts()
 
@@ -45,6 +46,7 @@ def host_details():
     return dict(form=form,hosts=hosts)   
 
 @check_moderator
+@handle_exception
 def add_host():
     if_redirect = False
     host_ip = request.args[0]
@@ -60,7 +62,7 @@ def add_host():
         return dict(form=form)
 
 @check_moderator
-@exception_handler
+@handle_exception
 def add_datastore():
     form = get_add_datastore_form()
     datastores = get_datastores()
@@ -73,23 +75,20 @@ def add_datastore():
     return dict(form=form, datastores=datastores)
 
 @check_moderator
+@handle_exception
 def delete_user_vm():
-    try:
-        vm_id=request.args[0]
-        user_id=request.args[1]
-        delete_user_vm_access(vm_id,user_id)				
-        session.flash = 'User access is eradicated.'
-    except:
-        handle_exception()	
+    vm_id=request.args[0]
+    user_id=request.args[1]
+    delete_user_vm_access(vm_id,user_id)				
+    session.flash = 'User access is eradicated.'
     redirect(URL(r=request,c = 'user',f = 'settings', args = [vm_id]))
 
 @check_moderator
-@exception_handler
 def migrate_vm():
     session.flash="Has to be implemented"
 
 @check_moderator
-@exception_handler
+@handle_exception
 def lockvm():
     vm_id=request.args[0]
     vminfo=get_vm_info(vm_id)
@@ -103,17 +102,24 @@ def lockvm():
     redirect(URL(r=request,c='admin',f='list_all_vm'))
 
 @check_moderator
-@exception_handler
+@handle_exception
 def task_list():
-    #TODO:Pagination to be implemented
-    pending = get_task_by_status(TASK_QUEUE_STATUS_PENDING)
-    success = get_task_by_status(TASK_QUEUE_STATUS_SUCCESS)
-    failed = get_task_by_status(TASK_QUEUE_STATUS_FAILED)
+
+    form = get_task_num_form()
+    task_num = TASK_PER_PAGE
+    form.vars.task_num = task_num
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        task_num = int(form.vars.task_num)
     
-    return dict(pending=pending, success=success, failed=failed)
+    pending = get_task_by_status(TASK_QUEUE_STATUS_PENDING, task_num)
+    success = get_task_by_status(TASK_QUEUE_STATUS_SUCCESS, task_num)
+    failed = get_task_by_status(TASK_QUEUE_STATUS_FAILED, task_num)
+    
+    return dict(pending=pending, success=success, failed=failed, form=form)
 
 @check_moderator
-@exception_handler
+@handle_exception
 def ignore_task():
     task_id=request.args[0]
     update_task_ignore(task_id)
@@ -121,7 +127,7 @@ def ignore_task():
     redirect(URL(r=request,c='admin',f='task_list'))
 
 @check_moderator
-@exception_handler
+@handle_exception
 def retry_task():
     task_id=request.args[0]
     update_task_retry(task_id)
@@ -129,7 +135,7 @@ def retry_task():
     redirect(URL(r=request,c='admin',f='task_list'))
 
 @check_moderator
-@exception_handler
+@handle_exception
 def delete_machine():   
     vm_id=request.args[0]
     add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)
@@ -137,17 +143,14 @@ def delete_machine():
     redirect(URL(r=request,c='admin',f='list_all_vm'))
 
 @check_moderator
-@exception_handler
 def edit_vmconfig():
     session.flash="Has to be implemented"
 
 @check_moderator
-@exception_handler
 def mailToGUI():
     session.flash="Has to be implemented"
 
 
 @check_moderator
-@exception_handler
 def add_disk():
     session.flash="Has to be implemented"

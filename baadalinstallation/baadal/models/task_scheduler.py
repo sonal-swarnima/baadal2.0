@@ -26,7 +26,7 @@ def processTaskQueue(task_id):
         #Update attention_time for task in the event table
         task_event_query.update(attention_time=get_datetime())
         #Call the corresponding function from vm_helper
-        ret = task[process['task_type']](process['vm_id'])
+        ret = task[process['task_type']](process['parameters'])
         #On return, update the status and end time in task event table
         task_event_query.update(status=ret[0], end_time=get_datetime())
         if ret[0] == TASK_QUEUE_STATUS_FAILED:

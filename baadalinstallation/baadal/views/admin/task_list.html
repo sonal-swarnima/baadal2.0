@@ -1,12 +1,21 @@
 {{extend 'layout.html'}}
+<div style="text-align:right;padding-right:15px">
+{{=form}}
+</div>
+<div id="tabs-task">
+<ul>
+    <li><a href="#pendTab">Pending Tasks</a></li>
+    <li><a href="#compTab">Completed Tasks</a></li>
+    <li><a href="#failTab">Failed Tasks</a></li>
+</ul>
+
+<div id="pendTab">
 
 {{
-  counter=0;
   if not pending:
 }}
-<h2 class="subtitle">No Pending Tasks</h2>
+<h3>No Pending Tasks</h3>
 {{else:}}
-<h2 class="subtitle">Pending Tasks</h2>
   <div class="TABLE">
   <table id="pendingtasks">
       <tr>
@@ -28,14 +37,13 @@
 </table>
 </div>
 {{pass}}
-<br/>
-<br/>
+</div>
+<div id="compTab">
 {{
   if not success:
 }}
-<h2 class="subtitle">No Completed Tasks</h2>
+<h3>No Completed Tasks</h3>
 {{else:}}
-<h2 class="subtitle">Completed Tasks</h2>
   <div class="TABLE">
   <table id="completedtasks">
       <tr>
@@ -57,12 +65,13 @@
 </table>
 </div>
 {{pass}}
-<br/>
-<br/>
+</div>
+<div id="failTab">
 {{
+  counter = 0;
   if not failed:
 }}
-<h2 class="subtitle">No Failed Tasks</h2>
+<h3>No Failed Tasks</h3>
 {{else:}}
 <script>
 function clicker(content){
@@ -78,7 +87,6 @@ function clicker(content){
 }
 </script>
 
-<h2 class="subtitle">Failed Tasks</h2>
   <div class="TABLE">
   <table id="failedtasks">
       <tr>
@@ -103,6 +111,8 @@ function clicker(content){
       </tr>
       {{counter=counter+1}}
 	{{pass}}
-</table>
-</div>
+  </table>
+  </div>
 {{pass}}
+</div>
+</div>

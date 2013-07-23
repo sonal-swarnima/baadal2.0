@@ -55,6 +55,7 @@ VM_STATUS_SHUTDOWN = 6
 current.VM_STATUS_RUNNING = VM_STATUS_RUNNING
 current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
+current.VM_STATUS_VERIFIED = VM_STATUS_VERIFIED
 
 #Startup Data
 GROUP_DATA = {'admin':'Super User',
@@ -64,13 +65,13 @@ GROUP_DATA = {'admin':'Super User',
 
 ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi'}
 
-DB_CONSTANTS = {'ifbaadaldown':'0',
-              'vmfiles_path':'/mnt/testdatastore',
+DB_CONSTANTS = {'vmfiles_path':'/mnt/testdatastore',
               'datastore_int':'ds_',
               'vncport_range':'20000',
               'templates_dir':'vm_templates',
               'archives_dir' : 'vm_archives',
-              'vmcount' : '1' }
+              'vmcount' : '1',
+              'admin_email': 'baadalsupport@cse.iitd.ernet.in' }
 
 ADMIN = 'admin'
 ORGADMIN = 'orgadmin'
@@ -99,6 +100,6 @@ MAC_IP_POOL = { '54:52:00:01:17:89' : '10.208.21.75',
 
 current.MAC_IP_POOL = MAC_IP_POOL
 
-
+TASK_PER_PAGE=20
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

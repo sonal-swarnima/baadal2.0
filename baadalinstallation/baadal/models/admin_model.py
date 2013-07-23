@@ -83,8 +83,8 @@ def get_vm_groupby_hosts() :
     return (hostvmlist)
 
 
-def get_task_by_status(task_status):
-    events = db(db.task_queue_event.status == task_status).select(orderby = ~db.task_queue_event.start_time)
+def get_task_by_status(task_status, task_num):
+    events = db(db.task_queue_event.status == task_status).select(orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
     return get_task_list(events)
     
 

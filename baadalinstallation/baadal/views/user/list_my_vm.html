@@ -1,9 +1,14 @@
 {{extend 'layout.html'}}
+<div id="tabs-task">
+<ul>
+    <li><a href="#pendTab">Pending VM's</a></li>
+    <li><a href="#runTab">My VM's</a></li>
+</ul>
 
+<div id="pendTab">
 {{if not pending_vm:}}
-<h2 class="subtitle">No Pending Requests</h2>
-    {{else:}}
-<h2 class="subtitle">Pending Requests</h2>
+<h3>No Pending Requests</h3>
+  {{else:}}
   <div class="TABLE">
     <table id="pendingreqs">
       <tr>
@@ -33,14 +38,13 @@
     </table>
     </div>
 {{pass}}
-<br/>
-<br/>
+</div>
+<div id="runTab">
 {{
   if not hosted_vm:
 }}
-<h2 class="subtitle">No VM Running</h2>
+<h3>No VM Running</h3>
 {{else:}}
-<h2 class="subtitle">{{=T('My VMs')}}</h2>
 <div class="TABLE">
   <table id="myvms">
       <tr>
@@ -82,3 +86,5 @@
   </table>
 </div>
 {{pass}}
+</div>
+</div>

@@ -132,13 +132,6 @@ def get_faculty_info(username):
         return (user.user.id, (user.user.first_name + ' ' + user.user.last_name))
 
 
-def add_vm_task_to_queue(_vm_id, _task_type):
-    db.task_queue.insert(task_type=_task_type,
-                         vm_id=_vm_id, 
-                         priority=TASK_QUEUE_PRIORITY_NORMAL,  
-                         status=TASK_QUEUE_STATUS_PENDING)
-
-    
 def get_vm_user_list(vm_id) :		
     vm_users=db(vm_id == db.user_vm_map.vm_id ).select()
     user_id_lst =[]
@@ -147,11 +140,11 @@ def get_vm_user_list(vm_id) :
     return user_id_lst		
 
 
-def get_my_task_list(task_status):
+def get_my_task_list(task_status, task_num):
     task_query = db((db.task_queue_event.status == task_status) 
                     & (db.task_queue_event.vm_id == db.vm_data.id) 
                     & (db.vm_data.requester_id==auth.user.id))
 
-    events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time)
+    events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)
