@@ -55,6 +55,7 @@ VM_STATUS_SHUTDOWN = 6
 current.VM_STATUS_RUNNING = VM_STATUS_RUNNING
 current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
+current.VM_STATUS_VERIFIED = VM_STATUS_VERIFIED
 
 #Startup Data
 GROUP_DATA = {'admin':'Super User',
@@ -69,7 +70,8 @@ DB_CONSTANTS = {'vmfiles_path':'/mnt/testdatastore',
               'vncport_range':'20000',
               'templates_dir':'vm_templates',
               'archives_dir' : 'vm_archives',
-              'vmcount' : '1' }
+              'vmcount' : '1',
+              'admin_email': 'baadalsupport@cse.iitd.ernet.in' }
 
 ADMIN = 'admin'
 ORGADMIN = 'orgadmin'

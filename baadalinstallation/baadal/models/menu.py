@@ -7,7 +7,7 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator,is_faculty,is_orgadmin
+from helper import is_moderator, is_faculty, is_orgadmin, get_pending_approval_count
 
 response.title = request.application
 response.google_analytics_id = None
@@ -40,7 +40,7 @@ if auth.is_logged_in():
             response.orgadmin_menu = [
                 (H2('ORG-ADMIN MENU'),False,None),
                 (T('List All Org-Level VMs'), False, URL('orgadmin','list_all_orglevel_vm')),
-                (T('Pending Org-Level VM Approvals {'+str(0)+'}'), False, URL('orgadmin','pending_approvals'))
+                (T('Pending Org-Level VM Approvals {'+str(get_pending_approval_count())+'}'), False, URL('orgadmin','pending_approvals'))
                 ]
         
             if is_moderator():
