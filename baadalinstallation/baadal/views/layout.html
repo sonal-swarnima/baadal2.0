@@ -37,8 +37,14 @@
       	loadMenu(jQuery('#menu_faculty'), true);
       	loadMenu(jQuery('#menu_user'), false);
       }
-      else{
+      else if(jQuery('#menu_user').length != 0){
       	loadMenu(jQuery('#menu_user'), true);
+      }else
+      {
+      	$.cookie('menu_admin', null, {path: '/' });
+      	$.cookie('menu_orgadmin', null, {path: '/' });
+      	$.cookie('menu_faculty', null, {path: '/' });
+      	$.cookie('menu_user', null, {path: '/' });
       }
 
       jQuery('[id^=menu_]').click(function(){
@@ -74,7 +80,6 @@
     function addToCookie(obj){
     	obj_id = obj.attr('id');
     	is_hidden = obj.parent().next().is(':hidden');
-    	jQuery.removeCookie(obj_id);
     	jQuery.cookie(obj_id, is_hidden, {path: '/' });
     }
   </script>
