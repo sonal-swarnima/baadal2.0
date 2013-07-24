@@ -80,12 +80,12 @@ def fetch_ldap_user(username):
 
         if username in admin_users:
             _role = current.ADMIN
-        elif user in orgadmin_users:
+        elif username in orgadmin_users:
             _role = current.ORGADMIN
-        elif user in faculty_users:
+        elif username in faculty_users:
             _role = current.FACULTY
         else:
-            _role = currently.USER
+            _role = current.USER
 
     except ldap.LDAPError, e:
         current.logger.error(e)
@@ -108,6 +108,7 @@ def create_or_update_user(user_name, first_name, last_name, email, role, organis
     org_id = current.db(organisation == current.db.organisation.name).select(current.db.organisation.id).first()    
     current.db(current.db.user.username==user_name).update(first_name = first_name, last_name = last_name, email = email, 
                                                          organisation_id = org_id)
+                                                         
     add_user_membership(user.id, role, update_session)   
 
 
@@ -125,8 +126,10 @@ def add_user_membership(user_id, role, update_session):
 def add_membership_db(_user_id, role, update_session):
     #Find the group_id for the given role
     _group_id = current.db(current.db.user_group.role==role).select(current.db.user_group.id).first()['id']
+    _org_id = current.db(current.db.user.id == user_id).select(current.db.user.organisation_id).first()
     if _group_id !=0:
         current.db.user_membership.insert(user_id=_user_id,group_id=_group_id)
         if update_session:
             # add role to the current session
-            current.auth.user_groups[long(_group_id)]=role
+            current.auth.user_groups[long(_group_id)] = role
+            current.auth.organisation_id = _org_id
