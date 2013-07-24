@@ -60,7 +60,8 @@ def set_configuration_elem(form):
     
     form.vars.vCPU = int(configVal[0])
     form.vars.RAM = int(configVal[1])*1024
-    form.vars.HDD = int(configVal[2])
+    if form.vars.HDD == None:
+        form.vars.HDD = 0
 
 
 def validate_approver(form):
