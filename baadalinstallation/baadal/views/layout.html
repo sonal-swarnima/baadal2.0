@@ -16,72 +16,21 @@
 	    jQuery('.flash').hide();
       {{pass}}
       
-      jQuery('#configure').siblings().hide();
+      displayMainMenu();
 
       jQuery('#configure').click(function(){
       	$(this).siblings().slideToggle();
+    	addToCookie($(this));
       });
-      
-      if(jQuery('#menu_admin').length != 0){
-      	loadMenu(jQuery('#menu_admin'), true);
-      	loadMenu(jQuery('#menu_orgadmin'), false);
-      	loadMenu(jQuery('#menu_faculty'), false);
-      	loadMenu(jQuery('#menu_user'), false);
-      }
-      else if(jQuery('#menu_orgadmin').length != 0){
-      	loadMenu(jQuery('#menu_orgadmin'), true);
-      	loadMenu(jQuery('#menu_faculty'), false);
-      	loadMenu(jQuery('#menu_user'), false);
-      }
-      else if(jQuery('#menu_faculty').length != 0){
-      	loadMenu(jQuery('#menu_faculty'), true);
-      	loadMenu(jQuery('#menu_user'), false);
-      }
-      else if(jQuery('#menu_user').length != 0){
-      	loadMenu(jQuery('#menu_user'), true);
-      }else
-      {
-      	$.cookie('menu_admin', null, {path: '/' });
-      	$.cookie('menu_orgadmin', null, {path: '/' });
-      	$.cookie('menu_faculty', null, {path: '/' });
-      	$.cookie('menu_user', null, {path: '/' });
-      }
 
       jQuery('[id^=menu_]').click(function(){
-		toggleMenu($(this))
+    	$(this).parent().siblings().toggle();
+    	addToCookie($(this));
       });        
 
       jQuery('#tabs-task').tabs();
     });
-    
-    function toggleMenu(obj){
-    	obj.parent().siblings().toggle();
-    	addToCookie(obj);
-    }
-    
-    function loadMenu(obj, show){
-    	obj_id = obj.attr('id');
-    	objs = obj.parent().siblings();
-    	saved_hidden = jQuery.cookie(obj_id);
-    	if(saved_hidden == 'true'){
-    		objs.hide();
-    	}else if(saved_hidden == 'false'){
-    		objs.show();
-    	}else{
-    		if(show){
-    			objs.show();
-    		}else{
-    			objs.hide();
-    		}
-    	}
-    	addToCookie(obj);
-    }
-	
-    function addToCookie(obj){
-    	obj_id = obj.attr('id');
-    	is_hidden = obj.parent().next().is(':hidden');
-    	jQuery.cookie(obj_id, is_hidden, {path: '/' });
-    }
+
   </script>
 
   <title>
