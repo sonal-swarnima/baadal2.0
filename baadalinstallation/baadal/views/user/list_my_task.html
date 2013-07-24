@@ -17,7 +17,7 @@
 <h3>No Pending Tasks</h3>
 {{else:}}
   <div class="TABLE">
-  <table>
+  <table id="pendingtasks">
       <tr>
         <th>Task</th>
         <th>VM</th>
@@ -45,7 +45,7 @@
 <h3>No Completed Tasks</h3>
 {{else:}}
   <div class="TABLE">
-  <table>
+  <table id="completedtasks">
       <tr>
         <th>Task</th>
         <th>VM</th>
@@ -88,7 +88,7 @@ function clicker(content){
 </script>
 
 <div class="TABLE">
-  <table>
+  <table id="failedtasks">
       <tr>
         <th>Task</th>
         <th>VM</th>

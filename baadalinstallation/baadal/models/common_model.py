@@ -154,4 +154,12 @@ def check_faculty(fn):
             redirect(URL(c='default', f='index'))
     return decorator    
 
+def get_pending_approval_count():
+
+    users_of_same_org = current.db(current.auth.user.organisation_id == current.db.user.organisation_id).select(current.db.user.id)
+
+    return current.db((current.db.vm_data.status == current.VM_STATUS_VERIFIED)
+            & (current.db.vm_data.requester_id.belongs(users_of_same_org))).count()
+             
+
 

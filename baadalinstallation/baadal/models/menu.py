@@ -7,7 +7,7 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin, get_pending_approval_count
+from helper import is_moderator, is_faculty, is_orgadmin
 
 response.title = request.application
 response.google_analytics_id = None

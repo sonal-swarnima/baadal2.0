@@ -31,3 +31,4 @@ def get_verified_vm_list():
              & (db.vm_data.requester_id.belongs(users_of_same_org))).select(db.vm_data.ALL)
 
     return get_pending_vm_list(vms)
+    
