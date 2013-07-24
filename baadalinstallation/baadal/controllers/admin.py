@@ -84,9 +84,34 @@ def delete_user_vm():
     redirect(URL(r=request,c = 'user',f = 'settings', args = [vm_id]))
 
 @check_moderator
+@handle_exception
 def migrate_vm():
-    session.flash="Has to be implemented"
 
+    if_redirect = False
+    vm_id = request.args[0]
+    form = get_migrate_vm_form(vm_id)
+
+    if form.accepts(request.vars,session,keepvalues = True):
+
+        migrate_vm = True
+
+        if form.vars.live_migration == None:
+            if is_vm_running(vm_id):
+                response.flash = "Your VM is already running. Kindly turn it off and then retry!!!"
+                migrate_vm = False
+
+        if migrate_vm:
+            add_vm_task_to_queue(vm_id, TASK_TYPE_MIGRATE_VM, form.vars.destination_host, form.vars.live_migration )
+            session.flash = 'Your task has been queued. Please check your task list for status.'
+            if_redirect = True
+
+    elif form.errors:
+        response.flash = 'Error in form'
+
+    if if_redirect :
+        redirect(URL(c = 'admin', f = 'hosts_vms'))
+    return dict(form=form)
+    
 @check_moderator
 @handle_exception
 def lockvm():

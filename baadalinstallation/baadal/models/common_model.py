@@ -85,13 +85,13 @@ def get_task_num_form():
     return form
     
 
-def add_vm_task_to_queue(_vm_id, _task_type, dest_host=None, mig_type=None):
+def add_vm_task_to_queue(_vm_id, _task_type, destination_host=None, live_migration=None):
     _dict = {}
     _dict['vm_id'] = _vm_id
-    if dest_host != None:
-        _dict['dest_host'] = dest_host
-    if mig_type != None:
-        _dict['mig_type'] = mig_type
+    if destination_host != None:
+        _dict['destination_host'] = destination_host
+    if live_migration != None:
+        _dict['live_migration'] = live_migration
         
     db.task_queue.insert(task_type=_task_type,
                          vm_id=_vm_id, 

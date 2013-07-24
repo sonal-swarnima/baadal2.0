@@ -246,7 +246,7 @@ def schedule_task(fields, _id):
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 
-    scheduler.queue_task('vm_task', pvars = dict(task_id = _id),start_time = request.now)  # @UndefinedVariable
+    scheduler.queue_task('vm_task', pvars = dict(task_id = _id),start_time = request.now, timeout = 1800)  # @UndefinedVariable
 
 
 def vm_data_insert_callback(fields, _id):

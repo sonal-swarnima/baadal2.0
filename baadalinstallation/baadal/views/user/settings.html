@@ -66,7 +66,7 @@
         }}
 	<td><a href=# alt="Migrate this Virtual Machine" title="Migrate this virtual machine." onClick="if(confirm('Are you sure you want to migrate the virtual machine. You might end up disturbing the scheduling algorithm.'))
                                 {
-                                	window.location ='{{=URL(r=request, f='migrate_vm', args=[data['id']])}}'
+                                	window.location ='{{=URL(r=request, c = 'admin' , f='migrate_vm', args=[data['id']])}}'
                                 }
           ">{{=IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20)}}
                 {{=A(_title="Migrate this virtual machine",_alt="Migrate this virtual machine")}}</a>

@@ -7,7 +7,7 @@ if 0:
     global db; db = gluon.sql.DAL()
 ###################################################################################
 
-import re, os, sys, math, time, commands, libvirt, shutil, paramiko, traceback, random
+import re, os, ast, sys, math, time, commands, libvirt, shutil, paramiko, traceback, random
 import xml.etree.ElementTree as etree
 from helper import *
 
@@ -156,7 +156,6 @@ def exec_command_on_host(machine_ip, user_name, command):
             ssh.close()
     return
     
-
 # Function to create vm image
 def create_vm_image(vm_details, datastore):
 
@@ -220,7 +219,6 @@ def get_install_command(template,vm_details,vm_image_location,ram,vcpus,new_mac_
 
     return install_command 
 
-
 # Function to generate xml
 def generate_xml(diskpath,target_disk):
 
@@ -230,7 +228,6 @@ def generate_xml(diskpath,target_disk):
     etree.SubElement(root_element, 'target', attrib = {'dev': target_disk})
     return (etree.tostring(root_element))
     
-
 # Function to attach disk with vm
 def attach_disk(vmname, size, hostip, datastore):
    
@@ -239,7 +236,7 @@ def attach_disk(vmname, size, hostip, datastore):
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
         domain = connection_object.lookupByName(vmname)
-        alreadyattached = len(current.db(current.db.attached_disks.vm_id == vm.id).select(current.db.attached_disks.id)) 
+        alreadyattached = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         current.logger.debug("Value of alreadyattached is : " + str(alreadyattached))
         current.logger.debug("Above IF")
         if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/' \
@@ -340,8 +337,11 @@ def update_db_after_vm_installation(vmid, vm_details, template, datastore, host,
     return
     
 # Function to install a vm
-def install(vmid):
-
+def install(parameters):
+ 
+        dict_parameters = ast.literal_eval(parameters)
+        vmid = dict_parameters['vm_id']
+        current.logger.debug(vmid)
         current.logger.debug("In install function...")
         try:
             # Fetches vm details from vm_data table
@@ -376,8 +376,10 @@ def install(vmid):
             return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to start a vm
-def start(vmid):
-
+def start(parameters):
+    
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -392,8 +394,10 @@ def start(vmid):
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to suspend a vm
-def suspend(vmid):
+def suspend(parameters):
 
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -408,8 +412,10 @@ def suspend(vmid):
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to resume a vm
-def resume(vmid):
+def resume(parameters):
 
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -424,8 +430,10 @@ def resume(vmid):
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to destroy a vm forcefully
-def destroy(vmid):
+def destroy(parameters):
 
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     current.logger.debug(str(vm_details))
     try:
@@ -471,15 +479,17 @@ def clean_up_database_after_vm_deletion(vm_details):
     return
         
 # Function to delete a vm
-def delete(vmid):
+def delete(parameters):
+
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
-        vm_status = domain.info()[0]
-        current.logger.debug(vm_status)
-        if (vm_status == 1 or vm_status == 3):
+        current.logger.debug(str(vm_details.status))
+        if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
             domain.destroy()
         current.logger.debug("Starting to delete it...")
@@ -494,22 +504,41 @@ def delete(vmid):
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to migrate a vm to a new host
-def migrate(vmid, hostid):
+def migrate(parameters):
 
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
+    current.logger.debug("vmid :" + str(vmid))
+    destination_host_id = dict_parameters['destination_host']
+    current.logger.debug("destination host id :" + str(destination_host_id))
+    destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
+    current.logger.debug("destination_host_ip " + str(destination_host_ip))
+
+    if 'live_migration' in dict_parameters:
+        flags = current.MIGRATE_LIVE|current.MIGRATE_PEER2PEER|current.MIGRATE_TUNNELLED|current.MIGRATE_PERSIST_DEST|current.MIGRATE_UNDEFINE_SOURCE
+    else:
+        flags = current.MIGRATE_PEER2PEER|current.MIGRATE_TUNNELLED|current.MIGRATE_PERSIST_DEST|current.MIGRATE_UNDEFINE_SOURCE
+    current.logger.debug("Flags: " + str(flags))       
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     current.logger.debug(str(vm_details))
     try:
         current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = current_host_connection_object.lookupByName(vm_details.vmname)
-        destination_host_connection_object = libvirt.open("qemu+ssh://root@" + hostid + "/system")
-        domain.migrate(destination_host_connection_object, 1, None, None, 0)
+        domain = current_host_connection_object.lookupByName(vm_details.vm_name)            
+        domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
         current.logger.debug("Migrated successfully..")
+        current.db(current.db.vm_data.id == vmid).update(host_id = destination_host_id)
+        vm_count_on_old_host = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
+        current.logger.debug("vm count on old host : " + str(vm_count_on_old_host))
+        current.db(current.db.host.id == vm_details.host_id).update(vm_count = vm_count_on_old_host - 1)
+        vm_count_on_new_host = current.db(current.db.host.id == destination_host_id).select().first()['vm_count']
+        current.logger.debug("vm count on new host : " + str(vm_count_on_new_host))
+        current.db(current.db.host.id == destination_host_id).update(vm_count = vm_count_on_new_host + 1) 
         message = vm_details.vm_name + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message)
-        
+        return(current.TASK_QUEUE_STATUS_FAILED, message) 
+
 # Prepares VM list to be displayed on webpage
 def get_vm_list(vms):
     vmlist = []

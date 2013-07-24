@@ -7,14 +7,15 @@ if 0:
 ###################################################################################
 import sys,traceback
 from helper import get_datetime
-from vm_helper import install,start,suspend,resume,destroy,delete
+from vm_helper import install,start,suspend,resume,destroy,delete,migrate
 
-task = {TASK_TYPE_CREATE_VM    :   install,
-        TASK_TYPE_START_VM     :   start,
-        TASK_TYPE_SUSPEND_VM     :   suspend,
-        TASK_TYPE_RESUME_VM     :   resume,
-        TASK_TYPE_DESTROY_VM     :   destroy,
-        TASK_TYPE_DELETE_VM     :   delete
+task = {TASK_TYPE_CREATE_VM    :    install,
+        TASK_TYPE_START_VM     :    start,
+        TASK_TYPE_SUSPEND_VM   :    suspend,
+        TASK_TYPE_RESUME_VM    :    resume,
+        TASK_TYPE_DESTROY_VM   :    destroy,
+        TASK_TYPE_DELETE_VM    :    delete,
+        TASK_TYPE_MIGRATE_VM   :    migrate
 }
 
 def processTaskQueue(task_id):

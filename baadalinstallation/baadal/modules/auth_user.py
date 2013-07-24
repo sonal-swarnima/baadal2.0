@@ -126,7 +126,7 @@ def add_user_membership(user_id, role, update_session):
 def add_membership_db(_user_id, role, update_session):
     #Find the group_id for the given role
     _group_id = current.db(current.db.user_group.role==role).select(current.db.user_group.id).first()['id']
-    _org_id = current.db(current.db.user.id == user_id).select(current.db.user.organisation_id).first()
+    _org_id = current.db(current.db.user.id == _user_id).select(current.db.user.organisation_id).first()
     if _group_id !=0:
         current.db.user_membership.insert(user_id=_user_id,group_id=_group_id)
         if update_session:
