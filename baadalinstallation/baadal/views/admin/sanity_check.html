@@ -1,0 +1,24 @@
+{{extend 'layout.html'}}
+{{
+  if not vms:
+}}
+  <center>No VM running</center>
+{{else:}}
+  <table>
+      <tr>
+        <th>Host</th>
+        <th>Status</th>
+        <th>VM Name</th>
+        <th>Operation</th>
+      {{pass}}
+      </tr>
+  {{for vm in vms:}}
+      <tr>
+        <td>{{=vm['host']}}</td>
+        <td>{{=vm['status']}}</td>
+        <td>{{=vm['vmname']}}</td>
+        <td>{{=vm['operation']}}</td>
+      </tr>
+  {{pass}}
+  </table>
+{{pass}}

@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import request,session
+    from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
@@ -179,3 +179,8 @@ def mailToGUI():
 @check_moderator
 def add_disk():
     session.flash="Has to be implemented"
+
+@check_moderator
+def sanity_check():
+    output = check_sanity()
+    return dict(vms=output)

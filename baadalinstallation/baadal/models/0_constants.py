@@ -72,11 +72,16 @@ current.MIGRATE_PERSIST_DEST = MIGRATE_PERSIST_DEST
 current.MIGRATE_UNDEFINE_SOURCE = MIGRATE_UNDEFINE_SOURCE
 current.MIGRATE_PAUSED = MIGRATE_PAUSED
 
+ADMIN = 'admin'
+ORGADMIN = 'orgadmin'
+FACULTY = 'faculty'
+USER = 'user'
+
 #Startup Data
-GROUP_DATA = {'admin':'Super User',
-            'orgadmin' : 'Organisation Level Admin',
-            'faculty':'Faculty User',
-            'user':'Normal User'}
+GROUP_DATA = {ADMIN : 'Super User', 
+              ORGADMIN : 'Organisation Level Admin', 
+              FACULTY : 'Faculty User', 
+              USER:'Normal User'}
 
 ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi'}
 
@@ -87,11 +92,6 @@ DB_CONSTANTS = {'vmfiles_path':'/mnt/testdatastore',
               'archives_dir' : 'vm_archives',
               'vmcount' : '1',
               'admin_email': 'baadalsupport@cse.iitd.ernet.in' }
-
-ADMIN = 'admin'
-ORGADMIN = 'orgadmin'
-FACULTY = 'faculty'
-USER = 'user'
 
 current.ADMIN = ADMIN
 current.ORGADMIN = ORGADMIN

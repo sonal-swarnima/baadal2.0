@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_NOT_EMPTY, IS_INT_IN_RANGE
+    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty

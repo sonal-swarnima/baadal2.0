@@ -49,8 +49,7 @@ if auth.is_logged_in():
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
-                    (T('Sanity Check'), False, URL('default','page_under_construction')),
-                    (T('Emergency'), False, URL('default','page_under_construction')),
+                    (T('Sanity Check'), False, URL('admin','sanity_check')),
                     (T('Configure System'), False,dict(_href='#', _id='configure'),[
                         (T('Add Host'), False, URL('admin','host_details')),
                         (T('Add Template'), False, URL('admin','add_template')),
