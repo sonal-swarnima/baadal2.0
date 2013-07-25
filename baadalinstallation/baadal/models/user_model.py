@@ -120,13 +120,13 @@ def get_faculty_info(username):
     user_query = db((db.user.username == username) 
              & (db.user.id == db.user_membership.user_id)
              & (db.user_membership.group_id == db.user_group.id)
-             & (db.user_group.role=='faculty'))
+             & (db.user_group.role == 'faculty'))
     user = user_query.select().first()
     if not user:
         if current.auth_type == 'ldap':
             result = fetch_ldap_user(username)
-            if (result != None) and (result[3] == True):
-                create_or_update_user(user_name, result[0], result[1], result[2], result[3], result[4], False)
+            if (result != None) and (FACULTY in result[3]):
+                create_or_update_user(username, result[0], result[1], result[2], result[3], result[4], False)
                 user = user_query.select().first()
     
     if user:

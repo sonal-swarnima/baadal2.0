@@ -11,7 +11,8 @@ if 0:
 
 def get_all_orglevel_vm_list():
     
-    users_of_same_org = db(auth.user.organisation_id == db.user.organisation_id).select(db.user.id)
+    users_of_same_org = db(db(auth.user.id == db.user.id).select(db.user.organisation_id).first()['organisation_id'] == db.user.organisation_id).select(db.user.id)
+
     
     vms = db(((db.vm_data.status == VM_STATUS_RUNNING) 
                | (db.vm_data.status == VM_STATUS_SUSPENDED) 

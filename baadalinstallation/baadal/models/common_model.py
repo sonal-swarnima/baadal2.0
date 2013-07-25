@@ -156,10 +156,7 @@ def check_faculty(fn):
 
 def get_pending_approval_count():
 
-    users_of_same_org = current.db(current.auth.user.organisation_id == current.db.user.organisation_id).select(current.db.user.id)
+    users_of_same_org = db(db(auth.user.id == db.user.id).select(db.user.organisation_id).first()['organisation_id'] == db.user.organisation_id).select(db.user.id)
 
-    return current.db((current.db.vm_data.status == current.VM_STATUS_VERIFIED)
-            & (current.db.vm_data.requester_id.belongs(users_of_same_org))).count()
-             
-
-
+    return db((db.vm_data.status == VM_STATUS_VERIFIED) 
+             & (db.vm_data.requester_id.belongs(users_of_same_org))).count()

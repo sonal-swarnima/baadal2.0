@@ -24,9 +24,13 @@ def login_ldap_callback(form):
 
     
 def add_group_test():
-    member = current.db(current.db.user_membership.user_id==current.auth.user.id).select().first()
+
+    config = get_config_file()
+    _role = current.USER
+    
+    member = current.db(current.db.user_membership.user_id == current.auth.user.id).select().first()
     if not member:
-        add_membership_db(current.auth.user.id, 'admin', True)
+        add_membership_db(current.auth.user.id, _role, True)
 
 
 def fetch_ldap_user(username):
@@ -48,7 +52,7 @@ def fetch_ldap_user(username):
     _first_name = ''
     _last_name = ''
     _email = None
-    _role = None
+    _role_list = [current.USER]
     _organisation = 'IIT Delhi'
 
     try:
@@ -79,57 +83,62 @@ def fetch_ldap_user(username):
         faculty_users = config.get("GENERAL_CONF","faculty_uid")
 
         if username in admin_users:
-            _role = current.ADMIN
-        elif username in orgadmin_users:
-            _role = current.ORGADMIN
-        elif username in faculty_users:
-            _role = current.FACULTY
-        else:
-            _role = current.USER
+            _role_list.append(current.ADMIN)
+        if username in orgadmin_users:
+            _role_list.append(current.ORGADMIN)
+        if username in faculty_users:
+            _role_list.append(current.FACULTY)
 
     except ldap.LDAPError, e:
         current.logger.error(e)
 
-    current.logger.info(str(_first_name)+" : "+str(_last_name)+" : "+str(_email)+" : "+_role+" : "+str(_organisation))
+    current.logger.info(str(_first_name)+" : "+str(_last_name)+" : "+str(_email)+" : "+str(_role_list)+" : "+str(_organisation))
 
-    if _first_name and _last_name and _email and _role and _organisation:
-        return(_first_name, _last_name, _email, _role, _organisation)
+    if _first_name and _last_name and _email and _organisation:
+        return(_first_name, _last_name, _email, _role_list, _organisation)
     else: 
         return None
 
 #This method is called only when user logs in for the first time or when faculty name is verified on 'request VM' screen
-def create_or_update_user(user_name, first_name, last_name, email, role, organisation, update_session):
+def create_or_update_user(user_name, first_name, last_name, email, roles, organisation, update_session):
 
+    is_new_user = False
     user = current.db(current.db.user.username == user_name).select().first()
+    
     if not user:
         #create user
         user = current.db.user.insert(username=user_name, registration_id=user_name)
+        is_new_user = True
     
     org_id = current.db(organisation == current.db.organisation.name).select(current.db.organisation.id).first()    
-    current.db(current.db.user.username==user_name).update(first_name = first_name, last_name = last_name, email = email, 
-                                                         organisation_id = org_id)
+    current.db(current.db.user.username==user_name).update(first_name = first_name, last_name = last_name, email = email, organisation_id = org_id)
                                                          
-    add_user_membership(user.id, role, update_session)   
+    add_or_update_user_memberships(user.id, is_new_user, roles, update_session)   
 
 
-def add_user_membership(user_id, role, update_session):
-    
-    if role == current.ADMIN:
-        add_membership_db(user_id, current.ADMIN, update_session)
-    elif role == current.ORGADMIN:
-        add_membership_db(user_id, current.ORGADMIN, update_session)
-    elif role == current.FACULTY:
-        add_membership_db(user_id, current.FACULTY, update_session)
-    else:
-        add_membership_db(user_id, current.USER, update_session)
+def add_or_update_user_memberships(user_id, new_user, roles, update_session):
+
+    if not new_user:
+        current_roles = current.db((user_id == current.db.user_membership.user_id) & (current.db.user_membership.group_id == current.db.user_group.id)).select(current.db.user_group.role).as_list()
+
+        current.logger.info("users current roles: %s",current_roles)
+
+        for role in current_roles:
+            roles.pop(roles.index(role['role']))
+        
+    for role in roles:
+        add_membership_db(user_id, role, update_session)
+
 
 def add_membership_db(_user_id, role, update_session):
     #Find the group_id for the given role
     _group_id = current.db(current.db.user_group.role==role).select(current.db.user_group.id).first()['id']
-    _org_id = current.db(current.db.user.id == _user_id).select(current.db.user.organisation_id).first()
+    _org_id = current.db(current.db.user.id == _user_id).select(current.db.user.organisation_id).first()['organisation_id']
     if _group_id !=0:
         current.db.user_membership.insert(user_id=_user_id,group_id=_group_id)
         if update_session:
             # add role to the current session
             current.auth.user_groups[long(_group_id)] = role
             current.auth.organisation_id = _org_id
+            current.logger.debug(_org_id)
+            current.logger.debug(role)
