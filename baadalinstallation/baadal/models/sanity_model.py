@@ -5,6 +5,23 @@ if 0:
     from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+
+def vminfotostate(intstate):
+    logger.debug(intstate)
+
+    if(intstate==0):  state="No_State"
+    elif(intstate==1):state="Running"
+    elif(intstate==2):state="Blocked"
+    elif(intstate==3):state="Paused"
+    elif(intstate==4):state="Being_Shut_Down"
+    elif(intstate==5):state="Off"
+    elif(intstate==6):state="Crashed"
+    else: state="Unknown"
+
+    logger.debug(state)
+    return state
+
+
 def check_sanity():
     import libvirt
     vmcheck=[]
@@ -23,37 +40,31 @@ def check_sanity():
             names = conn.listDefinedDomains()
             for name in names:
                 domains.append(conn.lookupByName(name))
-            logger.debug(domains)
             for dom in domains:
                 try:
                     name = dom.name()
-                    vm = db(db.vm_data.vm_name == name).select(db.vm_data.host_id,db.vm_data.vm_name)
+                    logger.debug(name)
+                    logger.debug(dom.info()[0])
+                    vm = db(db.vm_data.vm_name == name).select(db.vm_data.id,db.vm_data.host_id,db.vm_data.vm_name).first()
+                    logger.debug(vm)
                     status=vminfotostate(dom.info()[0])
-                    if(len(vm)!=0):
-                        vm=vm[0]
+                    logger.debug(status)
+                    if(vm):
                         if(vm.host_id != host.id):
-                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Moved from '+vm.host_id.host_name+' to '+host.host_name})#Stupid VMs
+                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Moved from '+vm.host_id.host_name+' to '+host.host_name})#Bad VMs
                             db(db.vm_data.vm_name==name).update(host_id=host.id)
                         else:
-                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Is on expected host '+vm.host_id.name})#Good VMs
+                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Is on expected host '+vm.host_id.host_name})#Good VMs
                     else:
                         vmcheck.append({'host':host.host_name,'vmname':dom.name(),'status':status,'operation':'Orphan, VM is not in database'})#Orphan VMs
                     dom=""
-                except:vmcheck.append({'vmname':vm.vm_name,'vmid':vm.id,'operation':'Some Error Occured'})
+                except Exception as e:
+                    logger.error(e)
+                    if(vm):
+                        vmcheck.append({'vmname':vm.vm_name,'host':'Unknown','status':'Unknown','operation':'Some Error Occured'})
+
             domains=[]
             names=[]
             print conn.close()
         except:pass
     return vmcheck
-
-
-    def vminfotostate(intstate):
-        if(intstate==0):  state="No_State"
-        elif(intstate==1):state="Running"
-        elif(intstate==2):state="Blocked"
-        elif(intstate==3):state="Paused"
-        elif(intstate==4):state="Being_Shut_Down"
-        elif(intstate==5):state="Off"
-        elif(intstate==6):state="Crashed"
-        else: state="Unknown"
-        return state
