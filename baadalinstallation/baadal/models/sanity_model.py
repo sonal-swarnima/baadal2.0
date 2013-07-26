@@ -5,28 +5,26 @@ if 0:
     from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+import libvirt
+from libvirt import *  # @UnusedWildImport
 
 def vminfotostate(intstate):
-    logger.debug(intstate)
 
-    if(intstate==0):  state="No_State"
-    elif(intstate==1):state="Running"
-    elif(intstate==2):state="Blocked"
-    elif(intstate==3):state="Paused"
-    elif(intstate==4):state="Being_Shut_Down"
-    elif(intstate==5):state="Off"
-    elif(intstate==6):state="Crashed"
+    if(intstate == VIR_DOMAIN_NOSTATE): state="No_State"
+    elif(intstate == VIR_DOMAIN_RUNNING):state="Running"
+    elif(intstate == VIR_DOMAIN_BLOCKED):state="Blocked"
+    elif(intstate == VIR_DOMAIN_PAUSED):state="Paused"
+    elif(intstate == VIR_DOMAIN_SHUTDOWN):state="Being_Shut_Down"
+    elif(intstate == VIR_DOMAIN_SHUTOFF):state="Off"
+    elif(intstate == VIR_DOMAIN_CRASHED):state="Crashed"
     else: state="Unknown"
 
-    logger.debug(state)
     return state
 
 
 def check_sanity():
-    import libvirt
     vmcheck=[]
     hosts=db(db.host.status == HOST_STATUS_UP).select()
-    logger.debug(hosts)
     for host in hosts:
         try:
             #Establish a read only remote connection to libvirtd
@@ -43,12 +41,8 @@ def check_sanity():
             for dom in domains:
                 try:
                     name = dom.name()
-                    logger.debug(name)
-                    logger.debug(dom.info()[0])
                     vm = db(db.vm_data.vm_name == name).select(db.vm_data.id,db.vm_data.host_id,db.vm_data.vm_name).first()
-                    logger.debug(vm)
                     status=vminfotostate(dom.info()[0])
-                    logger.debug(status)
                     if(vm):
                         if(vm.host_id != host.id):
                             vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Moved from '+vm.host_id.host_name+' to '+host.host_name})#Bad VMs
