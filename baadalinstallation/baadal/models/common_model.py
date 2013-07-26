@@ -81,7 +81,7 @@ def get_task_list(events):
 def get_task_num_form():
     form = FORM('Show:',
                 INPUT(_name = 'task_num', _size=2, requires = IS_INT_IN_RANGE(1,101)),
-                INPUT(_type = 'submit', _value = 'Refresh'))
+                INPUT(_type = 'submit', _value = 'Refresh', _onclick = 'tab_refresh()'))
     return form
     
 

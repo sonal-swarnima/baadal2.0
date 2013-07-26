@@ -50,3 +50,7 @@
     	is_visible = obj.parent().next().is(':visible');
     	$.cookie(obj_id, is_visible, {path: '/' });
     }
+    
+    function tab_refresh(){
+    	$.cookie('tab_index',$("#tabs-task").tabs('option', 'active'));
+    }
