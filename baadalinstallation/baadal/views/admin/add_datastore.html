@@ -1,37 +1,3 @@
 {{extend 'layout.html'}}
-
-<div class="post">
-	<h1 class="title">{{=T('Add Datastore')}}</h1>
-	<div class="entry">
-		{{=form}}
-	</div>
-</div>
-<br/>
-<br/>
-{{if not datastores:}}
-	<center><h4>No Datastore Configured Yet.</h4></center>
-	
-{{else:}}
-<h2 class="subtitle">{{=T('Datastores')}}</h2>
-<div class="TABLE">
-  <table id="datastores">
-      <tr>
-        <th>Name</th>
-        <th>Mount IP</th>
-        <th>Capacity (GB)</th>
-        <th>Username</th>
-        <th>Path</th>
-      </tr>
-  {{for datastore in datastores:}}
-      <tr>
-        <td>{{=datastore['ds_name']}}</td>
-        <td>{{=datastore['ds_ip']}}</td>
-        <td>{{=datastore['capacity']}}</td>
-        <td>{{=datastore['username']}}</td>
-        <td>{{=datastore['path']}}</td>
-      </tr>
-  {{pass}}
-  </table>
-</div>
-{{pass}}
-	
+<h2 class="title">{{=T('Manage Datastore')}}</h2>
+{{=form}}
