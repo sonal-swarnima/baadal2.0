@@ -179,6 +179,10 @@ def exec_command_on_host(machine_ip, user_name, command):
         raise
     return output[0]
 
+def add_live_migration_option(form):
+    live_migration_element = TR('Live Migration:' , INPUT(_type = 'checkbox', _name = 'live_migration')) 
+    form[0].insert(3, live_migration_element)      
+
 def get_migrate_vm_form(vm_id):
 
     host_id = db(db.vm_data.id == vm_id).select(db.vm_data.host_id).first()['host_id']
@@ -187,12 +191,14 @@ def get_migrate_vm_form(vm_id):
     form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
                       TR('Current Host:', INPUT(_name = 'current_host', _readonly = True)),
                       TR('Destination Host:' , SELECT(*host_options, **dict(_name = 'destination_host', requires = IS_IN_DB(db, 'host.id')))),
-                      TR('Live Migration:' , INPUT(_type = 'checkbox', _name = 'live_migration')),
                       TR('', INPUT(_type='submit', _value = 'Migrate'))))
 
     form.vars.vm_name = db(db.vm_data.id == vm_id).select(db.vm_data.vm_name).first()['vm_name']  
     form.vars.current_host = db(db.host.id == host_id).select(db.host.host_ip).first()['host_ip']
 
+    if is_vm_running(vm_id):
+        add_live_migration_option(form)
+        
     return form
 
 # Check if vm is running

@@ -57,20 +57,8 @@ current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
 current.VM_STATUS_VERIFIED = VM_STATUS_VERIFIED
 
-#MIGRATE FLAGS
-MIGRATE_LIVE = 1
-MIGRATE_PEER2PEER = 2
-MIGRATE_TUNNELLED = 4
-MIGRATE_PERSIST_DEST = 8
-MIGRATE_UNDEFINE_SOURCE = 16
-MIGRATE_PAUSED = 32
-
-current.MIGRATE_LIVE = MIGRATE_LIVE
-current.MIGRATE_PEER2PEER = MIGRATE_PEER2PEER
-current.MIGRATE_TUNNELLED = MIGRATE_TUNNELLED
-current.MIGRATE_PERSIST_DEST = MIGRATE_PERSIST_DEST
-current.MIGRATE_UNDEFINE_SOURCE = MIGRATE_UNDEFINE_SOURCE
-current.MIGRATE_PAUSED = MIGRATE_PAUSED
+#SNAPSHOT LIMIT
+SNAPSHOT_LIMIT = 3
 
 ADMIN = 'admin'
 ORGADMIN = 'orgadmin'
@@ -85,13 +73,13 @@ GROUP_DATA = {ADMIN : 'Super User',
 
 ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi'}
 
-DB_CONSTANTS = {'vmfiles_path':'/mnt/testdatastore',
-              'datastore_int':'ds_',
-              'vncport_range':'20000',
-              'templates_dir':'vm_templates',
-              'archives_dir' : 'vm_archives',
-              'vmcount' : '1',
-              'admin_email': 'baadalsupport@cse.iitd.ernet.in' }
+DB_CONSTANTS = {'vmfiles_path' : '/mnt/testdatastore',
+              'datastore_int'  : 'ds_',
+              'vncport_range'  : 20000,
+              'templates_dir'  : 'vm_templates',
+              'archives_dir'   : 'vm_archives',
+              'vmcount'        :  1,
+              'admin_email'    : 'baadalsupport@cse.iitd.ernet.in' }
 
 current.ADMIN = ADMIN
 current.ORGADMIN = ORGADMIN

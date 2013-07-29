@@ -7,23 +7,22 @@ if 0:
     global db; db = gluon.sql.DAL()
 ###################################################################################
 
-import re, os, ast, sys, math, time, commands, libvirt, shutil, paramiko, traceback, random
+import re, os, ast, sys, math, time, commands, shutil, paramiko, traceback, random
 import xml.etree.ElementTree as etree
+from libvirt import *
 from helper import *
 
-# Function to choose datastore from a list of available datastores
+# Chooses datastore from a list of available datastores
 def choose_datastore():
 
-    datastores = current.db(current.db.datastore.id>=0).select(orderby = current.db.datastore.used)
-    current.logger.debug("Total number of datastores is : " + str(len(datastores)))
+    datastores = current.db(current.db.datastore.id >= 0).select(orderby = current.db.datastore.used)
+ 
     if(len(datastores) == 0):
-        current.logger.error("No datastore found.")
         raise Exception("No datastore found.")
     else:
-       current.logger.debug("Datastore selected is: " + str(datastores[0]))
        return datastores[0]
        
-# Function to compute effective RAM and CPU
+# Computes effective RAM and CPU
 def compute_effective_ram_vcpu(RAM, vCPU, runlevel):
 
     effective_ram = 1024
@@ -44,12 +43,13 @@ def compute_effective_ram_vcpu(RAM, vCPU, runlevel):
 
         if(RAM/divideby >= 1024):
             effective_ram = RAM/divideby
+
         if(vCPU/divideby >= 1): 
             effective_cpu = vCPU/divideby
 
     return (effective_ram, effective_cpu)
 
-# Function to find the used host resources
+# Finds the used host resources
 def host_resources_used(hostid):
 
     RAM = 0.0
@@ -59,20 +59,21 @@ def host_resources_used(hostid):
                      current.db.vm_data.current_run_level)
 
     for vm in vms:
-        (effective_ram,effective_cpu) = compute_effective_ram_vcpu(vm.RAM,vm.vCPU,vm.current_run_level)
+        (effective_ram, effective_cpu) = compute_effective_ram_vcpu(vm.RAM, vm.vCPU, vm.current_run_level)
         RAM = RAM + effective_ram
         CPU = CPU + effective_cpu
 
     host_ram = current.db(current.db.host.id == hostid).select(current.db.host.RAM)[0].RAM
     host_cpu = current.db(current.db.host.id == hostid).select(current.db.host.CPUs)[0].CPUs
-    return (math.ceil(RAM),math.ceil(CPU),host_ram,host_cpu)
 
-#Function to find new host for a vm to be installed
-def find_new_host(runlevel,RAM,vCPU):
+    return (math.ceil(RAM), math.ceil(CPU), host_ram, host_cpu)
+
+# Finds new host for a vm to be installed
+def find_new_host(runlevel, RAM, vCPU):
 
     hosts = current.db(current.db.host.status == current.HOST_STATUS_UP).select() 
+
     if (len(hosts) == 0):
-        current.logger.error("No host found.")
         raise Exception("No host found.")
     else:
         runlevel = int(runlevel)
@@ -80,25 +81,26 @@ def find_new_host(runlevel,RAM,vCPU):
         for host in hosts:
             current.logger.debug("Checking host = " + host.host_name)
             (used_ram,used_cpu,host_ram,host_cpu) = host_resources_used(host.id)
-            current.logger.debug("used ram:" + str(used_ram) + " used cpu:" + str(used_cpu) + " host ram:" + str(host_ram) + " host cpu"+ 
-                                  str(host_cpu))
+            current.logger.debug("used ram:" + str(used_ram) + " used cpu:" + str(used_cpu) + " host ram:" + str(host_ram) +  \
+                                 " host cpu" + str(host_cpu))
             (effective_ram,effective_vcpu) = compute_effective_ram_vcpu(RAM,vCPU,runlevel)
             if(host_selected == None and (used_ram + effective_ram) <= ((host_ram * 1024))):
                 host_selected = host
+
     if host_selected != None:
         return host_selected
     else:
-        current.logger.error("No active host is available for a new vm.")
         raise Exception("No active host is available for a new vm.")
 
-#Function to choose mac and ip address for a vm to be installed
+# Chooses mac address, ip address and vncport for a vm to be installed
 def choose_mac_ip_vncport():
 
     temporary_pool = current.MAC_IP_POOL
     while True:
         mac_selected = random.choice(temporary_pool.keys())
-        current.logger.debug(str(mac_selected))
+        current.logger.debug("Checking mac = " + str(mac_selected))
         mac = current.db(current.db.vm_data.mac_addr == mac_selected).select().first()
+
         if mac == None:
             break
         else:
@@ -110,16 +112,12 @@ def choose_mac_ip_vncport():
     new_vncport = str(int(get_constant('vncport_range')) + count)
     update_value('vmcount', count + 1)
 
-    current.logger.debug("MAC is : " + str(mac_selected))  
-    current.logger.debug("IP is : %s" % current.MAC_IP_POOL[mac_selected])
-    current.logger.debug("VNCPORT is : %s" % new_vncport)
     return (mac_selected, current.MAC_IP_POOL[mac_selected], new_vncport)
 
-# Function to allocate vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
+# Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
 def allocate_vm_properties(vm_details):
 
     current.logger.debug("Inside allocate_vm_properties()...")
-    current.logger.debug("VM Details are: " + str(vm_details))
 
     datastore = choose_datastore()
     current.logger.debug("Datastore selected is: " + str(datastore))
@@ -128,11 +126,14 @@ def allocate_vm_properties(vm_details):
     current.logger.debug("Host selected is: " + str(host))
 
     (new_mac_address, new_ip_address, new_vncport) = choose_mac_ip_vncport()
-
+    current.logger.debug("MAC is : " + str(new_mac_address) + " IP is : " + str(new_ip_address) + " VNCPORT is : "  \
+                          + str(new_vncport))
+    
     (ram, vcpus) = compute_effective_ram_vcpu(vm_details.RAM, vm_details.vCPU, 1)
+
     return (datastore, host, new_mac_address, new_ip_address, new_vncport, ram, vcpus)
 
-# Function to execute command on host machine using paramiko module
+# Executes command on host machine using paramiko module
 def exec_command_on_host(machine_ip, user_name, command):
 
     try:
@@ -156,7 +157,7 @@ def exec_command_on_host(machine_ip, user_name, command):
             ssh.close()
     return
     
-# Function to create vm image
+# Creates a vm image
 def create_vm_image(vm_details, datastore):
 
     # Creates a directory for the new vm
@@ -164,7 +165,6 @@ def create_vm_image(vm_details, datastore):
     if not os.path.exists (get_constant('vmfiles_path') + '/' + vm_details.vm_name):
         os.makedirs(get_constant('vmfiles_path') + '/' + vm_details.vm_name)
     else:
-        current.logger.error("Directory with same name as vmname already exists.")
         raise Exception("Directory with same name as vmname already exists.")
 
     # Finds the location of template image that the user has requested for its vm.               
@@ -173,19 +173,21 @@ def create_vm_image(vm_details, datastore):
             
     # Copies the template image from its location to new vm directory
     """
-    command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + datastore.path
-                          + '/' + get_constant("templates_dir") + '/tmp'
+    command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + \ 
+                          datastore.path + '/' + get_constant("templates_dir") + '/tmp'
     """
     vm_image_location = get_constant('vmfiles_path') + '/' + vm_details.vm_name + '/' + vm_details.vm_name + '.qcow2'
+
     current.logger.debug("Copy in progress...")
     rcode = os.system('cp %s %s' % (template_location, vm_image_location))
     if rcode != 0:
         current.logger.error("Unsuccessful in copying image...")
         raise Exception("Unsuccessful in copying image...")
+
     return (template, vm_image_location)
 
-# Function to determine install command for vm
-def get_install_command(template,vm_details,vm_image_location,ram,vcpus,new_mac_address,new_vncport):
+# Determines an install command for vm
+def get_install_command(template, vm_details, vm_image_location, ram, vcpus, new_mac_address, new_vncport):
     
     optional = ' --import --os-type=' + template.os_type
     if (template.arch != 'amd64'):
@@ -219,16 +221,17 @@ def get_install_command(template,vm_details,vm_image_location,ram,vcpus,new_mac_
 
     return install_command 
 
-# Function to generate xml
+# Generates xml
 def generate_xml(diskpath,target_disk):
 
-    root_element = etree.Element('disk',attrib = {'type':'file','device':'disk'})
+    root_element = etree.Element('disk',attrib = {'type':'block','device':'disk'})
     etree.SubElement(root_element, 'driver',attrib = {'name':'qemu','cache':'none'})
-    etree.SubElement(root_element, 'source', attrib = {'file':diskpath})
+    etree.SubElement(root_element, 'source', attrib = {'dev':diskpath})
     etree.SubElement(root_element, 'target', attrib = {'dev': target_disk})
+
     return (etree.tostring(root_element))
     
-# Function to attach disk with vm
+# Attaches a disk with vm
 def attach_disk(vmname, size, hostip, datastore):
    
     vm = current.db(current.db.vm_data.vm_name == vmname).select().first()
@@ -236,26 +239,26 @@ def attach_disk(vmname, size, hostip, datastore):
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
         domain = connection_object.lookupByName(vmname)
-        alreadyattached = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
-        current.logger.debug("Value of alreadyattached is : " + str(alreadyattached))
-        current.logger.debug("Above IF")
-        if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/' \
-                               +vmname):
+        already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
+        current.logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
+
+        if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name \
+                               +  '/' +vmname):
             current.logger.debug("Making Directory")          
-            os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/' + vmname)
-        diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + vmname+ "/" + \
-                   vmname + str(alreadyattached + 1) + ".raw"
+            os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/'  \
+                         + vmname)
+
+        diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + vmname \
+                   + "/" + vmname + str(already_attached_disks + 1) + ".raw"
 
         # Create a new image for the new disk to be attached
         command= "qemu-img create -f raw "+ diskpath + " " + str(size) + "G"
-        current.logger.debug(command)
         output = os.system(command)
-        current.logger.debug(output)
         if output != 0:
             return False
             
         # Attaching disk to vm using libvirt API
-        target_disk = "vd" + chr(97 + alreadyattached + 1)
+        target_disk = "vd" + chr(97 + already_attached_disks + 1)
         xmlDescription = generate_xml(diskpath, target_disk)
         domain.attachDevice(xmlDescription)
         xmlfile = domain.XMLDesc(0)
@@ -271,7 +274,7 @@ def attach_disk(vmname, size, hostip, datastore):
         current.logger.error(message) 
         return False
 
-# Function to launch vm on host
+# Launches a vm on host
 def launch_vm_on_host(template, vm_details, vm_image_location, ram, vcpus, new_mac_address, new_vncport, host_ip, datastore):
 
     attach_disk_status_message = 'Your request for additional HDD is completed.'
@@ -291,7 +294,7 @@ def launch_vm_on_host(template, vm_details, vm_image_location, ram, vcpus, new_m
             attach_disk_status_message = " Your request for additional HDD could not be completed at this moment. Check logs."
     return attach_disk_status_message
 
-# Function to check if a newly created vm is defined
+# Checks if a newly created vm is defined
 def check_if_vm_defined(hostip, vmname):
 
     vm_defined = False
@@ -305,44 +308,44 @@ def check_if_vm_defined(hostip, vmname):
     except:
         return False
 
-# Function to free vm properties
+# Frees vm properties
 def free_vm_properties(vm_details):
 
     if os.path.exists (get_constant('vmfiles_path') + '/' + vm_details.vm_name):
         shutil.rmtree(get_constant('vmfiles_path') + '/' + vm_details.vm_name)
     return
     
-# Function to update db after a vm is installed successfully
+# Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vmid, vm_details, template, datastore, host, new_mac_address, new_ip_address, new_vncport):
 
     # Update vm_data table
     current.db(current.db.vm_data.id == vmid).update( host_id = host.id, \
-                                      datastore_id = datastore.id, \
-                                      vm_ip = new_ip_address, \
-                                      vnc_port = new_vncport, \
-                                      mac_addr = new_mac_address, \
-                                      start_time = get_datetime(), \
-                                      current_run_level = 3, \
-                                      last_run_level = 3,\
-                                      total_cost = 0, \
-                                      status = current.VM_STATUS_RUNNING)
+                                                      datastore_id = datastore.id, \
+                                                      vm_ip = new_ip_address, \
+                                                      vnc_port = new_vncport, \
+                                                      mac_addr = new_mac_address, \
+                                                      start_time = get_datetime(), \
+                                                      current_run_level = 3, \
+                                                      last_run_level = 3,\
+                                                      total_cost = 0, \
+                                                      status = current.VM_STATUS_RUNNING )
 
     # Updating the count of vms on host
     count = current.db(current.db.host.id == host.id).select().first()['vm_count']
-    current.logger.debug("count is:" + str(count))
     current.db(current.db.host.id == host.id).update(vm_count = count + 1)
 
     # Updating the used entry of datastore
-    current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.HDD) + int(template.hdd))
+    current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.HDD) +  \
+               int(template.hdd))
     return
     
-# Function to install a vm
+# Installs a vm
 def install(parameters):
  
         dict_parameters = ast.literal_eval(parameters)
         vmid = dict_parameters['vm_id']
-        current.logger.debug(vmid)
         current.logger.debug("In install function...")
+
         try:
             # Fetches vm details from vm_data table
             vm_details = current.db(current.db.vm_data.id == vmid).select()[0]
@@ -350,9 +353,6 @@ def install(parameters):
 	
             # Calling allocate_vm_properties function
             (datastore, host, new_mac_address, new_ip_address, new_vncport, ram, vcpus) = allocate_vm_properties(vm_details)
-            current.logger.debug("DATASTORE: " + str(datastore.ds_ip) + " HOST: " + str(host.host_ip) + " MAC: " + str(new_mac_address) +
-                                 "NEW IP: " + str(new_ip_address) + " VNCPort: " + str(new_vncport) + " RAM: " + str(ram) + " VCPUs: " + 
-                                  str(vcpus))
 
             # Calling create_vm_image function
             (template, vm_image_location) = create_vm_image(vm_details, datastore)
@@ -362,9 +362,12 @@ def install(parameters):
                                                            new_vncport, host.host_ip, datastore)       
 
             # Checking if vm has been installed successfully
-            current.logger.debug("Checking if VM has been successfully created...")
             assert(check_if_vm_defined(host.host_ip, vm_details.vm_name)), "VM is not installed. Check logs."
-            update_db_after_vm_installation(vmid, vm_details, template, datastore, host, new_mac_address, new_ip_address, new_vncport) 
+
+            # Update database after vm installation
+            update_db_after_vm_installation(vmid, vm_details, template, datastore, host, new_mac_address, new_ip_address,
+                                            new_vncport) 
+
             message = "VM is installed successfully." + attach_disk_status_message
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
@@ -375,7 +378,7 @@ def install(parameters):
             free_vm_properties(vm_details)
             return (current.TASK_QUEUE_STATUS_FAILED, message)
 
-# Function to start a vm
+# Starts a vm
 def start(parameters):
     
     dict_parameters = ast.literal_eval(parameters)
@@ -393,7 +396,7 @@ def start(parameters):
         message = e.get_error_message()
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
-# Function to suspend a vm
+# Suspends a vm
 def suspend(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
@@ -411,7 +414,7 @@ def suspend(parameters):
         message = e.get_error_message()
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
-# Function to resume a vm
+# Resumes a vm
 def resume(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
@@ -429,7 +432,7 @@ def resume(parameters):
         message = e.get_error_message()
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
-# Function to destroy a vm forcefully
+# Destroys a vm forcefully
 def destroy(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
@@ -470,15 +473,14 @@ def clean_up_database_after_vm_deletion(vm_details):
 
     # updating the count of guest vms on host
     count = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
-    current.logger.debug("count is:" + str(count))
     current.db(current.db.host.id == vm_details.host_id).update(vm_count = count - 1)
 
     # updating the used entry of database
     current.db(current.db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
-                                                                                (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
+                                                                         (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
     return
         
-# Function to delete a vm
+# Deletes a vm
 def delete(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
@@ -503,24 +505,20 @@ def delete(parameters):
         message = e.get_error_message()
         return(current.TASK_QUEUE_STATUS_FAILED, message)
 
-# Function to migrate a vm to a new host
+# Migrates a vm to a new host
 def migrate(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
     vmid = dict_parameters['vm_id']
-    current.logger.debug("vmid :" + str(vmid))
     destination_host_id = dict_parameters['destination_host']
-    current.logger.debug("destination host id :" + str(destination_host_id))
     destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
-    current.logger.debug("destination_host_ip " + str(destination_host_ip))
+    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
 
     if 'live_migration' in dict_parameters:
-        flags = current.MIGRATE_LIVE|current.MIGRATE_PEER2PEER|current.MIGRATE_TUNNELLED|current.MIGRATE_PERSIST_DEST|current.MIGRATE_UNDEFINE_SOURCE
-    else:
-        flags = current.MIGRATE_PEER2PEER|current.MIGRATE_TUNNELLED|current.MIGRATE_PERSIST_DEST|current.MIGRATE_UNDEFINE_SOURCE
+        flags |= VIR_MIGRATE_LIVE
+  
     current.logger.debug("Flags: " + str(flags))       
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
-    current.logger.debug(str(vm_details))
     try:
         current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = current_host_connection_object.lookupByName(vm_details.vm_name)            
@@ -528,10 +526,8 @@ def migrate(parameters):
         current.logger.debug("Migrated successfully..")
         current.db(current.db.vm_data.id == vmid).update(host_id = destination_host_id)
         vm_count_on_old_host = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
-        current.logger.debug("vm count on old host : " + str(vm_count_on_old_host))
         current.db(current.db.host.id == vm_details.host_id).update(vm_count = vm_count_on_old_host - 1)
         vm_count_on_new_host = current.db(current.db.host.id == destination_host_id).select().first()['vm_count']
-        current.logger.debug("vm count on new host : " + str(vm_count_on_new_host))
         current.db(current.db.host.id == destination_host_id).update(vm_count = vm_count_on_new_host + 1) 
         message = vm_details.vm_name + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -539,6 +535,24 @@ def migrate(parameters):
         message = e.get_error_message()
         return(current.TASK_QUEUE_STATUS_FAILED, message) 
 
+# Snapshots a vm
+def snapshot(parameters):
+
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_name)
+        xmlDesc = "<domainsnapshot><name> %s </name></domainsnapshot>" % (vm_details.vm_name + get_datetime())
+        domain.snapshotCreateXML(xmlDesc, 0)
+        current.logger.debug("Snapshottted successfully...")
+        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id)
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return(current.TASK_QUEUE_STATUS_FAILED, message) 
+           
 # Prepares VM list to be displayed on webpage
 def get_vm_list(vms):
     vmlist = []

@@ -149,3 +149,10 @@ def get_my_task_list(task_status, task_num):
     events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)
+
+def check_snapshot_limit(vm_id):
+    snapshot_count = len(db(db.snapshot.vm_id == vm_id).select())
+    if snapshot_count < SNAPSHOT_LIMIT:
+        return True
+    else:
+        return False

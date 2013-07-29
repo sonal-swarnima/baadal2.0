@@ -120,7 +120,7 @@ db.define_table('template',
     Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386'))),
     Field('hdd', 'integer', notnull = True),
     Field('hdfile', 'string', notnull = True),
-    Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW', 'RAW', 'ISO'))),
+    Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO'))),
     Field('datastore_id', db.datastore),
     format = '%(name)s')
 
