@@ -7,7 +7,7 @@ if 0:
     global db; db = gluon.sql.DAL()
 ###################################################################################
 
-import re, os, ast, sys, math, time, commands, shutil, paramiko, traceback, random, libvirt
+import re, os, ast, sys, math, time, commands, shutil, paramiko, traceback, random
 import xml.etree.ElementTree as etree
 from libvirt import *
 from helper import *
