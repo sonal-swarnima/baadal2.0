@@ -1,41 +1,4 @@
 {{extend 'layout.html'}}
 
-<div class="post">
-	<h1 class="title">{{=T('Add Template')}}</h1>
-	<div class="entry">
-		{{=form}}
-	</div>
-</div>
-<br/>
-<br/>
-{{if not templates:}}
-	<center><h4>No Template Configured Yet.</h4></center>
-	
-{{else:}}
-<h2 class="subtitle">{{=T('Templates')}}</h2>
-<div class="TABLE">
-  <table id="templates">
-      <tr>
-        <th>Name of Template</th>
-        <th>Operating System</th>
-        <th>Architecture</th>
-        <th>Harddisk(GB)</th>
-        <th>HD File</th>
-        <th>Template Type</th>
-        <th>Datastore</th>
-      </tr>
-  {{for template in templates:}}
-      <tr>
-        <td>{{=template['name']}}</td>
-        <td>{{=template['os_type']}}</td>
-        <td>{{=template['arch']}}</td>
-        <td>{{=template['hdd']}}</td>
-        <td>{{=template['hdfile']}}</td>
-        <td>{{=template['type']}}</td>
-        <td>{{=template['datastore_id.ds_name']}}</td>
-      </tr>
-  {{pass}}
-  </table>
-</div>
-{{pass}}
-	
+<h2 class="subtitle">{{=T('Manage Template')}}</h2>
+{{=form}}
