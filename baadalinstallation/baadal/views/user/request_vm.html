@@ -15,36 +15,31 @@ jQuery(document).ready(function(){
     jQuery('[id^=config_row__]').hide();
     jQuery('#faculty_row').hide();
 
-	template_check()
+    template_check()
 });
 
 jQuery('#vm_data_template_id').change(function(){
-	template_check()
+    template_check()
 });
 
 function template_check() {
-	var _value=$('#vm_data_template_id').val();
+    var _value=$('#vm_data_template_id').val();
 	
-	if (_value == ''){
-	   jQuery('#vm_data_purpose__row').hide();
-	   jQuery('#vm_data_HDD__row').hide();
-	   jQuery('[id^=config_row__]').hide();
-       jQuery('#faculty_row').hide();
-	}
-	else if(jQuery('#config_row__'+_value).length != 0){
-	   jQuery('#vm_data_purpose__row').show();
-	   jQuery('#vm_data_HDD__row').show();
-	   jQuery('[id^=config_row__]').hide();
-	   jQuery('#config_row__'+_value).show();
-       jQuery('#faculty_row').show();
-	}
-	else{
-	   jQuery('#vm_data_purpose__row').show();
-	   jQuery('#vm_data_HDD__row').show();
-	   jQuery('[id^=config_row__]').hide();
-	   jQuery('#config_row__0').show();
-       jQuery('#faculty_row').show();
-	}
+    if (_value == ''){
+        jQuery('#vm_data_purpose__row').hide();
+        jQuery('#vm_data_HDD__row').hide();
+        jQuery('[id^=config_row__]').hide();
+        jQuery('#faculty_row').hide();
+    }else{
+        jQuery('#vm_data_purpose__row').show();
+        jQuery('#vm_data_HDD__row').show();
+        jQuery('[id^=config_row__]').hide();	
+        jQuery('#config_row__'+_value).show();
+        jQuery('#faculty_row').show();
+        if(jQuery('#config_row__'+_value).length != 0){
+            jQuery('#config_row__'+_value).show();   
+        }
+    }
   }
   
   function verify_faculty() {
