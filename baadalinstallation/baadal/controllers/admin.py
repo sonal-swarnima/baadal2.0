@@ -23,13 +23,7 @@ def hosts_vms():
 @handle_exception
 def add_template():
     form = get_add_template_form()
-    templates = get_templates()
-    if form.accepts(request.vars, session):
-        session.flash = 'New Template Created'
-        templates = get_templates()
-    elif form.errors:
-        raise Exception('Error in form')
-    return dict(form = form, templates = templates)
+    return dict(form = form)
 
 @check_moderator
 @handle_exception
@@ -65,21 +59,14 @@ def add_host():
 @handle_exception
 def add_datastore():
     form = get_add_datastore_form()
-    datastores = get_datastores()
-
-    if form.accepts(request.vars, session):
-        logger.debug('New datastore added')
-        datastores = get_datastores()
-    elif form.errors:
-        raise Exception('Error in form')
-    return dict(form=form, datastores=datastores)
+    return dict(form=form)
 
 @check_moderator
 @handle_exception
 def delete_user_vm():
     vm_id=request.args[0]
     user_id=request.args[1]
-    delete_user_vm_access(vm_id,user_id)				
+    delete_user_vm_access(vm_id,user_id)    			
     session.flash = 'User access is eradicated.'
     redirect(URL(r=request,c = 'user',f = 'settings', args = [vm_id]))
 
