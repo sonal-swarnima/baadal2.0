@@ -8,28 +8,28 @@ if 0:
 ###################################################################################
 
 def get_add_template_form():
-    form_fields = ['name','os_type','arch','hdd','hdfile','type','datastore_id']
-    form_labels = {'name':'Name of Template','hdd':'Harddisk(GB)','os_type':'Operating System','arch':'Architecture', 'hdfile':'HD File','type':'Template Type', 'datastore_id':'Datastore'}
+    db.template.id.readable=False # Since we do not want to expose the id field on the grid
 
-    form = SQLFORM(db.template, fields = form_fields, labels = form_labels, submit_button = 'Add Template')
+    #Define the fields to show on grid. 
+    fields = (db.template.name, db.template.os_type, db.template.arch, db.template.hdd, db.template.hdfile, db.template.type, db.template.datastore_id)
+
+    default_sort_order=[db.template.id]
+
+    #Creating the grid object
+    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=10, csv=False)
     return form
-
-
-def get_templates():
-    return db().select(db.template.ALL) 
-
 
 def get_add_datastore_form():
-    form_fields = ['ds_name', 'ds_ip', 'capacity', 'username', 'password', 'path']
-    form_labels = {'ds_name':'Name', 'ds_ip':'Mount IP', 'capacity':'Capacity (GB)', 'username':'Username', 'password':'Password', 'path':'Path'}
 
-    form = SQLFORM(db.datastore, fields = form_fields, labels = form_labels, submit_button = 'Add Datastore')
+    db.datastore.id.readable=False # Since we do not want to expose the used field on the grid
+    #Define the fields to show on grid. 
+    fields = (db.datastore.ds_name, db.datastore.ds_ip, db.datastore.capacity, db.datastore.username, db.datastore.password, db.datastore.path)
+
+    default_sort_order=[db.datastore.id]
+
+    #Creating the grid object
+    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=10, csv=False)
     return form
-
-
-def get_datastores():
-    return db().select(db.datastore.ALL) 
-
 
 def get_all_vm_list():
     vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
