@@ -51,8 +51,8 @@ if auth.is_logged_in():
                     (T('Tasks'), False, URL('admin','task_list')),
                     (T('Sanity Check'), False, URL('admin','sanity_check')),
                     (T('Configure System'), False,dict(_href='#', _id='configure'),[
-                        (T('Add Host'), False, URL('admin','host_details')),
-                        (T('Add Template'), False, URL('admin','add_template')),
-                        (T('Add Datastore'), False, URL('admin','add_datastore'))
+                        (T('Configure Host'), False, URL('admin','host_details')),
+                        (T('Configure Template'), False, URL('admin','add_template')),
+                        (T('Configure Datastore'), False, URL('admin','add_datastore'))
                         ])
                     ]
