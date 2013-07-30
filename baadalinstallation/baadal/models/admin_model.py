@@ -16,19 +16,19 @@ def get_add_template_form():
     default_sort_order=[db.template.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=10, csv=False)
+    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False)
     return form
 
 def get_add_datastore_form():
 
     db.datastore.id.readable=False # Since we do not want to expose the used field on the grid
     #Define the fields to show on grid. 
-    fields = (db.datastore.ds_name, db.datastore.ds_ip, db.datastore.capacity, db.datastore.username, db.datastore.password, db.datastore.path)
+    fields = (db.datastore.ds_name, db.datastore.ds_ip, db.datastore.capacity, db.datastore.username, db.datastore.path)
 
     default_sort_order=[db.datastore.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=10, csv=False)
+    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False)
     return form
 
 def get_all_vm_list():
