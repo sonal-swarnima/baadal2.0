@@ -1,3 +1,8 @@
 {{extend 'layout.html'}}
 <h2 class="title">{{=T('Manage Datastore')}}</h2>
 {{=form}}
+<script>
+jQuery(document).ready(function(){
+	$('<span>Add New Datastore</span>').insertAfter($('.icon-plus'));
+});
+</script>

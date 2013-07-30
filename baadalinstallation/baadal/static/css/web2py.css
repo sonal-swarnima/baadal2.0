@@ -350,6 +350,10 @@ border-left:1px solid #F7B232;
 border-right:1px solid #F7B232;
 }
 
+.web2py_htmltable thead tr th{
+text-align:left;
+}
+
 .web2py_htmltable tr:last-child td:last-child {
 -moz-border-radius-bottomright:0px;
 -webkit-border-bottom-right-radius:0px;

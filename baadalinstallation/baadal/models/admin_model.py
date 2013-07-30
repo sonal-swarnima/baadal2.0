@@ -16,7 +16,7 @@ def get_add_template_form():
     default_sort_order=[db.template.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False)
+    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
 def get_add_datastore_form():
@@ -28,7 +28,7 @@ def get_add_datastore_form():
     default_sort_order=[db.datastore.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False)
+    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
 def get_all_vm_list():
