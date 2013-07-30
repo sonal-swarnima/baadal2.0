@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE
+    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE,A,SPAN
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
@@ -80,8 +80,8 @@ def get_task_list(events):
 
 def get_task_num_form():
     form = FORM('Show:',
-                INPUT(_name = 'task_num', _size=2, requires = IS_INT_IN_RANGE(1,101)),
-                INPUT(_type = 'submit', _value = 'Refresh', _onclick = 'tab_refresh()'))
+                INPUT(_name = 'task_num', _class='task_num', requires = IS_INT_IN_RANGE(1,101)),
+                A(SPAN(_class='icon-refresh'), _onclick = 'tab_refresh();$(this).closest(\'form\').submit()', _href='#'))
     return form
     
 

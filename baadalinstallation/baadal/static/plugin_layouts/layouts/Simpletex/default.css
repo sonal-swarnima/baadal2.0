@@ -66,6 +66,7 @@ hr {
 
 img {
 	border: 1px solid #B2B2B2;
+	height:18px;
 }
 
 img.left {
@@ -156,6 +157,7 @@ thead th {
 
 }
 
+input.task_num{width:30px;}
 
 /* Menu */
 
@@ -345,38 +347,6 @@ html>body #menu a {
         position:fixed; top:0px; left:0px; width:100%; height:100%; color:#FFFFFF; text-align:center; vertical-align:middle;
 }
 
-
-ul.web2py-menu-vertical { 
-	width: 150px; 
-  position: relative; 
-top:1em; 
-left:1em;  
-z-index:30; 
-border:0; 
-margin:0; 
-padding: 0; 
-list-style: none; 
-text-decoration: none;
-}
-
-ul.web2py-menu-vertical li { 
-margin:0; 
-padding:0; 
-border:0; 
-width: 150px; 
-background: black; 
-text-align:left;
-}
-
-ul.web2py-menu-vertical li a { 
-margin:0; 
-padding: 1px 3px 1px 3px; 
-border:0; 
-width: 144px; 
-color: #1D5B7F; 
-font-size:12px;
-}
-
 div.flash { 
 position: fixed; 
 float: right; 
@@ -405,7 +375,6 @@ background-color: red;
 color: white; 
 padding: 3px; 
 }
-
 
 /*CSS FOR TABLES*/
 
@@ -463,7 +432,7 @@ border:1px solid #0057af;
 border-width:0px 1px 1px 0px;
 text-align:left;
 padding:7px;
-font-size:10px;
+font-size:11px;
 font-family:Arial;
 font-weight:normal;
 color:#000000;
