@@ -49,6 +49,7 @@ def add_to_cost(vm_id):
     elif(vm.current_run_level == 3): scale = .25
 
     totalcost = float(hours*(vm.vCPU*float(COST_CPU) + vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
+    totalcost = round(totalcost,2)
     db(db.vm_data.id == vm_id).update(start_time=get_datetime(),total_cost=totalcost)
     return totalcost
 

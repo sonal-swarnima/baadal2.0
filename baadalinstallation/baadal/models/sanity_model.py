@@ -59,6 +59,6 @@ def check_sanity():
 
             domains=[]
             names=[]
-            print conn.close()
+            conn.close()
         except:pass
     return vmcheck

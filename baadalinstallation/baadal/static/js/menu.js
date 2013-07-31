@@ -1,53 +1,69 @@
     function displayMainMenu(){
     	//alert('uff');
       if(jQuery('#menu_admin').length != 0){
-      	loadMenu(jQuery('#menu_admin'), true);
-      	loadMenu(jQuery('#menu_orgadmin'), false);
-      	loadMenu(jQuery('#menu_faculty'), false);
-      	loadMenu(jQuery('#menu_user'), false);
-        jQuery('#configure').siblings().hide();
+      	loadMainMenu(jQuery('#menu_admin'), true);
+      	loadSubMenu(jQuery('#configure'), false);
+      	loadMainMenu(jQuery('#menu_orgadmin'), false);
+      	loadMainMenu(jQuery('#menu_faculty'), false);
+      	loadMainMenu(jQuery('#menu_user'), false);
       }
       else if(jQuery('#menu_orgadmin').length != 0){
-      	loadMenu(jQuery('#menu_orgadmin'), true);
-      	loadMenu(jQuery('#menu_faculty'), false);
-      	loadMenu(jQuery('#menu_user'), false);
+      	loadMainMenu(jQuery('#menu_orgadmin'), true);
+      	loadMainMenu(jQuery('#menu_faculty'), false);
+      	loadMainMenu(jQuery('#menu_user'), false);
       }
       else if(jQuery('#menu_faculty').length != 0){
-      	loadMenu(jQuery('#menu_faculty'), true);
-      	loadMenu(jQuery('#menu_user'), false);
+      	loadMainMenu(jQuery('#menu_faculty'), true);
+      	loadMainMenu(jQuery('#menu_user'), false);
       }
       else if(jQuery('#menu_user').length != 0){
-      	loadMenu(jQuery('#menu_user'), true);
+      	loadMainMenu(jQuery('#menu_user'), true);
       }else
       {
       	$.cookie('menu_admin', null, {path: '/' });
       	$.cookie('menu_orgadmin', null, {path: '/' });
       	$.cookie('menu_faculty', null, {path: '/' });
       	$.cookie('menu_user', null, {path: '/' });
+      	$.cookie('configure', null, {path: '/' });
       }
     }
     
-    function loadMenu(obj, show){
+    function loadMainMenu(obj, show){
+    	loadMenu(obj, obj.parent().siblings(), show);
+    }
+
+    function loadSubMenu(obj, show){
+    	loadMenu(obj, obj.siblings(), show);    
+    }
+
+    function loadMenu(obj, children, show){
     	obj_id = obj.attr('id');
-    	objs = obj.parent().siblings();
     	is_visible = $.cookie(obj_id);
     	if(is_visible == 'true'){
-    		objs.show();
+    		children.show();
     	}else if(is_visible == 'false'){
-    		objs.hide();
+    		children.hide();
     	}else{
     		if(show){
-    			objs.show();
+    			children.show();
     		}else{
-    			objs.hide();
+    			children.hide();
     		}
     	}
-    	addToCookie(obj);
+    	addToCookie(obj, children);
+    }
+
+    function addToMainCookie(obj){
+    	addToCookie(obj, obj.parent().siblings())
+    }
+
+    function addToSubCookie(obj){
+    	addToCookie(obj, obj.siblings())
     }
 	
-    function addToCookie(obj){
+    function addToCookie(obj, children){
     	obj_id = obj.attr('id');
-    	is_visible = obj.parent().next().is(':visible');
+    	is_visible = children.is(':visible');
     	$.cookie(obj_id, is_visible, {path: '/' });
     }
     

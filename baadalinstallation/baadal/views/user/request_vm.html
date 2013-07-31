@@ -1,10 +1,10 @@
 {{extend 'layout.html'}}
 
 <div class="post">
-	<h2 class="subtitle">{{=T('Request VM')}}</h2>
-	<div class="entry">
-		{{=form}}
-	</div>
+    <h2 class="subtitle">{{=T('Request VM')}}</h2>
+    <div class="entry">
+        {{=form}}
+    </div>
 </div>
 
 
@@ -24,7 +24,7 @@ jQuery('#vm_data_template_id').change(function(){
 
 function template_check() {
     var _value=$('#vm_data_template_id').val();
-	
+    
     if (_value == ''){
         jQuery('#vm_data_purpose__row').hide();
         jQuery('#vm_data_HDD__row').hide();
@@ -33,33 +33,36 @@ function template_check() {
     }else{
         jQuery('#vm_data_purpose__row').show();
         jQuery('#vm_data_HDD__row').show();
-        jQuery('[id^=config_row__]').hide();	
-        jQuery('#config_row__'+_value).show();
         jQuery('#faculty_row').show();
-        if(jQuery('#config_row__'+_value).length != 0){
-            jQuery('#config_row__'+_value).show();   
+
+        jQuery('[id^=config_row__]').hide();    
+        
+        if(jQuery('#config_row__'+_value).length == 0){
+            jQuery('#config_row__0').show();   
+        }else
+        {
+            jQuery('#config_row__'+_value).show();
         }
     }
-  }
+}
   
-  function verify_faculty() {
-  	var verify_url = "{{=URL('verify_faculty')}}";
-  	var faculty_user = jQuery('#faculty_user').val();
-  	jQuery.post(verify_url, {keywords:faculty_user},
-  		function(result){
-  			faculty_info = result;
-  			if(result != 'None'){
-  				jQuery('[name="user_name"]').val(faculty_user);
-				jQuery('#faculty_user').val(faculty_info);
-			}else
-			{
-  				jQuery('[name="user_name"]').val('');
-				jQuery('.flash').html('Faculty Approver Username is not valid').slideDown();
-			}
-		}
-	);
-
-  }
+function verify_faculty() {
+    var verify_url = "{{=URL('verify_faculty')}}";
+    var faculty_user = jQuery('#faculty_user').val();
+    jQuery.post(verify_url, {keywords:faculty_user},
+        function(result){
+            faculty_info = result;
+            if(result != 'None'){
+                jQuery('[name="user_name"]').val(faculty_user);
+                jQuery('#faculty_user').val(faculty_info);
+            }else
+            {
+                jQuery('[name="user_name"]').val('');
+                jQuery('.flash').html('Faculty Approver Username is not valid').slideDown();
+            }
+        }
+    );
+}
 
 jQuery('form').submit(function(){
 });

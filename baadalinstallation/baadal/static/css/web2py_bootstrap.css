@@ -94,7 +94,7 @@ textarea,button{display:block;}
 /*reset ul padding */
 ul#navbar{padding:0;}
 /* label aligned to related input */
-td.w2p_fl,td.w2p_fc {padding:0;}
+td.w2p_fl,td.w2p_fc {padding:0.1em 0.5em;}
 #web2py_user_form td{vertical-align:middle;}
 
 /*=============================================================

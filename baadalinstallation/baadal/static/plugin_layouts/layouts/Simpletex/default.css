@@ -273,17 +273,23 @@ html>body #menu a {
 	list-style: none;
 }
 
+#sidebar ul.nav li {
+	padding-left:10px;
+	padding-top:5px;
+	background: url(images/img12.gif) repeat-x;
+}
+
+#sidebar ul.nav li.web2py-menu-first {
+	padding-left:0px;
+	padding-top:10px;
+	padding-bottom:10px;
+	background: url(images/img11.gif) repeat-x left bottom;
+}
+
 #sidebar li {
-	padding: 10px;
-	background: url(images/img11.gif) no-repeat;
-}
-
-#sidebar li ul {
-}
-
-#sidebar li li {
-	padding: 5px 0;
-	background: url(images/img12.gif) repeat-x left bottom;
+	padding-left:0px;
+	padding-top:5px;
+	background: url(images/img12.gif) repeat-x;
 }
 
 #sidebar h2 {

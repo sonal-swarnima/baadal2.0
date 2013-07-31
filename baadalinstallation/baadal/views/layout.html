@@ -19,13 +19,13 @@
       displayMainMenu();
 
       jQuery('#configure').click(function(){
-      	$(this).siblings().slideToggle();
-    	addToCookie($(this));
+      	$(this).siblings().toggle();
+    	addToSubCookie($(this));
       });
 
       jQuery('[id^=menu_]').click(function(){
     	$(this).parent().siblings().toggle();
-    	addToCookie($(this));
+    	addToMainCookie($(this));
       });        
 	
       tab_index = 0;
