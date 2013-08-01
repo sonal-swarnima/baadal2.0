@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, get_vm_template_config
+from helper import is_moderator, is_faculty, get_vm_template_config, get_fullname
 from auth_user import fetch_ldap_user, create_or_update_user
 
 def get_my_pending_vm():
@@ -130,15 +130,7 @@ def get_faculty_info(username):
                 user = user_query.select().first()
     
     if user:
-        return (user.user.id, (user.user.first_name + ' ' + user.user.last_name))
-
-
-def get_vm_user_list(vm_id) :		
-    vm_users=db(vm_id == db.user_vm_map.vm_id ).select()
-    user_id_lst =[]
-    for vm_user in vm_users:
-        user_id_lst.append(vm_user.user_id)
-    return user_id_lst		
+        return (user.user.id, (user.user.first_name + ' ' + user.user.last_name))	
 
 
 def get_my_task_list(task_status, task_num):
@@ -150,9 +142,31 @@ def get_my_task_list(task_status, task_num):
 
     return get_task_list(events)
 
-def check_snapshot_limit(vm_id):
-    snapshot_count = len(db(db.snapshot.vm_id == vm_id).select())
-    if snapshot_count < SNAPSHOT_LIMIT:
-        return True
-    else:
-        return False
+   
+def get_vm_config(vm_id):
+
+    vminfo = get_vm_info(vm_id)
+    
+    vm_info_map = {'id'       : str(vminfo.id),
+                   'name'     : str(vminfo.vm_name),
+                   'hdd'      : str(vminfo.HDD),
+                   'extrahdd' : str(0),
+                   'ram'      : str(vminfo.RAM),
+                   'vcpus'    : str(vminfo.vCPU),
+                   'status'   : str(vminfo.status),
+                   'ostype'   : 'Linux',
+                   'purpose'  : str(vminfo.purpose)}
+
+    if is_moderator():
+         vm_info_map.update({'host' : str(vminfo.host_id),
+                             'vnc'  : str(vminfo.vnc_port)})
+
+    return vm_info_map  
+    
+    
+def get_vm_user_list(vm_id) :		
+    vm_users = db((vm_id == db.user_vm_map.vm_id) & (db.user_vm_map.user_id == db.user.id)).select(db.user.ALL)
+    user_id_lst = []
+    for vm_user in vm_users:
+        user_id_lst.append(vm_user)
+    return user_id_lst

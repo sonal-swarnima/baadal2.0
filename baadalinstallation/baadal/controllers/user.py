@@ -41,7 +41,7 @@ def list_my_vm():
 
 @auth.requires_login()
 @handle_exception
-def settings():
+def settings_org():
     vm_id=request.args[0]
     vminfo = vm_permission_check(vm_id)     
     #TODO : Analyze
@@ -62,6 +62,33 @@ def settings():
         return dict(data=data,users=get_vm_user_list(vm_id))
     else :
         return dict(data=data)
+
+@auth.requires_login()
+@handle_exception
+def settings():
+
+    vm_id=request.args[0]
+    vm_users = None
+    vm_info = get_vm_config(vm_id)
+    
+    if is_moderator() | is_faculty() | is_orgadmin():
+        vm_users = get_vm_user_list(vm_id)
+    
+    vm_operations = get_vm_operations(vm_id)
+    
+    return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = None, vmusers = vm_users)     
+
+"""    vm_usrs = None
+    vm_conf = get_vm_config(vm_id)
+    vm_ops = get_valid_vm_operations(vm_id)
+    vm_snaps = get_vm_snapshots(vm_id)
+
+    if is_moderator() or is_orgadmin():
+        vm_users = get_vm_users(vm_id)
+
+    return dict(vm_config = vm_conf, vm_operations = vm_ops, vm_snapshots = vm_snaps, vm_users = vm_usrs)
+"""	
+
 
 @auth.requires_login()
 @handle_exception
@@ -150,20 +177,7 @@ def list_my_task():
     success = get_my_task_list(TASK_QUEUE_STATUS_SUCCESS, task_num)
     failed = get_my_task_list(TASK_QUEUE_STATUS_FAILED, task_num)
 
-    return dict(pending=pending, success=success, failed=failed, form=form)
-
-def vm_permission_check(vm_id):
-    vminfo = get_vm_info(vm_id)
-    if vminfo == None:
-        session.vm_status = "No such vm exists any more"        
-        redirect_list_vm()
-    else:
-        if (not is_moderator()): #moderator has access rights on all vms 
-            if auth.user.id not in get_vm_user_list(vm_id): 
-                session.vm_status = "Not authorized"
-                session.flash="Not authorized"
-                redirect_list_vm()
-    return vminfo    
+    return dict(pending=pending, success=success, failed=failed, form=form)  
 
 
 def redirect_list_vm():

@@ -59,7 +59,7 @@ def get_full_name(user_id):
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    vm_info=db((db.vm_data.id==_vm_id) & (db.vm_data.locked == False)).select()
+    vm_info=db((db.vm_data.id == _vm_id) & (db.vm_data.locked == False)).select()
     if not vm_info:
         return None
     return vm_info.first()
@@ -148,7 +148,7 @@ def check_orgadmin(fn):
 # Generic check faculty decorator
 def check_faculty(fn):
     def decorator(*args, **kwargs):
-        if (auth.is_logged_in()) & (is_moderator() | is_orgadmin() | is_faculty()):
+        if (auth.is_logged_in()) & (is_faculty()):
             return fn(*args, **kwargs)
         else:
             session.flash = "You don't have faculty privileges"
@@ -161,3 +161,71 @@ def get_pending_approval_count():
 
     return db((db.vm_data.status == VM_STATUS_VERIFIED) 
              & (db.vm_data.requester_id.belongs(users_of_same_org))).count()
+             
+def get_vm_operations(vm_id):
+
+   valid_operations_list = []
+   ismoderator = is_moderator()
+   isfaculty = is_faculty()
+   isorgadmin = is_orgadmin()   
+   vmstatus = int(db(db.vm_data.id == vm_id).select(db.vm_data.status).first()['status'])
+   
+   
+   if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
+
+        if is_moderator():
+           valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
+               	 	_href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
+                	_title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
+                	
+        if is_moderator() or is_orgadmin() or is_faculty():
+            valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
+               	 	_onclick="confirm_vm_deletion()",	_title="Delete this virtual machine",	_alt="Delete this virtual machine"))
+  
+        if vmstatus == VM_STATUS_SUSPENDED:
+            
+            valid_operations_list.append(A(IMG(_src=URL('static','images/play2.png'), _height=20, _width=20),
+                _href=URL(r=request, f='resume_machine', args=[vm_id]), 
+                _title="Unpause this virtual machine", _alt="Unpause on this virtual machine"))
+                
+            valid_operations_list.append(A(IMG(_src=URL('static','images/cpu.png'), _height=20, _width=20),
+                _href=URL(r=request, f='adjrunlevel', args = vm_id),
+                _title="Adjust your machines resource utilization", _alt="Adjust your machines resource utilization"))
+            
+        if vmstatus == VM_STATUS_SHUTDOWN:
+            
+            valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
+               	 	_href=URL(r=request, f='start_machine', args=[vm_id]), 
+                	_title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
+                	
+            valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
+                _href=URL(r=request,c='default', f='request_clonevm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
+   
+        if vmstatus == VM_STATUS_RUNNING:
+            
+            valid_operations_list.append(A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
+                    _href=URL(r=request, f='pause_machine', args=[vm_id]), 
+                    _title="Pause this virtual machine", _alt="Pause this virtual machine"))
+
+            valid_operations_list.append(A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
+                    _href=URL(r=request, f='shutdown_machine', args=[vm_id]), _title="Gracefully shut down this virtual machine",
+                    _alt="Gracefully shut down this virtual machine"))
+                    
+            valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
+                _href=URL(r=request,c='admin', f='edit_vmconfig', args=vm_id),
+                _title="Edit VM Config", _alt="Edit VM Config"))
+                    
+        if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED):
+             
+             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
+                    _href=URL(r=request, f='destroy_machine', args= [vm_id]), 
+                    _title="Forcefully power off this virtual machine",
+                    _alt="Forcefully power off this virtual machine"))
+   
+   else:
+       logger.error("INVALID VM STATUS!!!")
+       raise
+       
+   return valid_operations_list  
+   
+   
