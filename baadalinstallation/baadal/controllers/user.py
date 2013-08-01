@@ -93,8 +93,7 @@ def settings():
 @auth.requires_login()
 @handle_exception
 def start_machine():
-    vm_id=request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id=request.args[0]       
     add_vm_task_to_queue(vm_id,TASK_TYPE_START_VM)
     redirect_list_vm()
 
@@ -102,8 +101,7 @@ def start_machine():
 @auth.requires_login()
 @handle_exception
 def shutdown_machine():
-    vm_id=request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id=request.args[0]      
     add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
     redirect_list_vm()
 
@@ -111,8 +109,7 @@ def shutdown_machine():
 @auth.requires_login()
 @handle_exception
 def destroy_machine():
-    vm_id=request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id=request.args[0]       
     add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
     redirect_list_vm()
 
@@ -120,8 +117,7 @@ def destroy_machine():
 @auth.requires_login()
 @handle_exception       
 def resume_machine():
-    vm_id=request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id=request.args[0]     
     add_vm_task_to_queue(vm_id,TASK_TYPE_RESUME_VM)        
     redirect_list_vm()
 
@@ -129,8 +125,7 @@ def resume_machine():
 @auth.requires_login()
 @handle_exception       
 def delete_machine():
-    vm_id = request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id = request.args[0]      
     add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
     redirect_list_vm()
 
@@ -138,8 +133,7 @@ def delete_machine():
 @auth.requires_login()
 @handle_exception       
 def pause_machine():
-    vm_id=request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id=request.args[0]  
     add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
     redirect_list_vm()
 
@@ -148,7 +142,7 @@ def pause_machine():
 def adjrunlevel():
     #Adjust the run level of the virtual machine
     vm_id=request.args[0]
-    vminfo = vm_permission_check(vm_id)        
+    vminfo = get_vm_config(vm_id)        
     return dict(vm=vminfo)
 
 @auth.requires_login()
@@ -158,8 +152,7 @@ def clonevm():
 @auth.requires_login()
 @handle_exception       
 def changelevel():
-    vm_id=request.args[0]
-    vm_permission_check(vm_id)        
+    vm_id=request.args[0]     
     add_vm_task_to_queue(vm_id,TASK_TYPE_CHANGELEVEL_VM)        
     redirect_list_vm()
 

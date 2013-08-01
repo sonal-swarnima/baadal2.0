@@ -147,15 +147,17 @@ def get_vm_config(vm_id):
 
     vminfo = get_vm_info(vm_id)
     
-    vm_info_map = {'id'       : str(vminfo.id),
-                   'name'     : str(vminfo.vm_name),
-                   'hdd'      : str(vminfo.HDD),
-                   'extrahdd' : str(0),
-                   'ram'      : str(vminfo.RAM),
-                   'vcpus'    : str(vminfo.vCPU),
-                   'status'   : str(vminfo.status),
-                   'ostype'   : 'Linux',
-                   'purpose'  : str(vminfo.purpose)}
+    vm_info_map = {'id'              : str(vminfo.id),
+                   'name'            : str(vminfo.vm_name),
+                   'hdd'             : str(vminfo.HDD),
+                   'extrahdd'        : str(0),
+                   'ram'             : str(vminfo.RAM),
+                   'vcpus'           : str(vminfo.vCPU),
+                   'status'          : str(vminfo.status),
+                   'ostype'          : 'Linux',
+                   'purpose'         : str(vminfo.purpose),
+                   'totalcost'       : str(vminfo.total_cost),
+                   'currentrunlevel' : str(vminfo.current_run_level)}
 
     if is_moderator():
          vm_info_map.update({'host' : str(vminfo.host_id),
