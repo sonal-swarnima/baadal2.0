@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator
+from helper import is_moderator, is_faculty, is_orgadmin
 
 @auth.requires_login()
 @handle_exception
@@ -38,30 +38,30 @@ def list_my_vm():
     
     return dict(pending_vm = pending_vm, hosted_vm = hosted_vm)
 
-
-@auth.requires_login()
-@handle_exception
-def settings_org():
-    vm_id=request.args[0]
-    vminfo = vm_permission_check(vm_id)     
-    #TODO : Analyze
-    # as state attr is not the live state of the machine              
-    state=vminfo.status  #current state of VM
-    data={'id':vminfo.id,
-          'name':vminfo.vm_name,
-          'hdd':vminfo.HDD,
-          'ram':vminfo.RAM,
-          'vcpus':vminfo.vCPU,
-          'status':state,
-          'hostip':vminfo.host_id.host_ip,
-          'port':vminfo.vnc_port,
-          'ostype':vminfo.template_id.ostype,
-          'expire_date':vminfo.expiry_date,
-          'purpose':vminfo.purpose}
-    if is_moderator() :
-        return dict(data=data,users=get_vm_user_list(vm_id))
-    else :
-        return dict(data=data)
+# 
+# @auth.requires_login()
+# @handle_exception
+# def settings_org():
+#     vm_id=request.args[0]
+#     vminfo = vm_permission_check(vm_id)     
+#     #TODO : Analyze
+#     # as state attr is not the live state of the machine              
+#     state=vminfo.status  #current state of VM
+#     data={'id':vminfo.id,
+#           'name':vminfo.vm_name,
+#           'hdd':vminfo.HDD,
+#           'ram':vminfo.RAM,
+#           'vcpus':vminfo.vCPU,
+#           'status':state,
+#           'hostip':vminfo.host_id.host_ip,
+#           'port':vminfo.vnc_port,
+#           'ostype':vminfo.template_id.ostype,
+#           'expire_date':vminfo.expiry_date,
+#           'purpose':vminfo.purpose}
+#     if is_moderator() :
+#         return dict(data=data,users=get_vm_user_list(vm_id))
+#     else :
+#         return dict(data=data)
 
 @auth.requires_login()
 @handle_exception
@@ -160,7 +160,7 @@ def changelevel():
 @handle_exception       
 def list_my_task():
     form = get_task_num_form()
-    task_num = TASK_PER_PAGE
+    task_num = ITEMS_PER_PAGE
     form.vars.task_num = task_num
 
     if form.accepts(request.vars, session, keepvalues=True):

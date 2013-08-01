@@ -16,7 +16,7 @@ def get_add_template_form():
     default_sort_order=[db.template.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
 def get_add_datastore_form():
@@ -28,7 +28,7 @@ def get_add_datastore_form():
     default_sort_order=[db.datastore.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=10, csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
 def get_all_vm_list():
@@ -135,7 +135,7 @@ def get_host_form(host_ip):
 
 def is_host_available(host_ip):
     try:
-        exec_command_on_host(host_ip,'root','pwd')
+        execute_command(host_ip,'root','pwd')
         return True
     except:
         return False
@@ -143,7 +143,7 @@ def is_host_available(host_ip):
 
 def get_mac_address(host_ip):
     command = "ifconfig -a | grep eth0 | head -n 1"
-    ret = exec_command_on_host(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
+    ret = execute_command(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
     ret=ret.strip()
     mac_addr = ret[ret.rindex(' '):].lstrip()
     return mac_addr
@@ -151,19 +151,19 @@ def get_mac_address(host_ip):
 
 def get_cpu_num(host_ip):
     command = "cat /proc/cpuinfo | grep processor | wc -l"
-    ret = exec_command_on_host(host_ip, 'root',command)
+    ret = execute_command(host_ip, 'root',command)
     return int(ret)/2
     
 
 def get_ram(host_ip):
     command = "cat /proc/meminfo | grep MemTotal"
-    ret = exec_command_on_host(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
+    ret = execute_command(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
     ram_in_kb = ret[ret.index(' '):-3].strip()
     ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
     return ram_in_gb
 
 
-def exec_command_on_host(machine_ip, user_name, command):
+def execute_command(machine_ip, user_name, command):
 
     logger.debug("Starting to establish SSH connection with host" + str(machine_ip))
     import paramiko

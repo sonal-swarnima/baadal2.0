@@ -118,7 +118,7 @@ def lockvm():
 def task_list():
 
     form = get_task_num_form()
-    task_num = TASK_PER_PAGE
+    task_num = ITEMS_PER_PAGE
     form.vars.task_num = task_num
 
     if form.accepts(request.vars, session, keepvalues=True):

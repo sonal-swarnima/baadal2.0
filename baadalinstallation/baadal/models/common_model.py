@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE,A,SPAN
+    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE,A,SPAN,IMG,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
@@ -169,28 +169,24 @@ def get_pending_approval_count():
              
 def get_vm_operations(vm_id):
 
-   valid_operations_list = []
-   ismoderator = is_moderator()
-   isfaculty = is_faculty()
-   isorgadmin = is_orgadmin()   
-   vmstatus = int(db(db.vm_data.id == vm_id).select(db.vm_data.status).first()['status'])
+    valid_operations_list = []
+    vmstatus = int(db(db.vm_data.id == vm_id).select(db.vm_data.status).first()['status'])
    
-   
-   if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
+    if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
 
         valid_operations_list.append(A(IMG(_src=URL('static','images/snapshot.png'), _height=20, _width=20),
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
                     _title="Take VM snapshot", _alt="Take VM snapshot"))
-
+        
         valid_operations_list.append(A(IMG(_src=URL('static','images/performance.jpg'), _height=20, _width=20),
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
                     _title="Check VM performance", _alt="Check VM Performance"))
 
         if is_moderator():
-           valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
+            valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
                	 	_href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
                 	_title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
-                	
+
         if is_moderator() or is_orgadmin() or is_faculty():
             valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
                	 	_onclick="confirm_vm_deletion()",	_title="Delete this virtual machine",	_alt="Delete this virtual machine"))
@@ -210,7 +206,7 @@ def get_vm_operations(vm_id):
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
                	 	_href=URL(r=request, f='start_machine', args=[vm_id]), 
                 	_title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
-                	
+
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
                 _href=URL(r=request,c='default', f='request_clonevm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
                                
@@ -240,16 +236,15 @@ def get_vm_operations(vm_id):
                     
                     
         if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED):
-             
-             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
+            
+            valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
                     _href=URL(r=request, f='destroy_machine', args= [vm_id]), 
                     _title="Forcefully power off this virtual machine",
                     _alt="Forcefully power off this virtual machine"))
    
-   else:
-       logger.error("INVALID VM STATUS!!!")
-       raise
-       
-   return valid_operations_list  
+    else:
+        logger.error("INVALID VM STATUS!!!")
+        raise
+    return valid_operations_list  
    
    

@@ -32,14 +32,10 @@
         <td>{{=vm['level']}}</td>
         <td>{{=vm['cost']}}</td>
         <td>
-        <div id = '{{=vm['name']}}'>
-        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), 
-        _title="Settings", 
-        _alt="Settings")}}
-        {{vm=vm['name']}}
-        <img alt="Operations" title="Operations" src="../static/images/lock.png" height="18" onclick="ajax('{{=URL('dominfo/'+vm)}}', ['{{=vm}}'],'{{=vm}}');"/>
-        </div>
+	        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), 
+	        _title="Settings", 
+	        _alt="Settings")}}
         </td>
       </tr>
       </form>

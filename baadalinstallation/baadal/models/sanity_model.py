@@ -8,7 +8,7 @@ if 0:
 import libvirt
 from libvirt import *  # @UnusedWildImport
 
-def vminfotostate(intstate):
+def vminfo_to_state(intstate):
 
     if(intstate == VIR_DOMAIN_NOSTATE): state="No_State"
     elif(intstate == VIR_DOMAIN_RUNNING):state="Running"
@@ -41,21 +41,22 @@ def check_sanity():
             for dom in domains:
                 try:
                     name = dom.name()
-                    vm = db(db.vm_data.vm_name == name).select(db.vm_data.id,db.vm_data.host_id,db.vm_data.vm_name).first()
-                    status=vminfotostate(dom.info()[0])
+                    vm = db(db.vm_data.vm_name == name).select().first()
+                    status=vminfo_to_state(dom.info()[0])
                     if(vm):
                         if(vm.host_id != host.id):
-                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Moved from '+vm.host_id.host_name+' to '+host.host_name})#Bad VMs
+                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'message':'Moved from '+vm.host_id.host_name+' to '+host.host_name, 'operation':'None'})#Bad VMs
                             db(db.vm_data.vm_name==name).update(host_id=host.id)
                         else:
-                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'operation':'Is on expected host '+vm.host_id.host_name})#Good VMs
+                            vmcheck.append({'host':host.host_name,'vmname':vm.vm_name,'status':status,'message':'VM is on expected host '+vm.host_id.host_name, 'operation':'None'})#Good VMs
                     else:
-                        vmcheck.append({'host':host.host_name,'vmname':dom.name(),'status':status,'operation':'Orphan, VM is not in database'})#Orphan VMs
+                        vmcheck.append({'host':host.host_name,'vmname':dom.name(),'status':status,'message':'Orphan, VM is not in database', 'operation':'Orphan'})#Orphan VMs
                     dom=""
                 except Exception as e:
                     logger.error(e)
                     if(vm):
-                        vmcheck.append({'vmname':vm.vm_name,'host':'Unknown','status':'Unknown','operation':'Some Error Occured'})
+                        vmcheck.append({'vmname':vm.vm_name,'host':'Unknown','status':'Unknown','message':'Some Error Occurred', 'operation':'Error'})
+            
 
             domains=[]
             names=[]
