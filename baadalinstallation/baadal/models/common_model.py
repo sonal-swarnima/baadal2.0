@@ -86,13 +86,18 @@ def get_task_num_form():
     return form
     
 
-def add_vm_task_to_queue(_vm_id, _task_type, destination_host=None, live_migration=None):
+def add_vm_task_to_queue(_vm_id, _task_type, destination_host = None, live_migration = None, updated_vm_config = None):
+
     _dict = {}
     _dict['vm_id'] = _vm_id
+    
     if destination_host != None:
         _dict['destination_host'] = destination_host
     if live_migration != None:
         _dict['live_migration'] = live_migration
+    if updated_vm_config:
+        _dict['ram'] = updated_vm_config['ram']
+        _dict['vcpus'] = updated_vm_config['vcpus']
         
     db.task_queue.insert(task_type=_task_type,
                          vm_id=_vm_id, 
@@ -173,6 +178,14 @@ def get_vm_operations(vm_id):
    
    if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
 
+        valid_operations_list.append(A(IMG(_src=URL('static','images/snapshot.png'), _height=20, _width=20),
+                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _title="Take VM snapshot", _alt="Take VM snapshot"))
+
+        valid_operations_list.append(A(IMG(_src=URL('static','images/performance.jpg'), _height=20, _width=20),
+                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _title="Check VM performance", _alt="Check VM Performance"))
+
         if is_moderator():
            valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
                	 	_href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
@@ -200,6 +213,20 @@ def get_vm_operations(vm_id):
                 	
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
                 _href=URL(r=request,c='default', f='request_clonevm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
+                               
+            valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
+                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _title="Attach Extra Disk", _alt="Attach Extra Disk"))
+                    
+            if is_moderator():
+            
+                valid_operations_list.append(A(IMG(_src=URL('static','images/vnc.jpg'), _height=20, _width=20),
+                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _title="Assign VNC", _alt="Assign VNC"))
+                    
+                valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
+                    _href=URL(r = request, c = 'admin', f = 'edit_vmconfig', args = vm_id), _title="Edit VM Config", 
+                    _alt="Edit VM Config"))
    
         if vmstatus == VM_STATUS_RUNNING:
             
@@ -211,9 +238,6 @@ def get_vm_operations(vm_id):
                     _href=URL(r=request, f='shutdown_machine', args=[vm_id]), _title="Gracefully shut down this virtual machine",
                     _alt="Gracefully shut down this virtual machine"))
                     
-            valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
-                _href=URL(r=request,c='admin', f='edit_vmconfig', args=vm_id),
-                _title="Edit VM Config", _alt="Edit VM Config"))
                     
         if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED):
              

@@ -68,7 +68,7 @@ def delete_user_vm():
     user_id=request.args[1]
     delete_user_vm_access(vm_id,user_id)    			
     session.flash = 'User access is eradicated.'
-    redirect(URL(r=request,c = 'user',f = 'settings', args = [vm_id]))
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_moderator
 @handle_exception
@@ -111,7 +111,7 @@ def lockvm():
     else:
         update_vm_lock(vm_id,False)
         session.flash = "Lock Released. Start VM yourself."
-    redirect(URL(r=request,c='admin',f='list_all_vm'))
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_moderator
 @handle_exception
@@ -152,11 +152,33 @@ def delete_machine():
     vm_id=request.args[0]
     add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)
 
-    redirect(URL(r=request,c='admin',f='list_all_vm'))
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_moderator
+@handle_exception
 def edit_vmconfig():
-    session.flash="Has to be implemented"
+
+    vm_id = int(request.args[0])  
+    vm_info = get_vm_config(vm_id)
+
+    form = FORM(INPUT(_name='vmname',_type='hidden',requires=IS_NOT_EMPTY()),
+                  TABLE(TR('New RAM(MB):',INPUT(_name = 'ram', _value = vm_info['ram'], requires = IS_NOT_EMPTY())),
+                  TR('New vCPU:',INPUT(_name='cpu', _value = vm_info['vcpus'], requires=IS_NOT_EMPTY())),
+                  TR("",INPUT(_type='submit',_value="Update!"))))
+
+    form.vars.vmname = request.args[0]
+
+    if form.accepts(request.vars, session):
+        if vm_info['status'] == VM_STATUS_SHUTDOWN:
+            updated_vm_config = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
+            add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, None, None, updated_vm_config)
+            session.flash = "Your request has been queued!!!"
+        else:
+            session.flash='VM is not Off. Turn it off first'
+
+        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+
+    return dict(form=form)
 
 @check_moderator
 def mailToGUI():
