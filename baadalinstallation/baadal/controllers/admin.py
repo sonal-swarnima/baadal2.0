@@ -194,3 +194,11 @@ def add_disk():
 def sanity_check():
     output = check_sanity()
     return dict(vms=output)
+    
+@check_moderator
+def sync_vm_info():
+    vm_name = request.args[0]
+    task = request.args[1]
+
+    redirect(URL(r=request,c='admin',f='sanity_check'))
+
