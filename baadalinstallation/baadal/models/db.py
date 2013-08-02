@@ -187,6 +187,7 @@ db.define_table('attached_disks',
 db.define_table('snapshot',
     Field('vm_id', db.vm_data,notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
+    Field('snapshot_name', 'string', length = 50),
     Field('path', 'string', notnull = True))
 
 db.define_table('task_queue',
@@ -255,7 +256,9 @@ def vm_data_insert_callback(fields, _id):
                             RAM = fields['RAM'],
                             HDD = fields['HDD'],
                             purpose = fields['purpose'],
-                            template_id = fields['template_id'])
+                            template_id = fields['template_id'],
+                            requester_id = fields['requester_id'],
+                            owner_id = fields['owner_id'])
 
 db.vm_data._after_insert = [vm_data_insert_callback]
 
@@ -270,4 +273,24 @@ def task_queue_update_callback(dbset, new_fields):
         schedule_task(fields,fields['id'])
 
 db.task_queue._after_update = [task_queue_update_callback]
+
+def update_vm_data_event(fields, _id):
+    db(db.vm_data_event.id == _id).update(host_id = fields['host_id'], 
+                                          datastore_id = fields['datastore_id'], 
+                                          vm_ip = fields['vm_ip'], 
+                                          vnc_port = fields['vnc_port'], 
+                                          mac_addr = fields['mac_addr'], 
+                                          start_time = fields['start_time'], 
+                                          current_run_level = fields['current_run_level'],
+                                          last_run_level = fields['last_run_level'],
+                                          total_cost = fields['total_cost'],
+                                          status = fields['status'] )
+
+def vm_data_update_callback(dbset, new_fields):
+        fields = dbset.select().first()
+        update_vm_data_event(fields,fields['id'])
+
+db.vm_data._after_update = [vm_data_update_callback]
+
+
 

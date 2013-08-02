@@ -318,18 +318,6 @@ def free_vm_properties(vm_details):
 # Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vmid, vm_details, template, datastore, host, new_mac_address, new_ip_address, new_vncport):
 
-    # Update vm_data table
-    current.db(current.db.vm_data.id == vmid).update( host_id = host.id, \
-                                                      datastore_id = datastore.id, \
-                                                      vm_ip = new_ip_address, \
-                                                      vnc_port = new_vncport, \
-                                                      mac_addr = new_mac_address, \
-                                                      start_time = get_datetime(), \
-                                                      current_run_level = 3, \
-                                                      last_run_level = 3,\
-                                                      total_cost = 0, \
-                                                      status = current.VM_STATUS_RUNNING )
-
     # Updating the count of vms on host
     count = current.db(current.db.host.id == host.id).select().first()['vm_count']
     current.db(current.db.host.id == host.id).update(vm_count = count + 1)
@@ -337,6 +325,20 @@ def update_db_after_vm_installation(vmid, vm_details, template, datastore, host,
     # Updating the used entry of datastore
     current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.HDD) +  \
                int(template.hdd))
+
+    # Update vm_data table
+    current.db(current.db.vm_data.id == vmid).update( host_id = host.id, 
+                                                      datastore_id = datastore.id, 
+                                                      vm_ip = new_ip_address, 
+                                                      vnc_port = new_vncport, 
+                                                      mac_addr = new_mac_address, 
+                                                      start_time = get_datetime(), 
+                                                      current_run_level = 3, 
+                                                      last_run_level = 3,
+                                                      total_cost = 0, 
+                                                      status = current.VM_STATUS_RUNNING )
+
+    
     return
     
 # Installs a vm
@@ -394,7 +396,7 @@ def start(parameters):
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Suspends a vm
 def suspend(parameters):
@@ -412,7 +414,7 @@ def suspend(parameters):
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Resumes a vm
 def resume(parameters):
@@ -430,7 +432,7 @@ def resume(parameters):
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Destroys a vm forcefully
 def destroy(parameters):
@@ -449,7 +451,7 @@ def destroy(parameters):
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Function to clean up database after vm deletion
 def clean_up_database_after_vm_deletion(vm_details):
@@ -486,7 +488,6 @@ def delete(parameters):
     dict_parameters = ast.literal_eval(parameters)
     vmid = dict_parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
-    current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
@@ -503,7 +504,7 @@ def delete(parameters):
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Migrates a vm to a new host
 def migrate(parameters):
@@ -533,7 +534,7 @@ def migrate(parameters):
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message) 
+        return (current.TASK_QUEUE_STATUS_FAILED, message) 
 
 # Snapshots a vm
 def snapshot(parameters):
@@ -544,21 +545,95 @@ def snapshot(parameters):
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
-        xmlDesc = "<domainsnapshot><name> %s </name></domainsnapshot>" % (vm_details.vm_name + get_datetime())
+        snapshot_name = vm_details.vm_name + get_datetime()
+        xmlDesc = "<domainsnapshot><name> %s </name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
-        current.logger.debug("Snapshottted successfully...")
-        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id)
+        message = "Snapshotted successfully."
+        current.logger.debug(message)
+        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
-        return(current.TASK_QUEUE_STATUS_FAILED, message) 
+        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+
+# Reverts to snapshot
+def revert(parameters):
+
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
+    snapshotid = dict_parameters['snapshot_id']
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_name)
+        snapshot_name = current.db(current.db.snapshot.id == snapshotid).first()['snapshot_name']
+        snapshot = domain.snapshotLookupByName(snapshot_name, 0)
+        domain.revertToSnapshot(snapshot, 0)
+        message = "Reverted to snapshot successfully."
+        current.logger.debug(message)
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
+
+# Deletes a snapshot
+def delete_snapshot(parameters):
+
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']
+    snapshotid = dict_parameters['snapshot_id']
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_name)
+        snapshot_name = current.db(current.db.snapshot.id == snapshotid).first()['snapshot_name']
+        snapshot = domain.snapshotLookupByName(snapshot_name, 0)
+        snapshot.delete()
+        message = "Deleted snapshot successfully."
+        current.logger.debug(message)
+        current.db(current.db.snapshot.id == snapshotid).delete()
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
+
+# Edits vm configuration
+def edit_vm_config(parameters):
+
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']    
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    message = ""
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_name)
+
+        if 'vcpus' in dict_parameters:
+            new_vcpus = int(dict_parameters['vcpus'])
+            domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_AFFECT_CONFIG)
+            message += "Edited vCPU successfully."
+            current.db(current.db.vm_data.id == vmid).update(vCPU = new_vcpus)
+
+        if 'ram' in dict_parameters:
+            new_ram = int(dict_parameters['ram']) * 1024
+            current.logger.debug(str(new_ram))
+            domain.setMemoryFlags(new_ram, VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_MEM_MAXIMUM)
+            message +=  " And edited RAM successfully."
+            current.db(current.db.vm_data.id == vmid).update(RAM = int(dict_parameters['ram']))
+        current.logger.debug(message)
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
+
            
 # Prepares VM list to be displayed on webpage
 def get_vm_list(vms):
     vmlist = []
     for vm in vms:
         total_cost = add_to_cost(vm.vm_name)
-        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip,   'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 
+                   'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
         vmlist.append(element)
     return vmlist
 
