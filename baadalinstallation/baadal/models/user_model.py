@@ -172,3 +172,12 @@ def get_vm_user_list(vm_id) :
     for vm_user in vm_users:
         user_id_lst.append(vm_user)
     return user_id_lst
+
+def check_snapshot_limit(vm_id):
+    snapshots = len(db(db.snapshot.vm_id == vm_id).select())
+    logger.debug("No of snapshots are " + str(snapshots))
+    if snapshots < SNAPSHOTTING_LIMIT:
+        return True
+    else:
+        return False
+

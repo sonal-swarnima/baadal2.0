@@ -4,7 +4,7 @@
 
 function confirm_vm_deletion(){
 
-    if(confirm('Are you sure you want to delete it') {
+    if(confirm('Are you sure you want to delete it')) {
     
             if(confirm('Do you want to delete hard disk as well?')) {
                 window.location ='{{=URL(r=request, f='delete_machine', args=[vminfo['id'],True])}}'

@@ -158,6 +158,19 @@ def changelevel():
 
 @auth.requires_login()
 @handle_exception       
+def snapshot():
+    vm_id = int(request.args[0])
+
+# check_snapshot_limit() to be implemented    
+    if check_snapshot_limit(vm_id):
+        add_vm_task_to_queue(vm_id,TASK_TYPE_SNAPSHOT_VM)
+        session.flash = "Your VM snapshoting request has been queued"
+        redirect_list_vm()
+    else:
+        session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
+
+@auth.requires_login()
+@handle_exception       
 def list_my_task():
     form = get_task_num_form()
     task_num = ITEMS_PER_PAGE

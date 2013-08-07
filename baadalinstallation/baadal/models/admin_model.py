@@ -188,6 +188,9 @@ def get_migrate_vm_form(vm_id):
     host_id = db(db.vm_data.id == vm_id).select(db.vm_data.host_id).first()['host_id']
     host_options = [OPTION(host.host_ip, _value = host.id) for host in db(db.host.id != host_id).select()]
 
+    if not host_options:
+        response.flash = "No other host is available. Please add any host first."
+
     form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
                       TR('Current Host:', INPUT(_name = 'current_host', _readonly = True)),
                       TR('Destination Host:' , SELECT(*host_options, **dict(_name = 'destination_host', requires = IS_IN_DB(db, 'host.id')))),
@@ -208,4 +211,11 @@ def is_vm_running(vmid):
         return True
     else:
         return False
-
+   
+#return the form required to edit vm configs        
+def get_edit_vm_config_form():
+    form = FORM(INPUT(_name='vmname',_type='hidden',requires=IS_NOT_EMPTY()),
+                  TABLE(TR('New RAM(MB):',INPUT(_name = 'ram', _value = vm_info['ram'], requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1024,8192)])),
+                  TR('New vCPU:',INPUT(_name='cpu', _value = vm_info['vcpus'], requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,8)])),
+                  TR("",INPUT(_type='submit',_value="Update!"))))
+    return form

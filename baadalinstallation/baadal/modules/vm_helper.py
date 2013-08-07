@@ -545,7 +545,7 @@ def snapshot(parameters):
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
-        snapshot_name = vm_details.vm_name + get_datetime()
+        snapshot_name = vm_details.vm_name + str(get_datetime())
         xmlDesc = "<domainsnapshot><name> %s </name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."
@@ -625,6 +625,15 @@ def edit_vm_config(parameters):
     except libvirt.libvirtError,e:
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)
+
+# Clones vm
+def clone(parameters):
+
+    dict_parameters = ast.literal_eval(parameters)
+    vmid = dict_parameters['vm_id']    
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    clone_name = dict_parameters['clone_name']
+    
 
            
 # Prepares VM list to be displayed on webpage

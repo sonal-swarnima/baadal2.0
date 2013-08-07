@@ -175,9 +175,9 @@ def get_vm_operations(vm_id):
     if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
 
         valid_operations_list.append(A(IMG(_src=URL('static','images/snapshot.png'), _height=20, _width=20),
-                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='snapshot', args=[vm_id]), 
                     _title="Take VM snapshot", _alt="Take VM snapshot"))
-        
+
         valid_operations_list.append(A(IMG(_src=URL('static','images/performance.jpg'), _height=20, _width=20),
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
                     _title="Check VM performance", _alt="Check VM Performance"))

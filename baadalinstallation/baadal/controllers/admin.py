@@ -161,17 +161,13 @@ def edit_vmconfig():
     vm_id = int(request.args[0])  
     vm_info = get_vm_config(vm_id)
 
-    form = FORM(INPUT(_name='vmname',_type='hidden',requires=IS_NOT_EMPTY()),
-                  TABLE(TR('New RAM(MB):',INPUT(_name = 'ram', _value = int(vm_info['ram']), requires = IS_NOT_EMPTY())),
-                  TR('New vCPU:',INPUT(_name='cpu', _value = int(vm_info['vcpus']), requires=IS_NOT_EMPTY())),
-                  TR("",INPUT(_type='submit',_value="Update!"))))
+    form = get_edit_vm_config_form()
 
     form.vars.vmname = request.args[0]
 
     if form.accepts(request.vars, session):
- 
-        if int(vm_info['status']) == VM_STATUS_SHUTDOWN:
-            updated_vm_config = {'ram' : form.vars.ram, 'vcpus' : form.vars.cpu}
+        if vm_info['status'] == VM_STATUS_SHUTDOWN:
+            updated_vm_config = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
             add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, None, None, updated_vm_config)
             session.flash = "Your request has been queued!!!"
         else:
