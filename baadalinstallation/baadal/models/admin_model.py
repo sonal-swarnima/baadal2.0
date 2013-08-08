@@ -213,9 +213,9 @@ def is_vm_running(vmid):
         return False
    
 #return the form required to edit vm configs        
-def get_edit_vm_config_form():
+def get_edit_vm_config_form(vm_info):
     form = FORM(INPUT(_name='vmname',_type='hidden',requires=IS_NOT_EMPTY()),
                   TABLE(TR('New RAM(MB):',INPUT(_name = 'ram', _value = vm_info['ram'], requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1024,8192)])),
-                  TR('New vCPU:',INPUT(_name='cpu', _value = vm_info['vcpus'], requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,8)])),
+                  TR('New vCPU:',INPUT(_name='vcpus', _value = vm_info['vcpus'], requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,8)])),
                   TR("",INPUT(_type='submit',_value="Update!"))))
     return form

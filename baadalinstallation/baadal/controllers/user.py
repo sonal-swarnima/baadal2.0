@@ -75,8 +75,10 @@ def settings():
         vm_users = get_vm_user_list(vm_id)
     
     vm_operations = get_vm_operations(vm_id)
+
+    vm_snapshots = get_vm_snapshots(vm_id)
     
-    return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = None, vmusers = vm_users)     
+    return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
 
 """    vm_usrs = None
     vm_conf = get_vm_config(vm_id)
@@ -160,14 +162,31 @@ def changelevel():
 @handle_exception       
 def snapshot():
     vm_id = int(request.args[0])
-
-# check_snapshot_limit() to be implemented    
+   
     if check_snapshot_limit(vm_id):
         add_vm_task_to_queue(vm_id,TASK_TYPE_SNAPSHOT_VM)
         session.flash = "Your VM snapshoting request has been queued"
         redirect_list_vm()
     else:
         session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
+
+@auth.requires_login()
+@handle_exception
+def delete_snapshot():
+    vm_id = int(request.args[0])
+    snapshot_id = int(request.args[1])
+    add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, None, None, None, snapshot_id)
+    session.flash = "Your delete snapshot request has been queued"
+    redirect_list_vm()
+
+@auth.requires_login()
+@handle_exception
+def revert_to_snapshot():
+    vm_id = int(request.args[0])
+    snapshot_id = int(request.args[1])
+    add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, None, None, None, snapshot_id)
+    session.flash = "Your revert to snapshot request has been queued"
+    redirect_list_vm()
 
 @auth.requires_login()
 @handle_exception       

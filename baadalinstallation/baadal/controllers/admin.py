@@ -161,12 +161,12 @@ def edit_vmconfig():
     vm_id = int(request.args[0])  
     vm_info = get_vm_config(vm_id)
 
-    form = get_edit_vm_config_form()
+    form = get_edit_vm_config_form(vm_info)
 
     form.vars.vmname = request.args[0]
 
     if form.accepts(request.vars, session):
-        if vm_info['status'] == VM_STATUS_SHUTDOWN:
+        if int(vm_info['status']) == VM_STATUS_SHUTDOWN:
             updated_vm_config = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
             add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, None, None, updated_vm_config)
             session.flash = "Your request has been queued!!!"

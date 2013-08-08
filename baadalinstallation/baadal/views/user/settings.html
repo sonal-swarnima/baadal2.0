@@ -90,3 +90,24 @@ function confirm_vm_deletion(){
 	  </table>
 </div>
 {{pass}}
+
+{{if vmsnapshots:}}
+<div class = "post">
+    
+        <h2 class = "title"> Current Snapshot </h2>
+        <table>
+                <tr> 
+               
+                     {{for snapshot in vmsnapshots:}}
+                     <td> {{ =snapshot}}</td>
+                     {{pass}}
+               </tr>
+       </table>
+</div>
+{{pass}}
+
+                
+
+
+                
+

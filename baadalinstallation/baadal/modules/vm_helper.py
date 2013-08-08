@@ -225,7 +225,7 @@ def get_install_command(template, vm_details, vm_image_location, ram, vcpus, new
 def generate_xml(diskpath,target_disk):
 
     root_element = etree.Element('disk',attrib = {'type':'block','device':'disk'})
-    etree.SubElement(root_element, 'driver',attrib = {'name':'qemu','cache':'none'})
+    etree.SubElement(root_element, 'driver',attrib = {'name':'qemu','cache':'none', 'type':'qcow2'})
     etree.SubElement(root_element, 'source', attrib = {'dev':diskpath})
     etree.SubElement(root_element, 'target', attrib = {'dev': target_disk})
 
@@ -249,10 +249,10 @@ def attach_disk(vmname, size, hostip, datastore):
                          + vmname)
 
         diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + vmname \
-                   + "/" + vmname + str(already_attached_disks + 1) + ".raw"
+                   + "/" + vmname + str(already_attached_disks + 1) + ".qcow2"
 
         # Create a new image for the new disk to be attached
-        command= "qemu-img create -f raw "+ diskpath + " " + str(size) + "G"
+        command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
         output = os.system(command)
         if output != 0:
             return False
@@ -545,7 +545,8 @@ def snapshot(parameters):
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
-        snapshot_name = vm_details.vm_name + str(get_datetime())
+        datetime = get_datetime()
+        snapshot_name = vm_details.vm_name
         xmlDesc = "<domainsnapshot><name> %s </name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."
@@ -558,7 +559,8 @@ def snapshot(parameters):
 
 # Reverts to snapshot
 def revert(parameters):
-
+    
+    current.logger.debug("Inside revert snapshot")
     dict_parameters = ast.literal_eval(parameters)
     vmid = dict_parameters['vm_id']
     snapshotid = dict_parameters['snapshot_id']
@@ -566,7 +568,7 @@ def revert(parameters):
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
-        snapshot_name = current.db(current.db.snapshot.id == snapshotid).first()['snapshot_name']
+        snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         domain.revertToSnapshot(snapshot, 0)
         message = "Reverted to snapshot successfully."
@@ -579,14 +581,16 @@ def revert(parameters):
 # Deletes a snapshot
 def delete_snapshot(parameters):
 
+    current.logger.debug("Inside delete snapshot1")
     dict_parameters = ast.literal_eval(parameters)
     vmid = dict_parameters['vm_id']
     snapshotid = dict_parameters['snapshot_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
-        snapshot_name = current.db(current.db.snapshot.id == snapshotid).first()['snapshot_name']
+        snapshot_name = current.db(current.db.snapshot.id == snapshotid).select(current.db.snapshot.snapshot_name).first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         snapshot.delete()
         message = "Deleted snapshot successfully."

@@ -86,18 +86,20 @@ def get_task_num_form():
     return form
     
 
-def add_vm_task_to_queue(_vm_id, _task_type, destination_host = None, live_migration = None, updated_vm_config = None):
+def add_vm_task_to_queue(_vm_id, _task_type, destination_host = None, live_migration = None, updated_vm_config = None, snapshot_id = None):
 
     _dict = {}
     _dict['vm_id'] = _vm_id
     
-    if destination_host != None:
+    if destination_host:
         _dict['destination_host'] = destination_host
-    if live_migration != None:
+    if live_migration:
         _dict['live_migration'] = live_migration
     if updated_vm_config:
         _dict['ram'] = updated_vm_config['ram']
         _dict['vcpus'] = updated_vm_config['vcpus']
+    if snapshot_id:
+        _dict['snapshot_id'] = snapshot_id
         
     db.task_queue.insert(task_type=_task_type,
                          vm_id=_vm_id, 
@@ -246,5 +248,19 @@ def get_vm_operations(vm_id):
         logger.error("INVALID VM STATUS!!!")
         raise
     return valid_operations_list  
+
+def get_vm_snapshots(vm_id):
+    vm_snapshots_list = []
+    for snapshot in db(db.snapshot.vm_id == vm_id).select():
+        
+        vm_snapshots_list.append(snapshot.snapshot_name)
+        vm_snapshots_list.append(A(IMG(_src=URL('static','images/delete-snapshot.gif'), _height = 20, _width = 20),
+                                       _href=URL(r=request, f='delete_snapshot', args= [vm_id, snapshot.id]),
+               	 	               _title = "Delete this snapshot",	_alt = "Delete this snapshot"))
+        vm_snapshots_list.append(A(IMG(_src=URL('static','images/revertTosnapshot.png'),_height = 20, _width = 20),
+                                       _href=URL(r=request, f='revert_to_snapshot', args= [vm_id, snapshot.id]),
+                                       _title = "Revert to this snapshot", _alt = "Revert to this snapshot"))
+
+    return vm_snapshots_list
    
    
