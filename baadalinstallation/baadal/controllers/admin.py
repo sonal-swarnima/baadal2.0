@@ -220,9 +220,15 @@ def sanity_check():
     return dict(vms=output)
     
 @check_moderator
-def sync_vm_info():
-    vm_name = request.args[0]
-    task = request.args[1]
-
+def sync_vm():
+    task = request.args[0]
+    vm_name = request.args[1]
+    host_id = request.args[2]
+    if task == 'Delete_Orphan':
+        delete_orhan_vm(vm_name, host_id)
+    elif task == 'Add_Orphan':
+        add_orhan_vm(vm_name, host_id)
+    elif task == 'Delete_VM_Info':
+        delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
 

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    import logger
-###################################################################################
+
 from gluon import current
 from helper import get_config_file
 
 def login_callback(form):
     if current.auth.is_logged_in():
-        add_group_test()
+        _role = current.USER
+        
+        member = current.db(current.db.user_membership.user_id == current.auth.user.id).select().first()
+        if not member:
+            add_membership_db(current.auth.user.id, _role, True)
     
 
 def login_ldap_callback(form):
@@ -21,16 +21,6 @@ def login_ldap_callback(form):
                 create_or_update_user(user_name, result[0], result[1], result[2], result[3], result[4],True)
             else:
                 current.logger.error('Unable To Update User Info!!!')
-
-    
-def add_group_test():
-
-    config = get_config_file()
-    _role = current.USER
-    
-    member = current.db(current.db.user_membership.user_id == current.auth.user.id).select().first()
-    if not member:
-        add_membership_db(current.auth.user.id, _role, True)
 
 
 def fetch_ldap_user(username):

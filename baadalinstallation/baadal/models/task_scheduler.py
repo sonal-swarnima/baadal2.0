@@ -7,7 +7,7 @@ if 0:
 ###################################################################################
 import sys,traceback
 from helper import get_datetime
-from vm_helper import *
+from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config
 
 task = {TASK_TYPE_CREATE_VM          :    install,
         TASK_TYPE_START_VM           :    start,

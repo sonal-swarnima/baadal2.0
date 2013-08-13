@@ -21,7 +21,15 @@
         <td>{{=vm['status']}}</td>
         <td>{{=vm['vmname']}}</td>
         <td>{{=vm['message']}}</td>
-        <td></td>
+        <td>
+        {{if vm['operation'] == 'Orphan':}}
+        	{{=A('Delete Orphan VM',_href=URL(r=request,f='sync_vm',args=['Delete_Orphan', vm['vmname'], vm['host_id']]))}}
+        	&nbsp;|&nbsp;
+        	{{=A('Update VM Info',_href=URL(r=request,f='sync_vm',args=['Add_Orphan', vm['vmname'], vm['host_id']]))}}
+        {{elif vm['operation'] == 'Undefined':}}
+        	{{=A('Delete VM Info',_href=URL(r=request,f='sync_vm',args=['Delete_VM_Info', vm['vmname'], vm['host_id']]))}}
+        {{pass}}
+        </td>
       </tr>
   {{pass}}
   </table>
