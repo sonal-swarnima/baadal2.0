@@ -67,7 +67,6 @@ def user_details():
     vm_id = request.args[0]
     form = get_search_user_form()
     if form.accepts(request.vars,session):
-        session.flash = 'Check the details'
         redirect(URL(c ='admin', f = 'add_user_to_vm', args = [form.vars.user_id, vm_id]))
     elif form.errors:
         session.form = 'Invalid user id'
@@ -81,6 +80,13 @@ def add_user_to_vm():
     vm_id = request.args[1]
     form = get_user_form(username)
 
+    if form.accepts(request.vars,session):
+        user_id = get_user_id(username)
+        add_user_vm_access(vm_id, user_id)
+        session.flash = "User is added to vm"
+        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+    elif form.errors:
+        session.form = 'Invalid user id'
     return dict(form = form)
 
 @check_moderator

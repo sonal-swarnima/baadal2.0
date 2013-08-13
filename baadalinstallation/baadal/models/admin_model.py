@@ -52,7 +52,10 @@ def approve_vm_request(vm_id):
 
 
 def delete_user_vm_access(vm_id,user_id) :    
-    db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()        
+    db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()  
+
+def add_user_vm_access(vm_id,user_id) :    
+    db.user_vm_map.insert(vm_id = vm_id, user_id = user_id)       
 
 
 def update_vm_lock(vminfo,flag) :
@@ -220,42 +223,33 @@ def get_edit_vm_config_form(vm_info):
                   TR("",INPUT(_type='submit',_value="Update!"))))
     return form
 
+def get_user_id(username):
+    user_id = db(db.user.username == username).select().first()['id']
+    return user_id
+
 def get_search_user_form():
     form = FORM('User ID:',
                 INPUT(_name = 'user_id',requires = IS_NOT_EMPTY()),
                 INPUT(_type = 'submit', _value = 'Verify'))
     return form
 
-def get_add_user_form():
-    form_fields = ['username','first_name','last_name','email']
-    form_labels = {'username':'Username','first_name':'First Name','last_name':'Last Name','email':'email'}
-
-    form = SQLFORM(db.user, fields = form_fields, labels = form_labels, submit_button = 'Confirm details')
-    return form
-
-
 def get_user_form(username):
-    
-    form = get_add_user_form()
+
     faculty_info = get_faculty_info(username)
-    #if faculty_info != None:
-    #session.flash = faculty_info[1]
-    return form
+    userid = faculty_info[0]
+    user_details = db(db.user.id == userid).select().first()
     
+    form = FORM(TABLE(TR('Username:', INPUT(_name = 'username', _value = user_details.username, _readonly = True)), 
+                      TR('First Name:', INPUT(_name = 'first_name',_value = user_details.first_name, _readonly = True)),
+                      TR('Last Name:' , INPUT(_name = 'last_name',_value = user_details.last_name, _readonly = True)),
+                      TR('Email ID:' , INPUT(_name = 'email',_value = user_details.email, _readonly = True)),
+                      TR('', INPUT(_type='submit', _value = 'Confirm Details'))))
 
-def get_add_user_form():
-    form_fields = ['username','first_name','last_name','email']
-    form_labels = {'username':'Username','first_name':'First Name','last_name':'Last Name','email':'email'}
-
-    form = SQLFORM(db.user, fields = form_fields, labels = form_labels, submit_button = 'Confirm details')
-    return form
-
-
-def get_user_form(username):
     
-    form = get_add_user_form()
-    faculty_info = get_faculty_info(username)
-    #if faculty_info != None:
-    #session.flash = faculty_info[1]
+    form.vars.username = user_details.username
+    form.vars.first_name = user_details.first_name
+    form.vars.last_name = user_details.last_name
+    form.vars.email = user_details.email
+
     return form
     
