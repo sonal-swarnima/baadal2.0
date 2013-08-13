@@ -219,3 +219,43 @@ def get_edit_vm_config_form(vm_info):
                   TR('New vCPU:',INPUT(_name='vcpus', _value = vm_info['vcpus'], requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,8)])),
                   TR("",INPUT(_type='submit',_value="Update!"))))
     return form
+
+def get_search_user_form():
+    form = FORM('User ID:',
+                INPUT(_name = 'user_id',requires = IS_NOT_EMPTY()),
+                INPUT(_type = 'submit', _value = 'Verify'))
+    return form
+
+def get_add_user_form():
+    form_fields = ['username','first_name','last_name','email']
+    form_labels = {'username':'Username','first_name':'First Name','last_name':'Last Name','email':'email'}
+
+    form = SQLFORM(db.user, fields = form_fields, labels = form_labels, submit_button = 'Confirm details')
+    return form
+
+
+def get_user_form(username):
+    
+    form = get_add_user_form()
+    faculty_info = get_faculty_info(username)
+    #if faculty_info != None:
+    #session.flash = faculty_info[1]
+    return form
+    
+
+def get_add_user_form():
+    form_fields = ['username','first_name','last_name','email']
+    form_labels = {'username':'Username','first_name':'First Name','last_name':'Last Name','email':'email'}
+
+    form = SQLFORM(db.user, fields = form_fields, labels = form_labels, submit_button = 'Confirm details')
+    return form
+
+
+def get_user_form(username):
+    
+    form = get_add_user_form()
+    faculty_info = get_faculty_info(username)
+    #if faculty_info != None:
+    #session.flash = faculty_info[1]
+    return form
+    

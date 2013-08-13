@@ -225,7 +225,7 @@ def get_vm_operations(vm_id):
                 valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
                     _href=URL(r = request, c = 'admin', f = 'edit_vmconfig', args = vm_id), _title="Edit VM Config", 
                     _alt="Edit VM Config"))
-   
+                
         if vmstatus == VM_STATUS_RUNNING:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
@@ -243,6 +243,13 @@ def get_vm_operations(vm_id):
                     _href=URL(r=request, f='destroy_machine', args= [vm_id]), 
                     _title="Forcefully power off this virtual machine",
                     _alt="Forcefully power off this virtual machine"))
+
+    if is_moderator():
+   
+        valid_operations_list.append(A(IMG(_src=URL('static','images/user_add.png'), _height=20, _width=20),
+                    _href=URL(r = request, c = 'admin', f = 'user_details', args = vm_id), _title="Add User to VM", 
+                    _alt="Add User to VM"))
+   
    
     else:
         logger.error("INVALID VM STATUS!!!")
@@ -251,15 +258,17 @@ def get_vm_operations(vm_id):
 
 def get_vm_snapshots(vm_id):
     vm_snapshots_list = []
+    snapshot_dict = {}
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
         
-        vm_snapshots_list.append(snapshot.snapshot_name)
-        vm_snapshots_list.append(A(IMG(_src=URL('static','images/delete-snapshot.gif'), _height = 20, _width = 20),
+        snapshot_dict['name'] = snapshot.snapshot_name
+        snapshot_dict['delete'] = A(IMG(_src=URL('static','images/delete-snapshot.gif'), _height = 20, _width = 20),
                                        _href=URL(r=request, f='delete_snapshot', args= [vm_id, snapshot.id]),
-               	 	               _title = "Delete this snapshot",	_alt = "Delete this snapshot"))
-        vm_snapshots_list.append(A(IMG(_src=URL('static','images/revertTosnapshot.png'),_height = 20, _width = 20),
+               	 	               _title = "Delete this snapshot",	_alt = "Delete this snapshot")
+        snapshot_dict['revert'] = A(IMG(_src=URL('static','images/revertTosnapshot.png'),_height = 20, _width = 20),
                                        _href=URL(r=request, f='revert_to_snapshot', args= [vm_id, snapshot.id]),
-                                       _title = "Revert to this snapshot", _alt = "Revert to this snapshot"))
+                                       _title = "Revert to this snapshot", _alt = "Revert to this snapshot")
+        vm_snapshots_list.append(snapshot_dict)
 
     return vm_snapshots_list
    

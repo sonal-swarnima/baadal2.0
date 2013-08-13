@@ -546,8 +546,8 @@ def snapshot(parameters):
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
         datetime = get_datetime()
-        snapshot_name = vm_details.vm_name
-        xmlDesc = "<domainsnapshot><name> %s </name></domainsnapshot>" % (snapshot_name)
+        snapshot_name = datetime.strftime("%I:%M%p on %B %d,%Y")
+        xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."
         current.logger.debug(message)
@@ -592,7 +592,7 @@ def delete_snapshot(parameters):
         domain = connection_object.lookupByName(vm_details.vm_name)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select(current.db.snapshot.snapshot_name).first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
-        snapshot.delete()
+        snapshot.delete(0)
         message = "Deleted snapshot successfully."
         current.logger.debug(message)
         current.db(current.db.snapshot.id == snapshotid).delete()

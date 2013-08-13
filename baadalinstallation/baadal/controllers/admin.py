@@ -63,6 +63,28 @@ def add_datastore():
 
 @check_moderator
 @handle_exception
+def user_details():
+    vm_id = request.args[0]
+    form = get_search_user_form()
+    if form.accepts(request.vars,session):
+        session.flash = 'Check the details'
+        redirect(URL(c ='admin', f = 'add_user_to_vm', args = [form.vars.user_id, vm_id]))
+    elif form.errors:
+        session.form = 'Invalid user id'
+
+    return dict(form=form)
+
+@check_moderator
+@handle_exception
+def add_user_to_vm():
+    username = request.args[0]
+    vm_id = request.args[1]
+    form = get_user_form(username)
+
+    return dict(form = form)
+
+@check_moderator
+@handle_exception
 def delete_user_vm():
     vm_id=request.args[0]
     user_id=request.args[1]
