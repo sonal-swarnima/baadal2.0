@@ -16,9 +16,9 @@ def login_ldap_callback(form):
     if current.auth.is_logged_in():
         user_name = current.auth.user.username
         if current.db(current.db.user.username == user_name).select(current.db.user.last_name)[0]['last_name'] == "":             
-            result = fetch_ldap_user(user_name)
-            if result:
-                create_or_update_user(user_name, result[0], result[1], result[2], result[3], result[4],True)
+            user_info = fetch_ldap_user(user_name)
+            if user_info:
+                create_or_update_user(user_info, True)
             else:
                 current.logger.error('Unable To Update User Info!!!')
 
@@ -39,11 +39,10 @@ def fetch_ldap_user(username):
     searchScope = ldap.SCOPE_SUBTREE
     retrieveAttributes = None
     searchFilter = "uid="+username
-    _first_name = ''
-    _last_name = ''
-    _email = None
+    user_info={'user_name':username}
+    user_info['email'] = None
+    user_info['organisation'] = 'IIT Delhi'
     _role_list = [current.USER]
-    _organisation = 'IIT Delhi'
 
     try:
         ldap_result_id = l.search(base_dn, searchScope, searchFilter, retrieveAttributes)  
@@ -57,42 +56,40 @@ def fetch_ldap_user(username):
                         for k,vals in attrs.items():
                             if k == 'cn':
                                 name_lst = vals[0].split(' ')
-                                _first_name = name_lst[0]
+                                user_info['first_name'] = name_lst[0]
                                 if len(name_lst) == 2:
-                                    _last_name = name_lst[1]
+                                    user_info['last_name'] = name_lst[1]
                                 else:
-                                    _last_name = vals[0][vals[0].index(' '):].lstrip()
+                                    user_info['last_name'] = vals[0][vals[0].index(' '):].lstrip()
                             if k == 'altEmail':
                                 if vals[0] != 'none':
-                                    _email=vals[0]
+                                    user_info['email'] = vals[0]
  
 #TODO: find role and organisation from ldap and set in db accordingly (current iitd ldap does not support this feature entirely) 
                                     
-        admin_users = config.get("GENERAL_CONF","admin_uid")
-        orgadmin_users = config.get("GENERAL_CONF","orgadmin_uid")        
-        faculty_users = config.get("GENERAL_CONF","faculty_uid")
-
-        if username in admin_users:
+        if username in config.get("GENERAL_CONF","admin_uid"):
             _role_list.append(current.ADMIN)
-        if username in orgadmin_users:
+        if username in config.get("GENERAL_CONF","orgadmin_uid"):
             _role_list.append(current.ORGADMIN)
-        if username in faculty_users:
+        if username in config.get("GENERAL_CONF","faculty_uid"):
             _role_list.append(current.FACULTY)
+            
+        user_info['roles'] = _role_list
 
     except ldap.LDAPError, e:
         current.logger.error(e)
 
-    current.logger.info(str(_first_name)+" : "+str(_last_name)+" : "+str(_email)+" : "+str(_role_list)+" : "+str(_organisation))
-
-    if _first_name and _last_name and _email and _organisation:
-        return(_first_name, _last_name, _email, _role_list, _organisation)
+    current.logger.info(user_info)
+    if 'first_name' in user_info:
+        return user_info
     else: 
         return None
 
 #This method is called only when user logs in for the first time or when faculty name is verified on 'request VM' screen
-def create_or_update_user(user_name, first_name, last_name, email, roles, organisation, update_session):
+def create_or_update_user(user_info, update_session):
 
     is_new_user = False
+    user_name = user_info['user_name']
     user = current.db(current.db.user.username == user_name).select().first()
     
     if not user:
@@ -100,10 +97,13 @@ def create_or_update_user(user_name, first_name, last_name, email, roles, organi
         user = current.db.user.insert(username=user_name, registration_id=user_name)
         is_new_user = True
     
-    org_id = current.db(organisation == current.db.organisation.name).select(current.db.organisation.id).first()    
-    current.db(current.db.user.username==user_name).update(first_name = first_name, last_name = last_name, email = email, organisation_id = org_id)
+    org_id = current.db(current.db.organisation.name == user_info['organisation']).select(current.db.organisation.id).first()    
+    current.db(current.db.user.username==user_name).update(first_name = user_info['first_name'], 
+                                                           last_name = user_info['last_name'], 
+                                                           email = user_info['email'], 
+                                                           organisation_id = org_id)
                                                          
-    add_or_update_user_memberships(user.id, is_new_user, roles, update_session)   
+    add_or_update_user_memberships(user.id, is_new_user, user_info['roles'], update_session)   
 
 
 def add_or_update_user_memberships(user_id, new_user, roles, update_session):

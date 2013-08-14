@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db
+    from gluon import db, response, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
@@ -223,20 +223,16 @@ def get_edit_vm_config_form(vm_info):
                   TR("",INPUT(_type='submit',_value="Update!"))))
     return form
 
-def get_user_id(username):
-    user_id = db(db.user.username == username).select().first()['id']
-    return user_id
 
 def validate_user(form):
     username = request.post_vars.user_id
     vm_id = request.args[0]
-    user_info = get_faculty_info(username)
+    user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
 
-    if user_info is None:
+    if not user_info:
         form.errors.user_id = 'Username is not valid'
-    user_id = get_user_id(username)
 
-    if db((db.user_vm_map.user_id == user_id) & (db.user_vm_map.vm_id == vm_id)).select():
+    if db((db.user_vm_map.user_id == user_info[0]) & (db.user_vm_map.vm_id == vm_id)).select():
         form.errors.user_id = 'User is already this vm user'
     return form
 
@@ -250,9 +246,8 @@ def get_search_user_form():
 
 def get_user_form(username, vm_id):
 
-    user_info = get_faculty_info(username)
-    userid = user_info[0]
-    user_details = db(db.user.id == userid).select().first()
+    user_info = get_user_info(username)
+    user_details = db.user[user_info[0]]
     
     form = FORM(TABLE(TR('Username:', INPUT(_name = 'username', _value = user_details.username, _readonly = True)), 
                       TR('First Name:', INPUT(_name = 'first_name',_value = user_details.first_name, _readonly = True)),
@@ -267,4 +262,4 @@ def get_user_form(username, vm_id):
     form.vars.email = user_details.email
 
     return form
-    
+

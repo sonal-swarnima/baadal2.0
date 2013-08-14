@@ -8,11 +8,11 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, get_vm_template_config, get_fullname
+from helper import is_moderator, is_faculty, get_vm_template_config
 from auth_user import fetch_ldap_user, create_or_update_user
 
 def get_my_pending_vm():
-    vms = db(((db.vm_data.status == VM_STATUS_REQUESTED) | (db.vm_data.status == VM_STATUS_VERIFIED)) 
+    vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED) 
              & (db.vm_data.requester_id==auth.user.id)).select(db.vm_data.ALL)
 
     return get_pending_vm_list(vms)
@@ -69,13 +69,13 @@ def validate_approver(form):
     faculty_user_name = request.post_vars.faculty_user
     
     if(faculty_user != ''):
-        faculty_info = get_faculty_info(faculty_user)
+        faculty_info = get_user_info(faculty_user, [FACULTY])
         if faculty_info[1] == faculty_user_name:
             form.vars.owner_id = faculty_info[0]
             form.vars.status = VM_STATUS_REQUESTED
             return
     
-    faculty_info = get_faculty_info(faculty_user_name)
+    faculty_info = get_user_info(faculty_user_name, [FACULTY])
     if faculty_info != None:
         form.vars.owner_id = faculty_info[0]
         form.vars.status = VM_STATUS_REQUESTED
@@ -116,18 +116,20 @@ def get_request_vm_form():
     return form
 
 
-def get_faculty_info(username):
+def get_user_info(username, roles):
     user_query = db((db.user.username == username) 
              & (db.user.id == db.user_membership.user_id)
              & (db.user_membership.group_id == db.user_group.id)
-             & (db.user_group.role == 'faculty'))
+             & (db.user_group.role.belongs(roles)))
     user = user_query.select().first()
+    # If user not present in DB
     if not user:
         if current.auth_type == 'ldap':
-            result = fetch_ldap_user(username)
-            if (result != None) and (FACULTY in result[3]):
-                create_or_update_user(username, result[0], result[1], result[2], result[3], result[4], False)
-                user = user_query.select().first()
+            user_info = fetch_ldap_user(username)
+            if user_info:
+                if [obj for obj in roles if obj in user_info['roles']]:
+                    create_or_update_user(user_info, False)
+                    user = user_query.select().first()
     
     if user:
         return (user.user.id, (user.user.first_name + ' ' + user.user.last_name))	
@@ -149,8 +151,8 @@ def get_vm_config(vm_id):
     
     vm_info_map = {'id'              : str(vminfo.id),
                    'name'            : str(vminfo.vm_name),
-                   'hdd'             : str(vminfo.HDD),
-                   'extrahdd'        : str(0),
+                   'hdd'             : '0',
+                   'extrahdd'        : str(vminfo.HDD),
                    'ram'             : str(vminfo.RAM),
                    'vcpus'           : str(vminfo.vCPU),
                    'status'          : str(vminfo.status),
@@ -160,7 +162,7 @@ def get_vm_config(vm_id):
                    'currentrunlevel' : str(vminfo.current_run_level)}
 
     if is_moderator():
-         vm_info_map.update({'host' : str(vminfo.host_id),
+        vm_info_map.update({'host' : str(vminfo.host_id),
                              'vnc'  : str(vminfo.vnc_port)})
 
     return vm_info_map  

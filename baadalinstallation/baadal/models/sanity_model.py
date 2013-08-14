@@ -127,7 +127,6 @@ def delete_orhan_vm(vm_name, host_id):
 
 #To be implemented
 def add_orhan_vm(vm_name, host_id):
-    print 'In add_orhan_vm'
     return
 
 #To be implemented

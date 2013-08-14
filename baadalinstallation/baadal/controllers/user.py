@@ -26,7 +26,7 @@ def request_vm():
 def verify_faculty():
 
     username = request.vars.keywords
-    faculty_info = get_faculty_info(username)
+    faculty_info = get_user_info(username, [FACULTY])
     if faculty_info != None:
         return faculty_info[1]
 
@@ -38,30 +38,6 @@ def list_my_vm():
     
     return dict(pending_vm = pending_vm, hosted_vm = hosted_vm)
 
-# 
-# @auth.requires_login()
-# @handle_exception
-# def settings_org():
-#     vm_id=request.args[0]
-#     vminfo = vm_permission_check(vm_id)     
-#     #TODO : Analyze
-#     # as state attr is not the live state of the machine              
-#     state=vminfo.status  #current state of VM
-#     data={'id':vminfo.id,
-#           'name':vminfo.vm_name,
-#           'hdd':vminfo.HDD,
-#           'ram':vminfo.RAM,
-#           'vcpus':vminfo.vCPU,
-#           'status':state,
-#           'hostip':vminfo.host_id.host_ip,
-#           'port':vminfo.vnc_port,
-#           'ostype':vminfo.template_id.ostype,
-#           'expire_date':vminfo.expiry_date,
-#           'purpose':vminfo.purpose}
-#     if is_moderator() :
-#         return dict(data=data,users=get_vm_user_list(vm_id))
-#     else :
-#         return dict(data=data)
 
 @auth.requires_login()
 @handle_exception
@@ -79,17 +55,6 @@ def settings():
     vm_snapshots = get_vm_snapshots(vm_id)
     
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
-
-"""    vm_usrs = None
-    vm_conf = get_vm_config(vm_id)
-    vm_ops = get_valid_vm_operations(vm_id)
-    vm_snaps = get_vm_snapshots(vm_id)
-
-    if is_moderator() or is_orgadmin():
-        vm_users = get_vm_users(vm_id)
-
-    return dict(vm_config = vm_conf, vm_operations = vm_ops, vm_snapshots = vm_snaps, vm_users = vm_usrs)
-"""	
 
 
 @auth.requires_login()

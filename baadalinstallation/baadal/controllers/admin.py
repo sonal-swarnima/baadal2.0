@@ -78,7 +78,7 @@ def user_details():
 def add_user_to_vm():
     username = request.args[0]
     vm_id = request.args[1]
-    form = get_user_form(username, vm_id)
+    form = get_user_form(username)
 
     if form.accepts(request.vars,session):
         user_id = get_user_id(username)

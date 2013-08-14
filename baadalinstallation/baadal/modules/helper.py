@@ -2,7 +2,7 @@
 ###################################################################################
 
 import os
-from gluon import current  # @Reimport
+from gluon import current
 
 def is_moderator():
     if current.ADMIN in current.auth.user_groups.values():
@@ -50,9 +50,8 @@ def update_value(constant_name, constant_value):
     current.db(current.db.constants.name == constant_name).update(value = constant_value)
     return 
 
-def get_fullname(_user_id):
-    row = current.db(current.db.user.id==_user_id).select()
-    if row :
-        row=row.first()
-        return row['first_name'] + ' ' + row['last_name']
+def get_fullname(user_id):
+    user = current.db.user[user_id]
+    if user :
+        return user.first_name + ' ' + user.last_name
         
