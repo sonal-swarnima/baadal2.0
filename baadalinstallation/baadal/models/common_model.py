@@ -155,7 +155,7 @@ def check_orgadmin(fn):
 # Generic check faculty decorator
 def check_faculty(fn):
     def decorator(*args, **kwargs):
-        if (auth.is_logged_in()) & (is_faculty()):
+        if (auth.is_logged_in()) & (is_faculty() | is_orgadmin() | is_moderator()):
             return fn(*args, **kwargs)
         else:
             session.flash = "You don't have faculty privileges"

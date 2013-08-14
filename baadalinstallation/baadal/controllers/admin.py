@@ -78,11 +78,10 @@ def user_details():
 def add_user_to_vm():
     username = request.args[0]
     vm_id = request.args[1]
-    form = get_user_form(username)
+    form = get_user_form(username, vm_id)
 
     if form.accepts(request.vars,session):
-        user_id = get_user_id(username)
-        add_user_vm_access(vm_id, user_id)
+        add_user_vm_access(vm_id, form.vars.user_id)
         session.flash = "User is added to vm"
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
     elif form.errors:

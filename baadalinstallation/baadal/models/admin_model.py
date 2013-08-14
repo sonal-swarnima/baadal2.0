@@ -54,7 +54,8 @@ def approve_vm_request(vm_id):
 def delete_user_vm_access(vm_id,user_id) :    
     db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()  
 
-def add_user_vm_access(vm_id,user_id) :    
+
+def add_user_vm_access(vm_id, user_id) :    
     db.user_vm_map.insert(vm_id = vm_id, user_id = user_id)       
 
 
@@ -246,7 +247,7 @@ def get_search_user_form():
 
 def get_user_form(username, vm_id):
 
-    user_info = get_user_info(username)
+    user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
     user_details = db.user[user_info[0]]
     
     form = FORM(TABLE(TR('Username:', INPUT(_name = 'username', _value = user_details.username, _readonly = True)), 
@@ -255,7 +256,7 @@ def get_user_form(username, vm_id):
                       TR('Email ID:' , INPUT(_name = 'email',_value = user_details.email, _readonly = True)),
                       TR(INPUT(_type='button', _value = 'Cancel', _onclick = "window.location='%s';"%URL(r=request,c = 'user', f='settings', args = vm_id )),INPUT(_type = 'submit', _value = 'Confirm Details'))))
 
-    
+    form.vars.user_id = user_details.id
     form.vars.username = user_details.username
     form.vars.first_name = user_details.first_name
     form.vars.last_name = user_details.last_name
