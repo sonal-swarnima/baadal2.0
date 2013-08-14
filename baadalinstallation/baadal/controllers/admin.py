@@ -66,7 +66,7 @@ def add_datastore():
 def user_details():
     vm_id = request.args[0]
     form = get_search_user_form()
-    if form.accepts(request.vars,session):
+    if form.accepts(request.vars, session, onvalidation = validate_user):
         redirect(URL(c ='admin', f = 'add_user_to_vm', args = [form.vars.user_id, vm_id]))
     elif form.errors:
         session.form = 'Invalid user id'
@@ -78,7 +78,7 @@ def user_details():
 def add_user_to_vm():
     username = request.args[0]
     vm_id = request.args[1]
-    form = get_user_form(username)
+    form = get_user_form(username, vm_id)
 
     if form.accepts(request.vars,session):
         user_id = get_user_id(username)

@@ -227,23 +227,38 @@ def get_user_id(username):
     user_id = db(db.user.username == username).select().first()['id']
     return user_id
 
+def validate_user(form):
+    username = request.post_vars.user_id
+    vm_id = request.args[0]
+    user_info = get_faculty_info(username)
+
+    if user_info is None:
+        form.errors.user_id = 'Username is not valid'
+    user_id = get_user_id(username)
+
+    if db((db.user_vm_map.user_id == user_id) & (db.user_vm_map.vm_id == vm_id)).select():
+        form.errors.user_id = 'User is already this vm user'
+    return form
+
+
 def get_search_user_form():
     form = FORM('User ID:',
                 INPUT(_name = 'user_id',requires = IS_NOT_EMPTY()),
                 INPUT(_type = 'submit', _value = 'Verify'))
     return form
+    
 
-def get_user_form(username):
+def get_user_form(username, vm_id):
 
-    faculty_info = get_faculty_info(username)
-    userid = faculty_info[0]
+    user_info = get_faculty_info(username)
+    userid = user_info[0]
     user_details = db(db.user.id == userid).select().first()
     
     form = FORM(TABLE(TR('Username:', INPUT(_name = 'username', _value = user_details.username, _readonly = True)), 
                       TR('First Name:', INPUT(_name = 'first_name',_value = user_details.first_name, _readonly = True)),
                       TR('Last Name:' , INPUT(_name = 'last_name',_value = user_details.last_name, _readonly = True)),
                       TR('Email ID:' , INPUT(_name = 'email',_value = user_details.email, _readonly = True)),
-                      TR('', INPUT(_type='submit', _value = 'Confirm Details'))))
+                      TR(INPUT(_type='button', _value = 'Cancel', _onclick = "window.location='%s';"%URL(r=request,c = 'user', f='settings', args = vm_id )),INPUT(_type = 'submit', _value = 'Confirm Details'))))
 
     
     form.vars.username = user_details.username
