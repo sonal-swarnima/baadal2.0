@@ -185,9 +185,12 @@ def get_vm_operations(vm_id):
                     _title="Check VM performance", _alt="Check VM Performance"))
 
         if is_moderator():
-            valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
-               	 	_href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
-                	_title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
+
+            if (db(db.host.id > 0).count() >= 2):
+
+                valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
+               	     _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
+                     _title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
 
         if is_moderator() or is_orgadmin() or is_faculty():
             valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),

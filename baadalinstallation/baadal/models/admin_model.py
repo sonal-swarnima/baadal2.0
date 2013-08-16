@@ -192,9 +192,6 @@ def get_migrate_vm_form(vm_id):
     host_id = db(db.vm_data.id == vm_id).select(db.vm_data.host_id).first()['host_id']
     host_options = [OPTION(host.host_ip, _value = host.id) for host in db(db.host.id != host_id).select()]
 
-    if not host_options:
-        response.flash = "No other host is available. Please add any host first."
-
     form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
                       TR('Current Host:', INPUT(_name = 'current_host', _readonly = True)),
                       TR('Destination Host:' , SELECT(*host_options, **dict(_name = 'destination_host', requires = IS_IN_DB(db, 'host.id')))),
@@ -232,9 +229,9 @@ def validate_user(form):
 
     if not user_info:
         form.errors.user_id = 'Username is not valid'
-
-    if db((db.user_vm_map.user_id == user_info[0]) & (db.user_vm_map.vm_id == vm_id)).select():
-        form.errors.user_id = 'User is already this vm user'
+    else:
+        if db((db.user_vm_map.user_id == user_info[0]) & (db.user_vm_map.vm_id == vm_id)).select():
+            form.errors.user_id = 'User is already this vm user'
     return form
 
 

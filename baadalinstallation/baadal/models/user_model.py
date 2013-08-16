@@ -60,8 +60,9 @@ def set_configuration_elem(form):
     
     form.vars.vCPU = int(configVal[0])
     form.vars.RAM = int(configVal[1])*1024
-    if form.vars.HDD == None:
-        form.vars.HDD = 0
+    form.vars.HDD = int(configVal[2])
+    if form.vars.extra_HDD == None:
+        form.vars.extra_HDD = 0
 
 
 def validate_approver(form):
@@ -104,8 +105,8 @@ def add_faculty_approver(form):
 
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','HDD','purpose']
-    form_labels = {'vm_name':'Name of VM','HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}
+    form_fields = ['vm_name','template_id','extra_HDD','purpose']
+    form_labels = {'vm_name':'Name of VM','extra_HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}
 
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(user_name=''))
     get_configuration_elem(form) # Create dropdowns for configuration
@@ -151,8 +152,8 @@ def get_vm_config(vm_id):
     
     vm_info_map = {'id'              : str(vminfo.id),
                    'name'            : str(vminfo.vm_name),
-                   'hdd'             : '0',
-                   'extrahdd'        : str(vminfo.HDD),
+                   'hdd'             : str(vminfo.HDD),
+                   'extrahdd'        : str(vminfo.extra_HDD),
                    'ram'             : str(vminfo.RAM),
                    'vcpus'           : str(vminfo.vCPU),
                    'status'          : str(vminfo.status),

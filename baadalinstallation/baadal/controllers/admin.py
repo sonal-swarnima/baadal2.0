@@ -85,7 +85,7 @@ def add_user_to_vm():
         session.flash = "User is added to vm"
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
     elif form.errors:
-        session.form = 'Invalid user id'
+        session.form = 'Error in form'
     return dict(form = form)
 
 @check_moderator
@@ -177,7 +177,7 @@ def retry_task():
 @handle_exception
 def delete_machine():   
     vm_id=request.args[0]
-    add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)
+    add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)    
 
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 

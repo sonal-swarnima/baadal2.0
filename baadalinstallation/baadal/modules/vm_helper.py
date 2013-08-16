@@ -286,10 +286,10 @@ def launch_vm_on_host(template, vm_details, vm_image_location, ram, vcpus, new_m
     exec_command_on_host(host_ip, 'root', install_command)
 
     # Serving HDD request
-    if (int(vm_details.HDD) != 0):
-        if (attach_disk(vm_details.vm_name, int(vm_details.HDD), host_ip, datastore)):
+    if (int(vm_details.extra_HDD) != 0):
+        if (attach_disk(vm_details.vm_name, int(vm_details.extra_HDD), host_ip, datastore)):
             vmid = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select(current.db.vm_data.id)[0].id
-            current.db.attached_disks.insert(vm_id = vmid, datastore_id = datastore.id , capacity = int(vm_details.HDD))
+            current.db.attached_disks.insert(vm_id = vmid, datastore_id = datastore.id , capacity = int(vm_details.extra_HDD))
         else:
             attach_disk_status_message = " Your request for additional HDD could not be completed at this moment. Check logs."
     return attach_disk_status_message
@@ -323,7 +323,7 @@ def update_db_after_vm_installation(vmid, vm_details, template, datastore, host,
     current.db(current.db.host.id == host.id).update(vm_count = count + 1)
 
     # Updating the used entry of datastore
-    current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.HDD) +  \
+    current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +  \
                int(template.hdd))
 
     # Update vm_data table
@@ -479,7 +479,9 @@ def clean_up_database_after_vm_deletion(vm_details):
 
     # updating the used entry of database
     current.db(current.db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
-                                                                         (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
+                                                          (int(vm_details.extra_HDD) + int(vm_details.template_id.hdd)))
+    # deleting entry of extra disk of vm
+    current.db(current.db.attached_disks.vm_id == vm_details.id).delete()
     return
         
 # Deletes a vm
@@ -638,7 +640,6 @@ def clone(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     clone_name = dict_parameters['clone_name']
     
-
            
 # Prepares VM list to be displayed on webpage
 def get_vm_list(vms):
