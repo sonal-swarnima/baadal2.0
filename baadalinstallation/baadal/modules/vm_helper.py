@@ -249,7 +249,7 @@ def attach_disk(vmname, size, hostip, datastore):
                          + vmname)
 
         diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + vmname \
-                   + "/" + vmname + str(already_attached_disks + 1) + ".qcow2"
+                   + "/" + vmname + "_disk" + str(already_attached_disks + 1) + ".qcow2"
 
         # Create a new image for the new disk to be attached
         command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
@@ -342,7 +342,7 @@ def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid,
                                                                last_run_level = 3,
                                                                total_cost = 0, 
                                                                parent_id = parent_id,
-                                                               status = current.VM_STATUS_SHUTDOWN )
+                                                               status = current.VM_STATUS_RUNNING )
 
     
     return
@@ -639,7 +639,7 @@ def edit_vm_config(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 
-def get_clone_properties(vm_details):
+def get_clone_properties(vm_details, cloned_vm_details):
 
     # Finds datastore for the cloned vm
     datastore = choose_datastore()
@@ -653,48 +653,53 @@ def get_clone_properties(vm_details):
     # Template of parent vm
     template = current.db(current.db.template.id == vm_details.template_id).select()[0]
 
-    # Determines name of the cloned vm
-    datetime = get_datetime()
-    cloned_vm_name = vm_details.vm_name + "_clone" + datetime.strftime("%I.%Mon%d%b%Y")
-
     # Creates a directory for the cloned vm
     current.logger.debug("Creating directory for cloned vm...")
-    if not os.path.exists (get_constant('vmfiles_path') + '/' + cloned_vm_name):
-        os.makedirs(get_constant('vmfiles_path') + '/' + cloned_vm_name)
-        clone_file_parameters = ' --file ' + get_constant('vmfiles_path') + '/' + cloned_vm_name + '/' + cloned_vm_name + '.qcow2'
+    if not os.path.exists (get_constant('vmfiles_path') + '/' + cloned_vm_details.vm_name):
+        os.makedirs(get_constant('vmfiles_path') + '/' + cloned_vm_details.vm_name)
+        clone_file_parameters = ' --file ' + get_constant('vmfiles_path') + '/' + cloned_vm_details.vm_name + '/' + \
+                                cloned_vm_details.vm_name + '.qcow2'
     else:
         raise Exception("Directory with same name as vmname already exists.")
 
     # Creates a folder for additional disks of the cloned vm
     vm = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select().first()
     already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
+
     if already_attached_disks > 0:
         if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name \
-                                  +  '/' + cloned_vm_name):
+                                  +  '/' + cloned_vm_details.vm_name):
             current.logger.debug("Making Directory")          
             os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/'  \
-                         + cloned_vm_name)
+                         + cloned_vm_details.vm_name)
+
     while already_attached_disks > 0:
         clone_file_parameters += ' --file ' + get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' \
-                                  + datastore.ds_name + '/' + cloned_vm_name + '/' + vm_details.vm_name + \
-                                   str(already_attached_disks) + 'clone' + datetime.strftime("%I.%Mon%d%b%Y") + '.qcow2'
+                                  + datastore.ds_name + '/' + cloned_vm_details.vm_name + '/' + cloned_vm_details.vm_name + \
+                                  + '_disk' + str(already_attached_disks) + '.qcow2'
         already_attached_disks -= 1
 
-    return (datastore, template, new_mac_address, new_ip_address, new_vncport, cloned_vm_name, clone_file_parameters)
+    return (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters)
         
 # Clones vm
 def clone(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']    
+    vmid = dict_parameters['vm_id']
+    cloned_vmid = parameters['cloned_vm_id']   
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    cloned_vm_details = current.db(current.db.vm_data.id == cloned_vmid).select().first()
     try:
-       (datastore, template, new_mac_address, new_ip_address, new_vncport, cloned_vm_name, clone_file_parameters) = get_clone_properties(vm_details)
-       clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_name + clone_file_parameters
-       exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
-       current.logger.debug("Updating db")
-       update_db_after_vm_installation(vm_details, template.hdd, datastore, vm_details.host_id, new_mac_address, new_ip_address,
-                                            new_vncport, parent_id = vm_details.id)
+        (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
+        clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_details.vm_name + \ 
+                        clone_file_parameters
+        exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
+        current.logger.debug("Updating db")
+        update_db_after_vm_installation(cloned_vm_details, template.hdd, datastore, vm_details.host_id, new_mac_address,
+                                         new_ip_address, new_vncport, parent_id = vm_details.id)
+        message = "Cloned successfully"
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+        
     except Exception as e:
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
