@@ -214,7 +214,7 @@ def clone_vm():
         session.flash = "Your request has been sent for approval."
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
     elif form.errors:
-        response.flash = "Error in form."
+        session.flash = "Error in form."
 
     return dict(form=form)
 
