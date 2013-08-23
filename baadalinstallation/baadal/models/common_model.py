@@ -213,7 +213,7 @@ def get_vm_operations(vm_id):
                 	_title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
-                _href=URL(r=request,c='default', f='request_clonevm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
+                _href=URL(r=request,c='admin', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
                                
             valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 

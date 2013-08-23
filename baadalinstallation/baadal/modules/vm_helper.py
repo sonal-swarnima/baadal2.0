@@ -316,27 +316,33 @@ def free_vm_properties(vm_details):
     return
     
 # Updates db after a vm is installed successfully
-def update_db_after_vm_installation(vmid, vm_details, template, datastore, host, new_mac_address, new_ip_address, new_vncport):
+def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid, new_mac_address, new_ip_address, new_vncport,
+                                    parent_id = 0):
+
+    current.logger.debug("Inside update db after installation")
+    current.logger.debug(str(hostid))
 
     # Updating the count of vms on host
-    count = current.db(current.db.host.id == host.id).select().first()['vm_count']
-    current.db(current.db.host.id == host.id).update(vm_count = count + 1)
+    count = current.db(current.db.host.id == hostid).select().first()['vm_count']
+    current.logger.debug("Count is " + str(hostid))
+    current.db(current.db.host.id == hostid).update(vm_count = count + 1)
 
     # Updating the used entry of datastore
-    current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +  \
-               int(template.hdd))
+    current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +        
+                                                                int(template_hdd))
 
     # Update vm_data table
-    current.db(current.db.vm_data.id == vmid).update( host_id = host.id, 
-                                                      datastore_id = datastore.id, 
-                                                      vm_ip = new_ip_address, 
-                                                      vnc_port = new_vncport, 
-                                                      mac_addr = new_mac_address, 
-                                                      start_time = get_datetime(), 
-                                                      current_run_level = 3, 
-                                                      last_run_level = 3,
-                                                      total_cost = 0, 
-                                                      status = current.VM_STATUS_RUNNING )
+    current.db(current.db.vm_data.id == vm_details.id).update( host_id = hostid, 
+                                                               datastore_id = datastore.id, 
+                                                               vm_ip = new_ip_address, 
+                                                               vnc_port = new_vncport, 
+                                                               mac_addr = new_mac_address, 
+                                                               start_time = get_datetime(), 
+                                                               current_run_level = 3, 
+                                                               last_run_level = 3,
+                                                               total_cost = 0, 
+                                                               parent_id = parent_id,
+                                                               status = current.VM_STATUS_SHUTDOWN )
 
     
     return
@@ -367,7 +373,7 @@ def install(parameters):
             assert(check_if_vm_defined(host.host_ip, vm_details.vm_name)), "VM is not installed. Check logs."
 
             # Update database after vm installation
-            update_db_after_vm_installation(vmid, vm_details, template, datastore, host, new_mac_address, new_ip_address,
+            update_db_after_vm_installation(vm_details, template.hdd, datastore, host.id, new_mac_address, new_ip_address,
                                             new_vncport) 
 
             message = "VM is installed successfully." + attach_disk_status_message
@@ -632,15 +638,69 @@ def edit_vm_config(parameters):
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
+
+def get_clone_properties(vm_details):
+
+    # Finds datastore for the cloned vm
+    datastore = choose_datastore()
+    current.logger.debug("Datastore selected is: " + str(datastore))
+
+    # Finds mac address, ip address and vnc port for the cloned vm
+    (new_mac_address, new_ip_address, new_vncport) = choose_mac_ip_vncport()
+    current.logger.debug("MAC is : " + str(new_mac_address) + " IP is : " + str(new_ip_address) + " VNCPORT is : "  \
+                              + str(new_vncport))
+  
+    # Template of parent vm
+    template = current.db(current.db.template.id == vm_details.template_id).select()[0]
+
+    # Determines name of the cloned vm
+    datetime = get_datetime()
+    cloned_vm_name = vm_details.vm_name + "_clone" + datetime.strftime("%I.%Mon%d%b%Y")
+
+    # Creates a directory for the cloned vm
+    current.logger.debug("Creating directory for cloned vm...")
+    if not os.path.exists (get_constant('vmfiles_path') + '/' + cloned_vm_name):
+        os.makedirs(get_constant('vmfiles_path') + '/' + cloned_vm_name)
+        clone_file_parameters = ' --file ' + get_constant('vmfiles_path') + '/' + cloned_vm_name + '/' + cloned_vm_name + '.qcow2'
+    else:
+        raise Exception("Directory with same name as vmname already exists.")
+
+    # Creates a folder for additional disks of the cloned vm
+    vm = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select().first()
+    already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
+    if already_attached_disks > 0:
+        if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name \
+                                  +  '/' + cloned_vm_name):
+            current.logger.debug("Making Directory")          
+            os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/'  \
+                         + cloned_vm_name)
+    while already_attached_disks > 0:
+        clone_file_parameters += ' --file ' + get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' \
+                                  + datastore.ds_name + '/' + cloned_vm_name + '/' + vm_details.vm_name + \
+                                   str(already_attached_disks) + 'clone' + datetime.strftime("%I.%Mon%d%b%Y") + '.qcow2'
+        already_attached_disks -= 1
+
+    return (datastore, template, new_mac_address, new_ip_address, new_vncport, cloned_vm_name, clone_file_parameters)
+        
 # Clones vm
 def clone(parameters):
 
     dict_parameters = ast.literal_eval(parameters)
     vmid = dict_parameters['vm_id']    
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
-    clone_name = dict_parameters['clone_name']
-    
-           
+    try:
+       (datastore, template, new_mac_address, new_ip_address, new_vncport, cloned_vm_name, clone_file_parameters) = get_clone_properties(vm_details)
+       clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_name + clone_file_parameters
+       exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
+       current.logger.debug("Updating db")
+       update_db_after_vm_installation(vm_details, template.hdd, datastore, vm_details.host_id, new_mac_address, new_ip_address,
+                                            new_vncport, parent_id = vm_details.id)
+    except Exception as e:
+        etype, value, tb = sys.exc_info()
+        message = ''.join(traceback.format_exception(etype, value, tb, 10))
+        current.logger.error("Exception " + message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+                   
 # Prepares VM list to be displayed on webpage
 def get_vm_list(vms):
     vmlist = []

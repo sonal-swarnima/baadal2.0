@@ -24,6 +24,7 @@ TASK_TYPE_DELETE_SNAPSHOT = 'Delete Snapshot'
 TASK_TYPE_REVERT_TO_SNAPSHOT = 'Revert to Snapshot'
 TASK_TYPE_EDITCONFIG_VM = 'Edit Config VM'
 TASK_TYPE_SNAPSHOT_VM = 'Snapshot VM'
+TASK_TYPE_CLONE_VM = 'Clone VM'
 
 #Task Queue Priority
 TASK_QUEUE_PRIORITY_LOW = 0

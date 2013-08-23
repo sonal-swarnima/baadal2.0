@@ -145,9 +145,10 @@ db.define_table('vm_data',
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
     Field('start_time', 'datetime', default = get_datetime()),
-    Field('parent_name', 'string'),
+    Field('parent_id', 'integer'),
     Field('locked', 'boolean', default = False),
     Field('status', 'integer'))
+
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),
@@ -177,7 +178,7 @@ db.define_table('vm_data_event',
     Field('next_run_level', 'integer'),
     Field('start_time', 'datetime', default = get_datetime()),
     Field('end_time', 'datetime'),
-    Field('parent_name', 'string'),
+    Field('parent_id', 'integer'),
     Field('status', 'integer'))
 
 db.define_table('attached_disks',

@@ -261,3 +261,26 @@ def get_user_form(username, vm_id):
 
     return form
 
+def get_clone_vm_form(vm_info):
+
+
+    form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vmname', _value = vm_info['name'], _readonly = True)), 
+                      TR('No. of Clones:', INPUT(_name = 'no_of_clones', requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,100)])),
+                      TR('Purpose:' , INPUT(_name = 'purpose', _type = 'text', requires = IS_NOT_EMPTY())),
+                      TR("",INPUT( _type = 'submit', _value = "Submit"))))
+
+    return form
+
+    
+
+
+def add_clone_entry_in_db(vm_info):
+    cloned_vm_id = db.vm_data.insert(vm_name = 'clone',
+                                     RAM = vm_info['ram'],
+                                     HDD = vm_info['hdd'],
+                                     extra_HDD = vm_info['extrahdd'],
+                                     vCPU = vm_info['vcpus']
+                                     )
+
+    return cloned_vm_id
+

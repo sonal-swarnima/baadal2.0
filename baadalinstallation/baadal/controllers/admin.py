@@ -204,6 +204,20 @@ def edit_vmconfig():
 
     return dict(form=form)
 
+def clone_vm():
+
+    vm_id = request.args[0]
+    vm_info = get_vm_config(vm_id)
+    form = get_clone_vm_form(vm_info)
+    if form.accepts(request.vars,session):
+        #cloned_vm_id = insert_clone_entry_in_db(vm_info)
+        session.flash = "Your request has been sent for approval."
+        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+    else:
+        session.flash = "Error in form."
+
+    return dict(form=form)
+
 @check_moderator
 def mailToGUI():
     session.flash="Has to be implemented"
