@@ -27,6 +27,9 @@ def index():
 def contact():
     return dict()
 
+def team():
+    return dict()
+
 def error():
     return dict(error=request.vars['error'])
 

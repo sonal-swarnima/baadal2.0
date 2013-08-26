@@ -6,6 +6,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
     from gluon import request
 ###################################################################################
+from simplejson import loads, dumps
 from helper import get_config_file,get_datetime
 from auth_user import login_callback,login_ldap_callback
 
@@ -145,10 +146,13 @@ db.define_table('vm_data',
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
     Field('start_time', 'datetime', default = get_datetime()),
-    Field('parent_id', 'integer'),
+    Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
+    Field('parameters', 'text', default={}),
     Field('status', 'integer'))
 
+db.vm_data.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
+db.vm_data.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),
@@ -179,6 +183,7 @@ db.define_table('vm_data_event',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('end_time', 'datetime'),
     Field('parent_id', 'integer'),
+    Field('parameters', 'string'),
     Field('status', 'integer'))
 
 db.define_table('attached_disks',

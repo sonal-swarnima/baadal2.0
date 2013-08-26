@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db, response, request
+    from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
@@ -39,15 +39,24 @@ def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
+def create_clone_task(vm_id, clone_count):
+    db.vm_data[vm_id] = dict(status=-1)
+    
+    return
 
 def approve_vm_request(vm_id):
     
-    db(db.vm_data.id == vm_id).update(status=VM_STATUS_APPROVED)
+    vm_data = db.vm_data[vm_id]
+    if vm_data.parameters and vm_data.parameters['clone_count']:
+        create_clone_task(vm_id, vm_data.parameters['clone_count'])
+        return
+
+    db.vm_data[vm_id] = dict(status=VM_STATUS_APPROVED)
     
-    vm_data = db(db.vm_data.id == vm_id).select().first()
     add_user_to_vm(vm_data.owner_id, vm_id)
     if(vm_data.owner_id != vm_data.requester_id):
         add_user_to_vm(vm_data.requester_id, vm_id)
+    
     add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM)
 
 
@@ -260,27 +269,3 @@ def get_user_form(username, vm_id):
     form.vars.email = user_details.email
 
     return form
-
-def get_clone_vm_form(vm_info):
-
-
-    form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vmname', _value = vm_info['name'], _readonly = True)), 
-                      TR('No. of Clones:', INPUT(_name = 'no_of_clones', requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,100)])),
-                      TR('Purpose:' , TEXTAREA(_name = 'purpose', requires = IS_NOT_EMPTY())),
-                      TR("",INPUT( _type = 'submit', _value = "Submit"))))
-
-    return form
-
-    
-
-
-def add_clone_entry_in_db(vm_info):
-    cloned_vm_id = db.vm_data.insert(vm_name = 'clone',
-                                     RAM = vm_info['ram'],
-                                     HDD = vm_info['hdd'],
-                                     extra_HDD = vm_info['extrahdd'],
-                                     vCPU = vm_info['vcpus']
-                                     )
-
-    return cloned_vm_id
-

@@ -21,6 +21,10 @@ def get_hosted_vm_list(vms):
 def get_pending_vm_list(vms):
     vmlist = []
     for vm in vms:
+        request_type = 'Install'
+        if vm.parameters and vm.parameters['clone_count']:
+            request_type = 'Clone[' + str(vm.parameters['clone_count']) + ']'
+
         element = {'id' : vm.id,
                    'vm_name' : vm.vm_name, 
                    'faculty_name' : get_fullname(vm.owner_id), 
@@ -28,7 +32,8 @@ def get_pending_vm_list(vms):
                    'RAM' : vm.RAM, 
                    'vCPUs' : vm.vCPU, 
                    'HDD' : vm.HDD, 
-                   'status' : vm.status}
+                   'status' : vm.status,
+                   'request_type' : request_type}
         vmlist.append(element)
     return vmlist
 
@@ -86,24 +91,13 @@ def get_task_num_form():
     return form
     
 
-def add_vm_task_to_queue(_vm_id, _task_type, destination_host = None, live_migration = None, updated_vm_config = None, snapshot_id = None):
+def add_vm_task_to_queue(vm_id, task_type, params = {}):
 
-    _dict = {}
-    _dict['vm_id'] = _vm_id
-    
-    if destination_host:
-        _dict['destination_host'] = destination_host
-    if live_migration:
-        _dict['live_migration'] = live_migration
-    if updated_vm_config:
-        _dict['ram'] = updated_vm_config['ram']
-        _dict['vcpus'] = updated_vm_config['vcpus']
-    if snapshot_id:
-        _dict['snapshot_id'] = snapshot_id
+    params['vm_id'] = vm_id
         
-    db.task_queue.insert(task_type=_task_type,
-                         vm_id=_vm_id, 
-                         parameters=str(_dict), 
+    db.task_queue.insert(task_type=task_type,
+                         vm_id=vm_id, 
+                         parameters=str(params), 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
     
@@ -163,11 +157,11 @@ def check_faculty(fn):
     return decorator    
 
 def get_pending_approval_count():
+    
+    users_of_same_org = db(auth.user.organisation_id == db.user.organisation_id)._select(db.user.id)
+    vm_count = db((db.vm_data.requester_id.belongs(users_of_same_org)) & (db.vm_data.status == VM_STATUS_VERIFIED)).count()
 
-    users_of_same_org = db(db(auth.user.id == db.user.id).select(db.user.organisation_id).first()['organisation_id'] == db.user.organisation_id).select(db.user.id)
-
-    return db((db.vm_data.status == VM_STATUS_VERIFIED) 
-             & (db.vm_data.requester_id.belongs(users_of_same_org))).count()
+    return vm_count
              
 def get_vm_operations(vm_id):
 
@@ -213,7 +207,7 @@ def get_vm_operations(vm_id):
                 	_title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
-                _href=URL(r=request,c='admin', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
+                _href=URL(r=request,c='user', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
                                
             valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 

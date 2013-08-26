@@ -14,10 +14,10 @@ response.google_analytics_id = None
 
 response.top_menu = [
     (T('About'), False, URL('default','index')),
-    (T('Blog'), False, URL('default','page_under_construction')),
-    (T('Photos'), False, URL('default','page_under_construction')),
-    (T('Team Baadal'), False, URL('default','page_under_construction')),
-    (T('Contact'), False, URL('default','page_under_construction'))
+#    (T('Blog'), False, URL('default','page_under_construction')),
+#    (T('Photos'), False, URL('default','page_under_construction')),
+    (T('Team Baadal'), False, URL('default','team')),
+    (T('Contact'), False, URL('default','contact'))
     ]
 if auth.is_logged_in():
     response.user_menu = [
@@ -25,12 +25,12 @@ if auth.is_logged_in():
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
         (T('My VMs'), False, URL('user','list_my_vm')),
-        (T('My Tasks'), False, URL('user','list_my_task')),
-        (T('Mail Admin'), False, URL('default','page_under_construction')),
-        (T('Report Bug'), False, URL('default','page_under_construction'))
+        (T('My Tasks'), False, URL('user','list_my_task'))
+#        (T('Mail Admin'), False, URL('default','page_under_construction')),
+#        (T('Report Bug'), False, URL('default','page_under_construction'))
         ]
     
-    if (is_moderator() | is_faculty()):
+    if (is_moderator() | is_orgadmin() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False, dict(_href='#', _id='menu_faculty')),
             (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests'))

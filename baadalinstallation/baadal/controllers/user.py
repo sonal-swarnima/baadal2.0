@@ -113,10 +113,6 @@ def adjrunlevel():
     return dict(vm=vminfo)
 
 @auth.requires_login()
-def clonevm():    
-    session.flash="Has to be implemented"
-
-@auth.requires_login()
 @handle_exception       
 def changelevel():
     vm_id=request.args[0]     
@@ -140,7 +136,7 @@ def snapshot():
 def delete_snapshot():
     vm_id = int(request.args[0])
     snapshot_id = int(request.args[1])
-    add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, None, None, None, snapshot_id)
+    add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, {'snapshot_id':snapshot_id})
     session.flash = "Your delete snapshot request has been queued"
     redirect_list_vm()
 
@@ -149,7 +145,7 @@ def delete_snapshot():
 def revert_to_snapshot():
     vm_id = int(request.args[0])
     snapshot_id = int(request.args[1])
-    add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, None, None, None, snapshot_id)
+    add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, {'snapshot_id':snapshot_id})
     session.flash = "Your revert to snapshot request has been queued"
     redirect_list_vm()
 
@@ -176,3 +172,17 @@ def redirect_list_vm():
     else :
         redirect(URL(r=request,c='user',f='list_my_vm'))
         
+@auth.requires_login()
+@handle_exception       
+def clone_vm():
+
+    vm_id = request.args[0]
+    form = get_clone_vm_form(vm_id)
+    if form.accepts(request.vars,session, onvalidation=clone_vm_validation):
+        session.flash = "Your request has been sent for approval."
+        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+    elif form.errors:
+        session.flash = "Error in form."
+
+    return dict(form=form)
+

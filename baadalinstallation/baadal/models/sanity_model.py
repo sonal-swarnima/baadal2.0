@@ -127,6 +127,19 @@ def delete_orhan_vm(vm_name, host_id):
 
 #To be implemented
 def add_orhan_vm(vm_name, host_id):
+    from xml.dom import minidom
+
+    host_details = db.host[host_id]
+    connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip + "/system")
+    domain = connection_object.lookupByName(vm_name)
+    raw_xml = domain.XMLDesc(0)
+    xml = minidom.parseString(raw_xml)
+    mac_elem = xml.getElementsByTagName('mac')[0]
+    mac_address = mac_elem.getAttribute('address')
+#     print mac_address
+    if mac_address in MAC_IP_POOL:
+        ip_address = MAC_IP_POOL[mac_address]
+        
     return
 
 #To be implemented

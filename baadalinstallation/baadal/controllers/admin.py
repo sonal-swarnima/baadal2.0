@@ -115,7 +115,10 @@ def migrate_vm():
                 migrate_vm = False
 
         if migrate_vm:
-            add_vm_task_to_queue(vm_id, TASK_TYPE_MIGRATE_VM, form.vars.destination_host, form.vars.live_migration )
+            params={}
+            params['destination_host'] = form.vars.destination_host
+            params['live_migration'] = form.vars.live_migration
+            add_vm_task_to_queue(vm_id, TASK_TYPE_MIGRATE_VM, params)
             session.flash = 'Your task has been queued. Please check your task list for status.'
             if_redirect = True
 
@@ -194,27 +197,13 @@ def edit_vmconfig():
 
     if form.accepts(request.vars, session):
         if int(vm_info['status']) == VM_STATUS_SHUTDOWN:
-            updated_vm_config = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
-            add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, None, None, updated_vm_config)
+            params = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
+            add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, params)
             session.flash = "Your request has been queued!!!"
         else:
             session.flash='VM is not Off. Turn it off first'
 
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-    return dict(form=form)
-
-def clone_vm():
-
-    vm_id = request.args[0]
-    vm_info = get_vm_config(vm_id)
-    form = get_clone_vm_form(vm_info)
-    if form.accepts(request.vars,session):
-        #cloned_vm_id = insert_clone_entry_in_db(vm_info)
-        session.flash = "Your request has been sent for approval."
-        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-    elif form.errors:
-        response.flash = "Error in form."
 
     return dict(form=form)
 

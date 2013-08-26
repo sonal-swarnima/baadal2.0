@@ -184,3 +184,34 @@ def check_snapshot_limit(vm_id):
     else:
         return False
 
+def get_clone_vm_form(vm_id):
+
+    vm_info = db.vm_data[vm_id]
+    clone_name = vm_info['vm_name'] + '_clone'
+    form =SQLFORM(db.vm_data, fields = ['purpose'], labels = {'purpose':'Purpose'}, hidden=dict(parent_vm_id=vm_id))
+    form[0].insert(0, TR(LABEL('VM Name:'), INPUT(_name = 'clone_name',  _value = clone_name, _readonly=True)))
+    form[0].insert(1, TR(LABEL('No. of Clones:'), INPUT(_name = 'no_of_clones', requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)])))
+
+    return form
+
+def clone_vm_validation(form):
+
+    parent_vm_id = request.post_vars.parent_vm_id
+    vm_info = db.vm_data[parent_vm_id]
+    clone_name = form.vars.clone_name
+    cnt = 1;
+    while(db.vm_data(vm_name=(clone_name+str(cnt)))):
+        cnt = cnt+1
+    
+    form.vars.vm_name = clone_name + str(cnt)
+    form.vars.RAM = vm_info['RAM']
+    form.vars.HDD = vm_info['HDD']
+    form.vars.extra_HDD = vm_info['extra_HDD']
+    form.vars.vCPU = vm_info['vCPU']
+    form.vars.template_id = vm_info['template_id']
+    form.vars.requester_id = auth.user.id
+    form.vars.owner_id = auth.user.id
+    form.vars.parent_id = parent_vm_id
+    form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
+    form.vars.status = VM_STATUS_REQUESTED
+
