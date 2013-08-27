@@ -51,7 +51,10 @@ def processTaskQueue(task_id):
         etype, value, tb = sys.exc_info()
         msg=''.join(traceback.format_exception(etype, value, tb, 10))
         db(db.task_queue.id==task_id).update(status=-1)
+        
+def processCloneTask(vm_id):
+    print 'Okkkk'
+    print vm_id
 
 from gluon.scheduler import Scheduler
-scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue))
-
+vm_scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue, clone_task=processCloneTask))
