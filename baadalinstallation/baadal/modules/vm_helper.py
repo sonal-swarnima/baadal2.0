@@ -7,7 +7,7 @@ if 0:
     global db; db = gluon.sql.DAL()
 ###################################################################################
 
-import re, os, ast, sys, math, time, commands, shutil, paramiko, traceback, random, libvirt
+import re, os, sys, math, time, commands, shutil, paramiko, traceback, random, libvirt
 import xml.etree.ElementTree as etree
 from libvirt import *
 from helper import *
@@ -350,8 +350,7 @@ def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid,
 # Installs a vm
 def install(parameters):
  
-        dict_parameters = ast.literal_eval(parameters)
-        vmid = dict_parameters['vm_id']
+        vmid = parameters['vm_id']
         current.logger.debug("In install function...")
 
         try:
@@ -389,8 +388,7 @@ def install(parameters):
 # Starts a vm
 def start(parameters):
     
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
+    vmid = parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -407,8 +405,7 @@ def start(parameters):
 # Suspends a vm
 def suspend(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
+    vmid = parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -425,8 +422,7 @@ def suspend(parameters):
 # Resumes a vm
 def resume(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
+    vmid = parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -443,8 +439,7 @@ def resume(parameters):
 # Destroys a vm forcefully
 def destroy(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
+    vmid = parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     current.logger.debug(str(vm_details))
     try:
@@ -493,8 +488,7 @@ def clean_up_database_after_vm_deletion(vm_details):
 # Deletes a vm
 def delete(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
+    vmid = parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -517,13 +511,12 @@ def delete(parameters):
 # Migrates a vm to a new host
 def migrate(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
-    destination_host_id = dict_parameters['destination_host']
+    vmid = parameters['vm_id']
+    destination_host_id = parameters['destination_host']
     destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
     flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
 
-    if 'live_migration' in dict_parameters:
+    if 'live_migration' in parameters:
         flags |= VIR_MIGRATE_LIVE
   
     current.logger.debug("Flags: " + str(flags))       
@@ -547,8 +540,7 @@ def migrate(parameters):
 # Snapshots a vm
 def snapshot(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
+    vmid = parameters['vm_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -569,9 +561,8 @@ def snapshot(parameters):
 def revert(parameters):
     
     current.logger.debug("Inside revert snapshot")
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
-    snapshotid = dict_parameters['snapshot_id']
+    vmid = parameters['vm_id']
+    snapshotid = parameters['snapshot_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -590,9 +581,8 @@ def revert(parameters):
 def delete_snapshot(parameters):
 
     current.logger.debug("Inside delete snapshot1")
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
-    snapshotid = dict_parameters['snapshot_id']
+    vmid = parameters['vm_id']
+    snapshotid = parameters['snapshot_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     current.logger.debug(str(vm_details))
     try:
@@ -612,26 +602,25 @@ def delete_snapshot(parameters):
 # Edits vm configuration
 def edit_vm_config(parameters):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']    
+    vmid = parameters['vm_id']    
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     message = ""
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
 
-        if 'vcpus' in dict_parameters:
-            new_vcpus = int(dict_parameters['vcpus'])
+        if 'vcpus' in parameters:
+            new_vcpus = int(parameters['vcpus'])
             domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_AFFECT_CONFIG)
             message += "Edited vCPU successfully."
             current.db(current.db.vm_data.id == vmid).update(vCPU = new_vcpus)
 
-        if 'ram' in dict_parameters:
-            new_ram = int(dict_parameters['ram']) * 1024
+        if 'ram' in parameters:
+            new_ram = int(parameters['ram']) * 1024
             current.logger.debug(str(new_ram))
             domain.setMemoryFlags(new_ram, VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_MEM_MAXIMUM)
             message +=  " And edited RAM successfully."
-            current.db(current.db.vm_data.id == vmid).update(RAM = int(dict_parameters['ram']))
+            current.db(current.db.vm_data.id == vmid).update(RAM = int(parameters['ram']))
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -682,13 +671,10 @@ def get_clone_properties(vm_details, cloned_vm_details):
     return (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters)
         
 # Clones vm
-def clone(parameters):
+def clone(vmid):
 
-    dict_parameters = ast.literal_eval(parameters)
-    vmid = dict_parameters['vm_id']
-    cloned_vmid = parameters['cloned_vm_id']   
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
-    cloned_vm_details = current.db(current.db.vm_data.id == cloned_vmid).select().first()
+    cloned_vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
         (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
         clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_details.vm_name + \ 

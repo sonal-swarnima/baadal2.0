@@ -5,7 +5,6 @@ if 0:
     from gluon import db
     import logger
 ###################################################################################
-import sys,traceback
 from helper import get_datetime
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone
 
@@ -26,14 +25,14 @@ task = {TASK_TYPE_CREATE_VM          :    install,
 
 def processTaskQueue(task_id):
     try:
-        process=db.task_queue[task_id] 
+        task_process = db.task_queue[task_id] 
         
         task_queue_query = db(db.task_queue.id==task_id)
         task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
         #Update attention_time for task in the event table
         task_event_query.update(attention_time=get_datetime())
         #Call the corresponding function from vm_helper
-        ret = task[process['task_type']](process['parameters'])
+        ret = task[task_process.task_type](task_process.parameters)
         #On return, update the status and end time in task event table
         task_event_query.update(status=ret[0], end_time=get_datetime())
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
@@ -45,16 +44,33 @@ def processTaskQueue(task_id):
             # For successful task, delete the task from queue 
             task_queue_query.delete()
         db.commit()
-        logger.debug("Task done")
+        logger.debug('Task done')
     except Exception as e:
         logger.error(e)
-        etype, value, tb = sys.exc_info()
-        msg=''.join(traceback.format_exception(etype, value, tb, 10))
         db(db.task_queue.id==task_id).update(status=-1)
         
-def processCloneTask(vm_id):
-    print 'Okkkk'
-    print vm_id
+def processCloneTask(task_id, vm_id):
+    try:
+        task_process = db.task_queue[task_id]
+        task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
+        db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.attention_time == None)).update(attention_time=get_datetime())
+        ret = task[TASK_TYPE_CLONE_VM](vm_id)
+        
+        params = task_process.parameters
+        clone_vm_list = params['clone_vm_id']
+        clone_vm_list.remove(vm_id)
+        if not clone_vm_list: #All Clones are process
+            db.task_queue[task_id].delete()
+        else:
+            params['clone_vm_id'] = clone_vm_list
+            db.task_queue[task_id] = dict(parameters=params)
+            if ret[0] == TASK_QUEUE_STATUS_FAILED:
+                task_event_query.update(error=ret[1], status=TASK_QUEUE_STATUS_FAILED)
+            elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
+                task_event_query.update(status=TASK_QUEUE_STATUS_SUCCESS)
+
+    except Exception as e:
+        logger.error(e)
 
 from gluon.scheduler import Scheduler
 vm_scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue, clone_task=processCloneTask))

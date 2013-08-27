@@ -9,4 +9,6 @@ if 0:
     from faculty_model import *
     from orgadmin_model import *    
     from sanity_model import *    
+    from task_scheduler import *
     from user_model import *
+    

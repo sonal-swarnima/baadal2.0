@@ -97,7 +97,7 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}):
         
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
-                         parameters=str(params), 
+                         parameters=params, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
     

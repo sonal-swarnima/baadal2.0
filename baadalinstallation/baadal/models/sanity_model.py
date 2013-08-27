@@ -136,7 +136,6 @@ def add_orhan_vm(vm_name, host_id):
     xml = minidom.parseString(raw_xml)
     mac_elem = xml.getElementsByTagName('mac')[0]
     mac_address = mac_elem.getAttribute('address')
-#     print mac_address
     if mac_address in MAC_IP_POOL:
         ip_address = MAC_IP_POOL[mac_address]
         
