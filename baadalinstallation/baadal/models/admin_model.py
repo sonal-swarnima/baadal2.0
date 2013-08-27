@@ -39,16 +39,43 @@ def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
-def create_clone_task(vm_id, clone_count):
+def create_clone_task(vm_data):
+    
+    vm_id = vm_data.id
+    clone_count = vm_data.parameters['clone_count']
+    
+    vm_id_list = []
+    for count in range(1, clone_count+1):
+        clone_vm_name = vm_data.vm_name + str(count)
+        clone_vm_id = db.vm_data.insert(
+                          vm_name = clone_vm_name, 
+                          RAM = vm_data.RAM,
+                          HDD = vm_data.HDD,
+                          extra_HDD = vm_data.extra_HDD,
+                          vCPU = vm_data.vCPU,
+                          template_id = vm_data.template_id,
+                          requester_id = vm_data.requester_id,
+                          owner_id = vm_data.owner_id,
+                          parent_id = vm_data.parent_id,
+                          purpose = vm_data.purpose,
+                          status = VM_STATUS_APPROVED)
+
+        vm_id_list.append(clone_vm_id)
+        
+        add_user_to_vm(vm_data.owner_id, clone_vm_id)
+        if(vm_data.owner_id != vm_data.requester_id):
+            add_user_to_vm(vm_data.requester_id, clone_vm_id)
+            
     db.vm_data[vm_id] = dict(status=-1)
     
-    return
+    add_vm_task_to_queue(vm_id, TASK_TYPE_CLONE_VM, {'clone_vm_id':vm_id_list})
+
 
 def approve_vm_request(vm_id):
     
     vm_data = db.vm_data[vm_id]
     if vm_data.parameters and vm_data.parameters['clone_count']:
-        create_clone_task(vm_id, vm_data.parameters['clone_count'])
+        create_clone_task(vm_data)
         return
 
     db.vm_data[vm_id] = dict(status=VM_STATUS_APPROVED)
