@@ -145,6 +145,13 @@ def get_my_task_list(task_status, task_num):
 
     return get_task_list(events)
 
+def get_vm_status(iStatus):
+    vm_status_map = {
+            VM_STATUS_RUNNING     :    'Running',
+            VM_STATUS_SUSPENDED   :    'Paused',
+            VM_STATUS_SHUTDOWN    :    'Shutdown'
+        }
+    return vm_status_map[iStatus]
    
 def get_vm_config(vm_id):
 
@@ -156,7 +163,7 @@ def get_vm_config(vm_id):
                    'extrahdd'        : str(vminfo.extra_HDD),
                    'ram'             : str(vminfo.RAM),
                    'vcpus'           : str(vminfo.vCPU),
-                   'status'          : str(vminfo.status),
+                   'status'          : get_vm_status(vminfo.status),
                    'ostype'          : 'Linux',
                    'purpose'         : str(vminfo.purpose),
                    'totalcost'       : str(vminfo.total_cost),
@@ -204,13 +211,13 @@ def clone_vm_validation(form):
         cnt = cnt+1
     
     form.vars.vm_name = clone_name + str(cnt)
-    form.vars.RAM = vm_info['RAM']
-    form.vars.HDD = vm_info['HDD']
-    form.vars.extra_HDD = vm_info['extra_HDD']
-    form.vars.vCPU = vm_info['vCPU']
-    form.vars.template_id = vm_info['template_id']
+    form.vars.RAM = vm_info.RAM
+    form.vars.HDD = vm_info.HDD
+    form.vars.extra_HDD = vm_info.extra_HDD
+    form.vars.vCPU = vm_info.vCPU
+    form.vars.template_id = vm_info.template_id
     form.vars.requester_id = auth.user.id
-    form.vars.owner_id = auth.user.id
+    form.vars.owner_id = vm_info.owner_id
     form.vars.parent_id = parent_vm_id
     form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
     form.vars.status = VM_STATUS_REQUESTED
