@@ -62,15 +62,17 @@ def settings():
 def start_machine():
     vm_id=request.args[0]       
     add_vm_task_to_queue(vm_id,TASK_TYPE_START_VM)
-    redirect_list_vm()
+    session.flash = 'Request to start machine added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 
 @auth.requires_login()
 @handle_exception
 def shutdown_machine():
     vm_id=request.args[0]      
-    add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
-    redirect_list_vm()
+    add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
+    session.flash = 'Request to shutdown machine added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 
 @auth.requires_login()
@@ -78,7 +80,8 @@ def shutdown_machine():
 def destroy_machine():
     vm_id=request.args[0]       
     add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
-    redirect_list_vm()
+    session.flash = 'Request to destroy machine added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 
 @auth.requires_login()
@@ -86,7 +89,8 @@ def destroy_machine():
 def resume_machine():
     vm_id=request.args[0]     
     add_vm_task_to_queue(vm_id,TASK_TYPE_RESUME_VM)        
-    redirect_list_vm()
+    session.flash = 'Request to resume machine added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 
 @auth.requires_login()
@@ -94,7 +98,8 @@ def resume_machine():
 def delete_machine():
     vm_id = request.args[0]      
     add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
-    redirect_list_vm()
+    session.flash = 'Request to delete machine added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 
 @auth.requires_login()
@@ -102,7 +107,8 @@ def delete_machine():
 def pause_machine():
     vm_id=request.args[0]  
     add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
-    redirect_list_vm()
+    session.flash = 'Request to pause machine added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception       
@@ -117,7 +123,8 @@ def adjrunlevel():
 def changelevel():
     vm_id=request.args[0]     
     add_vm_task_to_queue(vm_id,TASK_TYPE_CHANGELEVEL_VM)        
-    redirect_list_vm()
+    session.flash = 'Request to change level added to queue'
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception       
@@ -127,9 +134,10 @@ def snapshot():
     if check_snapshot_limit(vm_id):
         add_vm_task_to_queue(vm_id,TASK_TYPE_SNAPSHOT_VM)
         session.flash = "Your VM snapshoting request has been queued"
-        redirect_list_vm()
+
     else:
         session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception
@@ -138,7 +146,7 @@ def delete_snapshot():
     snapshot_id = int(request.args[1])
     add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, {'snapshot_id':snapshot_id})
     session.flash = "Your delete snapshot request has been queued"
-    redirect_list_vm()
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception
@@ -147,7 +155,7 @@ def revert_to_snapshot():
     snapshot_id = int(request.args[1])
     add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, {'snapshot_id':snapshot_id})
     session.flash = "Your revert to snapshot request has been queued"
-    redirect_list_vm()
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception       
@@ -166,12 +174,6 @@ def list_my_task():
     return dict(pending=pending, success=success, failed=failed, form=form)  
 
 
-def redirect_list_vm():
-    if (session.prev_url != None):
-        redirect(URL(r=request,f=session.prev_url))
-    else :
-        redirect(URL(r=request,c='user',f='list_my_vm'))
-        
 @auth.requires_login()
 @handle_exception       
 def clone_vm():

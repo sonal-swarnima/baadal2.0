@@ -86,7 +86,7 @@ def validate_approver(form):
 
 def request_vm_validation(form):
     set_configuration_elem(form)
-    if not(is_moderator() | is_faculty()):
+    if not(is_moderator() | is_orgadmin() | is_faculty()):
         validate_approver(form)
     else:
         form.vars.owner_id = auth.user.id
@@ -111,7 +111,7 @@ def get_request_vm_form():
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(user_name=''))
     get_configuration_elem(form) # Create dropdowns for configuration
 
-    if not(is_moderator() | is_faculty()):
+    if not(is_moderator() | is_orgadmin() | is_faculty()):
         add_faculty_approver(form)
     
     return form
@@ -220,5 +220,7 @@ def clone_vm_validation(form):
     form.vars.owner_id = vm_info.owner_id
     form.vars.parent_id = parent_vm_id
     form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
-    form.vars.status = VM_STATUS_REQUESTED
-
+    if (is_moderator() | is_orgadmin() | is_faculty()):
+        form.vars.status = VM_STATUS_VERIFIED
+    else:
+        form.vars.status = VM_STATUS_REQUESTED

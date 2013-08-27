@@ -56,6 +56,7 @@ def processCloneTask(task_id, vm_id):
     try:
         task_queue_query = db(db.task_queue.id==task_id)
         task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
+        # Update attention time for first clone task
         db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.attention_time == None)).update(attention_time=get_datetime())
         
         ret = task[TASK_TYPE_CLONE_VM](vm_id)
@@ -64,6 +65,7 @@ def processCloneTask(task_id, vm_id):
         
         task_process = task_queue_query.select().first()
         clone_vm_list = task_process.parameters['clone_vm_id']
+        # Remove VM id from the list. Tthis is to check if all the clones for the task are processed.
         clone_vm_list.remove(vm_id)
         
         if not clone_vm_list: #All Clones are processed
