@@ -43,7 +43,7 @@ def task_queue_insert_callback(fields, _id):
 db.task_queue._after_insert = [task_queue_insert_callback]
 
 def task_queue_update_callback(dbset, new_fields):
-    if new_fields['status'] == TASK_QUEUE_STATUS_RETRY:
+    if 'status' in new_fields and new_fields['status'] == TASK_QUEUE_STATUS_RETRY:
         fields = dbset.select().first()
         schedule_task(fields,fields['id'])
 
