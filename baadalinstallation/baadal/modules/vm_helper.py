@@ -317,7 +317,7 @@ def free_vm_properties(vm_details):
     
 # Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid, new_mac_address, new_ip_address, new_vncport,
-                                    parent_id = 0):
+                                    parent_id = None):
 
     current.logger.debug("Inside update db after installation")
     current.logger.debug(str(hostid))
@@ -331,6 +331,12 @@ def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid,
     current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +        
                                                                 int(template_hdd))
 
+    # vm_status (function : status) :- (install : running) ; (clone : shutdown)
+    if parent_id:
+        vm_status = current.VM_STATUS_SHUTDOWN
+    else:
+        vm_status = current.VM_STATUS_RUNNING
+
     # Update vm_data table
     current.db(current.db.vm_data.id == vm_details.id).update( host_id = hostid, 
                                                                datastore_id = datastore.id, 
@@ -342,9 +348,9 @@ def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid,
                                                                last_run_level = 3,
                                                                total_cost = 0, 
                                                                parent_id = parent_id,
-                                                               status = current.VM_STATUS_RUNNING )
+                                                               status = vm_status)
 
-    
+    current.logger.debug("Updated db")    
     return
     
 # Installs a vm
@@ -665,7 +671,7 @@ def get_clone_properties(vm_details, cloned_vm_details):
     while already_attached_disks > 0:
         clone_file_parameters += ' --file ' + get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' \
                                   + datastore.ds_name + '/' + cloned_vm_details.vm_name + '/' + cloned_vm_details.vm_name + \
-                                  + '_disk' + str(already_attached_disks) + '.qcow2'
+                                  '_disk' + str(already_attached_disks + 1) + '.qcow2'
         already_attached_disks -= 1
 
     return (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters)
@@ -677,15 +683,15 @@ def clone(vmid):
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
         (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
-        clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_details.vm_name + \ 
-                        clone_file_parameters
+        clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_details.vm_name + \
+                        clone_file_parameters + " --mac " + new_mac_address
         exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
-        current.logger.debug("Updating db")
+        current.logger.debug("Updating db after cloning")
         update_db_after_vm_installation(cloned_vm_details, template.hdd, datastore, vm_details.host_id, new_mac_address,
                                          new_ip_address, new_vncport, parent_id = vm_details.id)
         message = "Cloned successfully"
-        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-        
+        current.logger.debug(message)
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)        
     except Exception as e:
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))

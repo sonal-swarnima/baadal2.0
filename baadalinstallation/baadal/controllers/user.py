@@ -69,7 +69,7 @@ def start_machine():
 @handle_exception
 def shutdown_machine():
     vm_id=request.args[0]      
-    add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
+    add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
     redirect_list_vm()
 
 
