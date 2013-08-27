@@ -5,6 +5,7 @@
 if 0:
     from gluon import *  # @UnusedWildImport
     from gluon import request
+    from applications.baadal.models.task_scheduler import vm_scheduler
 ###################################################################################
 from simplejson import loads, dumps
 from helper import get_config_file,get_datetime
@@ -183,7 +184,7 @@ db.define_table('vm_data_event',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('end_time', 'datetime'),
     Field('parent_id', 'integer'),
-    Field('parameters', 'string'),
+    Field('parameters', 'text'),
     Field('status', 'integer'))
 
 db.define_table('attached_disks',
@@ -254,7 +255,17 @@ def schedule_task(fields, _id):
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 
-    scheduler.queue_task('vm_task', pvars = dict(task_id = _id),start_time = request.now, timeout = 1800)  # @UndefinedVariable
+    if fields['task_type'] == TASK_TYPE_CLONE_VM:
+        print fields['parameters']
+        import ast
+        _dict = ast.literal_eval(fields['parameters'])
+        tmp = _dict['clone_vm_id']
+
+        
+        for clone_vm_id in tmp:
+            vm_scheduler.queue_task('clone_task', pvars = dict(vm_id = clone_vm_id),start_time = request.now, timeout = 1800)
+    else:
+        vm_scheduler.queue_task('vm_task', pvars = dict(task_id = _id),start_time = request.now, timeout = 1800)
 
 
 def vm_data_insert_callback(fields, _id):
@@ -300,6 +311,4 @@ def vm_data_update_callback(dbset, new_fields):
         update_vm_data_event(fields,fields['id'])
 
 db.vm_data._after_update = [vm_data_update_callback]
-
-
 
