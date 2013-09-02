@@ -92,7 +92,8 @@ current.ORGADMIN = ORGADMIN
 current.FACULTY = FACULTY
 current.USER = USER
 
-MAC_IP_POOL = { '54:52:00:01:17:98' : '10.208.21.74',
+MAC_PRIVATE_IP_POOL = { 
+                '54:52:00:01:17:98' : '10.208.21.74',
                 '54:52:00:01:17:89' : '10.208.21.75',
                 '54:52:00:01:17:88' : '10.208.21.76',
                 '54:52:00:01:17:87' : '10.208.21.77',
@@ -108,8 +109,17 @@ MAC_IP_POOL = { '54:52:00:01:17:98' : '10.208.21.74',
                 '54:52:00:01:17:77' : '10.208.21.88',
                 '54:52:00:01:17:76' : '10.208.21.89' } 
 
-current.MAC_IP_POOL = MAC_IP_POOL
+MAC_PUBLIC_IP_POOL = { 
+                '54:52:00:01:17:40' : '10.208.23.93',
+                '54:52:00:01:17:41' : '10.208.23.94',
+                '54:52:00:01:17:42' : '10.208.23.95',
+                '54:52:00:01:17:43' : '10.208.23.96' } 
+
+current.MAC_PRIVATE_IP_POOL = MAC_PRIVATE_IP_POOL
+current.MAC_PUBLIC_IP_POOL = MAC_PUBLIC_IP_POOL
+
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
+current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 #Added so that changes in modules are instantlly loaded and reflected.

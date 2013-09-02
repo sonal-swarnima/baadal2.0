@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
-###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    from gluon import *  # @UnusedWildImport
-    import gluon
-    global db; db = gluon.sql.DAL()
-###################################################################################
 
-import re, os, sys, math, time, commands, shutil, paramiko, traceback, random, libvirt
+import sys, math, shutil, paramiko, traceback, random, libvirt
 import xml.etree.ElementTree as etree
-from libvirt import *
-from helper import *
+from libvirt import *  # @UnusedWildImport
+from helper import *  # @UnusedWildImport
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():
@@ -20,7 +13,7 @@ def choose_datastore():
     if(len(datastores) == 0):
         raise Exception("No datastore found.")
     else:
-       return datastores[0]
+        return datastores[0]
        
 # Computes effective RAM and CPU
 def compute_effective_ram_vcpu(RAM, vCPU, runlevel):
@@ -93,9 +86,8 @@ def find_new_host(runlevel, RAM, vCPU):
         raise Exception("No active host is available for a new vm.")
 
 # Chooses mac address, ip address and vncport for a vm to be installed
-def choose_mac_ip_vncport():
+def choose_mac_ip(temporary_pool):
 
-    temporary_pool = current.MAC_IP_POOL
     while True:
         mac_selected = random.choice(temporary_pool.keys())
         current.logger.debug("Checking mac = " + str(mac_selected))
@@ -108,30 +100,40 @@ def choose_mac_ip_vncport():
         if not temporary_pool:
             raise Exception("Available MACs are exhausted.")
 
-    count = int(get_constant('vmcount')) 
-    new_vncport = str(int(get_constant('vncport_range')) + count)
-    update_value('vmcount', count + 1)
+    return (mac_selected, current.MAC_IP_POOL[mac_selected])
 
-    return (mac_selected, current.MAC_IP_POOL[mac_selected], new_vncport)
+def choose_mac_ip_vncport(vm_properties):
+    
+    (vm_properties['mac_addr_1'], vm_properties['private_ip']) = choose_mac_ip(current.MAC_PRIVATE_IP_POOL)
+
+    if vm_properties['assign_public_ip']:
+        (vm_properties['mac_addr_2'], vm_properties['ppublic_ip']) = choose_mac_ip(current.MAC_PUBLIC_IP_POOL)
+    
+    count = int(get_constant('vmcount')) 
+    vm_properties['vnc_port'] = str(int(get_constant('vncport_range')) + count)
+    update_value('vmcount', count + 1)
+    
 
 # Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
 def allocate_vm_properties(vm_details):
 
     current.logger.debug("Inside allocate_vm_properties()...")
+    vm_properties = {}
 
-    datastore = choose_datastore()
-    current.logger.debug("Datastore selected is: " + str(datastore))
+    vm_properties['datastore'] = choose_datastore()
+    current.logger.debug("Datastore selected is: " + str(vm_properties['datastore']))
 
-    host = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
-    current.logger.debug("Host selected is: " + str(host))
+    vm_properties['host'] = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
+    current.logger.debug("Host selected is: " + str(vm_properties['host']))
 
-    (new_mac_address, new_ip_address, new_vncport) = choose_mac_ip_vncport()
-    current.logger.debug("MAC is : " + str(new_mac_address) + " IP is : " + str(new_ip_address) + " VNCPORT is : "  \
-                          + str(new_vncport))
+    vm_properties['assign_public_ip'] = vm_properties.public_ip != current.PUBLIC_IP_NOT_ASSIGNED
+    choose_mac_ip_vncport(vm_properties)
+    current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
+                          + str(vm_properties['vnc_port']))
     
-    (ram, vcpus) = compute_effective_ram_vcpu(vm_details.RAM, vm_details.vCPU, 1)
+    (vm_properties['ram'], vm_properties['vcpus']) = compute_effective_ram_vcpu(vm_details.RAM, vm_details.vCPU, 1)
 
-    return (datastore, host, new_mac_address, new_ip_address, new_vncport, ram, vcpus)
+    return vm_properties
 
 # Executes command on host machine using paramiko module
 def exec_command_on_host(machine_ip, user_name, command):
@@ -187,37 +189,31 @@ def create_vm_image(vm_details, datastore):
     return (template, vm_image_location)
 
 # Determines an install command for vm
-def get_install_command(template, vm_details, vm_image_location, ram, vcpus, new_mac_address, new_vncport):
+def get_install_command(template, vm_details, vm_image_location, vm_properties):
     
     optional = ' --import --os-type=' + template.os_type
     if (template.arch != 'amd64'):
         optional = optional + ' --arch=' + template.arch + ' '
+    
+    public_ip_command = ''
+    if vm_properties['assign_public_ip']:
+        public_ip_command = ' --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_2']
 
-    if (template.type == 'RAW'):
-       install_command = 'virt-install \
-                         --name=' + vm_details.vm_name + ' \
-                         --ram=' + str(ram) + ' \
-                         --vcpus=' + str(vcpus) + optional + ' \
-                         --disk path=' + vm_image_location +',bus=virtio \
-                         --network bridge=br0,model=virtio,mac=' + new_mac_address + ' \
-                         --graphics vnc,port=' + new_vncport + ',listen=0.0.0.0,password=duolc \
-                         --noautoconsole \
-                         --description \
-                         --autostart \
-                         --force'
-
-    elif (template.type == 'QCOW2'):
-        install_command = 'virt-install \
-                         --name=' + vm_details.vm_name + ' \
-                         --ram=' + str(ram) + ' \
-                         --vcpus=' + str(vcpus) + optional + ' \
-                         --disk path=' + vm_image_location + ',format=qcow2,bus=virtio \
-                         --network bridge=br0,model=virtio,mac=' + new_mac_address + ' \
-                         --graphics vnc,port=' + new_vncport + ',listen=0.0.0.0,password=duolc \
-                         --noautoconsole \
-                         --description \
-                         --autostart \
-                         --force' 
+    format_command = ''
+    if (template.type == 'QCOW2'):
+        format_command = ',format=qcow2' 
+    
+    install_command = 'virt-install \
+                     --name=' + vm_details.vm_name + ' \
+                     --ram=' + str(vm_properties['ram']) + ' \
+                     --vcpus=' + str(vm_properties['vcpus']) + optional + ' \
+                     --disk path=' + vm_image_location + format_command+',bus=virtio \
+                     --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_1'] + public_ip_command + ' \
+                     --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
+                     --noautoconsole \
+                     --description \
+                     --autostart \
+                     --force' 
 
     return install_command 
 
@@ -275,11 +271,12 @@ def attach_disk(vmname, size, hostip, datastore):
         return False
 
 # Launches a vm on host
-def launch_vm_on_host(template, vm_details, vm_image_location, ram, vcpus, new_mac_address, new_vncport, host_ip, datastore):
+def launch_vm_on_host(template, vm_details, vm_image_location, vm_properties):
 
     attach_disk_status_message = 'Your request for additional HDD is completed.'
-    install_command = get_install_command(template, vm_details, vm_image_location, ram, vcpus, new_mac_address, new_vncport)  
+    install_command = get_install_command(template, vm_details, vm_image_location, vm_properties)  
     # Starts installing a vm
+    host_ip = vm_properties['host'].host_ip
     current.logger.debug("Installation started...")
     current.logger.debug("Host is "+ host_ip)
     current.logger.debug("Installation command : " + install_command)
@@ -287,6 +284,7 @@ def launch_vm_on_host(template, vm_details, vm_image_location, ram, vcpus, new_m
 
     # Serving HDD request
     if (int(vm_details.extra_HDD) != 0):
+        datastore = vm_properties['datastore']
         if (attach_disk(vm_details.vm_name, int(vm_details.extra_HDD), host_ip, datastore)):
             vmid = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select(current.db.vm_data.id)[0].id
             current.db.attached_disks.insert(vm_id = vmid, datastore_id = datastore.id , capacity = int(vm_details.extra_HDD))
@@ -316,9 +314,10 @@ def free_vm_properties(vm_details):
     return
     
 # Updates db after a vm is installed successfully
-def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid, new_mac_address, new_ip_address, new_vncport,
-                                    parent_id = None):
+def update_db_after_vm_installation(vm_details, template_hdd, vm_properties, parent_id = None):
 
+    hostid = vm_properties['host'].id
+    datastore = vm_properties['datastore']
     current.logger.debug("Inside update db after installation")
     current.logger.debug(str(hostid))
 
@@ -340,15 +339,18 @@ def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid,
     # Update vm_data table
     current.db(current.db.vm_data.id == vm_details.id).update( host_id = hostid, 
                                                                datastore_id = datastore.id, 
-                                                               private_ip = new_ip_address, 
-                                                               vnc_port = new_vncport, 
-                                                               mac_addr = new_mac_address, 
+                                                               private_ip = vm_properties['private_ip'], 
+                                                               vnc_port = vm_properties['vnc_port'],
+                                                               mac_addr_1 = vm_properties['mac_addr_1'],
                                                                start_time = get_datetime(), 
                                                                current_run_level = 3, 
                                                                last_run_level = 3,
                                                                total_cost = 0, 
                                                                parent_id = parent_id,
                                                                status = vm_status)
+    if vm_properties['assign_public_ip']:
+        current.db(current.db.vm_data.id == vm_details.id).update(public_ip = vm_properties['public_ip'], 
+                                                                  mac_addr_2 = vm_properties['mac_addr_2'])
 
     current.logger.debug("Updated db")    
     return
@@ -361,25 +363,23 @@ def install(parameters):
 
         try:
             # Fetches vm details from vm_data table
-            vm_details = current.db(current.db.vm_data.id == vmid).select()[0]
+            vm_details = current.db.vm_data[vmid]
             current.logger.debug("Vm details are: " + str(vm_details))
-	
+    
             # Calling allocate_vm_properties function
-            (datastore, host, new_mac_address, new_ip_address, new_vncport, ram, vcpus) = allocate_vm_properties(vm_details)
+            vm_properties = allocate_vm_properties(vm_details)
 
             # Calling create_vm_image function
-            (template, vm_image_location) = create_vm_image(vm_details, datastore)
+            (template, vm_image_location) = create_vm_image(vm_details, vm_properties['datastore'])
          
             # Calling launch_vm_on_host
-            attach_disk_status_message = launch_vm_on_host(template, vm_details, vm_image_location, ram, vcpus, new_mac_address,
-                                                           new_vncport, host.host_ip, datastore)       
+            attach_disk_status_message = launch_vm_on_host(template, vm_details, vm_image_location, vm_properties)       
 
             # Checking if vm has been installed successfully
-            assert(check_if_vm_defined(host.host_ip, vm_details.vm_name)), "VM is not installed. Check logs."
+            assert(check_if_vm_defined(vm_properties['host'].host_ip, vm_details.vm_name)), "VM is not installed. Check logs."
 
             # Update database after vm installation
-            update_db_after_vm_installation(vm_details, template.hdd, datastore, host.id, new_mac_address, new_ip_address,
-                                            new_vncport) 
+            update_db_after_vm_installation(vm_details, template.hdd, vm_properties) 
 
             message = "VM is installed successfully." + attach_disk_status_message
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
@@ -697,4 +697,3 @@ def clone(vmid):
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
-

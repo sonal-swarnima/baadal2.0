@@ -6,9 +6,7 @@
       <tr>
         <th>Name</th>
         <th>Owner</th>              
-        {{if vm['public_ip'] != PUBLIC_IP_NOT_ASSIGNED:}}
-            <th>Public IP</th>        
-        {{pass}}
+        <th>Public IP</th>        
         <th>Private IP</th>
         <th>RAM</th>
         <th>vCPUs</th>
@@ -21,9 +19,7 @@
       <tr>
         <td>{{=vm['name']}}</td>
         <td>{{=vm['owner']}}</td>                
-        {{if vm['public_ip'] != PUBLIC_IP_NOT_ASSIGNED:}}
-            <td>{{=vm['public_ip']}}</td>
-        {{pass}}
+        <td>{{=vm['public_ip']}}</td>
         <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
         <td>{{=vm['vcpus']}}</td>
