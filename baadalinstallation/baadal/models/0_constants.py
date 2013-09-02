@@ -109,6 +109,7 @@ MAC_IP_POOL = { '54:52:00:01:17:98' : '10.208.21.74',
                 '54:52:00:01:17:76' : '10.208.21.89' } 
 
 current.MAC_IP_POOL = MAC_IP_POOL
+PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 
 ITEMS_PER_PAGE=20
 #Added so that changes in modules are instantlly loaded and reflected.

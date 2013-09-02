@@ -9,11 +9,29 @@ if 0:
 ###################################################################################
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
 
+def get_vm_status(iStatus):
+    vm_status_map = {
+            VM_STATUS_RUNNING     :    'Running',
+            VM_STATUS_SUSPENDED   :    'Paused',
+            VM_STATUS_SHUTDOWN    :    'Shutdown'
+        }
+    return vm_status_map[iStatus]
+
+
 def get_hosted_vm_list(vms):
     vmlist = []
     for vm in vms:
         total_cost = add_to_cost(vm.id)
-        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_full_name(vm.owner_id), 'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
+        element = {'id' : vm.id,
+                   'name' : vm.vm_name,
+                   'public_ip' : vm.public_ip, 
+                   'private_ip' : vm.private_ip, 
+                   'owner' : get_full_name(vm.owner_id), 
+                   'hostip' : vm.host_id.host_ip,
+                   'RAM' : vm.RAM,
+                   'vcpus' : vm.vCPU,
+                   'status' : get_vm_status(vm.status),
+                   'cost' : total_cost}
         vmlist.append(element)
     return vmlist
 

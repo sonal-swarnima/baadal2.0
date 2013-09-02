@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, get_vm_template_config
+from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config
 from auth_user import fetch_ldap_user, create_or_update_user
 
 def get_my_pending_vm():
@@ -93,6 +93,9 @@ def request_vm_validation(form):
         form.vars.status = VM_STATUS_VERIFIED
     
     form.vars.requester_id = auth.user.id
+    if form.vars.req_public_ip == 'on':
+        form.vars.public_ip = None
+    print form.vars.public_ip
 
 
 def add_faculty_approver(form):
@@ -110,6 +113,10 @@ def get_request_vm_form():
 
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(user_name=''))
     get_configuration_elem(form) # Create dropdowns for configuration
+    
+    form[0].insert(-1, TR(LABEL('Public IP:'), 
+                          INPUT(_type = 'checkbox', _name = 'req_public_ip'), 
+                          _id='public_ip_row'))      
 
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         add_faculty_approver(form)
@@ -145,14 +152,6 @@ def get_my_task_list(task_status, task_num):
 
     return get_task_list(events)
 
-def get_vm_status(iStatus):
-    vm_status_map = {
-            VM_STATUS_RUNNING     :    'Running',
-            VM_STATUS_SUSPENDED   :    'Paused',
-            VM_STATUS_SHUTDOWN    :    'Shutdown'
-        }
-    return vm_status_map[iStatus]
-   
 def get_vm_config(vm_id):
 
     vminfo = get_vm_info(vm_id)

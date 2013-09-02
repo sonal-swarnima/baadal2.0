@@ -1,33 +1,39 @@
 {{extend 'layout.html'}}
   {{for vmhosts in hostvmlist:}}
-	<h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}MB, vCPUs= {{=vmhosts['cpus']}}]</h2>
-	<div class="TABLE">
+    <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}MB, vCPUs= {{=vmhosts['cpus']}}]</h2>
+    <div class="TABLE">
     <table>
       <tr>
         <th>Name</th>
         <th>Owner</th>              
-        <th>IP</th>
+        {{if vm['public_ip'] != PUBLIC_IP_NOT_ASSIGNED:}}
+            <th>Public IP</th>        
+        {{pass}}
+        <th>Private IP</th>
         <th>RAM</th>
         <th>vCPUs</th>
         <th>Level</th>
         <th>Cost</th>
         <th>Settings</th>
       </tr>
-    {{for vm in vmhosts['details']:}}
+      {{for vm in vmhosts['details']:}}
       <form>
       <tr>
         <td>{{=vm['name']}}</td>
         <td>{{=vm['owner']}}</td>                
-        <td>{{=vm['ip']}}</td>
+        {{if vm['public_ip'] != PUBLIC_IP_NOT_ASSIGNED:}}
+            <td>{{=vm['public_ip']}}</td>
+        {{pass}}
+        <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
         <td>{{=vm['vcpus']}}</td>
         <td>{{=vm['level']}}</td>
         <td>{{=vm['cost']}}</td>
         <td>
-	        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-	        _href=URL(r=request,c='user' ,f='settings', args=[vm['id']]), 
-	        _title="Settings", 
-	        _alt="Settings")}}
+            {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+            _href=URL(r=request,c='user' ,f='settings', args=[vm['id']]), 
+            _title="Settings", 
+            _alt="Settings")}}
         </td>
       </tr>
       </form>

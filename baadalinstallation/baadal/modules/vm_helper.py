@@ -340,7 +340,7 @@ def update_db_after_vm_installation(vm_details, template_hdd, datastore, hostid,
     # Update vm_data table
     current.db(current.db.vm_data.id == vm_details.id).update( host_id = hostid, 
                                                                datastore_id = datastore.id, 
-                                                               vm_ip = new_ip_address, 
+                                                               private_ip = new_ip_address, 
                                                                vnc_port = new_vncport, 
                                                                mac_addr = new_mac_address, 
                                                                start_time = get_datetime(), 
@@ -697,14 +697,4 @@ def clone(vmid):
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
-                   
-# Prepares VM list to be displayed on webpage
-def get_vm_list(vms):
-    vmlist = []
-    for vm in vms:
-        total_cost = add_to_cost(vm.vm_name)
-        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 
-                   'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
-        vmlist.append(element)
-    return vmlist
 
