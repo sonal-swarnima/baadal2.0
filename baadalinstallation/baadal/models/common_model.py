@@ -50,6 +50,7 @@ def get_pending_vm_list(vms):
                    'RAM' : vm.RAM, 
                    'vCPUs' : vm.vCPU, 
                    'HDD' : vm.HDD, 
+                   'public_ip' : (vm.public_ip != PUBLIC_IP_NOT_ASSIGNED), 
                    'status' : vm.status,
                    'request_type' : request_type}
         vmlist.append(element)
