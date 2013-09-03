@@ -152,6 +152,7 @@ def get_my_task_list(task_status, task_num):
 
     return get_task_list(events)
 
+   
 def get_vm_config(vm_id):
 
     vminfo = get_vm_info(vm_id)

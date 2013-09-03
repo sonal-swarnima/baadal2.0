@@ -7,7 +7,8 @@ if 0:
     from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE,A,SPAN,IMG,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
+import os
+from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty, get_constant
 
 def get_vm_status(iStatus):
     vm_status_map = {
@@ -83,7 +84,7 @@ def get_full_name(user_id):
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    vm_info=db((db.vm_data.id == _vm_id) & (db.vm_data.locked == False)).select()
+    vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.locked == False) & (db.vm_data.host_id == db.host.id)).select()
     if not vm_info:
         return None
     return vm_info.first()
@@ -194,7 +195,7 @@ def get_vm_operations(vm_id):
                     _title="Take VM snapshot", _alt="Take VM snapshot"))
 
         valid_operations_list.append(A(IMG(_src=URL('static','images/performance.jpg'), _height=20, _width=20),
-                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='show_vm_performance', args=[vm_id]), 
                     _title="Check VM performance", _alt="Check VM Performance"))
 
         if is_moderator():
@@ -287,5 +288,52 @@ def get_vm_snapshots(vm_id):
         vm_snapshots_list.append(snapshot_dict)
 
     return vm_snapshots_list
-   
-   
+
+def create_graph(vm_name, graph_type, rrd_file_path):
+    
+    graph_file = get_constant('graph_file_dir') + vm_name + "_" + graph_type + ".png"
+    
+    start_time = None
+    grid = None
+    
+    ret = rrdtool.graph(graph_file, "--start", , "--end", "now", "--vertical-label", graph_type, --x-grid, ,)
+    
+"""
+rrdtool graph /home/www-data/web2py/applications/baadal/cpu.png --start now-200000 --end now --vertical-label ram --x-grid DAY:1:DAY:1:DAY:1:86400:%a DEF:myram=aayush.rrd:ram:AVERAGE LINE1:myram#ff0000 
+
+ret = rrdtool.graph( "net.png", "--start", "now-3600", "--end", "now", "--vertical-label=Bytes/s",
+ "DEF:inoctets=test1.rrd:input:AVERAGE",
+ "DEF:outoctets=test1.rrd:output:AVERAGE",
+ "AREA:inoctets#00FF00:In traffic",
+ "LINE1:outoctets#0000FF:Out traffic\r",
+ "CDEF:inbits=inoctets,8,*",
+ "CDEF:outbits=outoctets,8,*",
+ "COMMENT:\n",
+ "GPRINT:inbits:AVERAGE:Avg In traffic: %6.2lf %Sbps",
+ "COMMENT:  ",
+ "GPRINT:inbits:MAX:Max In traffic: %6.2lf %Sbps\r",
+ "GPRINT:outbits:AVERAGE:Avg Out traffic: %6.2lf %Sbps",
+ "COMMENT: ",
+ "GPRINT:outbits:MAX:Max Out traffic: %6.2lf %Sbps\r")
+"""  
+  
+    
+def fetch_and_return_graph(vm_name, graph_type):
+    return IMG(_src=URL('static','images/vm_graphs/'+vm_name+"_"+graph_type+'.png'))
+
+    
+def get_performance_graph(graph_type, vm, graph_period):
+
+    rrd_file = get_constant('vmfiles_path') + os.sep + get_constant('vm_rrds_dir') + os.sep + vm + ".rrd"
+    
+    if os.path.exists(rrd_file):
+        if create_graph(vm, graph_type, rrd_file, graph_period):        
+            return fetch_and_return_graph(vm, graph_type)        
+        else: 
+            logger.warn("Unable to create graph from rrd file!!!")
+            return H2("OOPS. No Graphs Available")
+    else:
+        logger.warn("VM's RRD File Unavailable!!!")
+        return H2("OOPS. No Graphs Available.")
+		
+

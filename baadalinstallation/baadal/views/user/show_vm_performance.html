@@ -1,0 +1,40 @@
+{{extend 'layout.html'}}
+
+<script>
+
+jQuery(document).ready(function(){
+
+    setInterval( function() {
+    
+    id = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href");
+    vm_name = "{{=vm_name}}"
+         jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{type:id, vm:vm_name}, success:function(msg) {jQuery("#target").html(msg);}});},5000);
+
+});
+
+</script>
+
+
+
+<div id="tabs-task">
+<ul>
+    <li><a href="#ram">Memory</a></li>
+    <li><a href="#cpu">CPU</a></li>
+    <li><a href="#nw">Network</a></li>
+    <li><a href="#io">I/O</a></li>
+    <li><a href="#disk">Disk</a></li>
+</ul>
+
+<br/><br/>
+
+<div id="target">target</div>
+
+<div id="ram">ram</div>
+<div id="cpu">cpu</div>
+<div id="nw">nw</div>
+<div id="io">io</div>
+<div id="disk">disk</div>
+
+</div>
+
+

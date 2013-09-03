@@ -60,7 +60,7 @@ function confirm_vm_deletion(){
 {{if vmusers:}}
 <div class="post">
     <h2 class="title">VM Users</h2>
-    <table>
+    <table id="vm_users">
 		<tr>
 	  {{for user in vmusers:}}
 		    <td>{{=(str(user.first_name) + " " + str(user.last_name))}}</td>
@@ -78,7 +78,7 @@ function confirm_vm_deletion(){
 <br/>
 <div class="post">
     <h2 class="title">VM Operations</h2>
-    <table>
+    <table id="vm_ops">
 		<tr>
 	  {{for operation in vmoperations:}}
     <td>{{=operation}}</td>
@@ -92,7 +92,7 @@ function confirm_vm_deletion(){
 <div class = "post">
     
         <h2 class = "title"> Current Snapshot </h2>
-        <table>          
+        <table id="vm_snaps">          
                      {{for snapshot in vmsnapshots:}}
                      <tr>
                          <td>{{=snapshot['name']}}</td>
@@ -105,4 +105,5 @@ function confirm_vm_deletion(){
 {{pass}}
 
                 
+
 
