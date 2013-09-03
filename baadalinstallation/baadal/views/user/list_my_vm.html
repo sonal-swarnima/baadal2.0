@@ -51,7 +51,8 @@
         <th>Name</th>
         <th>Owner</th>
         <th>Host</th>
-        <th>IP</th>
+        <th>Public IP</th>        
+        <th>Private IP</th>
 		<th>RAM</th>
 		<th>vCPUs</th>
         <th>Level</th>
@@ -65,11 +66,12 @@
         <input type = "hidden" name = "vm" value="{{=vm['id']}}"/>
         <td>{{=(vm['owner'])}}</td>
         <td>{{=vm['hostip']}}</td>
-		<td>{{=vm['ip']}}</td>
+        <td>{{=vm['public_ip']}}</td>
+        <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
 		<td>{{=vm['vcpus']}}</td>
         <td>{{=vm['level']}}</td>
-        <td>{{=round(float(vm['cost']),2)}}</td>
+        <td>{{=vm['cost']}}</td>
         <td>
         <div id = '{{=vm['name']}}'>
         {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),

@@ -91,16 +91,20 @@ def choose_mac_ip(temporary_pool):
     while True:
         mac_selected = random.choice(temporary_pool.keys())
         current.logger.debug("Checking mac = " + str(mac_selected))
-        mac = current.db(current.db.vm_data.mac_addr == mac_selected).select().first()
+        
+        vms = current.db(current.db.vm_data).select()
+        found = False
+        for row in vms.find(lambda row: row.mac_addr_1==mac_selected | row.mac_addr_2==mac_selected):
+            found = True
 
-        if mac == None:
+        if not found:
             break
         else:
             temporary_pool.pop(mac_selected)
         if not temporary_pool:
             raise Exception("Available MACs are exhausted.")
 
-    return (mac_selected, current.MAC_IP_POOL[mac_selected])
+    return (mac_selected, temporary_pool[mac_selected])
 
 def choose_mac_ip_vncport(vm_properties):
     
