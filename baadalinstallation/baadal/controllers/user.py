@@ -176,24 +176,14 @@ def list_my_task():
 @auth.requires_login()
 @handle_exception       
 def show_vm_performance():
-    print request.args[0]
     vm_id = int(request.args[0])
-    
-    import commands
-    
-    print commands.getstatusoutput("touch this_is_bull_shit.png")
-#    vm_info = get_vm_info(vm_id)    
-#    print vm_info
-    return dict(vm_name="testbaadal")
+    vm_info = get_vm_info(vm_id)    
+    return dict(vm_name = vm_info['name'])
 
 @auth.requires_login()
 @handle_exception       
 def get_updated_graph():
-		print request.vars['type']
-		print request.vars['vm']
-#		return get_performance_graph(request.vars['type'], request.vars['vm'])
-		a = "performance.jpg"
-		return IMG(_src=URL('static','images/'+a))		
+		return get_performance_graph(request.vars['graphType'], request.vars['vm'], request.vars['graphPeriod'])
 		
 		
 @auth.requires_login()

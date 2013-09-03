@@ -4,17 +4,19 @@
 
 jQuery(document).ready(function(){
 
+    var period;
+    $('input[name=graph-period-radio]:radio').click( function() {
+	period = $('input[name=graph-period-radio]:radio:checked').val();
+    }); 
     setInterval( function() {
     
-    id = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href");
+    id = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
     vm_name = "{{=vm_name}}"
-         jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{type:id, vm:vm_name}, success:function(msg) {jQuery("#target").html(msg);}});},5000);
+         jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{graphType:id, vm:vm_name, graphPeriod:period}, success:function(msg) {jQuery("#target").html(msg);}});},5000);
 
 });
 
 </script>
-
-
 
 <div id="tabs-task">
 <ul>
@@ -26,6 +28,14 @@ jQuery(document).ready(function(){
 </ul>
 
 <br/><br/>
+
+<div id="graph-type">
+    <input type="radio" value="hour" name="graph-period-radio" checked="checked">Last hour</input>
+    <input type="radio" value="day" name="graph-period-radio">Last day</input>
+    <input type="radio" value="week" name="graph-period-radio">Last week</input>
+    <input type="radio" value="month" name="graph-period-radio">Last month</input>
+    <input type="radio" value="year" name="graph-period-radio">Last year</input>
+</div>
 
 <div id="target">target</div>
 

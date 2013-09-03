@@ -289,34 +289,66 @@ def get_vm_snapshots(vm_id):
 
     return vm_snapshots_list
 
-def create_graph(vm_name, graph_type, rrd_file_path):
+def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
     
     graph_file = get_constant('graph_file_dir') + vm_name + "_" + graph_type + ".png"
     
     start_time = None
     grid = None
+    consolidation = 'AVERAGE'
     
-    ret = rrdtool.graph(graph_file, "--start", , "--end", "now", "--vertical-label", graph_type, --x-grid, ,)
-    
-"""
-rrdtool graph /home/www-data/web2py/applications/baadal/cpu.png --start now-200000 --end now --vertical-label ram --x-grid DAY:1:DAY:1:DAY:1:86400:%a DEF:myram=aayush.rrd:ram:AVERAGE LINE1:myram#ff0000 
-
-ret = rrdtool.graph( "net.png", "--start", "now-3600", "--end", "now", "--vertical-label=Bytes/s",
- "DEF:inoctets=test1.rrd:input:AVERAGE",
- "DEF:outoctets=test1.rrd:output:AVERAGE",
- "AREA:inoctets#00FF00:In traffic",
- "LINE1:outoctets#0000FF:Out traffic\r",
- "CDEF:inbits=inoctets,8,*",
- "CDEF:outbits=outoctets,8,*",
- "COMMENT:\n",
- "GPRINT:inbits:AVERAGE:Avg In traffic: %6.2lf %Sbps",
- "COMMENT:  ",
- "GPRINT:inbits:MAX:Max In traffic: %6.2lf %Sbps\r",
- "GPRINT:outbits:AVERAGE:Avg Out traffic: %6.2lf %Sbps",
- "COMMENT: ",
- "GPRINT:outbits:MAX:Max Out traffic: %6.2lf %Sbps\r")
-"""  
+    if graph_period == 'hour':
+        start_time = str(24*60*60)
+        grid = 'HOUR:1:HOUR:1:HOUR:1:0:%k'
+        consolidation = 'MIN'
+    elif graph_period == 'day':
+        start_time = '-1d'
+        grid = 'DAY:1:DAY:1:DAY:1:86400:%a'
+    elif graph_period == 'month':
+        start_time = '-1w'
+        grid = 'WEEK:1:WEEK:1:WEEK:1:604800:Week %W'
+    elif graph_period == 'week':
+        start_time = '-1m'
+        grid = 'MONTH:1:MONTH:1:MONTH:1:2592000:%b'
+    elif graph_period == 'year':
+        start_time = '-1y'
+        grid = 'YEAR:1:YEAR:1:YEAR:1:31536000:%Y'
   
+    if ((graph_type == 'ram') or (graph_type == 'cpu')):
+
+        if graph_type == 'ram':
+            ds = 'DEF:ram=' + vm_name + '.rrd:memory:' + consolidation
+            line = 'LINE1:ram#0000FF'
+        elif graph_type == 'cpu':
+            ds = 'DEF:cpu=' + vm_name + '.rrd:cpus:' + consolidation
+            line = 'LINE1:cpu#0000FF'
+                
+        ret = rrdtool.graph(graph_file, "--start", start_time, "--end", "now", "--vertical-label", graph_type, "--x-grid", grid, ds, line)
+
+    else:
+
+        if graph_type == 'nw':
+            ds1 = 'DEF:nwr=' + vm_name + '.rrd:nwr:' + consolidation
+            ds2 = 'DEF:nww=' + vm_name + '.rrd:nww:' + consolidation
+            line1 = 'LINE1:nwr#0000FF'
+            line2 = 'LINE2:nww#FF7410'
+            vdef1 = "VDEF:nwread=nwr,read"
+            vdef2 = "VDEF:nwwrite=nww,write"
+
+        elif graph_type == 'io':
+            ds1 = 'DEF:diskr=' + vm_name + '.rrd:diskr:' + consolidation
+            ds2 = 'DEF:diskw=' + vm_name + '.rrd:diskw:' + consolidation
+            line1 = 'LINE1:diskr#0000FF'
+            line2 = 'LINE2:diskw#FF7410'
+            vdef1 = "VDEF:diskread=diskr,read"
+            vdef2 = "VDEF:diskwrite=diskw,write"
+
+        ret = rrdtool.graph(graph_file, "--start", start_time, "--end", "now", "--vertical-label", graph_type, "--x-grid", grid, ds1, ds2, line1, line2, vdef1, vdef2)
+        
+        if ret:
+            return False
+        else:
+            return True 
     
 def fetch_and_return_graph(vm_name, graph_type):
     return IMG(_src=URL('static','images/vm_graphs/'+vm_name+"_"+graph_type+'.png'))
