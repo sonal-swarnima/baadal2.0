@@ -54,7 +54,6 @@ def processTaskQueue(task_id):
         
 def processCloneTask(task_id, vm_id):
     try:
-        task_queue_query = db(db.task_queue.id==task_id)
         task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
         # Update attention time for first clone task
         db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.attention_time == None)).update(attention_time=get_datetime())
@@ -63,20 +62,28 @@ def processCloneTask(task_id, vm_id):
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             db.vm_data[vm_id] = dict(status = -1)
         
-        task_process = task_queue_query.select().first()
-        clone_vm_list = task_process.parameters['clone_vm_id']
-        # Remove VM id from the list. Tthis is to check if all the clones for the task are processed.
+        clone_vm_list = db.task_queue[task_id].parameters['clone_vm_id']
+        # Remove VM id from the list. This is to check if all the clones for the task are processed.
         clone_vm_list.remove(vm_id)
         
+        task_event = task_event_query.select().first()
+        # Find the status of all clone tasks combined
+        current_status = task_event.status
+        if current_status == None:
+            current_status = ret[0]
+        elif current_status != TASK_QUEUE_STATUS_PARTIAL_SUCCESS:
+            if ret[0] != current_status:
+                current_status = TASK_QUEUE_STATUS_PARTIAL_SUCCESS
+
         if not clone_vm_list: #All Clones are processed
-            task_event_query.update(status=ret[0], end_time=get_datetime())
-            if ret[0] == TASK_QUEUE_STATUS_FAILED:
+            task_event_query.update(status=current_status, end_time=get_datetime())
+            if current_status == TASK_QUEUE_STATUS_FAILED:
                 task_event_query.update(error=ret[1])
-            elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
-                task_queue_query.delete()
+            else:
+                del db.task_queue[task_id]
         else:
             params = {'clone_vm_id' : clone_vm_list}
-            db(db.task_queue.id==task_id).update(parameters=params)
+            db(db.task_queue.id==task_id).update(parameters=params, status=current_status)
         db.commit()
 
     except:
