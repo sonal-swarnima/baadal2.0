@@ -94,7 +94,7 @@ def choose_mac_ip(temporary_pool):
         
         vms = current.db(current.db.vm_data).select()
         found = False
-        for row in vms.find(lambda row: row.mac_addr_1==mac_selected | row.mac_addr_2==mac_selected):
+        for row in vms.find(lambda row: row.mac_addr_1==mac_selected or row.mac_addr_2==mac_selected):
             found = True
 
         if not found:
@@ -130,7 +130,7 @@ def allocate_vm_properties(vm_details):
     vm_properties['host'] = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
     current.logger.debug("Host selected is: " + str(vm_properties['host']))
 
-    vm_properties['assign_public_ip'] = vm_properties.public_ip != current.PUBLIC_IP_NOT_ASSIGNED
+    vm_properties['assign_public_ip'] = vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED
     choose_mac_ip_vncport(vm_properties)
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
                           + str(vm_properties['vnc_port']))
