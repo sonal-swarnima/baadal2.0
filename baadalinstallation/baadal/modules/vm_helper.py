@@ -93,14 +93,11 @@ def choose_mac_ip(temporary_pool):
         current.logger.debug("Checking mac = " + str(mac_selected))
         
         vms = current.db(current.db.vm_data).select()
-        found = False
-        for row in vms.find(lambda row: row.mac_addr_1==mac_selected or row.mac_addr_2==mac_selected):
-            found = True
-
-        if not found:
-            break
-        else:
+        if vms.find(lambda row: row.mac_addr_1==mac_selected or row.mac_addr_2==mac_selected):
             temporary_pool.pop(mac_selected)
+        else:
+            break
+
         if not temporary_pool:
             raise Exception("Available MACs are exhausted.")
 
@@ -640,14 +637,16 @@ def edit_vm_config(parameters):
 
 def get_clone_properties(vm_details, cloned_vm_details):
 
-    # Finds datastore for the cloned vm
+    vm_properties = {}
+    vm_properties['assign_public_ip'] = vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED
+    
     datastore = choose_datastore()
     current.logger.debug("Datastore selected is: " + str(datastore))
 
     # Finds mac address, ip address and vnc port for the cloned vm
-    (new_mac_address, new_ip_address, new_vncport) = choose_mac_ip_vncport()
-    current.logger.debug("MAC is : " + str(new_mac_address) + " IP is : " + str(new_ip_address) + " VNCPORT is : "  \
-                              + str(new_vncport))
+    choose_mac_ip_vncport(vm_properties)
+    current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
+                              + str(vm_properties['vnc_port']))
   
     # Template of parent vm
     template = current.db(current.db.template.id == vm_details.template_id).select()[0]
@@ -678,7 +677,7 @@ def get_clone_properties(vm_details, cloned_vm_details):
                                   '_disk' + str(already_attached_disks + 1) + '.qcow2'
         already_attached_disks -= 1
 
-    return (datastore, template, new_mac_address, new_ip_address, new_vncport, clone_file_parameters)
+    return (datastore, template, vm_properties['mac_addr_1'], vm_properties['private_ip'], vm_properties['vnc_port'], clone_file_parameters)
         
 # Clones vm
 def clone(vmid):

@@ -216,7 +216,7 @@ db.define_table('task_queue_event',
     Field('vm_id', db.vm_data,notnull = True),
     Field('parameters', 'text', default={}),
     Field('status', 'integer', notnull = True),
-    Field('error', 'string', length = 1024),
+    Field('error', 'text'),
     Field('start_time', 'datetime', default = get_datetime()),
     Field('attention_time', 'datetime'),
     Field('end_time', 'datetime'))
