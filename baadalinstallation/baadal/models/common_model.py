@@ -8,6 +8,11 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 import os
+import shutil
+import time
+
+import rrdtool
+
 from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty, get_constant
 
 def get_vm_status(iStatus):
@@ -84,9 +89,11 @@ def get_full_name(user_id):
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.locked == False) & (db.vm_data.host_id == db.host.id)).select()
+    vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.locked == False)).select()
     if not vm_info:
         return None
+
+    logger.info(vm_info)
     return vm_info.first()
 
 
@@ -290,26 +297,37 @@ def get_vm_snapshots(vm_id):
     return vm_snapshots_list
 
 def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
-    
-    graph_file = get_constant('graph_file_dir') + vm_name + "_" + graph_type + ".png"
-    
+
+    logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
+    rrd_file = vm_name + '.rrd'
+
+    if os.path.exists(rrd_file):
+        logger.debug(os.remove(rrd_file))        
+
+    shutil.copyfile(rrd_file_path, rrd_file)
+    graph_file = vm_name + "_" + graph_type + ".png"
+
     start_time = None
     grid = None
+    ret = None
     consolidation = 'AVERAGE'
+    ds = ds1 = ds2 = None
+    line = line1 = line2 = None
+    vdef1 = vdef2 = None
     
     if graph_period == 'hour':
-        start_time = str(24*60*60)
+        start_time = 'now - ' + str(24*60*60)
         grid = 'HOUR:1:HOUR:1:HOUR:1:0:%k'
         consolidation = 'MIN'
     elif graph_period == 'day':
         start_time = '-1d'
         grid = 'DAY:1:DAY:1:DAY:1:86400:%a'
     elif graph_period == 'month':
-        start_time = '-1w'
-        grid = 'WEEK:1:WEEK:1:WEEK:1:604800:Week %W'
-    elif graph_period == 'week':
         start_time = '-1m'
         grid = 'MONTH:1:MONTH:1:MONTH:1:2592000:%b'
+    elif graph_period == 'week':
+        start_time = '-1w'
+        grid = 'WEEK:1:WEEK:1:WEEK:1:604800:Week %W'
     elif graph_period == 'year':
         start_time = '-1y'
         grid = 'YEAR:1:YEAR:1:YEAR:1:31536000:%Y'
@@ -323,49 +341,74 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
             ds = 'DEF:cpu=' + vm_name + '.rrd:cpus:' + consolidation
             line = 'LINE1:cpu#0000FF'
                 
-        ret = rrdtool.graph(graph_file, "--start", start_time, "--end", "now", "--vertical-label", graph_type, "--x-grid", grid, ds, line)
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--x-grid', grid, ds, line)
 
     else:
 
         if graph_type == 'nw':
             ds1 = 'DEF:nwr=' + vm_name + '.rrd:nwr:' + consolidation
             ds2 = 'DEF:nww=' + vm_name + '.rrd:nww:' + consolidation
-            line1 = 'LINE1:nwr#0000FF'
-            line2 = 'LINE2:nww#FF7410'
+            line1 = 'LINE1:nwr#0000FF:Read'
+            line2 = 'LINE2:nww#FF7410:Write'
             vdef1 = "VDEF:nwread=nwr,read"
-            vdef2 = "VDEF:nwwrite=nww,write"
+            vdef2 = "VDEF:nwwrite=nww"
 
-        elif graph_type == 'io':
+        elif graph_type == 'disk':
             ds1 = 'DEF:diskr=' + vm_name + '.rrd:diskr:' + consolidation
             ds2 = 'DEF:diskw=' + vm_name + '.rrd:diskw:' + consolidation
-            line1 = 'LINE1:diskr#0000FF'
-            line2 = 'LINE2:diskw#FF7410'
-            vdef1 = "VDEF:diskread=diskr,read"
-            vdef2 = "VDEF:diskwrite=diskw,write"
+            line1 = 'LINE1:diskr#0000FF:Read'
+            line2 = 'LINE2:diskw#FF7410:Write'
+            vdef1 = "VDEF:diskread=diskr"
+            vdef2 = "VDEF:diskwrite=diskw"
 
-        ret = rrdtool.graph(graph_file, "--start", start_time, "--end", "now", "--vertical-label", graph_type, "--x-grid", grid, ds1, ds2, line1, line2, vdef1, vdef2)
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--x-grid', grid, ds1, ds2, line1, line2)
         
-        if ret:
-            return False
-        else:
-            return True 
-    
-def fetch_and_return_graph(vm_name, graph_type):
-    return IMG(_src=URL('static','images/vm_graphs/'+vm_name+"_"+graph_type+'.png'))
+    if os.path.exists(get_constant('graph_file_dir') + os.sep + graph_file):
+        logger.debug(os.remove(get_constant('graph_file_dir') + os.sep + graph_file))
+    shutil.copy2(graph_file, get_constant('graph_file_dir'))
 
+    if os.path.exists(get_constant('graph_file_dir') + os.sep + graph_file):
+        return True
+    else:
+        return False
     
 def get_performance_graph(graph_type, vm, graph_period):
 
-    rrd_file = get_constant('vmfiles_path') + os.sep + get_constant('vm_rrds_dir') + os.sep + vm + ".rrd"
-    
-    if os.path.exists(rrd_file):
-        if create_graph(vm, graph_type, rrd_file, graph_period):        
-            return fetch_and_return_graph(vm, graph_type)        
-        else: 
-            logger.warn("Unable to create graph from rrd file!!!")
-            return H2("OOPS. No Graphs Available")
-    else:
-        logger.warn("VM's RRD File Unavailable!!!")
-        return H2("OOPS. No Graphs Available.")
+    error = None
+    img = IMG(_src = URL("static" , "images/no_graph.jpg") , _style = "height:100px")
+
+    try:
+        rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + vm + ".rrd"
+  
+        if os.path.exists(rrd_file):
+            if create_graph(vm, graph_type, rrd_file, graph_period):   
+               img_pos = "vm_graphs/" + vm + "_" + graph_type + ".png"
+               img = IMG(_src = URL("static", img_pos), _style = "height:100px")
+               logger.info("Graph created successfully")
+            else:
+               logger.warn("Unable to create graph from rrd file!!!")
+               error = H3("Unable to create graph from rrd file")
+        else:
+            logger.warn("VMs RRD File Unavailable!!!")
+            error = "VMs RRD File Unavailable!!!"
 		
+    except: 
+
+        import sys, traceback
+        etype, value, tb = sys.exc_info()
+        logger.warn("Error occured while creating graph.")
+        msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
+        logger.error(msg)           
+        error = msg
+
+    finally:
+        if (is_moderator() and (error != None)):
+            return H3(error)
+        else:
+            logger.info("Returning image.")
+            return img
+
+
+
+
 

@@ -2,17 +2,35 @@
 
 <script>
 
-jQuery(document).ready(function(){
+var period = "hour";
 
-    var period;
-    $('input[name=graph-period-radio]:radio').click( function() {
-	period = $('input[name=graph-period-radio]:radio:checked').val();
+function update_graph()
+{
+    graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
+    period = $('input[name=graph-period-radio]:radio:checked').val();
+    vm_name = "{{=vm_name}}";
+
+    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{graphType:graph_type, vmName:vm_name,
+        graphPeriod:period}, success:function(msg) { jQuery("#refresh").html(msg); 
+                                                     src = jQuery("#refresh img").attr("src") + "?" + new Date().getTime(); 
+                                                     jQuery("#refresh img").attr("src" , src) } });
+}
+
+jQuery(document).ready( function(){
+
+    update_graph();
+
+    $('input[name=graph-period-radio]:radio').click( function() {  
+        update_graph();
     }); 
-    setInterval( function() {
-    
-    id = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
-    vm_name = "{{=vm_name}}"
-         jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{graphType:id, vm:vm_name, graphPeriod:period}, success:function(msg) {jQuery("#target").html(msg);}});},5000);
+
+    $('#tabs-task ul li').click( function() {  
+        update_graph();
+    }); 
+
+    $('#refresh').click( function() {
+        update_graph();
+    });
 
 });
 
@@ -23,27 +41,46 @@ jQuery(document).ready(function(){
     <li><a href="#ram">Memory</a></li>
     <li><a href="#cpu">CPU</a></li>
     <li><a href="#nw">Network</a></li>
-    <li><a href="#io">I/O</a></li>
     <li><a href="#disk">Disk</a></li>
 </ul>
 
 <br/><br/>
 
-<div id="graph-type">
-    <input type="radio" value="hour" name="graph-period-radio" checked="checked">Last hour</input>
-    <input type="radio" value="day" name="graph-period-radio">Last day</input>
-    <input type="radio" value="week" name="graph-period-radio">Last week</input>
-    <input type="radio" value="month" name="graph-period-radio">Last month</input>
-    <input type="radio" value="year" name="graph-period-radio">Last year</input>
-</div>
+<table>
+    <tr>
+    <td>
+        <div id="graph-type">
+            <input type="radio" value="hour" name="graph-period-radio" checked="checked">&nbsp;Last hour<br/><br/>
+            <input type="radio" value="day" name="graph-period-radio">&nbsp;Last day<br/><br/>
+            <input type="radio" value="week" name="graph-period-radio">&nbsp;Last week<br/><br/>
+            <input type="radio" value="month" name="graph-period-radio">&nbsp;Last month<br/><br/>
+            <input type="radio" value="year" name="graph-period-radio">&nbsp;Last year<br/><br/>
+        </div>
+    </td>
 
-<div id="target">target</div>
+    <td>
+        <table>
+            <tr>
+                <td id="refresh"></td>
+            </tr>
+        </table>
+    </td>
+    </tr>
 
-<div id="ram">ram</div>
-<div id="cpu">cpu</div>
-<div id="nw">nw</div>
-<div id="io">io</div>
-<div id="disk">disk</div>
+    <tr>
+        <td id="">
+	    <input type="button" id="refresh" name="refresh" value="Refresh Graph">
+        </td>
+    </tr>
+
+</table>
+
+<div id="ram"></div>
+<div id="cpu"></div>
+<div id="nw"></div>
+<div id="disk"></div>
+
+<!--<div><strong>NOTE:&nbsp;&nbsp;</strong>The graph refreshes every 10 second.</div>-->
 
 </div>
 

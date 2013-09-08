@@ -113,6 +113,8 @@ def get_dom_info(dom_id, host_ip, conn):
 	dom_diskr	= dom_disk_usage[0]
 	dom_diskw	= dom_disk_usage[1]
 
+
+	logger.info(dom_name)
 	logger.warn("As we get VM mem usage info from rrs size of the process running on host therefore it is observed that the memused is sometimes greater than max mem specified in case when the VM uses memory near to its mam memory")
 
 	return [dom_name, dom_maxmem, dom_memusage, dom_cputime, dom_cpus, dom_nwr, dom_nww, dom_diskr, dom_diskw]
@@ -127,6 +129,8 @@ def update_rrd():
 	logger.debug(active_host_list)
 
 	for host in active_host_list:
+
+		conn = None
 		try:
 			host_ip = host['host_ip']
 			conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
@@ -135,17 +139,17 @@ def update_rrd():
 			active_dom_ids = conn.listDomainsID()
 			logger.debug(active_dom_ids)
 			for dom_id in active_dom_ids:
+
+			   try:
 	
 				dom_info = get_dom_info(dom_id, host_ip, conn)			
 				logger.info(dom_info)
 				rrd_file = get_rrd_file_abs_path(dom_info[0])
-				print rrd_file
-				rrd_file = os.getcwd() + os.sep +dom_info[0] + ".rrd"
 	
 				if not (os.path.exists(rrd_file)):
 					logger.warn("RRD file does not exists")
 					logger.warn("Creating new RRD file")
-						create_rrd(rrd_file)
+					create_rrd(rrd_file)
 					time.sleep(1)
 
 
@@ -156,10 +160,26 @@ def update_rrd():
 				if ret:
 					logger.warn("Error while Updating %s.rrd" % (dom_info[0]))
 					logger.warn(rrdtool.error())
+				else:
+					logger.info("rrd updated successfully.")
+			   except:
+				import sys, traceback
+				etype, value, tb = sys.exc_info()
+				logger.warn("Error occured while creating/updating rrd.")
+				msg = ''.join(traceback.format_exception(etype, value, tb, 10))
+				logger.error(msg)
+				pass
 
-			conn.close()
 		except:
+			import sys, traceback
+			etype, value, tb = sys.exc_info()
+			logger.warn("Error occured while creating/updating rrd or host.")
+			msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
+			logger.error(msg)           
 			pass
+		finally: 
+			if conn:
+				conn.close()
 
 
 if __name__=="__main__":
