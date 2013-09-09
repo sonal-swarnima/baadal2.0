@@ -333,32 +333,32 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
         if graph_type == 'ram':
             ds = 'DEF:ram=' + vm_name + '.rrd:memory:' + consolidation
-            line = 'LINE1:ram#0000FF: RAM Usage(bytes)'
+            line = 'LINE1:ram#0000FF:Memory'
         elif graph_type == 'cpu':
             ds = 'DEF:cpu=' + vm_name + '.rrd:cpus:' + consolidation
-            line = 'LINE1:cpu#0000FF:CPU usage(cores)'
+            line = 'LINE1:cpu#0000FF:CPU'
                 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--x-grid', grid, ds, line)
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds, line)
 
     else:
 
         if graph_type == 'nw':
             ds1 = 'DEF:nwr=' + vm_name + '.rrd:nwr:' + consolidation
             ds2 = 'DEF:nww=' + vm_name + '.rrd:nww:' + consolidation
-            line1 = 'LINE1:nwr#0000FF:NW Read(bytes)'
-            line2 = 'LINE2:nww#FF7410:NW Write(bytes)'
+            line1 = 'LINE1:nwr#0000FF:Receive'
+            line2 = 'LINE2:nww#FF7410:Transmit'
             vdef1 = "VDEF:nwread=nwr,read"
             vdef2 = "VDEF:nwwrite=nww"
 
         elif graph_type == 'disk':
             ds1 = 'DEF:diskr=' + vm_name + '.rrd:diskr:' + consolidation
             ds2 = 'DEF:diskw=' + vm_name + '.rrd:diskw:' + consolidation
-            line1 = 'LINE1:diskr#0000FF:Disk Read(bytes)'
-            line2 = 'LINE2:diskw#FF7410:Disk Write(bytes)'
+            line1 = 'LINE1:diskr#0000FF:DiskRead'
+            line2 = 'LINE2:diskw#FF7410:DiskWrite'
             vdef1 = "VDEF:diskread=diskr"
             vdef2 = "VDEF:diskwrite=diskw"
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--x-grid', grid, ds1, ds2, line1, line2)
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2)
 
     shutil.copy2(graph_file, get_constant('graph_file_dir'))
 
@@ -378,7 +378,7 @@ def get_performance_graph(graph_type, vm, graph_period):
         if os.path.exists(rrd_file):
             if create_graph(vm, graph_type, rrd_file, graph_period):   
                img_pos = "vm_graphs/" + vm + "_" + graph_type + ".png"
-               img = IMG(_src = URL("static", img_pos), _style = "height:100px")
+               img = IMG(_src = URL("static", img_pos), _style = "height:100%")
                logger.info("Graph created successfully")
             else:
                logger.warn("Unable to create graph from rrd file!!!")

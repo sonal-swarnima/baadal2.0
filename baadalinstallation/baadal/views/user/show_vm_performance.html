@@ -2,8 +2,6 @@
 
 <script>
 
-var period = "hour";
-
 function update_graph()
 {
     graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
@@ -11,9 +9,9 @@ function update_graph()
     vm_name = "{{=vm_name}}";
 
     jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{graphType:graph_type, vmName:vm_name,
-        graphPeriod:period}, success:function(msg) { jQuery("#refresh").html(msg); 
-                                                     src = jQuery("#refresh img").attr("src") + "?" + new Date().getTime(); 
-                                                     jQuery("#refresh img").attr("src" , src) } });
+        graphPeriod:period}, success:function(msg) { jQuery("#target").html(msg); 
+                                                     src = jQuery("#target img").attr("src") + "?" + new Date().getTime(); 
+                                                     jQuery("#target img").attr("src" , src) } });
 }
 
 jQuery(document).ready( function(){
@@ -61,14 +59,14 @@ jQuery(document).ready( function(){
     <td>
         <table>
             <tr>
-                <td id="refresh"></td>
+                <td id="target"></td>
             </tr>
         </table>
     </td>
     </tr>
 
     <tr>
-        <td id="">
+        <td>
 	    <input type="button" id="refresh" name="refresh" value="Refresh Graph">
         </td>
     </tr>
@@ -79,8 +77,6 @@ jQuery(document).ready( function(){
 <div id="cpu"></div>
 <div id="nw"></div>
 <div id="disk"></div>
-
-<!--<div><strong>NOTE:&nbsp;&nbsp;</strong>The graph refreshes every 10 second.</div>-->
 
 </div>
 
