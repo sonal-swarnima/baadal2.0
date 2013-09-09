@@ -299,10 +299,7 @@ def get_vm_snapshots(vm_id):
 def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
     logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
-    rrd_file = vm_name + '.rrd'
-
-    if os.path.exists(rrd_file):
-        logger.debug(os.remove(rrd_file))        
+    rrd_file = vm_name + '.rrd'       
 
     shutil.copyfile(rrd_file_path, rrd_file)
     graph_file = vm_name + "_" + graph_type + ".png"
@@ -320,26 +317,26 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
         grid = 'HOUR:1:HOUR:1:HOUR:1:0:%k'
         consolidation = 'MIN'
     elif graph_period == 'day':
-        start_time = '-1d'
+        start_time = '-1w'
         grid = 'DAY:1:DAY:1:DAY:1:86400:%a'
     elif graph_period == 'month':
-        start_time = '-1m'
+        start_time = '-1y'
         grid = 'MONTH:1:MONTH:1:MONTH:1:2592000:%b'
     elif graph_period == 'week':
-        start_time = '-1w'
+        start_time = '-1m'
         grid = 'WEEK:1:WEEK:1:WEEK:1:604800:Week %W'
     elif graph_period == 'year':
-        start_time = '-1y'
+        start_time = '-5y'
         grid = 'YEAR:1:YEAR:1:YEAR:1:31536000:%Y'
   
     if ((graph_type == 'ram') or (graph_type == 'cpu')):
 
         if graph_type == 'ram':
             ds = 'DEF:ram=' + vm_name + '.rrd:memory:' + consolidation
-            line = 'LINE1:ram#0000FF'
+            line = 'LINE1:ram#0000FF: RAM Usage(bytes)'
         elif graph_type == 'cpu':
             ds = 'DEF:cpu=' + vm_name + '.rrd:cpus:' + consolidation
-            line = 'LINE1:cpu#0000FF'
+            line = 'LINE1:cpu#0000FF:CPU usage(cores)'
                 
         rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--x-grid', grid, ds, line)
 
@@ -348,23 +345,21 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
         if graph_type == 'nw':
             ds1 = 'DEF:nwr=' + vm_name + '.rrd:nwr:' + consolidation
             ds2 = 'DEF:nww=' + vm_name + '.rrd:nww:' + consolidation
-            line1 = 'LINE1:nwr#0000FF:Read'
-            line2 = 'LINE2:nww#FF7410:Write'
+            line1 = 'LINE1:nwr#0000FF:NW Read(bytes)'
+            line2 = 'LINE2:nww#FF7410:NW Write(bytes)'
             vdef1 = "VDEF:nwread=nwr,read"
             vdef2 = "VDEF:nwwrite=nww"
 
         elif graph_type == 'disk':
             ds1 = 'DEF:diskr=' + vm_name + '.rrd:diskr:' + consolidation
             ds2 = 'DEF:diskw=' + vm_name + '.rrd:diskw:' + consolidation
-            line1 = 'LINE1:diskr#0000FF:Read'
-            line2 = 'LINE2:diskw#FF7410:Write'
+            line1 = 'LINE1:diskr#0000FF:Disk Read(bytes)'
+            line2 = 'LINE2:diskw#FF7410:Disk Write(bytes)'
             vdef1 = "VDEF:diskread=diskr"
             vdef2 = "VDEF:diskwrite=diskw"
 
         rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--x-grid', grid, ds1, ds2, line1, line2)
-        
-    if os.path.exists(get_constant('graph_file_dir') + os.sep + graph_file):
-        logger.debug(os.remove(get_constant('graph_file_dir') + os.sep + graph_file))
+
     shutil.copy2(graph_file, get_constant('graph_file_dir'))
 
     if os.path.exists(get_constant('graph_file_dir') + os.sep + graph_file):
