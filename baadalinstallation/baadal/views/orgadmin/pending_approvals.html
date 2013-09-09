@@ -36,9 +36,9 @@
             	{{if pending_approval['status'] == VM_STATUS_APPROVED:}}
             		Installation In Progress
             	{{else:}}
-					{{=A('Approve',_href=URL(r=request,f='approve_request',args=[pending_approval['id']]))}}
+					{{=A('Approve',_href=URL(r=request, f='approve_request', args=[pending_approval['id']]))}}
 					&nbsp;|&nbsp;
-					{{=A('Reject',_href=URL(r=request,f='reject_request',args=[pending_approval['id']]))}}
+					{{=A('Reject',_href=URL(r=request, f='reject_request', args=[pending_approval['id']]))}}
             	{{pass}}
             </td>
           </tr>
