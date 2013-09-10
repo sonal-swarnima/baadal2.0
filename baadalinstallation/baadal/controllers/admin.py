@@ -235,7 +235,7 @@ def sync_vm():
         delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
 
-@check_orgadmin
+@check_moderator
 @handle_exception
 def approve_request():
     vm_id=request.args[0] 
@@ -243,7 +243,7 @@ def approve_request():
     session.flash = 'Installation request added to queue'
     redirect(URL(c='admin', f='list_all_vm'))
 
-@check_orgadmin
+@check_moderator
 @handle_exception
 def reject_request():
     vm_id=request.args[0]
