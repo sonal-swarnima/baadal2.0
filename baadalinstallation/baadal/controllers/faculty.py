@@ -11,10 +11,6 @@ if 0:
 from helper import is_moderator
 
 @check_faculty
-def add_user_to_vm():
-    return dict()
-
-@check_faculty
 @handle_exception
 def pending_requests():
     pending_requests = get_pending_requests()

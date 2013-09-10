@@ -3,6 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from simplejson import loads, dumps
 from helper import get_config_file,get_datetime
@@ -93,7 +94,7 @@ else:
 ###############################################################################
 
 db.define_table('host',
-    Field('host_ip', 'string',length = 15,notnull = True, unique = True),
+    Field('host_ip', 'string',length = 15,notnull = True, unique = True, label='Host IP'),
     Field('host_name', 'string',length = 100,notnull = True, unique = True),
     Field('mac_addr', 'string',length = 100,notnull = True, unique = True),
     Field('HDD', 'integer'),
@@ -124,19 +125,19 @@ db.define_table('template',
     format = '%(name)s')
 
 db.define_table('vm_data',
-    Field('vm_name', 'string',length = 512,notnull = True, unique = True),
+    Field('vm_name', 'string',length = 512,notnull = True, unique = True, label='Name'),
     Field('host_id', db.host),
-    Field('RAM', 'integer'),
+    Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
     Field('extra_HDD', 'integer'),
-    Field('vCPU', 'integer'),
+    Field('vCPU', 'integer', label='vCPUs'),
     Field('template_id', db.template),
-    Field('requester_id',db.user),
-    Field('owner_id', db.user),
+    Field('requester_id',db.user, represent=lambda x, row: get_full_name(x), label='Requester'),
+    Field('owner_id', db.user, represent=lambda x, row: get_full_name(x), label='Owner'),
     Field('mac_addr_1', 'string',length = 100),
-    Field('private_ip', 'string',length = 15),
+    Field('private_ip', 'string',length = 15, label='Private IP'),
     Field('mac_addr_2', 'string',length = 100),
-    Field('public_ip', 'string',length = 15, default=PUBLIC_IP_NOT_ASSIGNED),
+    Field('public_ip', 'string',length = 15, default=PUBLIC_IP_NOT_ASSIGNED, label='Public IP'),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
     Field('purpose', 'text'),
@@ -149,7 +150,7 @@ db.define_table('vm_data',
     Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
     Field('parameters', 'text', default={}),
-    Field('status', 'integer'))
+    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
 db.vm_data.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.vm_data.parameters.filter_out = lambda txt, loads=loads: loads(txt)

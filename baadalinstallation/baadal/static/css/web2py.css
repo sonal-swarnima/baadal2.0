@@ -241,7 +241,7 @@ div.error {
     vertical-align:middle;
 }
 .web2py_grid .row_buttons a {
-    margin:3px;
+    margin:1px;
 }
 
 .web2py_search_actions {
@@ -373,4 +373,17 @@ border-top-right-radius:0px;
 -moz-border-radius-bottomleft:0px;
 -webkit-border-bottom-left-radius:0px;
 border-bottom-left-radius:0px;
+}
+.web2py_htmltable td{
+vertical-align:middle;
+
+background-color:#ffffff;
+border:1px solid #0057af;
+border-width:0px 1px 1px 0px;
+text-align:left;
+padding:7px;
+font-size:11px;
+font-family:Arial;
+font-weight:normal;
+color:#000000;
 }

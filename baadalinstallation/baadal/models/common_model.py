@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect, HTTP, FORM, INPUT, IS_INT_IN_RANGE,A,SPAN,IMG,request
+    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,H3,IS_INT_IN_RANGE,A,B,SPAN,IMG,request,SQLFORM,DIV
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 import os
@@ -17,11 +17,85 @@ from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_fac
 
 def get_vm_status(iStatus):
     vm_status_map = {
+            VM_STATUS_REQUESTED   :    'Requested',
+            VM_STATUS_REJECTED    :    'Rejected',
+            VM_STATUS_VERIFIED    :    'Verified',
+            VM_STATUS_APPROVED    :    'Approved',
             VM_STATUS_RUNNING     :    'Running',
             VM_STATUS_SUSPENDED   :    'Paused',
             VM_STATUS_SHUTDOWN    :    'Shutdown'
         }
     return vm_status_map[iStatus]
+
+
+def get_hosted_vm_grid(vm_query):
+    
+    db.vm_data.id.readable=False
+    
+    fields =(db.vm_data.id,
+             db.vm_data.vm_name, 
+             db.vm_data.owner_id, 
+             db.host.host_ip, 
+             db.vm_data.private_ip, 
+             db.vm_data.public_ip, 
+             db.vm_data.RAM, 
+             db.vm_data.vCPU,  
+             db.vm_data.status)
+    default_sort_order=[~db.vm_data.start_time]
+    
+    links = [lambda row: A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+            _href=URL(r=request, c='user',f='settings', args=[row.vm_data.id]), 
+            _title="Settings", 
+            _alt="Settings")]
+    
+    form = SQLFORM.grid(query=vm_query, fields=fields, orderby=default_sort_order, links = links,
+                        paginate=ITEMS_PER_PAGE, csv=False, searchable=False, deletable=False, editable=False,
+                        details=False, create=False, showbuttontext=False)
+    return form
+
+def public_ip_icon(public_ip):
+    if (public_ip == PUBLIC_IP_NOT_ASSIGNED):
+        return SPAN(_class='icon-ok')
+    else:
+        return SPAN(_class='icon-remove')
+    
+def approve_reject_icon(status, vm_id):
+    if status == VM_STATUS_APPROVED:
+        return A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18),
+            _href='#', 
+            _title="Installation in Progress", 
+            _alt="Installation in Progress")
+    else:
+        return DIV(A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18),
+            _href=URL(r=request, c='admin',f='approve_request', args=[vm_id]), 
+            _title="Approve Request", 
+            _alt="Approve Request", _onclick='tab_refresh()'),
+             A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18),
+            _href=URL(r=request, c='admin',f='reject_request', args=[vm_id]), 
+            _title="Reject Request", 
+            _alt="Reject Request", _onclick='tab_refresh()'))
+
+def get_pending_vm_grid(vm_query):
+
+    db.vm_data.id.readable=False
+    db.vm_data.public_ip.readable=False
+    fields =(db.vm_data.id,
+             db.vm_data.vm_name, 
+             db.vm_data.owner_id, 
+             db.vm_data.requester_id, 
+             db.vm_data.RAM, 
+             db.vm_data.vCPU,  
+             db.vm_data.status,
+             db.vm_data.public_ip)
+    default_sort_order=[~db.vm_data.id]
+    
+    links = [dict(header='Public IP', body=lambda row: public_ip_icon(row.public_ip)), 
+             lambda row: approve_reject_icon(row.status, row.id)]
+    
+    form = SQLFORM.grid(query=vm_query, fields=fields, orderby=default_sort_order, links = links,
+                        paginate=ITEMS_PER_PAGE, csv=False, searchable=False, deletable=False, editable=False,
+                        details=False, create=False, showbuttontext=False)
+    return form
 
 
 def get_hosted_vm_list(vms):

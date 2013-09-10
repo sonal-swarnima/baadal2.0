@@ -10,8 +10,9 @@ if 0:
 @check_moderator
 @handle_exception
 def list_all_vm():
-    vm_list = get_all_vm_list()
-    return dict(vmlist = vm_list)
+    hosted_vm_grid = get_all_hosted_vm()
+    pending_vm_grid = get_all_pending_vm()
+    return dict(hosted_vm_grid = hosted_vm_grid, pending_vm_grid = pending_vm_grid)
 
 @check_moderator
 @handle_exception
@@ -233,4 +234,20 @@ def sync_vm():
     elif task == 'Delete_VM_Info':
         delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
+
+@check_orgadmin
+@handle_exception
+def approve_request():
+    vm_id=request.args[0] 
+    approve_vm_request(vm_id);
+    session.flash = 'Installation request added to queue'
+    redirect(URL(c='admin', f='list_all_vm'))
+
+@check_orgadmin
+@handle_exception
+def reject_request():
+    vm_id=request.args[0]
+    reject_vm_request(vm_id);
+    session.flash = 'Request Rejected'
+    redirect(URL(c='admin', f='list_all_vm'))
 

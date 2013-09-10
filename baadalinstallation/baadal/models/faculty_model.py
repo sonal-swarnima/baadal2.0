@@ -17,7 +17,7 @@ def reject_vm_request(vm_id):
     db(db.vm_data_event.vm_id == vm_id).update(status=VM_STATUS_REJECTED)
     db(db.vm_data.id == vm_id).delete()
 
-def add_user_to_vm(_user_id, _vm_id):
+def add_vm_user(_user_id, _vm_id):
     db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
     
 def get_pending_requests():

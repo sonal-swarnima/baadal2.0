@@ -31,6 +31,14 @@ def get_add_datastore_form():
     form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
+def get_all_hosted_vm():
+    query = ((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id==db.host.id))
+    return get_hosted_vm_grid(query)
+
+def get_all_pending_vm():
+    query = (db.vm_data.status.belongs(VM_STATUS_VERIFIED, VM_STATUS_APPROVED))
+    return get_pending_vm_grid(query)
+
 def get_all_vm_list():
     vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
     return get_hosted_vm_list(vms)
@@ -62,9 +70,9 @@ def create_clone_task(vm_data):
 
         vm_id_list.append(clone_vm_id)
         
-        add_user_to_vm(vm_data.owner_id, clone_vm_id)
+        add_vm_user(vm_data.owner_id, clone_vm_id)
         if(vm_data.owner_id != vm_data.requester_id):
-            add_user_to_vm(vm_data.requester_id, clone_vm_id)
+            add_vm_user(vm_data.requester_id, clone_vm_id)
             
     db.vm_data[vm_id] = dict(status=-1)
     
@@ -80,9 +88,9 @@ def approve_vm_request(vm_id):
 
     db.vm_data[vm_id] = dict(status=VM_STATUS_APPROVED)
     
-    add_user_to_vm(vm_data.owner_id, vm_id)
+    add_vm_user(vm_data.owner_id, vm_id)
     if(vm_data.owner_id != vm_data.requester_id):
-        add_user_to_vm(vm_data.requester_id, vm_id)
+        add_vm_user(vm_data.requester_id, vm_id)
     
     add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM)
 
