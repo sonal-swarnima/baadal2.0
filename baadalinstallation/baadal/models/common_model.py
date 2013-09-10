@@ -120,7 +120,7 @@ def get_pending_vm_list(vms):
     vmlist = []
     for vm in vms:
         request_type = 'Install'
-        if vm.parameters and vm.parameters['clone_count']:
+        if vm.parameters and ('clone_count' in vm.parameters):
             request_type = 'Clone[' + str(vm.parameters['clone_count']) + ']'
 
         element = {'id' : vm.id,
