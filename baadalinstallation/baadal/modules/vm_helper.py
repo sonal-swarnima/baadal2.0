@@ -29,6 +29,9 @@ def install(parameters):
                                       total_cost = 0, \
                                       status = current.VM_STATUS_RUNNING)
         message = "VM is installed successfully."
+
+	#send email to requesting user on successful VM creation
+    	send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_name, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
     except Exception as e:
         message = e.get_error_message()

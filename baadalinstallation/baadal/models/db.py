@@ -30,11 +30,20 @@ db.define_table('organisation',
 from gluon.tools import Auth
 auth = Auth(db)
 
+from gluon.tools import Mail
+mail = Mail()
+mail.settings.server = config.get("MAIL_CONF","mail_server")
+mail.settings.sender = config.get("MAIL_CONF","mail_sender")
+mail.settings.login = config.get("MAIL_CONF","mail_login")
+mail.settings.tls = True
+
+
 #added to make auth and db objects available in modules 
 from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
 current.auth_type = config.get("AUTH_CONF","auth_type")
+current.mail = mail
 
 ## configure custom auth tables
 auth.settings.table_user_name = 'user'

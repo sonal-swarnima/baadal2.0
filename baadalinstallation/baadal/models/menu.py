@@ -25,8 +25,8 @@ if auth.is_logged_in():
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
         (T('My VMs'), False, URL('user','list_my_vm')),
-        (T('My Tasks'), False, URL('user','list_my_task'))
-#        (T('Mail Admin'), False, URL('default','page_under_construction')),
+        (T('My Tasks'), False, URL('user','list_my_task')),
+        (T('Mail Admin'), False, URL('user','mail_admin'))
 #        (T('Report Bug'), False, URL('default','page_under_construction'))
         ]
     

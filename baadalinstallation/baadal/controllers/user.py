@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin
+from helper import is_moderator, is_faculty, is_orgadmin, send_email_to_faculty
 
 @auth.requires_login()
 @handle_exception
@@ -203,4 +203,16 @@ def clone_vm():
         session.flash = "Error in form."
 
     return dict(form=form)
+
+@auth.requires_login()
+@handle_exception
+def mail_admin():
+    form = get_mail_admin_form()
+    if form.accepts(request.vars, session):
+        email_type = form.vars.email_type
+        email_subject = form.vars.email_subject
+        email_message = form.vars.email_message
+        send_email_to_admin(email_subject, email_message, email_type)
+        redirect(URL(c='default', f='index'))
+    return dict(form = form)
 

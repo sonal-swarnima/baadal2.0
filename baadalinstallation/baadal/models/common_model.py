@@ -117,6 +117,7 @@ def get_hosted_vm_list(vms):
 
 
 def get_pending_vm_list(vms):
+
     vmlist = []
     for vm in vms:
         request_type = 'Install'
@@ -132,7 +133,9 @@ def get_pending_vm_list(vms):
                    'HDD' : vm.HDD, 
                    'public_ip' : (vm.public_ip != PUBLIC_IP_NOT_ASSIGNED), 
                    'status' : vm.status,
-                   'request_type' : request_type}
+                   'request_type' : request_type,
+                   'owner_id' : vm.owner_id,
+                   'start_time' : round(float(vm.start_time.strftime('%s.%f')),3)}
         vmlist.append(element)
     return vmlist
 
@@ -477,7 +480,8 @@ def get_performance_graph(graph_type, vm, graph_period):
             logger.info("Returning image.")
             return img
 
-
-
-
-
+def get_faculty_info(faculty_id):
+    faculty_info = db(db.user.id==faculty_id).select()
+    if not faculty_info:
+        return None
+    return faculty_info.first()

@@ -8,8 +8,10 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config
+from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config, get_fullname, get_config_file, get_email, send_mail, push_email
 from auth_user import fetch_ldap_user, create_or_update_user
+
+config = get_config_file()
 
 def get_my_pending_vm():
     vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED) 
@@ -82,16 +84,19 @@ def validate_approver(form):
         form.vars.status = VM_STATUS_REQUESTED
     else:
         form.errors.faculty_user='Faculty Approver Username is not valid'
-
-
+        
 def request_vm_validation(form):
     set_configuration_elem(form)
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         validate_approver(form)
+        user_name = get_user_fullname()
+        faculty_info = get_faculty_info(form.vars.owner_id)
+        send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, user_name, form.vars.start_time, faculty_info)
     else:
         form.vars.owner_id = auth.user.id
         form.vars.status = VM_STATUS_VERIFIED
-    
+    email_address = get_email(auth.user.id)
+    send_email_to_user(form.vars.vm_name, user_name, email_address)
     form.vars.requester_id = auth.user.id
     if form.vars.req_public_ip == 'on':
         form.vars.public_ip = None
@@ -224,3 +229,37 @@ def clone_vm_validation(form):
         form.vars.status = VM_STATUS_VERIFIED
     else:
         form.vars.status = VM_STATUS_REQUESTED
+
+def send_email_to_user(vm_name, user_name, email_address):
+    context = dict(userName=user_name, vmName = vm_name)
+    noreply_email = config.get("MAIL_CONF","mail_noreply")
+    send_mail(email_address, VM_REQUEST_SUBJECT_FOR_USER, VM_REQUEST_TEMPLATE_FOR_USER, context, noreply_email)
+    
+def send_email_to_admin(email_subject, email_message, email_type):
+    if email_type == 'request':
+        email_address = config.get("MAIL_CONF","mail_admin_bug_report")
+    if email_type == 'report_bug':
+        email_address = config.get("MAIL_CONF","mail_admin_request")
+    if email_type == 'complaint':
+        email_address = config.get("MAIL_CONF","mail_admin_complaint")
+    user_email_address = get_email(auth.user.id)
+    logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
+    push_email(email_address, email_subject, email_message,user_email_address)
+
+def get_user_fullname():
+    return get_fullname(auth.user.id)
+    
+
+def get_mail_admin_form():
+    form = FORM(TABLE(TR('Type:'),
+                TR(TABLE(TR(TD(INPUT(_name='email_type', _type='radio', _value='report_bug', value='report_bug')),TD('Report Bug'),
+                TD(INPUT(_name='email_type', _type='radio', _value='request')),TD('Log Request'),
+                TD(INPUT(_name='email_type', _type='radio', _value='complaint')),TD('Lodge Complaint')))),TR('Subject:'),
+                TR(TEXTAREA(_name='email_subject',_style='height:50px; width:100%', _cols='30', _rows='20',requires=IS_NOT_EMPTY())),TR('Message:'),
+                TR(TEXTAREA(_name='email_message',_style='height:100px; width:100%', _cols='30', _rows='20',requires=IS_NOT_EMPTY())),
+                
+                TR(INPUT(_type = 'submit', _value = 'Send Email')),_style='width:100%; border:0px'))
+    return form
+
+
+
