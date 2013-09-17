@@ -115,7 +115,7 @@ thead th {
 /* header */
 
 #header {
-	width: 80%;
+	width: 90%;
 	height: 100px;
 	margin: 0 auto;
 }
@@ -169,9 +169,9 @@ input.task_num{width:30px;}
 }
 
 #menu ul {
-	float: right;
+	float: left;
 	margin: 0;
-	padding: 0;
+	padding-left: 50px;
 	list-style: none;
 }
 
@@ -211,7 +211,7 @@ html>body #menu a {
 /* Page */
 
 #page {
-	width: 80%;
+	width: 90%;
 	margin: 0 auto 20px auto;
 	background:  url(images/img07.gif) repeat-y 260px 0;
 }
@@ -220,8 +220,8 @@ html>body #menu a {
 
 #content {
 	float: right;
-	width: 55%;
-	padding-right: 7%;
+	width: 75%;
+	padding-right: 1%;
 	padding-top: 1%;
 }
 

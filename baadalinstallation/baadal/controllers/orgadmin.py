@@ -6,9 +6,7 @@ if 0:
     from gluon import request,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import send_email_to_faculty
 import datetime
-from decimal import *
 
 @check_orgadmin
 @handle_exception
@@ -28,7 +26,7 @@ def pending_approvals():
 def approve_request():
     vm_id=request.args[0] 
     approve_vm_request(vm_id);
-    session.flash = 'Installation request added to queue'
+    session.flash = 'Request approved.'
     redirect(URL(c='orgadmin', f='pending_approvals'))
 
 @check_orgadmin
@@ -42,13 +40,11 @@ def reject_request():
 @check_orgadmin
 @handle_exception
 def remind_faculty():
-    import urllib
     vm_owner_id=request.args[0]
     vm_name = request.args[1]
-    requester_name = request.vars['requester_name']
+    
     request_time = datetime.datetime.fromtimestamp(float(request.args[2])/1000.0).strftime("%A %d %B %Y %I:%M:%S %p")
-    logger.info("requester name is "+requester_name)
-    faculty_info = get_faculty_info(vm_owner_id)
-    send_email_to_faculty(vm_owner_id, vm_name, requester_name,request_time, faculty_info)
+    
+    send_email_to_faculty(vm_owner_id, vm_name, request_time)
     session.flash = 'Faculty Reminded'
     redirect(URL(c='orgadmin', f='pending_approvals'))

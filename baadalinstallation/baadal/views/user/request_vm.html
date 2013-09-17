@@ -14,6 +14,7 @@ jQuery(document).ready(function(){
     jQuery('#vm_data_extra_HDD__row').hide();
     jQuery('[id^=config_row__]').hide();
     jQuery('#faculty_row').hide();
+    jQuery('#collaborator_row').hide();
     jQuery('#public_ip_row').hide();
 
     template_check()
@@ -31,11 +32,13 @@ function template_check() {
         jQuery('#vm_data_extra_HDD__row').hide();
         jQuery('[id^=config_row__]').hide();
         jQuery('#faculty_row').hide();
+        jQuery('#collaborator_row').hide();
         jQuery('#public_ip_row').hide();
     }else{
         jQuery('#vm_data_purpose__row').show();
         jQuery('#vm_data_extra_HDD__row').show();
         jQuery('#faculty_row').show();
+        jQuery('#collaborator_row').show();
         jQuery('#public_ip_row').show();
 
         jQuery('[id^=config_row__]').hide();    
@@ -54,17 +57,55 @@ function verify_faculty() {
     var faculty_user = jQuery('#faculty_user').val();
     jQuery.post(verify_url, {keywords:faculty_user},
         function(result){
-            faculty_info = result;
             if(result != 'None'){
-                jQuery('[name="user_name"]').val(faculty_user);
-                jQuery('#faculty_user').val(faculty_info);
+                jQuery('[name="vm_owner"]').val(faculty_user);
+                jQuery('#faculty_user').val(result);
             }else
             {
-                jQuery('[name="user_name"]').val('');
+                jQuery('[name="vm_owner"]').val('');
                 jQuery('.flash').html('Faculty Approver Username is not valid').slideDown();
             }
         }
     );
+}
+
+function add_collaborator() {
+	var users_num = jQuery('[id^=user_]').length;
+	if(users_num == 3){
+		jQuery('.flash').html('Only upto 3 collaborators can be added to the VM').slideDown();
+		return;
+	}
+    var vm_users = jQuery('[name="vm_users"]').val();
+    var user = jQuery('#collaborator').val();
+    if(vm_users.indexOf(','+user+',') != -1)
+    {
+		jQuery('.flash').html('A collaborator cannot be added twice').slideDown();
+		return;
+    }
+
+    var verify_url = "{{=URL('add_collaborator')}}";
+    jQuery.post(verify_url, {keywords:user},
+        function(result){
+            if(result != 'None'){
+                jQuery('[name="vm_users"]').val(vm_users + user + ',');
+                
+                $('<tr id="user_'+user+'"><td></td><td>'+result+'</td><td><a href="#" onclick="remove_collaborator(\''+user+'\')">Remove</a></td></tr>').insertAfter($('#collaborator_row'));
+                
+                jQuery('#collaborator').val('');
+                jQuery('.flash').html('Collaborator added').slideDown();
+            }else
+            {
+                jQuery('.flash').html('Collaborator Username is not valid').slideDown();
+            }
+        }
+    );
+}
+
+function remove_collaborator(vm_user){
+	var vm_users = jQuery('[name="vm_users"]').val()
+	vm_users = vm_users.replace(vm_user+',', '');
+	jQuery('[name="vm_users"]').val(vm_users);
+	$('#user_'+vm_user).remove();
 }
 
 jQuery('form').submit(function(){

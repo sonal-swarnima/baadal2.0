@@ -32,19 +32,19 @@ def get_add_datastore_form():
     return form
 
 def get_all_hosted_vm():
-    query = ((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id==db.host.id))
+    query = ((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id==db.host.id))
     return get_hosted_vm_grid(query)
 
 def get_all_pending_vm():
-    query = (db.vm_data.status.belongs(VM_STATUS_VERIFIED, VM_STATUS_APPROVED))
+    query = (db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED, VM_STATUS_IN_QUEUE))
     return get_pending_vm_grid(query)
 
 def get_all_vm_list():
-    vms = db(db.vm_data.status > VM_STATUS_APPROVED).select()
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     return get_hosted_vm_list(vms)
 
 def get_all_vm_ofhost(hostid):
-    vms = db((db.vm_data.status > VM_STATUS_APPROVED) & (db.vm_data.host_id == hostid )).select()
+    vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
 def create_clone_task(vm_data):
@@ -66,32 +66,26 @@ def create_clone_task(vm_data):
                           owner_id = vm_data.owner_id,
                           parent_id = vm_data.parent_id,
                           purpose = vm_data.purpose,
-                          status = VM_STATUS_APPROVED)
+                          status = VM_STATUS_IN_QUEUE)
 
         vm_id_list.append(clone_vm_id)
         
-        add_vm_user(vm_data.owner_id, clone_vm_id)
-        if(vm_data.owner_id != vm_data.requester_id):
-            add_vm_user(vm_data.requester_id, clone_vm_id)
+        add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id)
             
+    # Update the status of clone request vm_data to -1 
     db.vm_data[vm_id] = dict(status=-1)
     
     add_vm_task_to_queue(vm_id, TASK_TYPE_CLONE_VM, {'clone_vm_id':vm_id_list})
 
 
-def approve_vm_request(vm_id):
+def enqueue_vm_request(vm_id):
     
     vm_data = db.vm_data[vm_id]
     if vm_data.parameters and vm_data.parameters['clone_count']:
         create_clone_task(vm_data)
         return
 
-    db.vm_data[vm_id] = dict(status=VM_STATUS_APPROVED)
-    
-    add_vm_user(vm_data.owner_id, vm_id)
-    if(vm_data.owner_id != vm_data.requester_id):
-        add_vm_user(vm_data.requester_id, vm_id)
-    
+    db(db.vm_data.id == vm_id).update(status=VM_STATUS_IN_QUEUE)
     add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM)
 
 
@@ -281,7 +275,7 @@ def validate_user(form):
 
 def get_search_user_form():
     form = FORM('User ID:',
-                INPUT(_name = 'user_id',requires = IS_NOT_EMPTY()),
+                INPUT(_name = 'user_id',requires = IS_NOT_EMPTY(), _id='add_user_id'),
                 INPUT(_type = 'submit', _value = 'Verify'))
     return form
     

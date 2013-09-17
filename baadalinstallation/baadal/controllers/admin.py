@@ -239,7 +239,7 @@ def sync_vm():
 @handle_exception
 def approve_request():
     vm_id=request.args[0] 
-    approve_vm_request(vm_id);
+    enqueue_vm_request(vm_id);
     session.flash = 'Installation request added to queue'
     redirect(URL(c='admin', f='list_all_vm'))
 

@@ -8,7 +8,8 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config, get_fullname, get_config_file, get_email, send_mail, push_email
+from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config, \
+    get_fullname, get_config_file, get_email, send_mail, push_email
 from auth_user import fetch_ldap_user, create_or_update_user
 
 config = get_config_file()
@@ -21,7 +22,7 @@ def get_my_pending_vm():
 
 
 def get_my_hosted_vm():
-    vms = db((db.vm_data.status > VM_STATUS_APPROVED) 
+    vms = db((db.vm_data.status > VM_STATUS_IN_QUEUE) 
              & (db.vm_data.id==db.user_vm_map.vm_id) 
              & (db.user_vm_map.user_id==auth.user.id)).select(db.vm_data.ALL)
 
@@ -68,7 +69,7 @@ def set_configuration_elem(form):
 
 
 def validate_approver(form):
-    faculty_user = request.post_vars.user_name
+    faculty_user = request.post_vars.vm_owner
     faculty_user_name = request.post_vars.faculty_user
     
     if(faculty_user != ''):
@@ -85,18 +86,26 @@ def validate_approver(form):
     else:
         form.errors.faculty_user='Faculty Approver Username is not valid'
         
+def send_email_to_faculty(faculty_id, vm_name, vm_request_time):
+
+    faculty_email = get_email(faculty_id)
+    if faculty_email:
+        faculty_name = get_fullname(faculty_id)
+        context = dict(facultyName = faculty_name, vmName = vm_name, vmRequestTime=vm_request_time)
+        noreply_email = config.get("MAIL_CONF","mail_noreply")
+        send_mail(faculty_email, current.VM_APPROVAL_SUBJECT_FOR_FACULTY, current.VM_APPROVAL_TEMPLATE_FOR_FACULTY, context, noreply_email)
+
 def request_vm_validation(form):
     set_configuration_elem(form)
-    user_name = get_user_fullname()
+
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         validate_approver(form)
-        faculty_info = get_faculty_info(form.vars.owner_id)
-        send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, user_name, form.vars.start_time, faculty_info)
+        send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, form.vars.start_time)
     else:
         form.vars.owner_id = auth.user.id
         form.vars.status = VM_STATUS_VERIFIED
-    email_address = get_email(auth.user.id)
-    send_email_to_user(form.vars.vm_name, user_name, email_address)
+    
+    send_email_to_user(form.vars.vm_name)
     form.vars.requester_id = auth.user.id
     if form.vars.req_public_ip == 'on':
         form.vars.public_ip = None
@@ -110,13 +119,20 @@ def add_faculty_approver(form):
     faculty_elem = TR(LABEL('Faculty Approver:'),_input,_link,_id='faculty_row')
     form[0].insert(-1,faculty_elem)#insert tr element in the form
 
+def add_collaborators(form):
+
+    _input=INPUT(_name='collaborator',_id='collaborator') # create INPUT
+    _link = TD(A('Add', _href='#',_onclick='add_collaborator()'))
+    collaborator_elem = TR(LABEL('Collaborators:'),_input,_link,_id='collaborator_row')
+    form[0].insert(-1, collaborator_elem)#insert tr element in the form
+
 
 def get_request_vm_form():
     
     form_fields = ['vm_name','template_id','extra_HDD','purpose']
     form_labels = {'vm_name':'Name of VM','extra_HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}
 
-    form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(user_name=''))
+    form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_owner='',vm_users=','))
     get_configuration_elem(form) # Create dropdowns for configuration
     
     form[0].insert(-1, TR(LABEL('Public IP:'), 
@@ -125,6 +141,7 @@ def get_request_vm_form():
 
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         add_faculty_approver(form)
+    add_collaborators(form)
     
     return form
 
@@ -230,8 +247,10 @@ def clone_vm_validation(form):
     else:
         form.vars.status = VM_STATUS_REQUESTED
 
-def send_email_to_user(vm_name, user_name, email_address):
-    context = dict(userName=user_name, vmName = vm_name)
+def send_email_to_user(vm_name):
+
+    email_address = get_email(auth.user.id)
+    context = dict(vmName = vm_name)
     noreply_email = config.get("MAIL_CONF","mail_noreply")
     send_mail(email_address, VM_REQUEST_SUBJECT_FOR_USER, VM_REQUEST_TEMPLATE_FOR_USER, context, noreply_email)
     
@@ -246,9 +265,6 @@ def send_email_to_admin(email_subject, email_message, email_type):
     logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
     push_email(email_address, email_subject, email_message,user_email_address)
 
-def get_user_fullname():
-    return get_fullname(auth.user.id)
-    
 
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),

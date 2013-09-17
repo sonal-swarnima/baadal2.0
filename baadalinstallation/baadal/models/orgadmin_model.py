@@ -29,3 +29,6 @@ def get_verified_vm_list():
 
     return get_pending_vm_list(vms)
     
+
+def approve_vm_request(vm_id):
+    db(db.vm_data.id == vm_id).update(status=VM_STATUS_APPROVED)

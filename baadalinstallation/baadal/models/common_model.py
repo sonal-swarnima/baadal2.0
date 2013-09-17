@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,H3,IS_INT_IN_RANGE,A,B,SPAN,IMG,request,SQLFORM,DIV
+    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,H3,IS_INT_IN_RANGE,A,SPAN,IMG,request,SQLFORM,DIV
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 import os
@@ -21,6 +21,7 @@ def get_vm_status(iStatus):
             VM_STATUS_REJECTED    :    'Rejected',
             VM_STATUS_VERIFIED    :    'Verified',
             VM_STATUS_APPROVED    :    'Approved',
+            VM_STATUS_IN_QUEUE    :    'In-Queue',
             VM_STATUS_RUNNING     :    'Running',
             VM_STATUS_SUSPENDED   :    'Paused',
             VM_STATUS_SHUTDOWN    :    'Shutdown'
@@ -49,8 +50,8 @@ def get_hosted_vm_grid(vm_query):
             _alt="Settings")]
     
     form = SQLFORM.grid(query=vm_query, fields=fields, orderby=default_sort_order, links = links,
-                        paginate=ITEMS_PER_PAGE, csv=False, searchable=False, deletable=False, editable=False,
-                        details=False, create=False, showbuttontext=False)
+                        paginate=ITEMS_PER_PAGE, csv=False, searchable=False, deletable=False, 
+                        editable=False, details=False, create=False, showbuttontext=False)
     return form
 
 def public_ip_icon(public_ip):
@@ -60,7 +61,7 @@ def public_ip_icon(public_ip):
         return SPAN(_class='icon-remove')
     
 def approve_reject_icon(status, vm_id):
-    if status == VM_STATUS_APPROVED:
+    if status == VM_STATUS_IN_QUEUE:
         return A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18),
             _href='#', 
             _title="Installation in Progress", 
@@ -205,6 +206,17 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}):
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
     
+def add_vm_users(_vm_id, requester_id, owner_id, vm_users=None):
+    user_list = [requester_id, owner_id]
+    print vm_users
+    if vm_users and len(vm_users) > 1:
+        for vm_user in vm_users[1:-1].split(','):
+            print 'here'
+            print vm_user
+            user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    for _user_id in set(user_list):
+        db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
+
 
 # Generic exception handler decorator
 def handle_exception(fn):
@@ -454,16 +466,15 @@ def get_performance_graph(graph_type, vm, graph_period):
   
         if os.path.exists(rrd_file):
             if create_graph(vm, graph_type, rrd_file, graph_period):   
-               img_pos = "vm_graphs/" + vm + "_" + graph_type + ".png"
-               img = IMG(_src = URL("static", img_pos), _style = "height:100%")
-               logger.info("Graph created successfully")
+                img_pos = "vm_graphs/" + vm + "_" + graph_type + ".png"
+                img = IMG(_src = URL("static", img_pos), _style = "height:100%")
+                logger.info("Graph created successfully")
             else:
-               logger.warn("Unable to create graph from rrd file!!!")
-               error = H3("Unable to create graph from rrd file")
+                logger.warn("Unable to create graph from rrd file!!!")
+                error = H3("Unable to create graph from rrd file")
         else:
             logger.warn("VMs RRD File Unavailable!!!")
             error = "VMs RRD File Unavailable!!!"
-		
     except: 
 
         import sys, traceback

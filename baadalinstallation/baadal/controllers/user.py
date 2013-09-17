@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin, send_email_to_faculty
+from helper import is_moderator, is_faculty, is_orgadmin
 
 @auth.requires_login()
 @handle_exception
@@ -17,6 +17,8 @@ def request_vm():
     
     # After validation, read selected configuration and set RAM, CPU and HDD accordingly
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
+        add_vm_users(form.vars.id, form.vars.requester_id, 
+                     form.vars.owner_id, request.post_vars.vm_users)
         logger.debug('VM requested successfully')
         redirect(URL(c='default', f='index'))
     return dict(form=form)
@@ -29,6 +31,15 @@ def verify_faculty():
     faculty_info = get_user_info(username, [FACULTY])
     if faculty_info != None:
         return faculty_info[1]
+
+@auth.requires_login()
+@handle_exception
+def add_collaborator():
+
+    username = request.vars.keywords
+    user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
+    if user_info != None:
+        return user_info[1]
 
 @auth.requires_login()
 @handle_exception
@@ -187,9 +198,8 @@ def get_updated_graph():
         logger.debug(request.vars['graphType'])
         logger.debug(request.vars['vmName'])
         logger.debug(request.vars['graphPeriod'])
-	return get_performance_graph(request.vars['graphType'], request.vars['vmName'], request.vars['graphPeriod'])
-		
-		
+        return get_performance_graph(request.vars['graphType'], request.vars['vmName'], request.vars['graphPeriod'])
+
 @auth.requires_login()
 @handle_exception       
 def clone_vm():
