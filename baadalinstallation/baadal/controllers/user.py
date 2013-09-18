@@ -19,6 +19,11 @@ def request_vm():
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         add_vm_users(form.vars.id, form.vars.requester_id, 
                      form.vars.owner_id, request.post_vars.vm_users)
+        
+        send_email_to_user(form.vars.vm_name)
+        if not(is_moderator() | is_orgadmin() | is_faculty()):
+            send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, form.vars.start_time)
+
         logger.debug('VM requested successfully')
         redirect(URL(c='default', f='index'))
     return dict(form=form)
