@@ -114,9 +114,6 @@ def choose_mac_ip_vncport(vm_properties):
     
     (vm_properties['mac_addr_1'], vm_properties['private_ip']) = choose_mac_ip(current.MAC_PRIVATE_IP_POOL)
 
-    if vm_properties['assign_public_ip']:
-        (vm_properties['mac_addr_2'], vm_properties['ppublic_ip']) = choose_mac_ip(current.MAC_PUBLIC_IP_POOL)
-    
     count = int(get_constant('vmcount')) 
     vm_properties['vnc_port'] = str(int(get_constant('vncport_range')) + count)
     update_value('vmcount', count + 1)
@@ -134,7 +131,6 @@ def allocate_vm_properties(vm_details):
     vm_properties['host'] = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
     current.logger.debug("Host selected is: " + str(vm_properties['host']))
 
-    vm_properties['assign_public_ip'] = vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED
     choose_mac_ip_vncport(vm_properties)
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
                           + str(vm_properties['vnc_port']))
@@ -204,10 +200,6 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
     if (template.arch != 'amd64'):
         optional = optional + ' --arch=' + template.arch + ' '
     
-    public_ip_command = ''
-    if vm_properties['assign_public_ip']:
-        public_ip_command = ' --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_2']
-
     format_command = ''
     if (template.type == 'QCOW2'):
         format_command = ',format=qcow2' 
@@ -217,7 +209,7 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
                      --ram=' + str(vm_properties['ram']) + ' \
                      --vcpus=' + str(vm_properties['vcpus']) + optional + ' \
                      --disk path=' + vm_image_location + format_command+',bus=virtio \
-                     --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_1'] + public_ip_command + ' \
+                     --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_1'] + ' \
                      --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
                      --noautoconsole \
                      --description \
@@ -358,9 +350,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
                                                                total_cost = 0, 
                                                                parent_id = parent_id,
                                                                status = vm_status)
-    if 'public_ip' in vm_properties:
-        current.db(current.db.vm_data.id == vm_details.id).update(public_ip = vm_properties['public_ip'], 
-                                                                  mac_addr_2 = vm_properties['mac_addr_2'])
 
     current.logger.debug("Updated db")    
     return
@@ -650,8 +639,7 @@ def edit_vm_config(parameters):
 def get_clone_properties(vm_details, cloned_vm_details):
 
     vm_properties = {}
-    vm_properties['assign_public_ip'] = vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED
-    
+
     datastore = choose_datastore()
     vm_properties['datastore'] = datastore
     current.logger.debug("Datastore selected is: " + str(datastore))
