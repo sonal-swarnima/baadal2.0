@@ -64,8 +64,7 @@ def get_pending_vm_list(vms):
                    'HDD' : vm.HDD, 
                    'status' : vm.status,
                    'request_type' : request_type,
-                   'owner_id' : vm.owner_id,
-                   'start_time' : round(float(vm.start_time.strftime('%s.%f')),3)}
+                   'owner_id' : vm.owner_id}
         vmlist.append(element)
     return vmlist
 
