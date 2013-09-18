@@ -8,11 +8,8 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config, \
-    get_fullname, get_config_file, get_email, send_mail, push_email
+from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config
 from auth_user import fetch_ldap_user, create_or_update_user
-
-config = get_config_file()
 
 def get_my_pending_vm():
     vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED) 
@@ -85,27 +82,24 @@ def validate_approver(form):
         form.vars.status = VM_STATUS_REQUESTED
     else:
         form.errors.faculty_user='Faculty Approver Username is not valid'
-        
-def send_email_to_faculty(faculty_id, vm_name, vm_request_time):
 
-    faculty_email = get_email(faculty_id)
-    if faculty_email:
-        faculty_name = get_fullname(faculty_id)
-        context = dict(facultyName = faculty_name, vmName = vm_name, vmRequestTime=vm_request_time)
-        noreply_email = config.get("MAIL_CONF","mail_noreply")
-        send_mail(faculty_email, current.VM_APPROVAL_SUBJECT_FOR_FACULTY, current.VM_APPROVAL_TEMPLATE_FOR_FACULTY, context, noreply_email)
-
+def send_remind_faculty_email(vm_id):
+    vm_data = db.vm_data[vm_id]
+    send_email_to_faculty(vm_data.owner_id, vm_data.vm_name, vm_data.start_time)
+    
 def request_vm_validation(form):
     set_configuration_elem(form)
 
-    if not(is_moderator() | is_orgadmin() | is_faculty()):
-        validate_approver(form)
-        send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, form.vars.start_time)
-    else:
+    if (is_moderator() | is_orgadmin()):
+        form.vars.owner_id = auth.user.id
+        form.vars.status = VM_STATUS_APPROVED
+    elif is_faculty():
         form.vars.owner_id = auth.user.id
         form.vars.status = VM_STATUS_VERIFIED
-    
-    send_email_to_user(form.vars.vm_name)
+    else:
+        form.vars.status = VM_STATUS_REQUESTED
+        validate_approver(form)
+
     form.vars.requester_id = auth.user.id
 
 def add_faculty_approver(form):
@@ -240,25 +234,6 @@ def clone_vm_validation(form):
         form.vars.status = VM_STATUS_VERIFIED
     else:
         form.vars.status = VM_STATUS_REQUESTED
-
-def send_email_to_user(vm_name):
-
-    email_address = get_email(auth.user.id)
-    context = dict(vmName = vm_name)
-    noreply_email = config.get("MAIL_CONF","mail_noreply")
-    send_mail(email_address, VM_REQUEST_SUBJECT_FOR_USER, VM_REQUEST_TEMPLATE_FOR_USER, context, noreply_email)
-    
-def send_email_to_admin(email_subject, email_message, email_type):
-    if email_type == 'request':
-        email_address = config.get("MAIL_CONF","mail_admin_bug_report")
-    if email_type == 'report_bug':
-        email_address = config.get("MAIL_CONF","mail_admin_request")
-    if email_type == 'complaint':
-        email_address = config.get("MAIL_CONF","mail_admin_complaint")
-    user_email_address = get_email(auth.user.id)
-    logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
-    push_email(email_address, email_subject, email_message,user_email_address)
-
 
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),
