@@ -6,7 +6,6 @@ if 0:
     from gluon import request,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import datetime
 
 @check_orgadmin
 @handle_exception
@@ -40,11 +39,7 @@ def reject_request():
 @check_orgadmin
 @handle_exception
 def remind_faculty():
-    vm_owner_id=request.args[0]
-    vm_name = request.args[1]
-    
-    request_time = datetime.datetime.fromtimestamp(float(request.args[2])/1000.0).strftime("%A %d %B %Y %I:%M:%S %p")
-    
-    send_email_to_faculty(vm_owner_id, vm_name, request_time)
+    vm_id=request.args[0]
+    send_remind_faculty_email(vm_id)
     session.flash = 'Faculty Reminded'
-    redirect(URL(c='orgadmin', f='pending_approvals'))
+    redirect(URL(c='faculty', f='pending_requests'))
