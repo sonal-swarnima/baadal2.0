@@ -122,8 +122,6 @@ from gluon.custom_import import track_changes; track_changes(True)
 VM_CREATION_TEMPLATE="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[vmRequestTime]} is successfully created and is now available for use. The following operations are allowed on the VM:\n1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nRegards,\nBaadal Admin"
 
 VM_CREATION_SUBJECT = "VM created successfully"
-current.VM_CREATION_TEMPLATE = VM_CREATION_TEMPLATE
-current.VM_CREATION_SUBJECT = VM_CREATION_SUBJECT
 
 VM_REQUEST_TEMPLATE_FOR_USER="Dear {0[userName]},\n\nYour request for VM({0[vmName]}) creation has been successfully registered. Please note that you will be getting a separate email on successful VM creation.\n\nRegards,\nBaadal Admin"
                     
@@ -132,5 +130,3 @@ VM_REQUEST_SUBJECT_FOR_USER = "VM request successful"
 VM_APPROVAL_TEMPLATE_FOR_FACULTY ="Dear {0[facultyName]},\n\n{0[userName]} requested a VM {0[vmName]} on {0[vmRequestTime]} and is pending approval from you.\n\nRegards,\nBaadal Admin"
                     
 VM_APPROVAL_SUBJECT_FOR_FACULTY = "VM pending approval"
-current.VM_APPROVAL_TEMPLATE_FOR_FACULTY = VM_APPROVAL_TEMPLATE_FOR_FACULTY
-current.VM_APPROVAL_SUBJECT_FOR_FACULTY = VM_APPROVAL_SUBJECT_FOR_FACULTY
