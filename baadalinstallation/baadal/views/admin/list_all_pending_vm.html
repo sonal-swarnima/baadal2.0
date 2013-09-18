@@ -1,0 +1,67 @@
+{{extend 'layout.html'}}
+{{if not pending_vms:}}
+<h2 class="subtitle">No Pending Requests</h2>
+    {{else:}}
+<h2 class="subtitle">Pending VM Requests</h2>
+  <div class="TABLE">
+    <table>
+      <tr>
+        <th>Type</th>
+        <th>Requested By</th>
+        <th>Collaborators</th>
+        <th>Organisation</th>
+        <th>VM Name</th>
+        <th>RAM</th>
+        <th>HDD</th>
+        <th>vCPUs</th>
+        <th>Approval Status</th>
+        <th>Action</th>
+      </tr> 
+      {{for pending_vm in pending_vms:}}
+       <tr>
+            <td>{{=pending_vm['request_type']}}</td>
+            <td>{{=pending_vm['requester_name']}}</td>
+            <td>{{=pending_vm['collaborators']}}</td>
+            <td>{{=pending_vm['organisation']}}</td>
+            <td>{{=pending_vm['vm_name']}}</td>
+            <td>{{=pending_vm['RAM']}}</td>
+            <td>{{=pending_vm['HDD']}}</td>
+            <td>{{=pending_vm['vCPUs']}}</td>
+            <td>
+            {{if pending_vm['requested_by'] == USER:}}
+            	{{=pending_vm['faculty_name']}}
+            	{{if pending_vm['status'] == VM_STATUS_REQUESTED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
+            	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
+            	{{pass}}
+            	<br/>
+            	{{=pending_vm['organisation']}} Admin
+            	{{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
+            	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
+            	{{pass}}
+            {{elif pending_vm['requested_by'] == FACULTY:}}
+            	pending_vm['organisation'] Admin
+            	{{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
+            	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
+            	{{pass}}
+            {{pass}}
+            </td>
+            <td>
+                {{if pending_vm['status'] == VM_STATUS_IN_QUEUE:}}
+                    {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
+                        _title="Installation in Progress", _alt="Installation in Progress")}}
+                {{else:}}
+                    {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='admin',f='approve_request', args=[pending_vm['id']]),
+                        _title="Approve Request", _alt="Approve Request")}}
+                    &nbsp;|&nbsp;
+                    {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='admin',f='reject_request', args=[pending_vm['id']]),
+                        _title="Reject Request", _alt="Reject Request")}}
+                {{pass}}
+            </td>
+          </tr>
+      {{pass}}
+    </table>
+    </div>
+{{pass}}
+
