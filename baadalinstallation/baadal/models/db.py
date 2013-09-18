@@ -43,7 +43,6 @@ from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
 current.auth_type = config.get("AUTH_CONF","auth_type")
-current.mail = mail
 
 ## configure custom auth tables
 auth.settings.table_user_name = 'user'
