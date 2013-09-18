@@ -59,21 +59,3 @@ def get_email(user_id):
     user = current.db.user[user_id]
     if user:
         return user.email
-
-def send_email_for_vm_creation(requester_id, vm_name, vm_request_time):
-    user_email = get_email(requester_id)
-    context = dict(vmName=vm_name, vmRequestTime=vm_request_time)
-    send_mail(user_email, current.VM_CREATION_SUBJECT, current.VM_CREATION_TEMPLATE, context, None)
-
-def send_mail(to_address, email_subject, email_template, context, reply_to_address):
-    
-    context['userName'] = (current.auth.user.first_name + ' ' + current.auth.user.last_name) 
-    email_message = email_template.format(context)
-    push_email(to_address, email_subject, email_message, reply_to_address)
-    
-def push_email(to_address, email_subject, email_message, reply_to_address):
-    if not reply_to_address:
-        current.mail.send(to=to_address, subject=email_subject, message = email_message)
-    else:
-        current.mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
-
