@@ -1,4 +1,3 @@
-
 {{extend 'layout.html'}}
 {{if not pending_requests:}}
 <h2 class="subtitle">No Pending Requests</h2>
@@ -31,7 +30,7 @@
              &nbsp;|&nbsp;
                {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pending_request['id']]))}}
            {{else:}}
-               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pending_request['owner_id'],pending_request['vm_name'], pending_request['start_time']], vars = dict(requester_name=pending_request['requester_name'])))}}
+               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pending_request['id']]))}}
            {{pass}}
             </td>
           </tr>
