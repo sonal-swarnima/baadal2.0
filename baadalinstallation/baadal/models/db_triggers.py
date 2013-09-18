@@ -52,7 +52,6 @@ db.task_queue._after_update = [task_queue_update_callback]
 def update_vm_data_event(fields, _id):
     db(db.vm_data_event.id == _id).update(host_id = fields['host_id'], 
                                           datastore_id = fields['datastore_id'], 
-                                          public_ip = fields['public_ip'], 
                                           private_ip = fields['private_ip'], 
                                           vnc_port = fields['vnc_port'], 
                                           mac_addr_1 = fields['mac_addr_1'], 

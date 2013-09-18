@@ -10,9 +10,14 @@ if 0:
 @check_moderator
 @handle_exception
 def list_all_vm():
-    hosted_vm_grid = get_all_hosted_vm()
-    pending_vm_grid = get_all_pending_vm()
-    return dict(hosted_vm_grid = hosted_vm_grid, pending_vm_grid = pending_vm_grid)
+    vm_list = get_all_vm_list()
+    return dict(vmlist = vm_list)
+
+@check_moderator
+@handle_exception
+def list_all_pending_vm():
+    pending_vms = get_all_pending_vm()
+    return dict(pending_vms = pending_vms)
 
 @check_moderator
 @handle_exception
@@ -241,7 +246,7 @@ def approve_request():
     vm_id=request.args[0] 
     enqueue_vm_request(vm_id);
     session.flash = 'Installation request added to queue'
-    redirect(URL(c='admin', f='list_all_vm'))
+    redirect(URL(c='admin', f='list_all_pending_vm'))
 
 @check_moderator
 @handle_exception
@@ -249,5 +254,5 @@ def reject_request():
     vm_id=request.args[0]
     reject_vm_request(vm_id);
     session.flash = 'Request Rejected'
-    redirect(URL(c='admin', f='list_all_vm'))
+    redirect(URL(c='admin', f='list_all_pending_vm'))
 

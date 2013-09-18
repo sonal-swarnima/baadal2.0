@@ -31,13 +31,31 @@ def get_add_datastore_form():
     form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
-def get_all_hosted_vm():
-    query = ((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id==db.host.id))
-    return get_hosted_vm_grid(query)
-
 def get_all_pending_vm():
-    query = (db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED, VM_STATUS_IN_QUEUE))
-    return get_pending_vm_grid(query)
+    vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED, VM_STATUS_IN_QUEUE)).select()
+    pending_vms = get_pending_vm_list(vms)
+    for vm in pending_vms:
+        collaborators = []
+        vm_users = db(db.user_vm_map.vm_id == vm['id']).select()
+        for vm_user in vm_users:
+            if vm_user.user_id != vm_user.vm_id.requester_id:
+                collaborators.append(vm_user.user_id.first_name + ' ' + vm_user.user_id.last_name)
+        vm['collaborators'] = ', '.join(collaborators)
+        
+        roles = []
+        user_roles = db(db.user_membership.user_id == vm['requester_id']).select()
+        for user_role in user_roles:
+            roles.append(user_role.group_id.role)
+        if ADMIN in roles:
+            vm['requested_by'] = ADMIN
+        elif ORGADMIN in roles:
+            vm['requested_by'] = ORGADMIN
+        elif FACULTY in roles:
+            vm['requested_by'] = FACULTY
+        else:
+            vm['requested_by'] = USER
+            
+    return pending_vms
 
 def get_all_vm_list():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()

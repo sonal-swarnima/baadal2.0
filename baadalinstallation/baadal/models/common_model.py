@@ -4,7 +4,7 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,H3,IS_INT_IN_RANGE,A,SPAN,IMG,request,SQLFORM,DIV
+    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,H3,IS_INT_IN_RANGE,A,SPAN,IMG,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 import os
@@ -28,86 +28,14 @@ def get_vm_status(iStatus):
         }
     return vm_status_map[iStatus]
 
-
-def get_hosted_vm_grid(vm_query):
-    
-    db.vm_data.id.readable=False
-    
-    fields =(db.vm_data.id,
-             db.vm_data.vm_name, 
-             db.vm_data.owner_id, 
-             db.host.host_ip, 
-             db.vm_data.private_ip, 
-             db.vm_data.public_ip, 
-             db.vm_data.RAM, 
-             db.vm_data.vCPU,  
-             db.vm_data.status)
-    default_sort_order=[~db.vm_data.start_time]
-    
-    links = [lambda row: A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-            _href=URL(r=request, c='user',f='settings', args=[row.vm_data.id]), 
-            _title="Settings", 
-            _alt="Settings")]
-    
-    form = SQLFORM.grid(query=vm_query, fields=fields, orderby=default_sort_order, links = links,
-                        paginate=ITEMS_PER_PAGE, csv=False, searchable=False, deletable=False, 
-                        editable=False, details=False, create=False, showbuttontext=False)
-    return form
-
-def public_ip_icon(public_ip):
-    if (public_ip == PUBLIC_IP_NOT_ASSIGNED):
-        return SPAN(_class='icon-ok')
-    else:
-        return SPAN(_class='icon-remove')
-    
-def approve_reject_icon(status, vm_id):
-    if status == VM_STATUS_IN_QUEUE:
-        return A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18),
-            _href='#', 
-            _title="Installation in Progress", 
-            _alt="Installation in Progress")
-    else:
-        return DIV(A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18),
-            _href=URL(r=request, c='admin',f='approve_request', args=[vm_id]), 
-            _title="Approve Request", 
-            _alt="Approve Request", _onclick='tab_refresh()'),
-             A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18),
-            _href=URL(r=request, c='admin',f='reject_request', args=[vm_id]), 
-            _title="Reject Request", 
-            _alt="Reject Request", _onclick='tab_refresh()'))
-
-def get_pending_vm_grid(vm_query):
-
-    db.vm_data.id.readable=False
-    db.vm_data.public_ip.readable=False
-    fields =(db.vm_data.id,
-             db.vm_data.vm_name, 
-             db.vm_data.owner_id, 
-             db.vm_data.requester_id, 
-             db.vm_data.RAM, 
-             db.vm_data.vCPU,  
-             db.vm_data.status,
-             db.vm_data.public_ip)
-    default_sort_order=[~db.vm_data.id]
-    
-    links = [dict(header='Public IP', body=lambda row: public_ip_icon(row.public_ip)), 
-             lambda row: approve_reject_icon(row.status, row.id)]
-    
-    form = SQLFORM.grid(query=vm_query, fields=fields, orderby=default_sort_order, links = links,
-                        paginate=ITEMS_PER_PAGE, csv=False, searchable=False, deletable=False, editable=False,
-                        details=False, create=False, showbuttontext=False)
-    return form
-
-
 def get_hosted_vm_list(vms):
     vmlist = []
     for vm in vms:
         total_cost = add_to_cost(vm.id)
         element = {'id' : vm.id,
                    'name' : vm.vm_name,
-                   'public_ip' : vm.public_ip, 
                    'private_ip' : vm.private_ip, 
-                   'owner' : get_full_name(vm.owner_id), 
+                   'owner' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name, 
                    'hostip' : vm.host_id.host_ip,
                    'RAM' : vm.RAM,
                    'vcpus' : vm.vCPU,
@@ -127,12 +55,13 @@ def get_pending_vm_list(vms):
 
         element = {'id' : vm.id,
                    'vm_name' : vm.vm_name, 
-                   'faculty_name' : get_fullname(vm.owner_id), 
-                   'requester_name' : get_fullname(vm.requester_id), 
+                   'faculty_name' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name, 
+                   'requester_id' : vm.requester_id,
+                   'requester_name' : vm.requester_id.first_name + ' ' + vm.requester_id.last_name,
+                   'organisation' : vm.requester_id.organisation_id.name,
                    'RAM' : vm.RAM, 
                    'vCPUs' : vm.vCPU, 
                    'HDD' : vm.HDD, 
-                   'public_ip' : (vm.public_ip != PUBLIC_IP_NOT_ASSIGNED), 
                    'status' : vm.status,
                    'request_type' : request_type,
                    'owner_id' : vm.owner_id,
@@ -278,6 +207,9 @@ def get_pending_approval_count():
     vm_count = db((db.vm_data.requester_id.belongs(users_of_same_org)) & (db.vm_data.status == VM_STATUS_VERIFIED)).count()
 
     return vm_count
+
+def get_all_pending_vm_count():
+    return db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED)).count()
              
 def get_vm_operations(vm_id):
 

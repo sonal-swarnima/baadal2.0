@@ -107,10 +107,6 @@ def request_vm_validation(form):
     
     send_email_to_user(form.vars.vm_name)
     form.vars.requester_id = auth.user.id
-    if form.vars.req_public_ip == 'on':
-        form.vars.public_ip = None
-    print form.vars.public_ip
-
 
 def add_faculty_approver(form):
 
@@ -135,10 +131,6 @@ def get_request_vm_form():
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_owner='',vm_users=','))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    form[0].insert(-1, TR(LABEL('Public IP:'), 
-                          INPUT(_type = 'checkbox', _name = 'req_public_ip'), 
-                          _id='public_ip_row'))      
-
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         add_faculty_approver(form)
     add_collaborators(form)
@@ -242,7 +234,9 @@ def clone_vm_validation(form):
     form.vars.owner_id = vm_info.owner_id
     form.vars.parent_id = parent_vm_id
     form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
-    if (is_moderator() | is_orgadmin() | is_faculty()):
+    if (is_moderator() | is_orgadmin()):
+        form.vars.status = VM_STATUS_APPROVED
+    elif is_faculty():
         form.vars.status = VM_STATUS_VERIFIED
     else:
         form.vars.status = VM_STATUS_REQUESTED
