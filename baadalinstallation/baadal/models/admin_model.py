@@ -316,3 +316,9 @@ def get_user_form(username, vm_id):
     form.vars.email = user_details.email
 
     return form
+
+def vm_has_snapshots(vm_id):
+    if (db(db.snapshot.vm_id == vm_id).select()):
+        return True
+    else:
+        return False

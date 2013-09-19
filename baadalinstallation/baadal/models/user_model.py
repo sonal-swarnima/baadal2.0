@@ -235,6 +235,32 @@ def clone_vm_validation(form):
     else:
         form.vars.status = VM_STATUS_REQUESTED
 
+def get_attach_extra_disk_form(vm_info):
+
+    form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vmname', _value = vm_info['name'], _readonly = True)), 
+                      TR('HDD:', INPUT(_name = 'hdd',_value = vm_info['hdd'], _readonly = True)),
+                      TR('Extra HDD:' , INPUT(_name = 'extra_hdd',_value = vm_info['extrahdd'], _readonly = True)),
+                      TR('Size:' , INPUT(_name = 'size', requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)])),
+                      TR('', INPUT(_type = 'submit', _value = 'Submit'))))
+
+    return form
+
+def attach_extra_disk_validation(form):
+
+    vm_name = form.vars.vmname + '_attach_disk'
+    hdd = form.vars.hdd
+    extra_hdd = form.vars.extra_hdd
+    disk_size = form.vars.size
+    if (is_moderator() | is_orgadmin() | is_faculty()):
+        vm_status = VM_STATUS_VERIFIED
+    else:
+        vm_status = VM_STATUS_REQUESTED
+    attach_disk_vm_id = db.vm_data.insert(vm_name = vm_name, HDD = hdd, extra_HDD = extra_hdd, parameters = dict(size = disk_size), status = vm_status)
+
+
+
+
+
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),
                 TR(TABLE(TR(TD(INPUT(_name='email_type', _type='radio', _value='report_bug', value='report_bug')),TD('Report Bug'),
