@@ -9,7 +9,7 @@ if 0:
 
 import sys, math, shutil, paramiko, traceback, random, libvirt
 import xml.etree.ElementTree as etree
-from mail_handler import send_email_for_vm_creation
+#from mail_handler import send_email_for_vm_creation
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
 
@@ -144,7 +144,7 @@ def allocate_vm_properties(vm_details):
 def exec_command_on_host(machine_ip, user_name, command):
 
     try:
-        current.logger.debug("Starting to establish SSH connection with host" + str(machine_ip))
+        current.logger.debug("Starting to establish SSH connection with host " + str(machine_ip))
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(machine_ip, username = user_name)
@@ -234,16 +234,16 @@ def generate_xml(diskpath,target_disk):
     etree.SubElement(root_element, 'target', attrib = {'dev': target_disk})
 
     return (etree.tostring(root_element))
-    
+      
 # Attaches a disk with vm
-def attach_disk(vmname, size, hostip, datastore):
+def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_disks):
    
     vm = current.db(current.db.vm_data.vm_name == vmname).select().first()
 
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
         domain = connection_object.lookupByName(vmname)
-        already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
+        #already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         current.logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
 
         if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name \
@@ -253,7 +253,7 @@ def attach_disk(vmname, size, hostip, datastore):
                          + vmname)
 
         diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + vmname \
-                   + "/" + vmname + "_disk" + str(already_attached_disks + 1) + ".qcow2"
+                   + "/" + disk_name
 
         # Create a new image for the new disk to be attached
         command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
@@ -267,8 +267,9 @@ def attach_disk(vmname, size, hostip, datastore):
         domain.attachDevice(xmlDescription)
         xmlfile = domain.XMLDesc(0)
         domain = connection_object.defineXML(xmlfile)
+        domain.reboot(0)
         domain.isActive()
-        current.logger.debug("The disk has been attached successfully. Reboot your vm to see it.")
+        current.logger.debug("The disk has been attached successfully.")
         connection_object.close()
         return True
     except:
@@ -276,6 +277,20 @@ def attach_disk(vmname, size, hostip, datastore):
         trace = ''.join(traceback.format_exception(etype, value, tb, 10))
         message = "Check logs for error: " + trace
         current.logger.error(message) 
+        return False
+
+# Serves extra disk request and updates db
+def serve_extra_disk_request(vm_details, disk_size):
+
+    current.logger.debug("Starting to serve extra disk request...")
+    datastore = choose_datastore()
+    already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
+    disk_name = vm_details.vm_name + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
+
+    if (attach_disk(vm_details.vm_name, disk_name, size, vm_details.host_id.host_ip, datastore, already_attached_disks)):
+        current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size) 
+        return True
+    else:
         return False
 
 # Launches a vm on host
@@ -292,10 +307,18 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
 
     # Serving HDD request
     if (int(vm_details.extra_HDD) != 0):
-        datastore = vm_properties['datastore']
-        if (attach_disk(vm_details.vm_name, int(vm_details.extra_HDD), host_ip, datastore)):
-            vmid = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select(current.db.vm_data.id)[0].id
-            current.db.attached_disks.insert(vm_id = vmid, datastore_id = datastore.id , capacity = int(vm_details.extra_HDD))
+        if (serve_extra_disk_request(vm_details, vm_details.extra_HDD)):
+            message = "Attached extra disk successfully"
+            current.logger.debug(message)
+        
+            """
+            datastore = vm_properties['datastore']
+            already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
+            disk_name = vm_details.vm_name + "_disk" + str(already_attached_disks + 1) + ".qcow2"        
+                if (attach_disk(vm_details.vm_name, disk_name, int(vm_details.extra_HDD), host_ip, datastore, already_attached_disks)):
+                    vmid = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select(current.db.vm_data.id)[0].id
+                    current.db.attached_disks.insert(vm_id = vmid, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = int(vm_details.extra_HDD))
+        """
         else:
             attach_disk_status_message = " Your request for additional HDD could not be completed at this moment. Check logs."
     return attach_disk_status_message
@@ -390,7 +413,7 @@ def install(parameters):
             message = "VM is installed successfully." + attach_disk_status_message
 
             #send email to requesting user on successful VM creation
-            send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_name, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+            #send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_name, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:            
@@ -709,15 +732,15 @@ def clone(vmid):
         current.logger.error("Exception " + message)
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
 
+# Attaches extra disk to VM
 def attach_extra_disk(parameters):
+
     vmid = parameters['vm_id']
     disk_size = parameters['disk_size']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     current.logger.debug(str(vm_details))
     try:
-        datastore = choose_datastore()
-        if (attach_disk(vm_details.vm_name, disk_size, vm_details.host_ip, datastore)):
-            current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , capacity = disk_size)
+        if (serve_extra_disk_request(vm_details, disk_size)):
             message = "Attached extra disk successfully"
             current.logger.debug(message)
             return (current.TASK_QUEUE_STATUS_SUCCESS, message) 
@@ -730,5 +753,34 @@ def attach_extra_disk(parameters):
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
+                  
+    
+"""
+# Attaches extra disk to VM
+def attach_extra_disk(parameters):
+
+    vmid = parameters['vm_id']
+    disk_size = parameters['size']
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    current.logger.debug(str(vm_details))
+    try:
+        datastore = choose_datastore()
+        already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
+        disk_name = vm_details.vm_name + "_disk" + str(already_attached_disks + 1) + ".qcow2"     
+        if (attach_disk(vm_details.vm_name, disk_name, disk_size, vm_details.host_id.host_ip, datastore, already_attached_disks)):
+            current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size)
+            message = "Attached extra disk successfully"
+            current.logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_SUCCESS, message) 
+        else:
+            message = " Your request for additional HDD could not be completed at this moment. Check logs."
+            current.logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_FAILED, message) 
+    except:
+        etype, value, tb = sys.exc_info()
+        message = ''.join(traceback.format_exception(etype, value, tb, 10))
+        current.logger.error("Exception " + message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+"""
                   
 
