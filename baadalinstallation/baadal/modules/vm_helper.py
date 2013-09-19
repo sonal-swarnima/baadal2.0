@@ -195,21 +195,27 @@ def create_vm_image(vm_details, datastore):
 
 # Determines an install command for vm
 def get_install_command(vm_details, vm_image_location, vm_properties):
-    
+
+    bus = ''    
     template = vm_properties['template']
     optional = ' --import --os-type=' + template.os_type
-    if (template.arch != 'amd64'):
+    if (template.arch != 'amd64' and template.os_type == 'Linux'):
         optional = optional + ' --arch=' + template.arch + ' '
+        bus = ',bus=virtio'
     
     format_command = ''
     if (template.type == 'QCOW2'):
-        format_command = ',format=qcow2' 
+        format_command = ',format=qcow2'
+    
+    variant_command = ''
+    if (template.os_type == 'Windows'):
+        variant_command = ' --os-variant=' + template.arch 
     
     install_command = 'virt-install \
                      --name=' + vm_details.vm_name + ' \
                      --ram=' + str(vm_properties['ram']) + ' \
-                     --vcpus=' + str(vm_properties['vcpus']) + optional + ' \
-                     --disk path=' + vm_image_location + format_command+',bus=virtio \
+                     --vcpus=' + str(vm_properties['vcpus']) + optional + variant_command + ' \
+                     --disk path=' + vm_image_location + format_command + bus + ' \
                      --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_1'] + ' \
                      --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
                      --noautoconsole \
@@ -702,3 +708,27 @@ def clone(vmid):
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
+
+def attach_extra_disk(parameters):
+    vmid = parameters['vm_id']
+    disk_size = parameters['disk_size']
+    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    current.logger.debug(str(vm_details))
+    try:
+        datastore = choose_datastore()
+        if (attach_disk(vm_details.vm_name, disk_size, vm_details.host_ip, datastore)):
+            current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , capacity = disk_size)
+            message = "Attached extra disk successfully"
+            current.logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_SUCCESS, message) 
+        else:
+            message = " Your request for additional HDD could not be completed at this moment. Check logs."
+            current.logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_FAILED, message) 
+    except:
+        etype, value, tb = sys.exc_info()
+        message = ''.join(traceback.format_exception(etype, value, tb, 10))
+        current.logger.error("Exception " + message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+                  
+
