@@ -224,8 +224,7 @@ def clone_vm():
 def attach_extra_disk():
 
     vm_id = request.args[0]
-    vm_info = get_vm_config(vm_id)
-    form = get_attach_extra_disk_form(vm_info)
+    form = get_attach_extra_disk_form(vm_id)
     if form.accepts(request.vars,session, onvalidation=attach_extra_disk_validation):
         session.flash = "Your request has been sent for approval."
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))

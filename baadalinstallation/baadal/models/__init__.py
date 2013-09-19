@@ -12,7 +12,8 @@ __all__ =['enqueue_vm_request','get_mail_admin_form','send_email_to_admin','get_
             'update_task_retry','get_all_hosts','get_vm_user_list','does_vm_exist','get_vm_info','get_vm_groupby_hosts','exception_handler',
             'handle_exception','get_full_name','delete_user_vm_access','update_vm_lock','get_request_vm_form','logger','get_add_template_form',
             'get_add_host_form','get_add_datastore_form','get_configuration_elem','set_configuration_elem','get_create_vm_form','add_vm_task_to_queue',
-            'add_vm_users','add_to_cost','get_all_vm_list','get_task_list','get_all_pending_vm_count','send_remind_faculty_email','send_email_to_user']
+            'add_vm_users','add_to_cost','get_all_vm_list','get_task_list','get_all_pending_vm_count','send_remind_faculty_email','send_email_to_user',
+            'get_attach_extra_disk_form','attach_extra_disk_validation']
 
 if 0:
     from admin_model import *

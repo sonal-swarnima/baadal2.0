@@ -209,16 +209,10 @@ def get_clone_vm_form(vm_id):
 
     return form
 
-def clone_vm_validation(form):
-
-    parent_vm_id = request.post_vars.parent_vm_id
+def copy_vm_info(form, parent_vm_id, vm_name):
     vm_info = db.vm_data[parent_vm_id]
-    clone_name = form.vars.clone_name
-    cnt = 1;
-    while(db.vm_data(vm_name=(clone_name+str(cnt)))):
-        cnt = cnt+1
-    
-    form.vars.vm_name = clone_name + str(cnt)
+
+    form.vars.vm_name = vm_name
     form.vars.RAM = vm_info.RAM
     form.vars.HDD = vm_info.HDD
     form.vars.extra_HDD = vm_info.extra_HDD
@@ -227,38 +221,45 @@ def clone_vm_validation(form):
     form.vars.requester_id = auth.user.id
     form.vars.owner_id = vm_info.owner_id
     form.vars.parent_id = parent_vm_id
-    form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
     if (is_moderator() | is_orgadmin()):
         form.vars.status = VM_STATUS_APPROVED
     elif is_faculty():
         form.vars.status = VM_STATUS_VERIFIED
     else:
         form.vars.status = VM_STATUS_REQUESTED
+    
 
-def get_attach_extra_disk_form(vm_info):
+def clone_vm_validation(form):
 
-    form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vmname', _value = vm_info['name'], _readonly = True)), 
-                      TR('HDD:', INPUT(_name = 'hdd',_value = vm_info['hdd'], _readonly = True)),
-                      TR('Extra HDD:' , INPUT(_name = 'extra_hdd',_value = vm_info['extrahdd'], _readonly = True)),
-                      TR('Size:' , INPUT(_name = 'size', requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)])),
-                      TR('', INPUT(_type = 'submit', _value = 'Submit'))))
+    parent_vm_id = request.post_vars.parent_vm_id
+    clone_name = form.vars.clone_name
+    cnt = 1;
+    while(db.vm_data(vm_name=(clone_name+str(cnt)))):
+        cnt = cnt+1
+    vm_name = clone_name + str(cnt)
+    form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
+    copy_vm_info(form, parent_vm_id, vm_name)
+    
+
+def get_attach_extra_disk_form(vm_id):
+
+    vm_info = db.vm_data[vm_id]
+    vm_name = vm_info['vm_name'] + '_attach_disk'
+    form =SQLFORM(db.vm_data, fields = ['purpose'], labels = {'purpose':'Purpose'}, hidden=dict(parent_vm_id=vm_id))
+    form[0].insert(0, TR(LABEL('VM Name:'), INPUT(_name = 'disk_vm_name',  _value = vm_name, _readonly=True)))
+    form[0].insert(1, TR(LABEL('HDD:'), INPUT(_name = '_HDD',_value = vm_info['HDD'], _readonly = True)))
+    form[0].insert(2, TR(LABEL('Extra HDD:'), INPUT(_name = '_extra_hdd',_value = vm_info['extra_HDD'], _readonly = True)))
+    form[0].insert(3, TR(LABEL('Disk Size:'), INPUT(_name = 'disk_size', requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)])))
 
     return form
 
+
 def attach_extra_disk_validation(form):
 
-    vm_name = form.vars.vmname + '_attach_disk'
-    hdd = form.vars.hdd
-    extra_hdd = form.vars.extra_hdd
-    disk_size = form.vars.size
-    if (is_moderator() | is_orgadmin() | is_faculty()):
-        vm_status = VM_STATUS_VERIFIED
-    else:
-        vm_status = VM_STATUS_REQUESTED
-    attach_disk_vm_id = db.vm_data.insert(vm_name = vm_name, HDD = hdd, extra_HDD = extra_hdd, parameters = dict(size = disk_size), status = vm_status)
-
-
-
+    parent_vm_id = request.post_vars.parent_vm_id
+    vm_name = form.vars.disk_vm_name
+    form.vars.parameters = dict(disk_size = form.vars.disk_size)
+    copy_vm_info(form, parent_vm_id, vm_name)
 
 
 def get_mail_admin_form():

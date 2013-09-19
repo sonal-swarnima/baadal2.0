@@ -52,6 +52,8 @@ def get_pending_vm_list(vms):
         request_type = 'Install'
         if vm.parameters and ('clone_count' in vm.parameters):
             request_type = 'Clone[' + str(vm.parameters['clone_count']) + ']'
+        if vm.parameters and ('disk_size' in vm.parameters):
+            request_type = 'Attach Disk'
 
         element = {'id' : vm.id,
                    'vm_name' : vm.vm_name, 
@@ -136,11 +138,8 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}):
     
 def add_vm_users(_vm_id, requester_id, owner_id, vm_users=None):
     user_list = [requester_id, owner_id]
-    print vm_users
     if vm_users and len(vm_users) > 1:
         for vm_user in vm_users[1:-1].split(','):
-            print 'here'
-            print vm_user
             user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
     for _user_id in set(user_list):
         db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
@@ -257,7 +256,7 @@ def get_vm_operations(vm_id):
                 _href=URL(r=request,c='user', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
                                
             valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
-                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), 
                     _title="Attach Extra Disk", _alt="Attach Extra Disk"))
                     
             if is_moderator():
