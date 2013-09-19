@@ -17,6 +17,7 @@ def send_email_for_vm_creation(requester_id, vm_name, vm_request_time):
     context = dict(vmName=vm_name, vmRequestTime=vm_request_time)
     send_mail(user_email, VM_CREATION_SUBJECT, VM_CREATION_TEMPLATE, context, None)
 
+
 def send_mail(to_address, email_subject, email_template, context, reply_to_address):
     
     context['userName'] = (auth.user.first_name + ' ' + auth.user.last_name) 
@@ -40,6 +41,7 @@ def send_email_to_faculty(faculty_id, vm_name, vm_request_time):
         noreply_email = config.get("MAIL_CONF","mail_noreply")
         send_mail(faculty_email, VM_APPROVAL_SUBJECT_FOR_FACULTY, VM_APPROVAL_TEMPLATE_FOR_FACULTY, context, noreply_email)
 
+
 def send_email_to_user(vm_name):
 
     email_address = get_email(auth.user.id)
@@ -47,6 +49,7 @@ def send_email_to_user(vm_name):
     noreply_email = config.get("MAIL_CONF","mail_noreply")
     send_mail(email_address, VM_REQUEST_SUBJECT_FOR_USER, VM_REQUEST_TEMPLATE_FOR_USER, context, noreply_email)
     
+
 def send_email_to_admin(email_subject, email_message, email_type):
     if email_type == 'request':
         email_address = config.get("MAIL_CONF","mail_admin_bug_report")

@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin
+from helper import is_moderator, is_faculty, is_orgadmin, get_datetime
 
 @auth.requires_login()
 @handle_exception
@@ -22,7 +22,7 @@ def request_vm():
         
         send_email_to_user(form.vars.vm_name)
         if not(is_moderator() | is_orgadmin() | is_faculty()):
-            send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, form.vars.start_time)
+            send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, get_datetime())
 
         logger.debug('VM requested successfully')
         redirect(URL(c='default', f='index'))

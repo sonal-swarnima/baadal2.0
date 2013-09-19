@@ -3,8 +3,9 @@
 <h2 class="subtitle">No Pending Requests</h2>
     {{else:}}
 <h2 class="subtitle">Pending VM Requests</h2>
-  <div class="TABLE">
-    <table>
+
+    <table id="sortTable" class="tablesorter">
+    <thead>
       <tr>
         <th>Type</th>
         <th>Requested By</th>
@@ -14,45 +15,41 @@
         <th>RAM</th>
         <th>HDD</th>
         <th>vCPUs</th>
-        <th colspan="2">Approval Status</th>
+        <th>Approval Status</th>
         <th>Action</th>
       </tr> 
+      </thead>
+      <tbody>
       {{for pending_vm in pending_vms:}}
-        {{rows = 1}}
-        {{if pending_vm['requested_by'] == USER:}}
-            {{rows=2}}
-        {{pass}}
        <tr>
-            <td rowspan="{{=rows}}">{{=pending_vm['request_type']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['requester_name']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['collaborators']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['organisation']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['vm_name']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['RAM']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['HDD']}}</td>
-            <td rowspan="{{=rows}}">{{=pending_vm['vCPUs']}}</td>
+            <td>{{=pending_vm['request_type']}}</td>
+            <td>{{=pending_vm['requester_name']}}</td>
+            <td>{{=pending_vm['collaborators']}}</td>
+            <td>{{=pending_vm['organisation']}}</td>
+            <td>{{=pending_vm['vm_name']}}</td>
+            <td>{{=pending_vm['RAM']}}</td>
+            <td>{{=pending_vm['HDD']}}</td>
+            <td>{{=pending_vm['vCPUs']}}</td>
+            <td>
             {{if pending_vm['requested_by'] == USER:}}
-            <td>
-                {{=pending_vm['faculty_name']}}
-            </td>
-            <td>    
-                {{if pending_vm['status'] == VM_STATUS_REQUESTED:}}
-                {{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
-                {{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'))}}
-                {{pass}}
-            </td>
+            	{{=pending_vm['faculty_name']}}
+            	{{if pending_vm['status'] == VM_STATUS_REQUESTED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
+            	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
+            	{{pass}}
+            	<br/>
+            	{{=pending_vm['organisation']}} Admin
+            	{{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
+            	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
+            	{{pass}}
             {{elif pending_vm['requested_by'] == FACULTY:}}
-            <td>
-                {{=pending_vm['organisation']}} Admin
-            </td>
-            <td>    
-                {{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
-                {{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'))}}
-                {{pass}}
-            </td>
-            {{else:}}<td colspan="2">Pre-Approved</td>
+            	pending_vm['organisation'] Admin
+            	{{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
+            	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
+            	{{pass}}
+            {{else:}}<i>Pre-Approved</i>
             {{pass}}
-            <td rowspan="{{=rows}}">
+            </td>
+            <td>
                 {{if pending_vm['status'] == VM_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
                         _title="Installation in Progress", _alt="Installation in Progress")}}
@@ -67,20 +64,8 @@
                 {{pass}}
             </td>
           </tr>
-        {{if pending_vm['requested_by'] == USER:}}
-          <tr>
-              <td>
-                  {{=pending_vm['organisation']}} Admin
-              </td>
-              <td>  
-                  {{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'))}}
-                  {{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'))}}
-                  {{pass}}
-              </td>
-          </tr>
-        {{pass}}  
       {{pass}}
+	</tbody>
     </table>
-    </div>
 {{pass}}
 
