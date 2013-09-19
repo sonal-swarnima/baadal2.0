@@ -9,6 +9,7 @@ if 0:
 
 import sys, math, shutil, paramiko, traceback, random, libvirt
 import xml.etree.ElementTree as etree
+from mail_handler import send_email_for_vm_creation
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
 
@@ -382,8 +383,8 @@ def install(parameters):
 
             message = "VM is installed successfully." + attach_disk_status_message
 
-			#send email to requesting user on successful VM creation
-    		send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_name, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+            #send email to requesting user on successful VM creation
+            send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_name, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:            
@@ -701,14 +702,3 @@ def clone(vmid):
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
-                   
-# Prepares VM list to be displayed on webpage
-def get_vm_list(vms):
-    vmlist = []
-    for vm in vms:
-        total_cost = add_to_cost(vm.vm_name)
-        element = {'id':vm.id,'name':vm.vm_name,'ip':vm.vm_ip, 'owner':get_fullname(vm.user_id), 'ip':vm.vm_ip, 
-                   'hostip':vm.host_id.host_ip,'RAM':vm.RAM,'vcpus':vm.vCPU,'level':vm.current_run_level,'cost':total_cost}
-        vmlist.append(element)
-    return vmlist
-
