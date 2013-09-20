@@ -258,8 +258,11 @@ def attach_extra_disk_validation(form):
 
     parent_vm_id = request.post_vars.parent_vm_id
     vm_name = form.vars.disk_vm_name
+    cnt = 1;
+    while(db.vm_data(vm_name=(vm_name+str(cnt)))):
+        cnt = cnt+1
     form.vars.parameters = dict(disk_size = form.vars.disk_size)
-    copy_vm_info(form, parent_vm_id, vm_name)
+    copy_vm_info(form, parent_vm_id, vm_name + str(cnt))
 
 
 def get_mail_admin_form():

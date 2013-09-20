@@ -99,14 +99,17 @@ def create_clone_task(vm_data):
 def enqueue_vm_request(vm_id):
     
     vm_data = db.vm_data[vm_id]
-    if vm_data.parameters and vm_data.parameters['clone_count']:
+    params = {}
+    if vm_data.parameters and 'clone_count' in vm_data.parameters:
         create_clone_task(vm_data)
         return
     task_type = TASK_TYPE_CREATE_VM
-    if vm_data.parameters and vm_data.parameters['disk_size']:
+   
+    if vm_data.parameters and 'disk_size' in vm_data.parameters:
         task_type = TASK_TYPE_ATTACH_DISK
+        params = {'disk_size' : vm_data.parameters['disk_size']}
     db(db.vm_data.id == vm_id).update(status=VM_STATUS_IN_QUEUE)
-    add_vm_task_to_queue(vm_id, task_type)
+    add_vm_task_to_queue(vm_id, task_type, params)
 
 
 def delete_user_vm_access(vm_id,user_id) :    

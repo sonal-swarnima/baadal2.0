@@ -278,7 +278,11 @@ def get_vm_operations(vm_id):
             valid_operations_list.append(A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
                     _href=URL(r=request, f='shutdown_machine', args=[vm_id]), _title="Gracefully shut down this virtual machine",
                     _alt="Gracefully shut down this virtual machine"))
-                    
+
+            valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
+                    _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), 
+                    _title="Attach Extra Disk", _alt="Attach Extra Disk"))
+                                      
                     
         if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED):
             
