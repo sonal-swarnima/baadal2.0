@@ -168,9 +168,9 @@ def exec_command_on_host(machine_ip, user_name, command):
 def create_vm_image(vm_details, datastore):
 
     # Creates a directory for the new vm
-    current.logger.debug("Creating directory...")
-    if not os.path.exists (get_constant('vmfiles_path') + '/' + vm_details.vm_name):
-        os.makedirs(get_constant('vmfiles_path') + '/' + vm_details.vm_name)
+    current.logger.debug("Creating vm directory...")
+    if not os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name):
+        os.makedirs(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name)
     else:
         raise Exception("Directory with same name as vmname already exists.")
 
@@ -183,7 +183,7 @@ def create_vm_image(vm_details, datastore):
     command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + \ 
                           datastore.path + '/' + get_constant("templates_dir") + '/tmp'
     """
-    vm_image_location = get_constant('vmfiles_path') + '/' + vm_details.vm_name + '/' + vm_details.vm_name + '.qcow2'
+    vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name + '/' + vm_details.vm_name + '.qcow2'
 
     current.logger.debug("Copy in progress...")
     rcode = os.system('cp %s %s' % (template_location, vm_image_location))
@@ -331,8 +331,8 @@ def check_if_vm_defined(hostip, vmname):
 # Frees vm properties
 def free_vm_properties(vm_details):
 
-    if os.path.exists (get_constant('vmfiles_path') + '/' + vm_details.vm_name):
-        shutil.rmtree(get_constant('vmfiles_path') + '/' + vm_details.vm_name)
+    if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name):
+        shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name)
     return
     
 # Updates db after a vm is installed successfully
@@ -491,7 +491,7 @@ def clean_up_database_after_vm_deletion(vm_details):
     # moving vm image folder to archives folder
     if not os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('archives_dir')):
             os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('archives_dir'))
-    source_file = get_constant('vmfiles_path') + '/' + vm_details.vm_name
+    source_file = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name
     archive_filename = vm_details.vm_name + str(get_datetime())
     current.logger.debug(archive_filename)
     destination_file = get_constant('vmfiles_path') + '/' + get_constant('archives_dir') + '/' + archive_filename
@@ -513,6 +513,24 @@ def clean_up_database_after_vm_deletion(vm_details):
     # deleting entry of extra disk of vm
     current.db(current.db.attached_disks.vm_id == vm_details.id).delete()
     return
+
+def vm_has_snapshots(vm_id):
+    if (current.db(current.db.snapshot.vm_id == vm_id).select()):
+        return True
+    else:
+        return False
+
+# Deletes all vm snapshots
+def delete_vm_snapshots(vmid, domain):
+
+    try:    
+        for row in current.db(current.db.snapshot.vm_id == vmid).select(current.db.snapshot.snapshot_name) :
+            current.logger.debug(row.snapshot_name)
+            snapshot = domain.snapshotLookupByName(row.snapshot_name, 0)
+            snapshot.delete(0)
+            current.logger.debug("Deleted " + row.snapshot_name + " snapshot successfully.")
+    except:
+        raise Exception("Could not delete snapshots. Try later")
         
 # Deletes a vm
 def delete(parameters):
@@ -525,7 +543,9 @@ def delete(parameters):
         current.logger.debug(str(vm_details.status))
         if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
-            domain.destroy()
+            #domain.destroy()
+        if (vm_has_snapshots(vmid)):
+             delete_vm_snapshots(vmid, domain)
         current.logger.debug("Starting to delete it...")
         domain.undefine()
         message = vm_details.vm_name + " is deleted successfully."
@@ -609,7 +629,7 @@ def revert(parameters):
 # Deletes a snapshot
 def delete_snapshot(parameters):
 
-    current.logger.debug("Inside delete snapshot1")
+    current.logger.debug("Inside delete snapshot")
     vmid = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
@@ -667,8 +687,8 @@ def get_clone_properties(vm_details, cloned_vm_details):
 
     # Finds mac address, ip address and vnc port for the cloned vm
     choose_mac_ip_vncport(vm_properties)
-    current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
-                              + str(vm_properties['vnc_port']))
+    current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + \
+                         " VNCPORT is : " + str(vm_properties['vnc_port']))
   
     # Template and host of parent vm
     vm_properties['template'] = current.db(current.db.template.id == vm_details.template_id).select()[0]
@@ -676,10 +696,10 @@ def get_clone_properties(vm_details, cloned_vm_details):
 
     # Creates a directory for the cloned vm
     current.logger.debug("Creating directory for cloned vm...")
-    if not os.path.exists (get_constant('vmfiles_path') + '/' + cloned_vm_details.vm_name):
-        os.makedirs(get_constant('vmfiles_path') + '/' + cloned_vm_details.vm_name)
-        clone_file_parameters = ' --file ' + get_constant('vmfiles_path') + '/' + cloned_vm_details.vm_name + '/' + \
-                                cloned_vm_details.vm_name + '.qcow2'
+    if not os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + cloned_vm_details.vm_name):
+        os.makedirs(get_constant('vmfiles_path') + get_constant('vms') + '/' + cloned_vm_details.vm_name)
+        clone_file_parameters = ' --file ' + get_constant('vmfiles_path') + get_constant('vms') + '/' + \
+                                cloned_vm_details.vm_name + '/' + cloned_vm_details.vm_name + '.qcow2'
     else:
         raise Exception("Directory with same name as vmname already exists.")
 
@@ -746,7 +766,5 @@ def attach_extra_disk(parameters):
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
-        return (current.TASK_QUEUE_STATUS_FAILED, message) 
-                  
-
+        return (current.TASK_QUEUE_STATUS_FAILED, message)            
 

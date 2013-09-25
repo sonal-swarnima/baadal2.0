@@ -89,7 +89,8 @@ DB_CONSTANTS = {'vmfiles_path' : '/mnt/testdatastore',
               'vmcount'        :  1,
               'vm_rrds_dir'    : 'vm_rrds',
               'graph_file_dir' : '/home/www-data/web2py/application/baadal/static/images/vm_graphs/',
-              'admin_email'    : 'baadalsupport@cse.iitd.ernet.in' }
+              'admin_email'    : 'baadalsupport@cse.iitd.ernet.in',
+              'vms'            : '/vms' }
 
 current.ADMIN = ADMIN
 current.ORGADMIN = ORGADMIN
