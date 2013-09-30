@@ -205,7 +205,7 @@ def get_clone_vm_form(vm_id):
     clone_name = vm_info['vm_name'] + '_clone'
     form =SQLFORM(db.vm_data, fields = ['purpose'], labels = {'purpose':'Purpose'}, hidden=dict(parent_vm_id=vm_id))
     form[0].insert(0, TR(LABEL('VM Name:'), INPUT(_name = 'clone_name',  _value = clone_name, _readonly=True)))
-    form[0].insert(1, TR(LABEL('No. of Clones:'), INPUT(_name = 'no_of_clones', requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)])))
+    form[0].insert(1, TR(LABEL('No. of Clones:'), INPUT(_name = 'no_of_clones', requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)], _id='no_of_clones')))
 
     return form
 
@@ -249,7 +249,7 @@ def get_attach_extra_disk_form(vm_id):
     form[0].insert(0, TR(LABEL('VM Name:'), INPUT(_name = 'disk_vm_name',  _value = vm_name, _readonly=True)))
     form[0].insert(1, TR(LABEL('HDD:'), INPUT(_name = '_HDD',_value = vm_info['HDD'], _readonly = True)))
     form[0].insert(2, TR(LABEL('Extra HDD:'), INPUT(_name = '_extra_hdd',_value = vm_info['extra_HDD'], _readonly = True)))
-    form[0].insert(3, TR(LABEL('Disk Size:'), INPUT(_name = 'disk_size', requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)])))
+    form[0].insert(3, TR(LABEL('Disk Size:'), INPUT(_name = 'disk_size', requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)], _id='attach_disk_size')))
 
     return form
 

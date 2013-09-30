@@ -101,7 +101,6 @@ def get_vm_info(_vm_id):
     if not vm_info:
         return None
 
-    logger.info(vm_info)
     return vm_info.first()
 
 
@@ -305,9 +304,9 @@ def get_vm_operations(vm_id):
 
 def get_vm_snapshots(vm_id):
     vm_snapshots_list = []
-    snapshot_dict = {}
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
-        
+
+        snapshot_dict = {}
         snapshot_dict['name'] = snapshot.snapshot_name
         snapshot_dict['delete'] = A(IMG(_src=URL('static','images/delete-snapshot.gif'), _height = 20, _width = 20),
                                        _href=URL(r=request, f='delete_snapshot', args= [vm_id, snapshot.id]),
@@ -316,7 +315,6 @@ def get_vm_snapshots(vm_id):
                                        _href=URL(r=request, f='revert_to_snapshot', args= [vm_id, snapshot.id]),
                                        _title = "Revert to this snapshot", _alt = "Revert to this snapshot")
         vm_snapshots_list.append(snapshot_dict)
-
     return vm_snapshots_list
 
 def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
