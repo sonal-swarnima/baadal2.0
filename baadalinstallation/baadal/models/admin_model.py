@@ -40,7 +40,10 @@ def get_all_pending_vm():
         for vm_user in vm_users:
             if vm_user.user_id != vm_user.vm_id.requester_id:
                 collaborators.append(vm_user.user_id.first_name + ' ' + vm_user.user_id.last_name)
-        vm['collaborators'] = ', '.join(collaborators)
+        if not collaborators:
+            vm['collaborators'] = '-'
+        else:
+            vm['collaborators'] = ', '.join(collaborators)
         
         roles = []
         user_roles = db(db.user_membership.user_id == vm['requester_id']).select()
@@ -154,6 +157,8 @@ def get_task_by_status(task_status, task_num):
     
 
 def update_task_retry(_task_id):
+    #Mark status for VM as 'In Queue'
+    db(db.vm_data.id.belongs(db(_task_id == db.task_queue.id)._select(db.task_queue.vm_id))).update(status = VM_STATUS_IN_QUEUE)
     #Mark current task event for the task as IGNORE. 
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
     #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task

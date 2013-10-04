@@ -309,6 +309,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     if (int(vm_details.extra_HDD) != 0):
         if (serve_extra_disk_request(vm_details, vm_details.extra_HDD, host_ip)):
             message = "Attached extra disk successfully"
+            current.db.vm_data[vmid] = dict(status=-1)
             current.logger.debug(message)
         else:
             attach_disk_status_message = " Your request for additional HDD could not be completed at this moment. Check logs."

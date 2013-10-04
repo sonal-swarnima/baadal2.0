@@ -24,12 +24,19 @@ task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_ATTACH_DISK             :    attach_extra_disk
        }
 
+def markFailedTask(task_id, error_msg, vm_id):
+    #For failed task, change task status to Failed, it can be marked for retry by admin later
+    db(db.task_queue.id==task_id).update(status=TASK_QUEUE_STATUS_FAILED)
+    #Update task event with the error message
+    db((db.task_queue_event.task_id==task_id) & 
+       (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE)).update(error=error_msg,status=TASK_QUEUE_STATUS_FAILED)
+    db.vm_data[vm_id] = dict(status = -1)
+
 
 def processTaskQueue(task_id):
+
+    task_process = db.task_queue[task_id] 
     try:
-        task_process = db.task_queue[task_id] 
-        
-        task_queue_query = db(db.task_queue.id==task_id)
         task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
         #Update attention_time for task in the event table
         task_event_query.update(attention_time=get_datetime())
@@ -38,20 +45,18 @@ def processTaskQueue(task_id):
         #On return, update the status and end time in task event table
         task_event_query.update(status=ret[0], end_time=get_datetime())
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
-            #For failed task, change task status to Failed, it can be marked for retry by admin later
-            task_queue_query.update(status=TASK_QUEUE_STATUS_FAILED)
-            #Update task event with the error message
-            task_event_query.update(error=ret[1],status=TASK_QUEUE_STATUS_FAILED)
-            db.vm_data[task_process.vm_id] = dict(status = -1)
+            markFailedTask(task_id, ret[1], task_process.vm_id)
+
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # For successful task, delete the task from queue 
-            task_queue_query.delete()
+            db(db.task_queue.id==task_id).delete()
         db.commit()
         logger.debug('Task done')
     except:
         etype, value, tb = sys.exc_info()
         msg=''.join(traceback.format_exception(etype, value, tb, 10))
         logger.error(msg)
+        markFailedTask(task_id, msg, task_process.vm_id)
         
 def processCloneTask(task_id, vm_id):
     try:
