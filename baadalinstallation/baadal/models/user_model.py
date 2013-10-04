@@ -191,8 +191,14 @@ def get_vm_user_list(vm_id) :
         user_id_lst.append(vm_user)
     return user_id_lst
 
+def is_snapshot_request_in_queue(vm_id):
+    if db((db.task_queue.vm_id == vm_id) & (db.task_queue.task_type == TASK_TYPE_SNAPSHOT_VM)).select():
+        return True
+    else:
+        return False
+
 def check_snapshot_limit(vm_id):
-    snapshots = len(db(db.snapshot.vm_id == vm_id).select())
+    snapshots = db(db.snapshot.vm_id == vm_id).count()
     logger.debug("No of snapshots are " + str(snapshots))
     if snapshots < SNAPSHOTTING_LIMIT:
         return True

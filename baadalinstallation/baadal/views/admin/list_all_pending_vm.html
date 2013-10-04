@@ -42,7 +42,7 @@
             	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
             	{{pass}}
             {{elif pending_vm['requested_by'] == FACULTY:}}
-            	pending_vm['organisation'] Admin
+            	{{=pending_vm['organisation']}} Admin
             	{{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
             	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
             	{{pass}}

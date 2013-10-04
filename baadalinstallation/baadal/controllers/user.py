@@ -146,11 +146,11 @@ def changelevel():
 @handle_exception       
 def snapshot():
     vm_id = int(request.args[0])
-   
-    if check_snapshot_limit(vm_id):
+    if is_snapshot_request_in_queue(vm_id):
+        session.flash = "Snapshot request already in queue."
+    elif check_snapshot_limit(vm_id):
         add_vm_task_to_queue(vm_id,TASK_TYPE_SNAPSHOT_VM)
-        session.flash = "Your VM snapshoting request has been queued"
-
+        session.flash = "Your request to snapshot VM has been queued"
     else:
         session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
