@@ -17,6 +17,7 @@ from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_fac
 
 def get_vm_status(iStatus):
     vm_status_map = {
+            VM_STATUS_UNKNOWN     :    'Unknown',
             VM_STATUS_REQUESTED   :    'Requested',
             VM_STATUS_REJECTED    :    'Rejected',
             VM_STATUS_VERIFIED    :    'Verified',

@@ -11,6 +11,7 @@ from vm_helper import install, start, suspend, resume, destroy, delete, migrate,
 
 task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_START_VM                :    start,
+        TASK_TYPE_STOP_VM                 :    destroy,
         TASK_TYPE_SUSPEND_VM              :    suspend,
         TASK_TYPE_RESUME_VM               :    resume,
         TASK_TYPE_DESTROY_VM              :    destroy,
@@ -30,7 +31,6 @@ def markFailedTask(task_id, error_msg, vm_id):
     #Update task event with the error message
     db((db.task_queue_event.task_id==task_id) & 
        (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE)).update(error=error_msg,status=TASK_QUEUE_STATUS_FAILED)
-    db.vm_data[vm_id] = dict(status = -1)
 
 
 def processTaskQueue(task_id):
@@ -46,6 +46,8 @@ def processTaskQueue(task_id):
         task_event_query.update(status=ret[0], end_time=get_datetime())
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             markFailedTask(task_id, ret[1], task_process.vm_id)
+            if task_process.task_type == TASK_TYPE_CREATE_VM:
+                db.vm_data[task_process.vm_id] = dict(status = -1)
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # For successful task, delete the task from queue 

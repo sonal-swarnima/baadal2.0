@@ -158,7 +158,9 @@ def get_task_by_status(task_status, task_num):
 
 def update_task_retry(_task_id):
     #Mark status for VM as 'In Queue'
-    db(db.vm_data.id.belongs(db(_task_id == db.task_queue.id)._select(db.task_queue.vm_id))).update(status = VM_STATUS_IN_QUEUE)
+    db(db.vm_data.id.belongs(db(
+        (db.task_queue.id_task_id == _task_id) & db.task_queue.task_type == TASK_TYPE_CREATE_VM)
+                             ._select(db.task_queue.vm_id))).update(status = VM_STATUS_IN_QUEUE)
     #Mark current task event for the task as IGNORE. 
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
     #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task
