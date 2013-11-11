@@ -53,7 +53,8 @@ if auth.is_logged_in():
                     (T('Sanity Check'), False, URL('admin','sanity_check')),
                     (T('Configure System'), False,dict(_href='#', _id='configure'),[
                         (T('Configure Host'), False, URL('admin','host_details')),
-                        (T('Configure Template'), False, URL('admin','add_template')),
-                        (T('Configure Datastore'), False, URL('admin','add_datastore'))
+                        (T('Configure Template'), False, URL('admin','manage_template')),
+                        (T('Configure Datastore'), False, URL('admin','add_datastore')),
+                        (T('Configure Security Domain'), False, URL('admin','manage_security_domain'))
                         ])
                     ]

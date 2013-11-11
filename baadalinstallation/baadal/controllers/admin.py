@@ -27,8 +27,14 @@ def hosts_vms():
 
 @check_moderator
 @handle_exception
-def add_template():
+def manage_template():
     form = get_add_template_form()
+    return dict(form = form)
+
+@check_moderator
+@handle_exception
+def manage_security_domain():
+    form = get_security_domain_form()
     return dict(form = form)
 
 @check_moderator

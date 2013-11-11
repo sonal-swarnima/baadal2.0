@@ -80,7 +80,10 @@ GROUP_DATA = {ADMIN : 'Super User',
               FACULTY : 'Faculty User', 
               USER:'Normal User'}
 
-ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi'}
+ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi',
+            'IIT Bombay':'Indian Institude of Technology, Mumbai'}
+
+DEF_SECURITY_DOMAIN = {'name' : 'Research', 'vlan_tag':'research', 'ip_range_lb':'10.20.1.1', 'ip_range_ub':'10.20.1.255', 'visible_to_all':True}
 
 DB_CONSTANTS = {'vmfiles_path' : '/mnt/testdatastore',
               'datastore_int'  : 'ds_',
@@ -127,6 +130,9 @@ MAC_PRIVATE_IP_POOL = {
  
 
 current.MAC_PRIVATE_IP_POOL = MAC_PRIVATE_IP_POOL
+
+PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
+current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 #Added so that changes in modules are instantlly loaded and reflected.

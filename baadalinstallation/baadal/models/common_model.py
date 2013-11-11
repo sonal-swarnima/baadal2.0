@@ -67,6 +67,7 @@ def get_pending_vm_list(vms):
                    'HDD' : vm.HDD, 
                    'status' : vm.status,
                    'request_type' : request_type,
+                   'public_ip' : (vm.public_ip != PUBLIC_IP_NOT_ASSIGNED), 
                    'owner_id' : vm.owner_id}
         vmlist.append(element)
     return vmlist

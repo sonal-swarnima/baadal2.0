@@ -13,6 +13,7 @@
         <th>Faculty</th>
         <th>HDD</th>
         <th>vCPUs</th>
+        <th>Public IP</th>
         <th>Status</th>
       </tr> 
       </thead>
@@ -26,6 +27,13 @@
             <td>{{=pending_approval['faculty_name']}}</td>
             <td>{{=pending_approval['HDD']}}</td>
             <td>{{=pending_approval['vCPUs']}}</td>
+            <td style="text-align:center">
+            {{if pending_approval['public_ip']:}}
+                    <span class="icon-ok"/>
+            {{else:}}        
+                    <span class="icon-remove"/>
+            {{pass}}
+            </td>
             <td>
             	{{if pending_approval['status'] == VM_STATUS_APPROVED:}}
             		Waiting for admin approval

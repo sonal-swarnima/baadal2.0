@@ -32,7 +32,7 @@ def request_vm():
 @handle_exception
 def verify_faculty():
 
-    username = request.vars.keywords
+    username = request.vars['keywords']
     faculty_info = get_user_info(username, [FACULTY])
     if faculty_info != None:
         return faculty_info[1]
@@ -41,7 +41,7 @@ def verify_faculty():
 @handle_exception
 def add_collaborator():
 
-    username = request.vars.keywords
+    username = request.vars['keywords']
     user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
     if user_info != None:
         return user_info[1]

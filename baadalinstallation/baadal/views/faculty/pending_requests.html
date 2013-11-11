@@ -13,6 +13,7 @@
         <th>Faculty</th>
         <th>HDD</th>
         <th>vCPUs</th>
+        <th>Public IP</th>
         <th>Operations</th>
       </tr> 
       </thead>
@@ -26,6 +27,13 @@
             <td>{{=pending_request['faculty_name']}}</td>
             <td>{{=pending_request['HDD']}}</td>
             <td>{{=pending_request['vCPUs']}}</td>
+            <td style="text-align:center">
+            {{if pending_request['public_ip']:}}
+                    <span class="icon-ok"/>
+            {{else:}}        
+                    <span class="icon-remove"/>
+            {{pass}}
+            </td>
             <td>
            {{if FACULTY in auth.user_groups.values():}}
                {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pending_request['id']]))}}

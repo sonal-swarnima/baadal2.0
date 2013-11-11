@@ -31,6 +31,28 @@ def get_add_datastore_form():
     form = SQLFORM.grid(db.datastore, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
+
+def get_org_visibility(row):
+    sec_domain = db.security_domain[row.id]
+    if sec_domain.visible_to_all:
+        return 'All'
+    elif sec_domain.org_visibility != None:
+        orgs = db(db.organisation.id.belongs(sec_domain.org_visibility)).select()
+        return ', '.join(org.name for org in orgs)
+    return '-'
+
+
+def get_security_domain_form():
+    
+    db.security_domain.id.readable=False 
+
+    fields = (db.security_domain.name, db.security_domain.vlan_tag, db.security_domain.ip_range_lb, db.security_domain.ip_range_ub)
+    default_sort_order=[db.security_domain.id]
+
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False)
+    return form
+
+
 def get_all_pending_vm():
     vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED, VM_STATUS_IN_QUEUE)).select()
     pending_vms = get_pending_vm_list(vms)
@@ -159,7 +181,7 @@ def get_task_by_status(task_status, task_num):
 def update_task_retry(_task_id):
     #Mark status for VM as 'In Queue'
     db(db.vm_data.id.belongs(db(
-        (db.task_queue.id_task_id == _task_id) & db.task_queue.task_type == TASK_TYPE_CREATE_VM)
+        (db.task_queue.id == _task_id) & db.task_queue.task_type == TASK_TYPE_CREATE_VM)
                              ._select(db.task_queue.vm_id))).update(status = VM_STATUS_IN_QUEUE)
     #Mark current task event for the task as IGNORE. 
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
@@ -175,7 +197,7 @@ def update_task_ignore(_task_id):
 
 def get_search_host_form():
     form = FORM('Host IP:',
-                INPUT(_name = 'host_ip',requires = IS_NOT_EMPTY()),
+                INPUT(_name = 'host_ip',requires = IS_NOT_EMPTY(), _id='host_ip_id'),
                 INPUT(_type = 'submit', _value = 'Get Details'))
     return form
 

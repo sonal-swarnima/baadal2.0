@@ -101,6 +101,9 @@ def request_vm_validation(form):
         validate_approver(form)
 
     form.vars.requester_id = auth.user.id
+    if form.vars.req_public_ip == 'on':
+        form.vars.public_ip = None
+    form.vars.security_domain = form.vars.sec_domain
 
 def add_faculty_approver(form):
 
@@ -116,19 +119,37 @@ def add_collaborators(form):
     collaborator_elem = TR(LABEL('Collaborators:'),_input,_link,_id='collaborator_row')
     form[0].insert(-1, collaborator_elem)#insert tr element in the form
 
+def get_security_domain():
+    sec_domains = db((db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))).select()
+    return sec_domains
+
+def add_security_domain(form):
+    
+    select=SELECT(_name='sec_domain') # create HTML select
+    i=0
+    for sec_domain in get_security_domain():
+        select.insert(i, OPTION(sec_domain['name'], _value = sec_domain['id']))
+        i = i+1
+
+    vlan_elem = TR(LABEL('Security Domain:'), select ,TD(), _id='security_domain_row')
+    form[0].insert(-1, vlan_elem)#insert tr element in the form
 
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose']
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_ssh', 'enable_http']
     form_labels = {'vm_name':'Name of VM','extra_HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}
 
     form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_owner='',vm_users=','))
     get_configuration_elem(form) # Create dropdowns for configuration
     
+    form[0].insert(-1, TR(LABEL('Public IP:'), 
+                          INPUT(_type = 'checkbox', _name = 'req_public_ip'), TD(), 
+                          _id='public_ip_row')) 
+    
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         add_faculty_approver(form)
     add_collaborators(form)
-    
+    add_security_domain(form)
     return form
 
 

@@ -17,11 +17,11 @@ conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
 db = DAL(conn_str)
 
 db.define_table('constants',
-    Field('name', 'string', notnull = True, unique = True),
+    Field('name', 'string', length = 255, notnull = True, unique = True),
     Field('value', 'string', notnull = True))
 
 db.define_table('organisation',
-    Field('name', 'string', notnull = True, unique = True),
+    Field('name', 'string', length = 255, notnull = True, unique = True),
     Field('details', 'string'),
     Field('public_ip', 'string',length = 15), 
     Field('admin_mailid', 'string', length = 50),
@@ -102,9 +102,9 @@ else:
 ###############################################################################
 
 db.define_table('host',
-    Field('host_ip', 'string',length = 15,notnull = True, unique = True, label='Host IP'),
-    Field('host_name', 'string',length = 100,notnull = True, unique = True),
-    Field('mac_addr', 'string',length = 100,notnull = True, unique = True),
+    Field('host_ip', 'string',length = 15,notnull = True, unique = True, requires=IS_IPV4(), label='Host IP'),
+    Field('host_name', 'string',length = 30,notnull = True, unique = True),
+    Field('mac_addr', 'string',length = 20,notnull = True, unique = True),
     Field('HDD', 'integer'),
     Field('CPUs', 'integer'),
     Field('RAM', 'integer'),
@@ -113,8 +113,8 @@ db.define_table('host',
     Field('vm_count', 'integer', default = 0))
 
 db.define_table('datastore',
-    Field('ds_name', 'string', unique = True, label='Name of Datastore'),
-    Field('ds_ip', 'string',length = 15, unique = True, label='Mount IP'),
+    Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
+    Field('ds_ip', 'string',length = 15, unique = True, requires=IS_IPV4(), label='Mount IP'),
     Field('path', 'string', label='Path'),
     Field('username', 'string', label='Username'),
     Field('password', 'password', label='Password'),
@@ -123,7 +123,7 @@ db.define_table('datastore',
     format = '%(ds_name)s')
 
 db.define_table('template',
-    Field('name', 'string', notnull = True, unique = True, label='Name of Template'),
+    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name of Template'),
     Field('os_type', default = "Linux", requires = IS_IN_SET(('Linux', 'Windows', 'Others')), label='Operating System'),
     Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386', 'win7')), label='Architecture'),
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
@@ -132,8 +132,19 @@ db.define_table('template',
     Field('datastore_id', db.datastore, label='Datastore'),
     format = '%(name)s')
 
+db.define_table('security_domain',
+    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name', requires=[IS_NOT_IN_DB(db,'security_domain.name')]),
+    Field('vlan_tag', 'string', length = 30, notnull = True, label='VLAN Tag'),
+    Field('ip_range_lb', 'string', notnull = True, label='IP Range From', requires=IS_IPV4()),
+    Field('ip_range_ub', 'string', notnull = True, label='IP Range To', requires=IS_IPV4()),
+    Field('visible_to_all', 'boolean', notnull = True, default = True),
+    Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
+    format = '%(name)s')
+
+
 db.define_table('vm_data',
-    Field('vm_name', 'string',length = 512,notnull = True, unique = True, label='Name'),
+    Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
+#     Field('vm_identity', 'string', length = 1024, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
@@ -145,7 +156,7 @@ db.define_table('vm_data',
     Field('mac_addr_1', 'string',length = 100),
     Field('private_ip', 'string',length = 15, label='Private IP'),
     Field('mac_addr_2', 'string',length = 100),
-    Field('public_ip', 'string',length = 15, label='Public IP'),
+    Field('public_ip', 'string',length = 15, label='Public IP', default=PUBLIC_IP_NOT_ASSIGNED),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
     Field('purpose', 'text'),
@@ -157,6 +168,9 @@ db.define_table('vm_data',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
+    Field('enable_ssh', 'boolean', default = False, label='Enable SSH Port'),
+    Field('enable_http', 'boolean', default = False, label='Enable HTTP Port'),
+    Field('security_domain', db.security_domain),
     Field('parameters', 'text', default={}),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
@@ -170,7 +184,8 @@ db.define_table('user_vm_map',
 
 db.define_table('vm_data_event',
     Field('vm_id', 'integer'),
-    Field('vm_name', 'string',length = 512,notnull = True),
+    Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
+#     Field('vm_identity', 'string', length = 1024, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),
@@ -265,3 +280,10 @@ if not db(db.organisation).count():
     for _key in _dict.keys():
         db.organisation.insert(name = _key,details = _dict[_key])
 
+if not db(db.security_domain).count():
+    _dict = dict(DEF_SECURITY_DOMAIN)
+    db.security_domain.insert(name = _dict['name'],
+                              vlan_tag = _dict['vlan_tag'],
+                              ip_range_lb = _dict['ip_range_lb'],
+                              ip_range_ub = _dict['ip_range_ub'],
+                              visible_to_all = _dict['visible_to_all'])

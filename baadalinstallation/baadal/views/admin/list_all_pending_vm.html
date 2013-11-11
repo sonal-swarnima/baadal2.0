@@ -46,18 +46,18 @@
             	{{if pending_vm['status'] == VM_STATUS_REQUESTED or pending_vm['status'] == VM_STATUS_VERIFIED:}}{{=IMG(_src=URL('static','images/red-light.jpg'), _height=18, _width=18)}}
             	{{else:}}{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
             	{{pass}}
-            {{else:}}<i>Pre-Approved</i>
+            {{else:}}<i>Pre-Approved</i>{{=IMG(_src=URL('static','images/green-light.jpg'), _height=18, _width=18)}}
             {{pass}}
             </td>
             <td>
                 {{if pending_vm['status'] == VM_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
-                        _title="Installation in Progress", _alt="Installation in Progress")}}
+                        _title="Installation in Progress", _alt="Installation in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='approve_request', args=[pending_vm['id']]),
                         _title="Approve Request", _alt="Approve Request")}}
-                    &nbsp;|&nbsp;
+                    &nbsp;&nbsp;
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pending_vm['id']]),
                         _title="Reject Request", _alt="Reject Request")}}
