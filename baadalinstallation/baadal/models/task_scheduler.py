@@ -44,6 +44,8 @@ def processTaskQueue(task_id):
         ret = task[task_process.task_type](task_process.parameters)
         #On return, update the status and end time in task event table
         task_event_query.update(status=ret[0], end_time=get_datetime())
+        del db.request_queue[task_process.parameters['request_id']]
+        
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             markFailedTask(task_id, ret[1], task_process.vm_id)
             if task_process.task_type == TASK_TYPE_CREATE_VM:
@@ -70,7 +72,9 @@ def processCloneTask(task_id, vm_id):
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             db.vm_data[vm_id] = dict(status = -1)
         
-        clone_vm_list = db.task_queue[task_id].parameters['clone_vm_id']
+        task_queue = db.task_queue[task_id]
+        print task_queue.parameters
+        clone_vm_list = task_queue.parameters['clone_vm_id']
         # Remove VM id from the list. This is to check if all the clones for the task are processed.
         clone_vm_list.remove(vm_id)
         
@@ -85,6 +89,7 @@ def processCloneTask(task_id, vm_id):
 
         if not clone_vm_list: #All Clones are processed
             task_event_query.update(status=current_status, end_time=get_datetime())
+            del db.request_queue[task_queue.parameters['request_id']]
             if current_status == TASK_QUEUE_STATUS_FAILED:
                 task_event_query.update(error=ret[1])
             else:

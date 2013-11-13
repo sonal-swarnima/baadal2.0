@@ -18,11 +18,11 @@ db = DAL(conn_str)
 
 db.define_table('constants',
     Field('name', 'string', length = 255, notnull = True, unique = True),
-    Field('value', 'string', notnull = True))
+    Field('value', 'string', length = 255, notnull = True))
 
 db.define_table('organisation',
     Field('name', 'string', length = 255, notnull = True, unique = True),
-    Field('details', 'string'),
+    Field('details', 'string', length = 255),
     Field('public_ip', 'string',length = 15), 
     Field('admin_mailid', 'string', length = 50),
     format = '%(details)s')
@@ -81,7 +81,7 @@ auth.settings.table_user = custom_auth_table # tell auth to use custom_auth_tabl
 
 auth.settings.table_group = db.define_table(
     auth.settings.table_group_name,
-    Field('role', 'string',length = 100,notnull = True, unique = True),
+    Field('role', 'string', length = 100, notnull = True, unique = True),
     Field('description', length = 255, default = ''))
 
 auth.settings.table_membership = db.define_table(
@@ -102,21 +102,21 @@ else:
 ###############################################################################
 
 db.define_table('host',
-    Field('host_ip', 'string',length = 15,notnull = True, unique = True, requires=IS_IPV4(), label='Host IP'),
-    Field('host_name', 'string',length = 30,notnull = True, unique = True),
-    Field('mac_addr', 'string',length = 20,notnull = True, unique = True),
+    Field('host_ip', 'string', length = 15, notnull = True, unique = True, requires=IS_IPV4(), label='Host IP'),
+    Field('host_name', 'string', length = 30, notnull = True, unique = True),
+    Field('mac_addr', 'string', length = 20, notnull = True, unique = True),
     Field('HDD', 'integer'),
     Field('CPUs', 'integer'),
     Field('RAM', 'integer'),
-    Field("category","string"),
+    Field("category",'string', length = 50),
     Field('status', 'integer'),
     Field('vm_count', 'integer', default = 0))
 
 db.define_table('datastore',
     Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
-    Field('ds_ip', 'string',length = 15, unique = True, requires=IS_IPV4(), label='Mount IP'),
+    Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(), label='Mount IP'),
     Field('path', 'string', label='Path'),
-    Field('username', 'string', label='Username'),
+    Field('username', 'string', length = 255, label='Username'),
     Field('password', 'password', label='Password'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
     Field('capacity', 'integer', label='Capacity'),
@@ -127,7 +127,7 @@ db.define_table('template',
     Field('os_type', default = "Linux", requires = IS_IN_SET(('Linux', 'Windows', 'Others')), label='Operating System'),
     Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386', 'win7')), label='Architecture'),
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
-    Field('hdfile', 'string', notnull = True, label='HD File'),
+    Field('hdfile', 'string', length = 255, notnull = True, label='HD File'),
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
     Field('datastore_id', db.datastore, label='Datastore'),
     format = '%(name)s')
@@ -135,16 +135,15 @@ db.define_table('template',
 db.define_table('security_domain',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name', requires=[IS_NOT_IN_DB(db,'security_domain.name')]),
     Field('vlan_tag', 'string', length = 30, notnull = True, label='VLAN Tag'),
-    Field('ip_range_lb', 'string', notnull = True, label='IP Range From', requires=IS_IPV4()),
-    Field('ip_range_ub', 'string', notnull = True, label='IP Range To', requires=IS_IPV4()),
+    Field('ip_range_lb', 'string', length = 15, notnull = True, label='IP Range From', requires=IS_IPV4()),
+    Field('ip_range_ub', 'string', length = 15, notnull = True, label='IP Range To', requires=IS_IPV4()),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
 
-
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-#     Field('vm_identity', 'string', length = 1024, notnull = True, unique = True),
+#     Field('vm_identity', 'string', length = 255, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
@@ -171,11 +170,29 @@ db.define_table('vm_data',
     Field('enable_ssh', 'boolean', default = False, label='Enable SSH Port'),
     Field('enable_http', 'boolean', default = False, label='Enable HTTP Port'),
     Field('security_domain', db.security_domain),
-    Field('parameters', 'text', default={}),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
-db.vm_data.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
-db.vm_data.parameters.filter_out = lambda txt, loads=loads: loads(txt)
+db.define_table('request_queue',
+    Field('vm_name', 'string', length = 30, notnull = True, label='VM Name'),
+    Field('parent_id', 'reference vm_data'),
+    Field('request_type', 'string', length = 20, notnull = True),
+    Field('RAM', 'integer', label='RAM'),
+    Field('HDD', 'integer'),
+    Field('extra_HDD', 'integer', label='Extra HDD'),
+    Field('attach_disk', 'integer', label='Disk Size'),
+    Field('vCPU', 'integer', label='vCPUs'),
+    Field('template_id', db.template),
+    Field('enable_ssh', 'boolean', default = False, label='Enable SSH Port'),
+    Field('enable_http', 'boolean', default = False, label='Enable HTTP Port'),
+    Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
+    Field('security_domain', db.security_domain, label='Security Domain'),
+    Field('requester_id',db.user, represent=lambda x, row: get_full_name(x), label='Requester'),
+    Field('owner_id', db.user, represent=lambda x, row: get_full_name(x), label='Owner'),
+    Field('collaborators', 'list:reference user'),
+    Field('clone_count', 'integer', label='No. of Clones'),
+    Field('purpose', 'text'),
+    Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
+    Field('start_time', 'datetime', default = get_datetime()))
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),
@@ -185,7 +202,7 @@ db.define_table('user_vm_map',
 db.define_table('vm_data_event',
     Field('vm_id', 'integer'),
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-#     Field('vm_identity', 'string', length = 1024, notnull = True, unique = True),
+#     Field('vm_identity', 'string', length = 255, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),
@@ -209,7 +226,6 @@ db.define_table('vm_data_event',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('end_time', 'datetime'),
     Field('parent_id', 'integer'),
-    Field('parameters', 'text'),
     Field('status', 'integer'))
 
 db.define_table('attached_disks',
@@ -223,7 +239,7 @@ db.define_table('snapshot',
     Field('vm_id', db.vm_data,notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
     Field('snapshot_name', 'string', length = 50),
-    Field('path', 'string'))
+    Field('path', 'string', length = 255))
 
 db.define_table('task_queue',
     Field('task_type', 'string',length = 30,notnull = True),
@@ -237,8 +253,8 @@ db.task_queue.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
 db.define_table('task_queue_event',
     Field('task_id', 'integer', notnull = True),
-    Field('task_type', 'string',length = 30,notnull = True),
-    Field('vm_id', db.vm_data,notnull = True),
+    Field('task_type', 'string', length = 30, notnull = True),
+    Field('vm_id', db.vm_data, notnull = True),
     Field('parameters', 'text', default={}),
     Field('status', 'integer', notnull = True),
     Field('error', 'text'),
@@ -281,7 +297,7 @@ if not db(db.organisation).count():
         db.organisation.insert(name = _key,details = _dict[_key])
 
 if not db(db.security_domain).count():
-    _dict = dict(DEF_SECURITY_DOMAIN)
+    _dict = dict(DEFAULT_SECURITY_DOMAIN)
     db.security_domain.insert(name = _dict['name'],
                               vlan_tag = _dict['vlan_tag'],
                               ip_range_lb = _dict['ip_range_lb'],

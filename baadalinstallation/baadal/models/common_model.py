@@ -18,16 +18,22 @@ from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_fac
 def get_vm_status(iStatus):
     vm_status_map = {
             VM_STATUS_UNKNOWN     :    'Unknown',
-            VM_STATUS_REQUESTED   :    'Requested',
-            VM_STATUS_REJECTED    :    'Rejected',
-            VM_STATUS_VERIFIED    :    'Verified',
-            VM_STATUS_APPROVED    :    'Approved',
             VM_STATUS_IN_QUEUE    :    'In-Queue',
             VM_STATUS_RUNNING     :    'Running',
             VM_STATUS_SUSPENDED   :    'Paused',
             VM_STATUS_SHUTDOWN    :    'Shutdown'
         }
     return vm_status_map[iStatus]
+
+def get_request_status(iStatus):
+    req_status_map = {
+            REQ_STATUS_REQUESTED   :    'Requested',
+            REQ_STATUS_REJECTED    :    'Rejected',
+            REQ_STATUS_VERIFIED    :    'Verified',
+            REQ_STATUS_APPROVED    :    'Approved',
+            REQ_STATUS_IN_QUEUE    :    'In-Queue',
+        }
+    return req_status_map[iStatus]
 
 def get_hosted_vm_list(vms):
     vmlist = []
@@ -46,31 +52,34 @@ def get_hosted_vm_list(vms):
     return vmlist
 
 
-def get_pending_vm_list(vms):
+def get_pending_request_list(vm_requests):
 
-    vmlist = []
-    for vm in vms:
-        request_type = 'Install'
-        if vm.parameters and ('clone_count' in vm.parameters):
-            request_type = 'Clone[' + str(vm.parameters['clone_count']) + ']'
-        if vm.parameters and ('disk_size' in vm.parameters):
-            request_type = 'Attach Disk'
+    request_list = []
+    for vm_request in vm_requests:
+        collaborators = '-'
+        if vm_request.collaborators != None:
+            vm_users = db(db.user.id.belongs(vm_request.collaborators)).select()
+            collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)  
 
-        element = {'id' : vm.id,
-                   'vm_name' : vm.vm_name, 
-                   'faculty_name' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name, 
-                   'requester_id' : vm.requester_id,
-                   'requester_name' : vm.requester_id.first_name + ' ' + vm.requester_id.last_name,
-                   'organisation' : vm.requester_id.organisation_id.name,
-                   'RAM' : vm.RAM, 
-                   'vCPUs' : vm.vCPU, 
-                   'HDD' : vm.HDD, 
-                   'status' : vm.status,
-                   'request_type' : request_type,
-                   'public_ip' : (vm.public_ip != PUBLIC_IP_NOT_ASSIGNED), 
-                   'owner_id' : vm.owner_id}
-        vmlist.append(element)
-    return vmlist
+        element = {'id' : vm_request.id,
+                   'vm_name' : vm_request.vm_name, 
+                   'faculty_name' : vm_request.owner_id.first_name + ' ' + vm_request.owner_id.last_name, 
+                   'requester_id' : vm_request.requester_id, 
+                   'owner_id' : vm_request.owner_id,
+                   'requester_name' : vm_request.requester_id.first_name + ' ' + vm_request.requester_id.last_name,
+                   'collaborators' : collaborators,
+                   'organisation' : vm_request.requester_id.organisation_id.name,
+                   'RAM' : vm_request.RAM, 
+                   'vCPUs' : vm_request.vCPU, 
+                   'HDD' : vm_request.HDD,
+                   'request_type' : vm_request.request_type,
+                   'public_ip' : vm_request.public_ip, 
+                   'enable_ssh' : vm_request.enable_ssh, 
+                   'enable_http' : vm_request.enable_http, 
+                   'security_domain' : vm_request.security_domain.name if vm_request.security_domain != None else None, 
+                   'status' : vm_request.status}
+        request_list.append(element)
+    return request_list
 
 
 def add_to_cost(vm_id):
@@ -105,6 +114,8 @@ def get_vm_info(_vm_id):
 
     return vm_info.first()
 
+def get_request_info(request_id):
+    return db.request_queue[request_id]
 
 def get_task_list(events):
 
@@ -128,9 +139,8 @@ def get_task_num_form():
     
 
 def add_vm_task_to_queue(vm_id, task_type, params = {}):
-
-    params['vm_id'] = vm_id
-        
+    
+    params.update({'vm_id' : vm_id})
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
                          parameters=params, 
@@ -203,12 +213,12 @@ def check_faculty(fn):
 def get_pending_approval_count():
     
     users_of_same_org = db(auth.user.organisation_id == db.user.organisation_id)._select(db.user.id)
-    vm_count = db((db.vm_data.requester_id.belongs(users_of_same_org)) & (db.vm_data.status == VM_STATUS_VERIFIED)).count()
+    vm_count = db((db.request_queue.requester_id.belongs(users_of_same_org)) & (db.request_queue.status == REQ_STATUS_VERIFIED)).count()
 
     return vm_count
 
 def get_all_pending_vm_count():
-    return db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED)).count()
+    return db(db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED)).count()
              
 def get_vm_operations(vm_id):
 
@@ -260,16 +270,16 @@ def get_vm_operations(vm_id):
                     _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), 
                     _title="Attach Extra Disk", _alt="Attach Extra Disk"))
                     
+            valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
+                _href=URL(r = request, c = 'user', f = 'edit_vm_config', args = vm_id), _title="Edit VM Config", 
+                _alt="Edit VM Config"))
+                
             if is_moderator():
             
                 valid_operations_list.append(A(IMG(_src=URL('static','images/vnc.jpg'), _height=20, _width=20),
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
                     _title="Assign VNC", _alt="Assign VNC"))
                     
-                valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
-                    _href=URL(r = request, c = 'admin', f = 'edit_vmconfig', args = vm_id), _title="Edit VM Config", 
-                    _alt="Edit VM Config"))
-                
         if vmstatus == VM_STATUS_RUNNING:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
@@ -292,11 +302,11 @@ def get_vm_operations(vm_id):
                     _title="Forcefully power off this virtual machine",
                     _alt="Forcefully power off this virtual machine"))
 
-    if is_moderator():
-   
-        valid_operations_list.append(A(IMG(_src=URL('static','images/user_add.png'), _height=20, _width=20),
-                    _href=URL(r = request, c = 'admin', f = 'user_details', args = vm_id), _title="Add User to VM", 
-                    _alt="Add User to VM"))
+        if is_moderator():
+       
+            valid_operations_list.append(A(IMG(_src=URL('static','images/user_add.png'), _height=20, _width=20),
+                        _href=URL(r = request, c = 'admin', f = 'user_details', args = vm_id), _title="Add User to VM", 
+                        _alt="Add User to VM"))
    
    
     else:

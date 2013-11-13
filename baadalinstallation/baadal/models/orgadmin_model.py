@@ -20,15 +20,15 @@ def get_all_orglevel_vm_list():
     
 
 
-def get_verified_vm_list():
+def get_verified_requests():
 
     users_of_same_org = db(auth.user.organisation_id == db.user.organisation_id)._select(db.user.id)
 
-    vms = db((db.vm_data.status.belongs(VM_STATUS_VERIFIED, VM_STATUS_APPROVED))
-             & (db.vm_data.requester_id.belongs(users_of_same_org))).select(db.vm_data.ALL)
+    requests = db((db.request_queue.status.belongs(REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED))
+             & (db.request_queue.requester_id.belongs(users_of_same_org))).select(db.request_queue.ALL)
 
-    return get_pending_vm_list(vms)
+    return get_pending_request_list(requests)
     
 
-def approve_vm_request(vm_id):
-    db(db.vm_data.id == vm_id).update(status=VM_STATUS_APPROVED)
+def approve_vm_request(request_id):
+    db(db.request_queue.id == request_id).update(status=REQ_STATUS_APPROVED)

@@ -17,7 +17,7 @@ def list_all_orglevel_vm():
 @check_orgadmin
 @handle_exception
 def pending_approvals():
-    pending_approvals = get_verified_vm_list()
+    pending_approvals = get_verified_requests()
     return dict(pending_approvals=pending_approvals)
     
 @check_orgadmin

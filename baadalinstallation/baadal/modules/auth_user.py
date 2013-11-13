@@ -102,7 +102,9 @@ def create_or_update_user(user_info, update_session):
                                                            last_name = user_info['last_name'], 
                                                            email = user_info['email'], 
                                                            organisation_id = org_id)
-                                                         
+    if update_session:
+        current.auth.user.organisation_id = org_id
+                                                     
     add_or_update_user_memberships(user.id, is_new_user, user_info['roles'], update_session)   
 
 
@@ -123,12 +125,8 @@ def add_or_update_user_memberships(user_id, new_user, roles, update_session):
 def add_membership_db(_user_id, role, update_session):
     #Find the group_id for the given role
     _group_id = current.db(current.db.user_group.role==role).select(current.db.user_group.id).first()['id']
-    _org_id = current.db(current.db.user.id == _user_id).select(current.db.user.organisation_id).first()['organisation_id']
     if _group_id !=0:
         current.db.user_membership.insert(user_id=_user_id,group_id=_group_id)
         if update_session:
             # add role to the current session
             current.auth.user_groups[long(_group_id)] = role
-            current.auth.organisation_id = _org_id
-            current.logger.debug(_org_id)
-            current.logger.debug(role)

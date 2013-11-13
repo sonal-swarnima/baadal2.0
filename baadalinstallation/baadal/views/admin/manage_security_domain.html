@@ -1,0 +1,22 @@
+{{extend 'layout.html'}}
+
+<h2 class="subtitle">{{=T('Manage Security Domain')}}</h2>
+{{=form}}
+
+<script>
+jQuery(document).ready(function(){
+	$('<span>Add New Security Domain</span>').insertAfter($('.icon-plus'));
+	visibility_check();
+});
+
+jQuery('#security_domain_visible_to_all').click(function(){
+    visibility_check()
+});
+
+function visibility_check() {
+	var _value=$('#security_domain_visible_to_all').is(':checked');
+	if (_value != 'undefined'){
+		$('#security_domain_org_visibility').prop('disabled', _value);
+	}
+}
+</script>

@@ -19,25 +19,25 @@ def pending_requests():
 @check_faculty
 @handle_exception
 def approve_request():
-    vm_id=request.args[0]
-    verify_vm_owner(vm_id)  
-    verify_vm_request(vm_id);
+    request_id=request.args[0]
+    verify_vm_owner(request_id)  
+    verify_vm_request(request_id);
     session.flash = 'Request Approved'
     redirect(URL(c='faculty', f='pending_requests'))
     
 @check_faculty
 @handle_exception
 def reject_request():
-    vm_id=request.args[0]
-    verify_vm_owner(vm_id)
-    reject_vm_request(vm_id);
+    request_id=request.args[0]
+    verify_vm_owner(request_id)
+    reject_vm_request(request_id);
     session.flash = 'Request Rejected'
     redirect(URL(c='faculty', f='pending_requests'))
 
-def verify_vm_owner(vm_id):
-    vm_info = get_vm_info(vm_id)
-    if vm_info != None:
-        if is_moderator() or (vm_info.owner_id == auth.user.id):
+def verify_vm_owner(request_id):
+    request_info = get_request_info(request_id)
+    if request_info != None:
+        if is_moderator() or (request_info.owner_id == auth.user.id):
             return
         
     session.flash="Not authorized"

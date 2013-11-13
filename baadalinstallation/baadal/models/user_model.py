@@ -12,14 +12,13 @@ from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config
 from auth_user import fetch_ldap_user, create_or_update_user
 
 def get_my_pending_vm():
-    vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED) 
-             & (db.vm_data.requester_id==auth.user.id)).select(db.vm_data.ALL)
-
-    return get_pending_vm_list(vms)
+    
+    requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
+    return get_pending_request_list(requests)
 
 
 def get_my_hosted_vm():
-    vms = db((db.vm_data.status > VM_STATUS_IN_QUEUE) 
+    vms = db((~db.vm_data.status.belongs(VM_STATUS_IN_QUEUE, VM_STATUS_UNKNOWN)) 
              & (db.vm_data.id==db.user_vm_map.vm_id) 
              & (db.user_vm_map.user_id==auth.user.id)).select(db.vm_data.ALL)
 
@@ -73,37 +72,49 @@ def validate_approver(form):
         faculty_info = get_user_info(faculty_user, [FACULTY])
         if faculty_info[1] == faculty_user_name:
             form.vars.owner_id = faculty_info[0]
-            form.vars.status = VM_STATUS_REQUESTED
+            form.vars.status = REQ_STATUS_REQUESTED
             return
     
     faculty_info = get_user_info(faculty_user_name, [FACULTY])
     if faculty_info != None:
         form.vars.owner_id = faculty_info[0]
-        form.vars.status = VM_STATUS_REQUESTED
+        form.vars.status = REQ_STATUS_REQUESTED
     else:
         form.errors.faculty_user='Faculty Approver Username is not valid'
+
 
 def send_remind_faculty_email(vm_id):
     vm_data = db.vm_data[vm_id]
     send_email_to_faculty(vm_data.owner_id, vm_data.vm_name, vm_data.start_time)
+
+def get_request_status():
+    status = REQ_STATUS_REQUESTED
+    if (is_moderator() | is_orgadmin()):
+        status = REQ_STATUS_APPROVED
+    elif is_faculty():
+        status = REQ_STATUS_VERIFIED
+
+    return status
     
 def request_vm_validation(form):
     set_configuration_elem(form)
+    form.vars.status = get_request_status()
 
     if (is_moderator() | is_orgadmin()):
         form.vars.owner_id = auth.user.id
-        form.vars.status = VM_STATUS_APPROVED
     elif is_faculty():
         form.vars.owner_id = auth.user.id
-        form.vars.status = VM_STATUS_VERIFIED
     else:
-        form.vars.status = VM_STATUS_REQUESTED
         validate_approver(form)
 
-    form.vars.requester_id = auth.user.id
-    if form.vars.req_public_ip == 'on':
-        form.vars.public_ip = None
     form.vars.security_domain = form.vars.sec_domain
+    vm_users = request.post_vars.vm_users
+    user_list = []
+    if vm_users and len(vm_users) > 1:
+        for vm_user in vm_users[1:-1].split('|'):
+            user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    form.vars.collaborators = user_list
+    
 
 def add_faculty_approver(form):
 
@@ -112,6 +123,7 @@ def add_faculty_approver(form):
     faculty_elem = TR(LABEL('Faculty Approver:'),_input,_link,_id='faculty_row')
     form[0].insert(-1,faculty_elem)#insert tr element in the form
 
+
 def add_collaborators(form):
 
     _input=INPUT(_name='collaborator',_id='collaborator') # create INPUT
@@ -119,9 +131,11 @@ def add_collaborators(form):
     collaborator_elem = TR(LABEL('Collaborators:'),_input,_link,_id='collaborator_row')
     form[0].insert(-1, collaborator_elem)#insert tr element in the form
 
+
 def get_security_domain():
     sec_domains = db((db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))).select()
     return sec_domains
+
 
 def add_security_domain(form):
     
@@ -134,17 +148,16 @@ def add_security_domain(form):
     vlan_elem = TR(LABEL('Security Domain:'), select ,TD(), _id='security_domain_row')
     form[0].insert(-1, vlan_elem)#insert tr element in the form
 
+
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_ssh', 'enable_http']
-    form_labels = {'vm_name':'Name of VM','extra_HDD':'Optional Additional Harddisk(GB)','template_id':'Template Image','purpose':'Purpose of this VM'}
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_ssh', 'enable_http', 'public_ip']
 
-    form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_owner='',vm_users=','))
+    db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
+    db.request_queue.requester_id.default = auth.user.id
+
+    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
-    
-    form[0].insert(-1, TR(LABEL('Public IP:'), 
-                          INPUT(_type = 'checkbox', _name = 'req_public_ip'), TD(), 
-                          _id='public_ip_row')) 
     
     if not(is_moderator() | is_orgadmin() | is_faculty()):
         add_faculty_approver(form)
@@ -228,69 +241,71 @@ def check_snapshot_limit(vm_id):
 
 def get_clone_vm_form(vm_id):
 
-    vm_info = db.vm_data[vm_id]
-    clone_name = vm_info['vm_name'] + '_clone'
-    form =SQLFORM(db.vm_data, fields = ['purpose'], labels = {'purpose':'Purpose'}, hidden=dict(parent_vm_id=vm_id))
-    form[0].insert(0, TR(LABEL('VM Name:'), INPUT(_name = 'clone_name',  _value = clone_name, _readonly=True)))
-    form[0].insert(1, TR(LABEL('No. of Clones:'), INPUT(_name = 'no_of_clones', requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)], _id='no_of_clones')))
-
-    return form
-
-def copy_vm_info(form, parent_vm_id, vm_name):
-    vm_info = db.vm_data[parent_vm_id]
-
-    form.vars.vm_name = vm_name
-    form.vars.RAM = vm_info.RAM
-    form.vars.HDD = vm_info.HDD
-    form.vars.extra_HDD = vm_info.extra_HDD
-    form.vars.vCPU = vm_info.vCPU
-    form.vars.template_id = vm_info.template_id
-    form.vars.requester_id = auth.user.id
-    form.vars.owner_id = vm_info.owner_id
-    form.vars.parent_id = parent_vm_id
-    if (is_moderator() | is_orgadmin()):
-        form.vars.status = VM_STATUS_APPROVED
-    elif is_faculty():
-        form.vars.status = VM_STATUS_VERIFIED
-    else:
-        form.vars.status = VM_STATUS_REQUESTED
+    vm_data = db.vm_data[vm_id]
     
-
-def clone_vm_validation(form):
-
-    parent_vm_id = request.post_vars.parent_vm_id
-    clone_name = form.vars.clone_name
+    clone_name = vm_data.vm_name + '_clone'
     cnt = 1;
     while(db.vm_data(vm_name=(clone_name+str(cnt)))):
         cnt = cnt+1
-    vm_name = clone_name + str(cnt)
-    form.vars.parameters = dict(clone_count = form.vars.no_of_clones)
-    copy_vm_info(form, parent_vm_id, vm_name)
     
+    db.request_queue.parent_id.default = vm_data.id
+    db.request_queue.vm_name.default = clone_name + str(cnt)
+    db.request_queue.HDD.default = vm_data.HDD
+    db.request_queue.RAM.default = vm_data.RAM
+    db.request_queue.vCPU.default = vm_data.vCPU
+    db.request_queue.request_type.default = TASK_TYPE_CLONE_VM
+    db.request_queue.status.default = get_request_status()
+    db.request_queue.requester_id.default = auth.user.id
+    db.request_queue.owner_id.default = vm_data.owner_id
+    db.request_queue.clone_count.requires = IS_INT_IN_RANGE(1,101)
+    
+    form_fields = ['vm_name', 'clone_count', 'purpose']
+    
+    form =SQLFORM(db.request_queue, fields = form_fields)
+    return form    
+
 
 def get_attach_extra_disk_form(vm_id):
 
-    vm_info = db.vm_data[vm_id]
-    vm_name = vm_info['vm_name'] + '_attach_disk'
-    form =SQLFORM(db.vm_data, fields = ['purpose'], labels = {'purpose':'Purpose'}, hidden=dict(parent_vm_id=vm_id))
-    form[0].insert(0, TR(LABEL('VM Name:'), INPUT(_name = 'disk_vm_name',  _value = vm_name, _readonly=True)))
-    form[0].insert(1, TR(LABEL('HDD:'), INPUT(_name = '_HDD',_value = vm_info['HDD'], _readonly = True)))
-    form[0].insert(2, TR(LABEL('Extra HDD:'), INPUT(_name = '_extra_hdd',_value = vm_info['extra_HDD'], _readonly = True)))
-    form[0].insert(3, TR(LABEL('Disk Size:'), INPUT(_name = 'disk_size', requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,101)], _id='attach_disk_size')))
+    vm_data = db.vm_data[vm_id]
+    
+    db.request_queue.parent_id.default = vm_data.id
+    db.request_queue.vm_name.default = vm_data.vm_name
+    db.request_queue.HDD.default = vm_data.HDD
+    db.request_queue.extra_HDD.default = vm_data.extra_HDD
+    db.request_queue.request_type.default = TASK_TYPE_ATTACH_DISK
+    db.request_queue.status.default = get_request_status()
+    db.request_queue.requester_id.default = auth.user.id
+    db.request_queue.owner_id.default = vm_data.owner_id
+    db.request_queue.attach_disk.requires = IS_INT_IN_RANGE(1,101)
+    
+    form_fields = ['vm_name', 'HDD', 'extra_HDD', 'attach_disk', 'purpose']
+    
+    form =SQLFORM(db.request_queue, fields = form_fields)
+    return form    
 
-    return form
 
-
-def attach_extra_disk_validation(form):
-
-    parent_vm_id = request.post_vars.parent_vm_id
-    vm_name = form.vars.disk_vm_name
-    cnt = 1;
-    while(db.vm_data(vm_name=(vm_name+str(cnt)))):
-        cnt = cnt+1
-    form.vars.parameters = dict(disk_size = form.vars.disk_size)
-    copy_vm_info(form, parent_vm_id, vm_name + str(cnt))
-
+def get_edit_vm_config_form(vm_id):
+    
+    vm_data = db.vm_data[vm_id]
+    db.request_queue.parent_id.default = vm_data.id
+    db.request_queue.vm_name.default = vm_data.vm_name
+    db.request_queue.RAM.default = vm_data.RAM
+    db.request_queue.RAM.requires = IS_IN_SET(VM_RAM_SET, zero=None)
+    db.request_queue.vCPU.default = vm_data.vCPU
+    db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
+    db.request_queue.HDD.default = vm_data.HDD
+    db.request_queue.enable_ssh.default = vm_data.enable_ssh
+    db.request_queue.enable_http.default = vm_data.enable_http
+    db.request_queue.security_domain.default = vm_data.security_domain
+    db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
+    db.request_queue.status.default = get_request_status()
+    db.request_queue.requester_id.default = auth.user.id
+    db.request_queue.owner_id.default = vm_data.owner_id
+    
+    form_fields = ['vm_name','RAM','vCPU','enable_ssh', 'enable_http', 'security_domain', 'purpose']
+    
+    return SQLFORM(db.request_queue, fields = form_fields)
 
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),
@@ -302,6 +317,4 @@ def get_mail_admin_form():
                 
                 TR(INPUT(_type = 'submit', _value = 'Send Email')),_style='width:100%; border:0px'))
     return form
-
-
 

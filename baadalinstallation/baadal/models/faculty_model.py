@@ -10,20 +10,20 @@ if 0:
 ###################################################################################
 from helper import is_moderator
 
-def verify_vm_request(vm_id):
-    db(db.vm_data.id == vm_id).update(status=VM_STATUS_VERIFIED)
+def verify_vm_request(request_id):
+    db(db.request_queue.id == request_id).update(status=REQ_STATUS_VERIFIED)
 
-def reject_vm_request(vm_id):
-    db(db.vm_data_event.vm_id == vm_id).update(status=VM_STATUS_REJECTED)
-    db(db.vm_data.id == vm_id).delete()
+def reject_vm_request(request_id):
+    #Send Mail
+    db(db.request_queue.id == request_id).delete()
 
 def get_pending_requests():
 
     if is_moderator():
-        vm_query = db(db.vm_data.status == VM_STATUS_REQUESTED)
+        _query = db(db.request_queue.status == REQ_STATUS_REQUESTED)
     else:
-        vm_query = db((db.vm_data.status == VM_STATUS_REQUESTED) & (db.vm_data.owner_id == auth.user.id))
+        _query = db((db.request_queue.status == REQ_STATUS_REQUESTED) & (db.request_queue.owner_id == auth.user.id))
     
-    vms = vm_query.select(db.vm_data.ALL)
-    return get_pending_vm_list(vms)
+    vm_requests = _query.select(db.request_queue.ALL)
+    return get_pending_request_list(vm_requests)
 

@@ -35,7 +35,7 @@
             {{pass}}
             </td>
             <td>
-            	{{if pending_approval['status'] == VM_STATUS_APPROVED:}}
+            	{{if pending_approval['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
             	{{else:}}
 					{{=A('Approve',_href=URL(r=request, f='approve_request', args=[pending_approval['id']]))}}

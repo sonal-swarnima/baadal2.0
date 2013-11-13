@@ -47,14 +47,14 @@ if auth.is_logged_in():
                 response.admin_menu = [
                     (H2('ADMIN MENU'),False, dict(_href='#', _id='menu_admin')),
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
-                    (T('Pending VM Requests {'+str(get_all_pending_vm_count())+'} '), False, URL('admin','list_all_pending_vm')),
+                    (T('Pending Requests {'+str(get_all_pending_vm_count())+'} '), False, URL('admin','list_all_pending_requests')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
                     (T('Sanity Check'), False, URL('admin','sanity_check')),
                     (T('Configure System'), False,dict(_href='#', _id='configure'),[
                         (T('Configure Host'), False, URL('admin','host_details')),
                         (T('Configure Template'), False, URL('admin','manage_template')),
-                        (T('Configure Datastore'), False, URL('admin','add_datastore')),
+                        (T('Configure Datastore'), False, URL('admin','manage_datastore')),
                         (T('Configure Security Domain'), False, URL('admin','manage_security_domain'))
                         ])
                     ]

@@ -7,7 +7,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-def get_add_template_form():
+def get_manage_template_form():
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
 
     #Define the fields to show on grid. 
@@ -19,7 +19,7 @@ def get_add_template_form():
     form = SQLFORM.grid(db.template, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
     return form
 
-def get_add_datastore_form():
+def get_manage_datastore_form():
 
     db.datastore.id.readable=False # Since we do not want to expose the used field on the grid
     #Define the fields to show on grid. 
@@ -53,34 +53,25 @@ def get_security_domain_form():
     return form
 
 
-def get_all_pending_vm():
-    vms = db(db.vm_data.status.belongs(VM_STATUS_REQUESTED, VM_STATUS_VERIFIED, VM_STATUS_APPROVED, VM_STATUS_IN_QUEUE)).select()
-    pending_vms = get_pending_vm_list(vms)
-    for vm in pending_vms:
-        collaborators = []
-        vm_users = db(db.user_vm_map.vm_id == vm['id']).select()
-        for vm_user in vm_users:
-            if vm_user.user_id != vm_user.vm_id.requester_id:
-                collaborators.append(vm_user.user_id.first_name + ' ' + vm_user.user_id.last_name)
-        if not collaborators:
-            vm['collaborators'] = '-'
-        else:
-            vm['collaborators'] = ', '.join(collaborators)
-        
+def get_all_pending_requests():
+
+    vms = db(db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED, REQ_STATUS_IN_QUEUE)).select()
+    requests = get_pending_request_list(vms)
+    for vm_request in requests:
         roles = []
-        user_roles = db(db.user_membership.user_id == vm['requester_id']).select()
+        user_roles = db(db.user_membership.user_id == vm_request['requester_id']).select()
         for user_role in user_roles:
             roles.append(user_role.group_id.role)
         if ADMIN in roles:
-            vm['requested_by'] = ADMIN
+            vm_request['requested_by'] = ADMIN
         elif ORGADMIN in roles:
-            vm['requested_by'] = ORGADMIN
+            vm_request['requested_by'] = ORGADMIN
         elif FACULTY in roles:
-            vm['requested_by'] = FACULTY
+            vm_request['requested_by'] = FACULTY
         else:
-            vm['requested_by'] = USER
-            
-    return pending_vms
+            vm_request['requested_by'] = USER
+
+    return requests
 
 def get_all_vm_list():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
@@ -90,10 +81,10 @@ def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
-def create_clone_task(vm_data):
-    
-    vm_id = vm_data.id
-    clone_count = vm_data.parameters['clone_count']
+def create_clone_task(req_data, params):
+
+    clone_count = req_data.clone_count
+    vm_data = db.vm_data[req_data.parent_id]
     
     vm_id_list = []
     for count in range(1, clone_count+1):
@@ -114,27 +105,51 @@ def create_clone_task(vm_data):
         vm_id_list.append(clone_vm_id)
         
         add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id)
-            
-    # Update the status of clone request vm_data to -1 
-    db.vm_data[vm_id] = dict(status=-1)
-    
-    add_vm_task_to_queue(vm_id, TASK_TYPE_CLONE_VM, {'clone_vm_id':vm_id_list})
+    params.update({'clone_vm_id':vm_id_list})
+    add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params)
+
+def create_install_task(req_data, params):
+
+    vm_id = db.vm_data.insert(
+                  vm_name = req_data.vm_name, 
+                  RAM = req_data.RAM,
+                  HDD = req_data.HDD,
+                  extra_HDD = req_data.extra_HDD,
+                  vCPU = req_data.vCPU,
+                  template_id = req_data.template_id,
+                  requester_id = req_data.requester_id,
+                  owner_id = req_data.owner_id,
+                  purpose = req_data.purpose,
+                  enable_ssh = req_data.enable_ssh,
+                  enable_http = req_data.enable_http,
+                  security_domain = req_data.security_domain,
+                  status = VM_STATUS_IN_QUEUE)
+        
+    add_vm_users(vm_id, req_data.requester_id, req_data.owner_id)
+    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params)
 
 
-def enqueue_vm_request(vm_id):
+def enqueue_vm_request(request_id):
     
-    vm_data = db.vm_data[vm_id]
-    params = {}
-    if vm_data.parameters and 'clone_count' in vm_data.parameters:
-        create_clone_task(vm_data)
-        return
-    task_type = TASK_TYPE_CREATE_VM
-   
-    if vm_data.parameters and 'disk_size' in vm_data.parameters:
-        task_type = TASK_TYPE_ATTACH_DISK
-        params = {'disk_size' : vm_data.parameters['disk_size']}
-    db(db.vm_data.id == vm_id).update(status=VM_STATUS_IN_QUEUE)
-    add_vm_task_to_queue(vm_id, task_type, params)
+    req_data = db.request_queue[request_id]
+    params={'request_id' : request_id}
+    if req_data.request_type == TASK_TYPE_CLONE_VM:
+        create_clone_task(req_data, params)
+    elif req_data.request_type == TASK_TYPE_CREATE_VM:
+        create_install_task(req_data, params)
+    else:
+        if req_data.request_type == TASK_TYPE_ATTACH_DISK:
+            params.update({'disk_size' : req_data.attach_disk})
+        elif req_data.request_type == TASK_TYPE_EDITCONFIG_VM:
+            params.update({'RAM' : req_data.RAM, 
+                      'vCPU' : req_data.vCPU,
+                      'public_ip' : req_data.public_ip,
+                      'enable_ssh' : req_data.enable_ssh,
+                      'enable_http' : req_data.enable_http,
+                      'security_domain' : req_data.security_domain})
+        add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
+    
+    db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 
 
 def delete_user_vm_access(vm_id,user_id) :    
@@ -303,14 +318,6 @@ def is_vm_running(vmid):
     else:
         return False
    
-#return the form required to edit vm configs        
-def get_edit_vm_config_form(vm_info):
-    form = FORM(INPUT(_name='vmname',_type='hidden',requires=IS_NOT_EMPTY()),
-                  TABLE(TR('New RAM(MB):',INPUT(_name = 'ram', _value = vm_info['ram'], requires = [IS_NOT_EMPTY(), IS_INT_IN_RANGE(1024,8192)])),
-                  TR('New vCPU:',INPUT(_name='vcpus', _value = vm_info['vcpus'], requires=[IS_NOT_EMPTY(), IS_INT_IN_RANGE(1,8)])),
-                  TR("",INPUT(_type='submit',_value="Update!"))))
-    return form
-
 
 def validate_user(form):
     username = request.post_vars.user_id

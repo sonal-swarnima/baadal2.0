@@ -17,8 +17,6 @@ def request_vm():
     
     # After validation, read selected configuration and set RAM, CPU and HDD accordingly
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
-        add_vm_users(form.vars.id, form.vars.requester_id, 
-                     form.vars.owner_id, request.post_vars.vm_users)
         
         send_email_to_user(form.vars.vm_name)
         if not(is_moderator() | is_orgadmin() | is_faculty()):
@@ -211,7 +209,8 @@ def clone_vm():
 
     vm_id = request.args[0]
     form = get_clone_vm_form(vm_id)
-    if form.accepts(request.vars,session, onvalidation=clone_vm_validation):
+#     if form.accepts(request.vars,session, onvalidation=clone_vm_validation):
+    if form.accepts(request.vars,session):
         session.flash = "Your request has been sent for approval."
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
     elif form.errors:
@@ -225,7 +224,7 @@ def attach_extra_disk():
 
     vm_id = request.args[0]
     form = get_attach_extra_disk_form(vm_id)
-    if form.accepts(request.vars,session, onvalidation=attach_extra_disk_validation):
+    if form.accepts(request.vars, session):
         session.flash = "Your request has been sent for approval."
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
     elif form.errors:
@@ -233,6 +232,16 @@ def attach_extra_disk():
 
     return dict(form=form)
 
+@auth.requires_login()
+@handle_exception       
+def edit_vm_config():
+
+    vm_id = request.args[0]
+    form = get_edit_vm_config_form(vm_id)
+    if form.accepts(request.vars, session):
+        session.flash = "Your request has been queued!!!"
+        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+    return dict(form=form)
 
 @auth.requires_login()
 @handle_exception

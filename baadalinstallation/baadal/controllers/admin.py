@@ -15,9 +15,9 @@ def list_all_vm():
 
 @check_moderator
 @handle_exception
-def list_all_pending_vm():
-    pending_vms = get_all_pending_vm()
-    return dict(pending_vms = pending_vms)
+def list_all_pending_requests():
+    pending_requests = get_all_pending_requests()
+    return dict(pending_requests = pending_requests)
 
 @check_moderator
 @handle_exception
@@ -28,7 +28,7 @@ def hosts_vms():
 @check_moderator
 @handle_exception
 def manage_template():
-    form = get_add_template_form()
+    form = get_manage_template_form()
     return dict(form = form)
 
 @check_moderator
@@ -69,8 +69,8 @@ def add_host():
 
 @check_moderator
 @handle_exception
-def add_datastore():
-    form = get_add_datastore_form()
+def manage_datastore():
+    form = get_manage_datastore_form()
     return dict(form=form)
 
 @check_moderator
@@ -205,28 +205,28 @@ def delete_machine():
 
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
-@check_moderator
-@handle_exception
-def edit_vmconfig():
-
-    vm_id = int(request.args[0])  
-    vm_info = get_vm_config(vm_id)
-
-    form = get_edit_vm_config_form(vm_info)
-
-    form.vars.vmname = request.args[0]
-
-    if form.accepts(request.vars, session):
-        if int(vm_info['status']) == VM_STATUS_SHUTDOWN:
-            params = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
-            add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, params)
-            session.flash = "Your request has been queued!!!"
-        else:
-            session.flash='VM is not Off. Turn it off first'
-
-        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-    return dict(form=form)
+# @check_moderator
+# @handle_exception
+# def edit_vmconfig():
+# 
+#     vm_id = int(request.args[0])  
+# #     vm_info = get_vm_config(vm_id)
+# 
+#     form = get_edit_vm_config_form(vm_id)
+# 
+#     form.vars.vmname = request.args[0]
+# 
+#     if form.accepts(request.vars, session):
+#         if int(vm_info['status']) == VM_STATUS_SHUTDOWN:
+#             params = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
+#             add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, params)
+#             session.flash = "Your request has been queued!!!"
+#         else:
+#             session.flash='VM is not Off. Turn it off first'
+# 
+#         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+# 
+#     return dict(form=form)
 
 @check_moderator
 def mailToGUI():
@@ -258,16 +258,16 @@ def sync_vm():
 @check_moderator
 @handle_exception
 def approve_request():
-    vm_id=request.args[0] 
-    enqueue_vm_request(vm_id);
+    request_id=request.args[0] 
+    enqueue_vm_request(request_id);
     session.flash = 'Installation request added to queue'
-    redirect(URL(c='admin', f='list_all_pending_vm'))
+    redirect(URL(c='admin', f='list_all_pending_requests'))
 
 @check_moderator
 @handle_exception
 def reject_request():
-    vm_id=request.args[0]
-    reject_vm_request(vm_id);
+    request_id=request.args[0]
+    reject_vm_request(request_id);
     session.flash = 'Request Rejected'
-    redirect(URL(c='admin', f='list_all_pending_vm'))
+    redirect(URL(c='admin', f='list_all_pending_requests'))
 

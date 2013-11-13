@@ -2,7 +2,7 @@
 <div id="tabs-task">
 <ul>
     <li><a href="#runTab">My VM's</a></li>
-    <li><a href="#pendTab">Pending VM's</a></li>
+    <li><a href="#pendTab">Pending VM Requests</a></li>
 </ul>
 
 <div id="pendTab">
@@ -17,6 +17,10 @@
         <th>Faculty</th>
         <th>HDD</th>
         <th>vCPUs</th>
+        <th>Public IP</th>
+        <th>Enable SSH</th>
+        <th>Enable HTTP</th>
+        <th>Security Domain</th>
         <th>Status</th>
       </tr> 
       {{for vm in pending_vm:}}
@@ -27,7 +31,29 @@
             <td>{{=vm['HDD']}}</td>
             <td>{{=vm['vCPUs']}}</td>
             <td>
-            {{if vm['status'] == VM_STATUS_VERIFIED:}}
+            {{if vm['public_ip']:}}
+                <span class="icon-ok"/>
+            {{else:}}        
+                <span class="icon-remove"/>
+            {{pass}}
+            </td>
+            <td>
+            {{if vm['enable_ssh']:}}
+                <span class="icon-ok"/>
+            {{else:}}        
+                <span class="icon-remove"/>
+            {{pass}}
+            </td>
+            <td>
+            {{if vm['enable_http']:}}
+                <span class="icon-ok"/>
+            {{else:}}        
+                <span class="icon-remove"/>
+            {{pass}}
+            </td>
+            <td>{{=vm['security_domain']}}</td>
+            <td>
+            {{if vm['status'] == REQ_STATUS_VERIFIED:}}
             	Waiting for admin approval
             {{else:}}
             	Waiting for approval

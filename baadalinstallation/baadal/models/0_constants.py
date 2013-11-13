@@ -23,7 +23,7 @@ TASK_TYPE_DESTROY_VM = 'Destroy VM'
 TASK_TYPE_CHANGELEVEL_VM = 'Changelevel VM'
 TASK_TYPE_DELETE_SNAPSHOT = 'Delete Snapshot'
 TASK_TYPE_REVERT_TO_SNAPSHOT = 'Revert to Snapshot'
-TASK_TYPE_EDITCONFIG_VM = 'Edit Config VM'
+TASK_TYPE_EDITCONFIG_VM = 'Edit VM Config'
 TASK_TYPE_SNAPSHOT_VM = 'Snapshot VM'
 TASK_TYPE_CLONE_VM = 'Clone VM'
 TASK_TYPE_ATTACH_DISK = 'Attach Disk'
@@ -50,21 +50,21 @@ COST_RUNLEVEL_1 = 5
 COST_RUNLEVEL_2 = 15
 COST_RUNLEVEL_3 = 30
 
+REQ_STATUS_REQUESTED = 1
+REQ_STATUS_REJECTED  = 2
+REQ_STATUS_VERIFIED  = 3
+REQ_STATUS_APPROVED  = 4
+REQ_STATUS_IN_QUEUE  = 5
 #VM Status
-VM_STATUS_UNKNOWN = -1
-VM_STATUS_REQUESTED = 0
-VM_STATUS_REJECTED  = 1
-VM_STATUS_VERIFIED  = 2
-VM_STATUS_APPROVED  = 3
-VM_STATUS_IN_QUEUE  = 4
-VM_STATUS_RUNNING   = 5
-VM_STATUS_SUSPENDED = 6
-VM_STATUS_SHUTDOWN  = 7
+VM_STATUS_UNKNOWN   =-1
+VM_STATUS_IN_QUEUE  = 1
+VM_STATUS_RUNNING   = 2
+VM_STATUS_SUSPENDED = 3
+VM_STATUS_SHUTDOWN  = 4
 
 current.VM_STATUS_RUNNING = VM_STATUS_RUNNING
 current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
-current.VM_STATUS_VERIFIED = VM_STATUS_VERIFIED
 
 #SNAPSHOTTING LIMIT
 SNAPSHOTTING_LIMIT = 3
@@ -83,7 +83,7 @@ GROUP_DATA = {ADMIN : 'Super User',
 ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi',
             'IIT Bombay':'Indian Institude of Technology, Mumbai'}
 
-DEF_SECURITY_DOMAIN = {'name' : 'Research', 'vlan_tag':'research', 'ip_range_lb':'10.20.1.1', 'ip_range_ub':'10.20.1.255', 'visible_to_all':True}
+DEFAULT_SECURITY_DOMAIN = {'name' : 'Research', 'vlan_tag':'research', 'ip_range_lb':'10.20.1.1', 'ip_range_ub':'10.20.1.255', 'visible_to_all':True}
 
 DB_CONSTANTS = {'vmfiles_path' : '/mnt/testdatastore',
               'datastore_int'  : 'ds_',
@@ -150,3 +150,7 @@ VM_REQUEST_SUBJECT_FOR_USER = "VM request successful"
 VM_APPROVAL_TEMPLATE_FOR_FACULTY ="Dear {0[facultyName]},\n\n{0[userName]} requested a VM {0[vmName]} on {0[vmRequestTime]} and is pending approval from you.\n\nRegards,\nBaadal Admin"
                     
 VM_APPROVAL_SUBJECT_FOR_FACULTY = "VM pending approval"
+
+VM_RAM_SET = (1024,2048,4096,8192)
+VM_vCPU_SET = (1,2,4,8)
+
