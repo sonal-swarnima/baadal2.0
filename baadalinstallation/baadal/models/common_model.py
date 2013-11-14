@@ -147,11 +147,10 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}):
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
     
+
 def add_vm_users(_vm_id, requester_id, owner_id, vm_users=None):
     user_list = [requester_id, owner_id]
-    if vm_users and len(vm_users) > 1:
-        for vm_user in vm_users[1:-1].split(','):
-            user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    if vm_users: user_list.extend(vm_users)
     for _user_id in set(user_list):
         db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
 

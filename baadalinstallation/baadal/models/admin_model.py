@@ -129,7 +129,7 @@ def create_install_task(req_data, params):
                   security_domain = req_data.security_domain,
                   status = VM_STATUS_IN_QUEUE)
         
-    add_vm_users(vm_id, req_data.requester_id, req_data.owner_id)
+    add_vm_users(vm_id, req_data.requester_id, req_data.owner_id, req_data.collaborators)
     add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params)
 
 def create_edit_config_task(req_data, params):
