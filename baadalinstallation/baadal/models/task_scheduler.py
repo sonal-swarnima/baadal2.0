@@ -44,7 +44,8 @@ def processTaskQueue(task_id):
         ret = task[task_process.task_type](task_process.parameters)
         #On return, update the status and end time in task event table
         task_event_query.update(status=ret[0], end_time=get_datetime())
-        del db.request_queue[task_process.parameters['request_id']]
+        if 'request_id' in task_process.parameters:
+            del db.request_queue[task_process.parameters['request_id']]
         
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             markFailedTask(task_id, ret[1], task_process.vm_id)
@@ -95,7 +96,8 @@ def processCloneTask(task_id, vm_id):
             else:
                 del db.task_queue[task_id]
         else:
-            params = {'clone_vm_id' : clone_vm_list}
+            params = task_queue.parameters
+            params.update({'clone_vm_id' : clone_vm_list})
             db(db.task_queue.id==task_id).update(parameters=params, status=current_status)
         db.commit()
 

@@ -748,16 +748,14 @@ def attach_extra_disk(parameters):
 
     vmid = parameters['vm_id']
     disk_size = parameters['disk_size']
-    parent_id = current.db(current.db.vm_data.id == vmid).select().first()['parent_id']
-    vm_details = current.db(current.db.vm_data.id == parent_id).select().first()
+    vm_details = current.db.vm_data[vmid]
     current.logger.debug(str(vm_details))
 
     try:
         if (serve_extra_disk_request(vm_details, disk_size, vm_details.host_id.host_ip)):
-            current.db(current.db.vm_data.id == parent_id).update(extra_HDD = vm_details.extra_HDD + disk_size)
+            current.db(current.db.vm_data.id == vmid).update(extra_HDD = vm_details.extra_HDD + disk_size)
             message = "Attached extra disk successfully"
             current.logger.debug(message)
-            current.db.vm_data[vmid] = dict(status=-1)
             return (current.TASK_QUEUE_STATUS_SUCCESS, message) 
         else:
             message = " Your request for additional HDD could not be completed at this moment. Check logs."

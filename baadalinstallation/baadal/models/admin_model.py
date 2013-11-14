@@ -88,7 +88,7 @@ def create_clone_task(req_data, params):
     
     vm_id_list = []
     for count in range(1, clone_count+1):
-        clone_vm_name = vm_data.vm_name + str(count)
+        clone_vm_name = req_data.vm_name + str(count)
         clone_vm_id = db.vm_data.insert(
                           vm_name = clone_vm_name, 
                           RAM = vm_data.RAM,
@@ -96,10 +96,14 @@ def create_clone_task(req_data, params):
                           extra_HDD = vm_data.extra_HDD,
                           vCPU = vm_data.vCPU,
                           template_id = vm_data.template_id,
-                          requester_id = vm_data.requester_id,
                           owner_id = vm_data.owner_id,
-                          parent_id = vm_data.parent_id,
-                          purpose = vm_data.purpose,
+                          requester_id = req_data.requester_id,
+                          parent_id = req_data.parent_id,
+                          enable_ssh = vm_data.security_domain,
+                          enable_http = vm_data.security_domain,
+                          public_ip = PUBLIC_IP_NOT_ASSIGNED,
+                          security_domain = vm_data.security_domain,
+                          purpose = TASK_TYPE_CLONE_VM,
                           status = VM_STATUS_IN_QUEUE)
 
         vm_id_list.append(clone_vm_id)
@@ -128,25 +132,32 @@ def create_install_task(req_data, params):
     add_vm_users(vm_id, req_data.requester_id, req_data.owner_id)
     add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params)
 
+def create_edit_config_task(req_data, params):
+    
+    vm_data = db.vm_data[req_data.parent_id]
+    
+    if vm_data.RAM != req_data.RAM : params['ram'] = req_data.RAM
+    if vm_data.vCPU != req_data.vCPU : params['vcpus'] = req_data.vCPU
+    if vm_data.public_ip != req_data.public_ip : params['public_ip'] = req_data.public_ip
+    if vm_data.enable_ssh != req_data.RAM : params['enable_ssh'] = req_data.enable_ssh
+    if vm_data.enable_http != req_data.enable_http : params['enable_http'] = req_data.enable_ssh
+    if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
+
+    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
 
 def enqueue_vm_request(request_id):
     
     req_data = db.request_queue[request_id]
     params={'request_id' : request_id}
+    
     if req_data.request_type == TASK_TYPE_CLONE_VM:
         create_clone_task(req_data, params)
     elif req_data.request_type == TASK_TYPE_CREATE_VM:
         create_install_task(req_data, params)
-    else:
-        if req_data.request_type == TASK_TYPE_ATTACH_DISK:
-            params.update({'disk_size' : req_data.attach_disk})
-        elif req_data.request_type == TASK_TYPE_EDITCONFIG_VM:
-            params.update({'RAM' : req_data.RAM, 
-                      'vCPU' : req_data.vCPU,
-                      'public_ip' : req_data.public_ip,
-                      'enable_ssh' : req_data.enable_ssh,
-                      'enable_http' : req_data.enable_http,
-                      'security_domain' : req_data.security_domain})
+    elif req_data.request_type == TASK_TYPE_EDITCONFIG_VM:
+        create_edit_config_task(req_data, params)
+    elif req_data.request_type == TASK_TYPE_ATTACH_DISK:
+        params.update({'disk_size' : req_data.attach_disk})
         add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
     
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
