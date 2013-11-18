@@ -223,7 +223,7 @@ def update_task_ignore(_task_id):
 
 def get_search_host_form():
     form = FORM('Host IP:',
-                INPUT(_name = 'host_ip',requires = IS_NOT_EMPTY(), _id='host_ip_id'),
+                INPUT(_name = 'host_ip',requires = IS_IPV4(), _id='host_ip_id'),
                 INPUT(_type = 'submit', _value = 'Get Details'))
     return form
 
