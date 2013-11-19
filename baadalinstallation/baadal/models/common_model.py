@@ -51,37 +51,114 @@ def get_hosted_vm_list(vms):
         vmlist.append(element)
     return vmlist
 
+def update_install_vm_request(vm_request, element):
+    collaborators = '-'
+    if vm_request.collaborators != None:
+        vm_users = db(db.user.id.belongs(vm_request.collaborators)).select()
+        collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
+    element['collaborators'] = collaborators
+    element['public_ip'] = vm_request.public_ip; 
+    
+    ports_enabled = [] 
+    if vm_request.enable_ssh: ports_enabled.append('SSH')
+    if vm_request.enable_http: ports_enabled.append('HTTP')
+    element['ports_enabled'] = ', '.join(ports_enabled) if ports_enabled else 'None';
+    
+    element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else None;
+    
+    if vm_request.extra_HDD != 0:
+        element['HDD'] = str(vm_request.HDD)+'GB + ' + str(vm_request.extra_HDD) + 'GB'
+    
+
+def update_clone_vm_request(vm_request, element):
+    element['clone_count'] = vm_request.clone_count
+    
+
+def update_attach_disk_request(vm_request, element):
+    element['parent_vm_id'] = vm_request.parent_id
+    element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD !=0 else 'None'
+    element['attach_disk'] = str(vm_request.attach_disk) + 'GB'
+    
+
+def update_edit_config_request(vm_request, element):
+    vm_data = db.vm_data[vm_request.parent_id]
+    
+    element['parent_vm_id'] = vm_request.parent_id
+    element['old_RAM'] = str(vm_data.RAM/1024)+'GB'
+    if vm_request.RAM == vm_data.RAM:
+        element['RAM'] = 'Same'
+    
+    element['old_vCPUs'] = str(vm_data.vCPU) +' CPU'
+    if vm_request.vCPU == vm_data.vCPU:
+        element['vCPUs'] = 'Same'
+
+    element['old_public_ip'] = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
+    element['public_ip'] = vm_request.public_ip
+
+    ports_enabled = [] 
+    if vm_data.enable_ssh: ports_enabled.append('SSH')
+    if vm_data.enable_http: ports_enabled.append('HTTP')
+    element['old_ports_enabled'] = ', '.join(ports_enabled) if ports_enabled else 'None';
+    
+    if vm_data.enable_ssh == vm_request.enable_ssh and vm_data.enable_http == vm_request.enable_http:
+        element['ports_enabled'] = 'Same'
+    else:
+        ports_enabled = [] 
+        if vm_request.enable_ssh: ports_enabled.append('SSH')
+        if vm_request.enable_http: ports_enabled.append('HTTP')
+        element['ports_enabled'] = ', '.join(ports_enabled) if ports_enabled else 'None';
+        
+    element['old_security_domain'] = vm_data.security_domain.name if vm_data.security_domain != None else None;
+    if vm_request.security_domain == vm_data.security_domain: element['security_domain'] = 'Same'
+    else: element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else None;
 
 def get_pending_request_list(vm_requests):
 
     request_list = []
     for vm_request in vm_requests:
-        collaborators = '-'
-        if vm_request.collaborators != None:
-            vm_users = db(db.user.id.belongs(vm_request.collaborators)).select()
-            collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)  
-
+        
         element = {'id' : vm_request.id,
                    'vm_name' : vm_request.vm_name, 
                    'faculty_name' : vm_request.owner_id.first_name + ' ' + vm_request.owner_id.last_name, 
                    'requester_id' : vm_request.requester_id, 
                    'owner_id' : vm_request.owner_id,
                    'requester_name' : vm_request.requester_id.first_name + ' ' + vm_request.requester_id.last_name,
-                   'collaborators' : collaborators,
                    'organisation' : vm_request.requester_id.organisation_id.name,
-                   'RAM' : vm_request.RAM, 
-                   'vCPUs' : vm_request.vCPU, 
-                   'HDD' : vm_request.HDD,
+                   'vCPUs' : str(vm_request.vCPU)+' CPU', 
+                   'RAM' : str(vm_request.RAM/1024) + 'GB' if vm_request.RAM else None, 
+                   'HDD' : str(vm_request.HDD) + 'GB' if vm_request.HDD else None,
                    'request_type' : vm_request.request_type,
-                   'public_ip' : vm_request.public_ip, 
-                   'enable_ssh' : vm_request.enable_ssh, 
-                   'enable_http' : vm_request.enable_http, 
-                   'security_domain' : vm_request.security_domain.name if vm_request.security_domain != None else None, 
                    'status' : vm_request.status}
+        
+        if vm_request.request_type == TASK_TYPE_CREATE_VM:
+            update_install_vm_request(vm_request, element)
+        elif vm_request.request_type == TASK_TYPE_CLONE_VM:
+            update_clone_vm_request(vm_request, element)
+        elif vm_request.request_type == TASK_TYPE_ATTACH_DISK:
+            update_attach_disk_request(vm_request, element)
+        elif vm_request.request_type == TASK_TYPE_EDITCONFIG_VM:
+            update_edit_config_request(vm_request, element)
+        
         request_list.append(element)
     return request_list
 
-
+def get_segregated_requests(request_list):
+    
+    install_requests = []
+    clone_requests = []
+    disk_requests = []
+    edit_requests = []
+    for req in request_list:
+        if req['request_type'] == TASK_TYPE_CREATE_VM:
+            install_requests.append(req)
+        elif req['request_type'] == TASK_TYPE_CLONE_VM:
+            clone_requests.append(req)
+        elif req['request_type'] == TASK_TYPE_ATTACH_DISK:
+            disk_requests.append(req)
+        elif req['request_type'] == TASK_TYPE_EDITCONFIG_VM:
+            edit_requests.append(req)
+    return (install_requests, clone_requests, disk_requests, edit_requests)
+    
 def add_to_cost(vm_id):
     vm = db.vm_data[vm_id]
 

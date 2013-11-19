@@ -17,7 +17,12 @@ def list_all_vm():
 @handle_exception
 def list_all_pending_requests():
     pending_requests = get_all_pending_requests()
-    return dict(pending_requests = pending_requests)
+    requests = get_segregated_requests(pending_requests)
+
+    return dict(install_requests = requests[0], 
+                clone_requests = requests[1], 
+                disk_requests = requests[2], 
+                edit_requests= requests[3])
 
 @check_moderator
 @handle_exception

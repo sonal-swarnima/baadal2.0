@@ -10,11 +10,12 @@ table.tablesorter {
 	text-align: left;
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
-    padding: 0.8em 1em;
+    padding: 0.8em 0.5em;
     background: none repeat scroll 0% 0% rgb(44, 118, 166);
     border-color: rgb(48, 138, 186) rgb(48, 138, 186) rgb(36, 111, 151);
     color: rgb(255, 255, 255);
     font-weight: bold;
+    text-align: left;
 }
 
 table.tablesorter thead tr .header {
@@ -29,6 +30,9 @@ table.tablesorter tbody td {
 	background-color: #FFF;
 	vertical-align: top;
 	border:1px solid #0057af;
+}
+table.tablesorter tbody td a{
+	color:rgb(29,91,127)
 }
 table.tablesorter tbody tr.odd td {
 	background-color:#F0F0F6;

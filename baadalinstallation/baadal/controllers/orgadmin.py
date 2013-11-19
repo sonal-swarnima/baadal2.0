@@ -18,7 +18,12 @@ def list_all_orglevel_vm():
 @handle_exception
 def pending_approvals():
     pending_approvals = get_verified_requests()
-    return dict(pending_approvals=pending_approvals)
+    requests = get_segregated_requests(pending_approvals)
+
+    return dict(install_requests = requests[0], 
+                clone_requests = requests[1], 
+                disk_requests = requests[2], 
+                edit_requests= requests[3])
     
 @check_orgadmin
 @handle_exception

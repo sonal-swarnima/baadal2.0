@@ -47,11 +47,8 @@ def add_collaborator():
 @auth.requires_login()
 @handle_exception
 def list_my_vm():
-    pending_vm = get_my_pending_vm()
     hosted_vm = get_my_hosted_vm()        
-    
-    return dict(pending_vm = pending_vm, hosted_vm = hosted_vm)
-
+    return dict(hosted_vm = hosted_vm)
 
 @auth.requires_login()
 @handle_exception

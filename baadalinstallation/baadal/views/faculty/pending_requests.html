@@ -1,51 +1,229 @@
 {{extend 'layout.html'}}
-{{if not pending_requests:}}
-<h2 class="subtitle">No Pending Requests</h2>
+<div id="tabs-task">
+<ul>
+    <li><a href="#installTab">Install VM ({{=len(install_requests)}})</a></li>
+    <li><a href="#cloneTab">Clone VM ({{=len(clone_requests)}})</a></li>
+    <li><a href="#diskTab">Attach Disk ({{=len(disk_requests)}})</a></li>
+    <li><a href="#editTab">Edit Configuration ({{=len(edit_requests)}})</a></li>
+</ul>
+
+
+<div id="installTab">
+
+{{if len(install_requests) == 0:}}
+<h3>No Pending Requests</h3>
     {{else:}}
-<h2 class="subtitle">Requests Pending for your Approval</h2>
-    <table id="sortTable" class="tablesorter">
-      <thead>
+
+    <table id="sortTable1" class="tablesorter">
+    <thead>
       <tr>
-        <th>Type</th>
-        <th>User ID</th>
+        <th>Requested By</th>
         <th>VM Name</th>
-        <th>RAM</th>
-        <th>Faculty</th>
-        <th>HDD</th>
         <th>vCPUs</th>
+        <th>RAM</th>
+        <th>HDD</th>
         <th>Public IP</th>
-        <th>Operations</th>
+        <th>Ports Enabled</th>
+        <th>Security Domain</th>
+        <th>Action</th>
       </tr> 
       </thead>
       <tbody>
-      {{for pending_request in pending_requests:}}
+      {{for pend_request in install_requests:}}
        <tr>
-            <td>{{=pending_request['request_type']}}</td>
-            <td>{{=pending_request['requester_name']}}</td>
-            <td>{{=pending_request['vm_name']}}</td>
-            <td>{{=pending_request['RAM']}}</td>
-            <td>{{=pending_request['faculty_name']}}</td>
-            <td>{{=pending_request['HDD']}}</td>
-            <td>{{=pending_request['vCPUs']}}</td>
-            <td style="text-align:center">
-            {{if pending_request['public_ip']:}}
+            <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=pend_request['vm_name']}}</td>
+            <td>{{=pend_request['vCPUs']}}</td>
+            <td>{{=pend_request['RAM']}}</td>
+            <td>{{=pend_request['HDD']}}</td>
+            <td>
+            {{if pend_request['public_ip']:}}
+                    <span class="icon-ok"/>
+            {{else:}}        
+                    <span class="icon-remove"/>
+            {{pass}}
+            </td>
+            <td>{{=pend_request['ports_enabled']}}</td>
+            <td>{{=pend_request['security_domain']}}</td>
+            <td>
+	           {{if FACULTY in auth.user_groups.values():}}
+	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	           {{else:}}
+	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{pass}}
+            </td>
+          </tr>
+      {{pass}}
+	</tbody>
+    </table>
+{{pass}}
+
+</div>
+<div id="cloneTab">
+{{if len(clone_requests) == 0:}}
+<h3>No Pending Requests</h3>
+    {{else:}}
+
+    <table id="sortTable2" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Requested By</th>
+        <th>No. of Clones</th>
+        <th>VM Name</th>
+        <th>RAM</th>
+        <th>HDD</th>
+        <th>vCPUs</th>
+        <th>Action</th>
+      </tr> 
+      </thead>
+      <tbody>
+      {{for pend_request in clone_requests:}}
+       <tr>
+            <td>{{=pend_request['requester_name']}}</td>
+            <td><b>{{=pend_request['clone_count']}}</b></td>
+            <td>{{=pend_request['vm_name']}}</td>
+            <td>{{=pend_request['RAM']}}</td>
+            <td>{{=pend_request['HDD']}}</td>
+            <td>{{=pend_request['vCPUs']}}</td>
+            <td>
+	           {{if FACULTY in auth.user_groups.values():}}
+	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	           {{else:}}
+	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{pass}}
+            </td>
+          </tr>
+      {{pass}}
+	</tbody>
+    </table>
+{{pass}}
+
+</div>
+<div id="diskTab">
+{{if len(disk_requests) == 0:}}
+<h3>No Pending Requests</h3>
+    {{else:}}
+
+    <table id="sortTable3" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Requested By</th>
+        <th>VM Name</th>
+        <th>vCPUs</th>
+        <th>RAM</th>
+        <th>HDD</th>
+        <th>Extra HDD</th>
+        <th>Additional HDD</th>
+        <th>Action</th>
+      </tr> 
+      </thead>
+      <tbody>
+      {{for pend_request in disk_requests:}}
+       <tr>
+            <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=A(pend_request['vm_name'],_href=URL(r=request, c='user',f='settings', args=[pend_request['parent_vm_id']]))}}</td>
+            <td>{{=pend_request['vCPUs']}}</td>
+            <td>{{=pend_request['RAM']}}</td>
+            <td>{{=pend_request['HDD']}}</td>
+            <td>{{=pend_request['extra_HDD']}}</td>
+            <td><b>{{=pend_request['attach_disk']}}</b></td>
+            <td>
+	           {{if FACULTY in auth.user_groups.values():}}
+	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	           {{else:}}
+	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{pass}}
+            </td>
+          </tr>
+      {{pass}}
+	</tbody>
+    </table>
+{{pass}}
+
+</div>
+<div id="editTab">
+
+{{if len(edit_requests) == 0:}}
+<h3>No Pending Requests</h3>
+    {{else:}}
+
+    <table id="sortTable4" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Requested<br/>By</th>
+        <th>VM Name</th>
+        <th>vCPUs</th>
+        <th>New<br/>vCPUs</th>
+        <th>RAM</th>
+        <th>New<br/>RAM</th>
+        <th>Public<br/>IP</th>
+        <th>New<br/>Public IP</th>
+        <th>Ports<br/>Enabled</th>
+        <th>New Ports<br/>Enabled</th>
+        <th>Security<br/>Domain</th>
+        <th>New Security<br/>Domain</th>
+        <th>Action</th>
+      </tr> 
+      </thead>
+      <tbody>
+      {{for pend_request in edit_requests:}}
+       <tr>
+            <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=A(pend_request['vm_name'],_href=URL(r=request, c='user',f='settings', args=[pend_request['parent_vm_id']]))}}</td>
+            <td>{{=pend_request['old_vCPUs']}}</td>
+            <td><b>{{=pend_request['vCPUs']}}</b></td>
+            <td>{{=pend_request['old_RAM']}}</td>
+            <td><b>{{=pend_request['RAM']}}</b></td>
+            <td>
+            {{if pend_request['old_public_ip']:}}
                     <span class="icon-ok"/>
             {{else:}}        
                     <span class="icon-remove"/>
             {{pass}}
             </td>
             <td>
-           {{if FACULTY in auth.user_groups.values():}}
-               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pending_request['id']]))}}
-             &nbsp;|&nbsp;
-               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pending_request['id']]))}}
-           {{else:}}
-               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pending_request['id']]))}}
-           {{pass}}
+            {{if pend_request['public_ip']:}}
+                    <span class="icon-ok"/>
+            {{else:}}        
+                    <span class="icon-remove"/>
+            {{pass}}
+            </td>
+            <td>{{=pend_request['old_ports_enabled']}}</td>
+            <td><b>{{=pend_request['ports_enabled']}}</b></td>
+            <td>{{=pend_request['old_security_domain']}}</td>
+            <td><b>{{=pend_request['security_domain']}}</b></td>
+            <td>
+	           {{if FACULTY in auth.user_groups.values():}}
+	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	           {{else:}}
+	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{pass}}
             </td>
           </tr>
       {{pass}}
-    </tbody>
+	</tbody>
     </table>
 {{pass}}
+
+</div>
+
+</div>
+
+<script>
+jQuery(document).ready(function(){
+      jQuery("#sortTable1").tablesorter(); 
+      jQuery("#sortTable2").tablesorter(); 
+      jQuery("#sortTable3").tablesorter(); 
+      jQuery("#sortTable4").tablesorter(); 
+});
+</script>
+
 

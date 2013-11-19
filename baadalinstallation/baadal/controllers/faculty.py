@@ -14,7 +14,12 @@ from helper import is_moderator
 @handle_exception
 def pending_requests():
     pending_requests = get_pending_requests()
-    return dict(pending_requests=pending_requests,is_moderator=is_moderator())
+    requests = get_segregated_requests(pending_requests)
+
+    return dict(install_requests = requests[0], 
+                clone_requests = requests[1], 
+                disk_requests = requests[2], 
+                edit_requests= requests[3])
         
 @check_faculty
 @handle_exception

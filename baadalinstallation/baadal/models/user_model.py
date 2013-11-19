@@ -226,7 +226,9 @@ def get_vm_user_list(vm_id) :
     return user_id_lst
 
 def is_snapshot_request_in_queue(vm_id):
-    if db((db.task_queue.vm_id == vm_id) & (db.task_queue.task_type == TASK_TYPE_SNAPSHOT_VM)).select():
+    if db((db.task_queue.vm_id == vm_id) 
+          & (db.task_queue.task_type == TASK_TYPE_SNAPSHOT_VM) 
+          & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select():
         return True
     else:
         return False
@@ -271,6 +273,8 @@ def get_attach_extra_disk_form(vm_id):
     
     db.request_queue.parent_id.default = vm_data.id
     db.request_queue.vm_name.default = vm_data.vm_name
+    db.request_queue.RAM.default = vm_data.RAM
+    db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.HDD.default = vm_data.HDD
     db.request_queue.extra_HDD.default = vm_data.extra_HDD
     db.request_queue.request_type.default = TASK_TYPE_ATTACH_DISK
@@ -297,13 +301,14 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.HDD.default = vm_data.HDD
     db.request_queue.enable_ssh.default = vm_data.enable_ssh
     db.request_queue.enable_http.default = vm_data.enable_http
+    db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
     
-    form_fields = ['vm_name','RAM','vCPU','enable_ssh', 'enable_http', 'security_domain', 'purpose']
+    form_fields = ['vm_name','RAM','vCPU','enable_ssh', 'enable_http', 'public_ip', 'security_domain', 'purpose']
     
     return SQLFORM(db.request_queue, fields = form_fields)
 

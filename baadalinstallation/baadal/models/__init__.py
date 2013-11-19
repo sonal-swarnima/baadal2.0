@@ -14,7 +14,7 @@ __all__ =['enqueue_vm_request','get_mail_admin_form','send_email_to_admin','get_
             'get_add_host_form','get_manage_datastore_form','get_configuration_elem','set_configuration_elem','get_create_vm_form','add_vm_task_to_queue',
             'add_vm_users','add_to_cost','get_all_vm_list','get_task_list','get_all_pending_vm_count','send_remind_faculty_email','send_email_to_user',
             'get_attach_extra_disk_form','vm_has_snapshots','is_snapshot_request_in_queue','get_security_domain_form',
-            'get_request_info','get_request_status']
+            'get_request_info','get_request_status','get_segregated_requests']
 
 if 0:
     from admin_model import *

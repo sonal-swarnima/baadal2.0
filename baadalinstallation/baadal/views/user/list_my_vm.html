@@ -1,71 +1,6 @@
 {{extend 'layout.html'}}
-<div id="tabs-task">
-<ul>
-    <li><a href="#runTab">My VM's</a></li>
-    <li><a href="#pendTab">Pending VM Requests</a></li>
-</ul>
+<h2 class="subtitle">{{=T('My VMs')}}</h2>
 
-<div id="pendTab">
-{{if not pending_vm:}}
-<h3>No Pending Requests</h3>
-  {{else:}}
-  <div class="TABLE">
-    <table id="pendingreqs">
-      <tr>
-        <th>VM Name</th>
-        <th>RAM</th>
-        <th>Faculty</th>
-        <th>HDD</th>
-        <th>vCPUs</th>
-        <th>Public IP</th>
-        <th>Enable SSH</th>
-        <th>Enable HTTP</th>
-        <th>Security Domain</th>
-        <th>Status</th>
-      </tr> 
-      {{for vm in pending_vm:}}
-       <tr>
-            <td>{{=vm['vm_name']}}</td>
-            <td>{{=vm['RAM']}}</td>
-            <td>{{=vm['faculty_name']}}</td>
-            <td>{{=vm['HDD']}}</td>
-            <td>{{=vm['vCPUs']}}</td>
-            <td>
-            {{if vm['public_ip']:}}
-                <span class="icon-ok"/>
-            {{else:}}        
-                <span class="icon-remove"/>
-            {{pass}}
-            </td>
-            <td>
-            {{if vm['enable_ssh']:}}
-                <span class="icon-ok"/>
-            {{else:}}        
-                <span class="icon-remove"/>
-            {{pass}}
-            </td>
-            <td>
-            {{if vm['enable_http']:}}
-                <span class="icon-ok"/>
-            {{else:}}        
-                <span class="icon-remove"/>
-            {{pass}}
-            </td>
-            <td>{{=vm['security_domain']}}</td>
-            <td>
-            {{if vm['status'] == REQ_STATUS_VERIFIED:}}
-            	Waiting for admin approval
-            {{else:}}
-            	Waiting for approval
-            {{pass}}
-            </td>
-          </tr>
-      {{pass}}
-    </table>
-    </div>
-{{pass}}
-</div>
-<div id="runTab">
 {{
   if not hosted_vm:
 }}
@@ -111,5 +46,3 @@
   </table>
 </div>
 {{pass}}
-</div>
-</div>

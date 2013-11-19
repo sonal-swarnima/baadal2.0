@@ -73,6 +73,7 @@ def get_all_pending_requests():
 
     return requests
 
+
 def get_all_vm_list():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     return get_hosted_vm_list(vms)
@@ -126,6 +127,7 @@ def create_install_task(req_data, params):
                   purpose = req_data.purpose,
                   enable_ssh = req_data.enable_ssh,
                   enable_http = req_data.enable_http,
+                  public_ip = PUBLIC_IP_NOT_ASSIGNED if not(req_data.public_ip) else None,
                   security_domain = req_data.security_domain,
                   status = VM_STATUS_IN_QUEUE)
         
@@ -223,7 +225,7 @@ def update_task_ignore(_task_id):
 
 def get_search_host_form():
     form = FORM('Host IP:',
-                INPUT(_name = 'host_ip',requires = IS_NOT_EMPTY(), _id='host_ip_id'),
+                INPUT(_name = 'host_ip',requires = IS_IPV4(), _id='host_ip_id'),
                 INPUT(_type = 'submit', _value = 'Get Details'))
     return form
 
