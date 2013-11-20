@@ -98,7 +98,7 @@ def get_dom_disk_usage(dom_obj):
 
 def get_dom_info(dom_id, host_ip, conn):
 	dom		= conn.lookupByID(dom_id)
-        dom_name	= dom.name()
+	dom_name	= dom.name()
 	dom_info	= dom.info()
 	dom_status	= dom_info[0]
 	dom_maxmem	= dom_info[1]
