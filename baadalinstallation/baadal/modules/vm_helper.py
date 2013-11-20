@@ -380,10 +380,10 @@ def install(parameters):
  
         vmid = parameters['vm_id']
         current.logger.debug("In install function...")
+        vm_details = current.db.vm_data[vmid]
 
         try:
             # Fetches vm details from vm_data table
-            vm_details = current.db.vm_data[vmid]
             current.logger.debug("VM details are: " + str(vm_details))
     
             # Calling allocate_vm_properties function

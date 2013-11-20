@@ -25,61 +25,60 @@ task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_ATTACH_DISK             :    attach_extra_disk
        }
 
-def markFailedTask(task_id, error_msg, vm_id):
+def markFailedTask(task_id, task_event_id, error_msg):
     #For failed task, change task status to Failed, it can be marked for retry by admin later
-    db(db.task_queue.id==task_id).update(status=TASK_QUEUE_STATUS_FAILED)
+    db.task_queue[task_id] = dict(status=TASK_QUEUE_STATUS_FAILED)
     #Update task event with the error message
-    db((db.task_queue_event.task_id==task_id) & 
-       (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE)).update(error=error_msg,status=TASK_QUEUE_STATUS_FAILED)
+    db.task_queue_event[task_event_id] = dict(status=TASK_QUEUE_STATUS_FAILED, error=error_msg)
 
 
-def processTaskQueue(task_id):
+def processTaskQueue(task_event_id):
 
-    task_process = db.task_queue[task_id] 
+    task_event = db.task_queue_event[task_event_id]
+    task_process = db.task_queue[task_event.task_id] 
     try:
-        task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
         #Update attention_time for task in the event table
-        task_event_query.update(attention_time=get_datetime())
+        db.task_queue_event[task_event_id] = dict(attention_time=get_datetime())
         #Call the corresponding function from vm_helper
         ret = task[task_process.task_type](task_process.parameters)
         #On return, update the status and end time in task event table
-        task_event_query.update(status=ret[0], end_time=get_datetime())
+        db.task_queue_event[task_event_id] = dict(status=ret[0], end_time=get_datetime())
+        
         if 'request_id' in task_process.parameters:
             del db.request_queue[task_process.parameters['request_id']]
         
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
-            markFailedTask(task_id, ret[1], task_process.vm_id)
+            markFailedTask(task_process.id, task_event_id, ret[1])
             if task_process.task_type == TASK_TYPE_CREATE_VM:
                 db.vm_data[task_process.vm_id] = dict(status = -1)
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # For successful task, delete the task from queue 
-            db(db.task_queue.id==task_id).delete()
+            del db.task_queue[task_process.id]
         db.commit()
         logger.debug('Task done')
     except:
         etype, value, tb = sys.exc_info()
         msg=''.join(traceback.format_exception(etype, value, tb, 10))
         logger.error(msg)
-        markFailedTask(task_id, msg, task_process.vm_id)
+        markFailedTask(task_process.id, task_event_id, msg)
         
-def processCloneTask(task_id, vm_id):
+def processCloneTask(task_event_id, vm_id):
     try:
-        task_event_query = db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.status != TASK_QUEUE_STATUS_IGNORE))
+        task_event = db.task_queue_event[task_event_id]
+        task_process = db.task_queue[task_event.task_id] 
         # Update attention time for first clone task
-        db((db.task_queue_event.task_id==task_id) & (db.task_queue_event.attention_time == None)).update(attention_time=get_datetime())
+        db((db.task_queue_event.id==task_event_id) & (db.task_queue_event.attention_time == None)).update(attention_time=get_datetime())
         
         ret = task[TASK_TYPE_CLONE_VM](vm_id)
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             db.vm_data[vm_id] = dict(status = -1)
         
-        task_queue = db.task_queue[task_id]
-        print task_queue.parameters
-        clone_vm_list = task_queue.parameters['clone_vm_id']
+#       task_queue = db.task_queue[task_id]
+        clone_vm_list = task_event.parameters['clone_vm_id']
         # Remove VM id from the list. This is to check if all the clones for the task are processed.
         clone_vm_list.remove(vm_id)
         
-        task_event = task_event_query.select().first()
         # Find the status of all clone tasks combined
         current_status = task_event.status
         if current_status == None:
@@ -89,16 +88,16 @@ def processCloneTask(task_id, vm_id):
                 current_status = TASK_QUEUE_STATUS_PARTIAL_SUCCESS
 
         if not clone_vm_list: #All Clones are processed
-            task_event_query.update(status=current_status, end_time=get_datetime())
-            del db.request_queue[task_queue.parameters['request_id']]
+            db.task_queue_event[task_event_id] = dict(status=ret[0], end_time=get_datetime())
+            del db.request_queue[task_process.parameters['request_id']]
             if current_status == TASK_QUEUE_STATUS_FAILED:
-                task_event_query.update(error=ret[1])
+                markFailedTask(task_process.id, task_event_id, ret[1])
             else:
-                del db.task_queue[task_id]
+                del db.task_queue[task_process.id]
         else:
-            params = task_queue.parameters
+            params = task_event.parameters
             params.update({'clone_vm_id' : clone_vm_list})
-            db(db.task_queue.id==task_id).update(parameters=params, status=current_status)
+            db.task_queue_event[task_event_id] = dict(parameters=params, status=current_status)
         db.commit()
 
     except:
