@@ -2,7 +2,9 @@
 ###################################################################################
 
 import os
+import re
 from gluon import current
+from gluon.validators import Validator
 
 def is_moderator():
     if current.ADMIN in current.auth.user_groups.values():
@@ -59,3 +61,16 @@ def get_email(user_id):
     user = current.db.user[user_id]
     if user:
         return user.email
+    
+class IS_MAC_ADDRESS(Validator):
+    
+    regex = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+    
+    def __init__(self, error_message='enter valid MAC address'):
+        self.error_message = error_message
+
+    def __call__(self, value):
+        if self.regex.match(value):
+            return (value, None)
+        else:
+            return (value, self.error_message)

@@ -154,3 +154,4 @@ VM_APPROVAL_SUBJECT_FOR_FACULTY = "VM pending approval"
 VM_RAM_SET = (1024,2048,4096,8192)
 VM_vCPU_SET = (1,2,4,8)
 
+IP_ERROR_MESSAGE = 'Enter valid IP address'

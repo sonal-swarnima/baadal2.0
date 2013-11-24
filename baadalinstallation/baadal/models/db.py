@@ -6,7 +6,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from simplejson import loads, dumps
-from helper import get_config_file,get_datetime
+from helper import get_config_file,get_datetime, IS_MAC_ADDRESS
 from auth_user import login_callback,login_ldap_callback
 
 #### Connection Pooling of Db is also possible
@@ -102,19 +102,19 @@ else:
 ###############################################################################
 
 db.define_table('host',
-    Field('host_ip', 'string', length = 15, notnull = True, unique = True, requires=IS_IPV4(), label='Host IP'),
+    Field('host_ip', 'string', length = 15, notnull = True, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Host IP'),
     Field('host_name', 'string', length = 30, notnull = True, unique = True),
-    Field('mac_addr', 'string', length = 20, notnull = True, unique = True),
-    Field('HDD', 'integer'),
-    Field('CPUs', 'integer'),
-    Field('RAM', 'integer'),
+    Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=IS_MAC_ADDRESS()),
+    Field('HDD', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
+    Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
+    Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None)),
     Field("category",'string', length = 50),
     Field('status', 'integer'),
     Field('vm_count', 'integer', default = 0))
 
 db.define_table('datastore',
     Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
-    Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(), label='Mount IP'),
+    Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
     Field('path', 'string', label='Path'),
     Field('username', 'string', length = 255, label='Username'),
     Field('password', 'password', label='Password'),
@@ -152,9 +152,9 @@ db.define_table('vm_data',
     Field('template_id', db.template),
     Field('requester_id',db.user, represent=lambda x, row: get_full_name(x), label='Requester'),
     Field('owner_id', db.user, represent=lambda x, row: get_full_name(x), label='Owner'),
-    Field('mac_addr_1', 'string',length = 100),
+    Field('mac_addr_1', 'string',length = 20 , requires=IS_MAC_ADDRESS()),
     Field('private_ip', 'string',length = 15, label='Private IP'),
-    Field('mac_addr_2', 'string',length = 100),
+    Field('mac_addr_2', 'string',length = 20),
     Field('public_ip', 'string',length = 15, label='Public IP', default=PUBLIC_IP_NOT_ASSIGNED),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
@@ -211,9 +211,9 @@ db.define_table('vm_data_event',
     Field('template_id', db.template),
     Field('requester_id',db.user),
     Field('owner_id', db.user),
-    Field('mac_addr_1', 'string',length = 100),
+    Field('mac_addr_1', 'string',length = 20),
     Field('private_ip', 'string',length = 15),
-    Field('mac_addr_2', 'string',length = 100),
+    Field('mac_addr_2', 'string',length = 20),
     Field('public_ip', 'string',length = 15),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
