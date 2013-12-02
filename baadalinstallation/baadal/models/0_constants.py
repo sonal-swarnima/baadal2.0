@@ -74,69 +74,14 @@ ORGADMIN = 'orgadmin'
 FACULTY = 'faculty'
 USER = 'user'
 
-#Startup Data
-GROUP_DATA = {ADMIN : 'Super User', 
-              ORGADMIN : 'Organisation Level Admin', 
-              FACULTY : 'Faculty User', 
-              USER:'Normal User'}
-
-ORG_DATA = {'IIT Delhi':'Indian Institude of Technology, Delhi',
-            'IIT Bombay':'Indian Institude of Technology, Mumbai'}
-
-DEFAULT_SECURITY_DOMAIN = {'name' : 'Research', 'vlan_tag':'research', 'ip_range_lb':'10.20.1.1', 'ip_range_ub':'10.20.1.255', 'visible_to_all':True}
-
-DB_CONSTANTS = {'vmfiles_path' : '/mnt/testdatastore',
-              'datastore_int'  : 'ds_',
-              'vncport_range'  : 20000,
-              'templates_dir'  : 'vm_templates',
-              'archives_dir'   : 'vm_archives',
-              'vmcount'        :  1,
-              'vm_rrds_dir'    : 'vm_rrds',
-              'graph_file_dir' : '/home/www-data/web2py/applications/baadal/static/images/vm_graphs/',
-              'admin_email'    : 'baadalsupport@cse.iitd.ernet.in',
-              'vms'            : '/vms' }
-
 current.ADMIN = ADMIN
 current.ORGADMIN = ORGADMIN
 current.FACULTY = FACULTY
 current.USER = USER
 
-MAC_PRIVATE_IP_POOL = { 
-                '54:52:00:01:17:98' : '10.208.21.74',
-                '54:52:00:01:17:89' : '10.208.21.75',
-                '54:52:00:01:17:88' : '10.208.21.76',
-                '54:52:00:01:17:87' : '10.208.21.77',
-                '54:52:00:01:17:86' : '10.208.21.78',
-                '54:52:00:01:17:85' : '10.208.21.79',
-                '54:52:00:01:17:84' : '10.208.21.80',
-                '54:52:00:01:17:83' : '10.208.21.81',
-                '54:52:00:01:17:82' : '10.208.21.82',
-                '54:52:00:01:17:81' : '10.208.21.83',
-                '54:52:00:01:17:80' : '10.208.21.84',
-                '54:52:00:01:17:79' : '10.208.21.86',
-                '54:52:00:01:17:78' : '10.208.21.87',
-                '54:52:00:01:17:77' : '10.208.21.88',
-                '54:52:00:01:17:76' : '10.208.21.89',
-                '54:52:00:01:17:01' : '10.208.23.61',
-                '54:52:00:01:17:02' : '10.208.23.62',
-                '54:52:00:01:17:03' : '10.208.23.63',
-                '54:52:00:01:17:04' : '10.208.23.64',
-                '54:52:00:01:17:05' : '10.208.23.65',
-                '54:52:00:01:17:06' : '10.208.23.66',
-                '54:52:00:01:17:07' : '10.208.23.67',
-                '54:52:00:01:17:92' : '10.208.23.68',
-                '54:52:00:01:17:93' : '10.208.23.69',
-                '54:52:00:01:17:94' : '10.208.23.70' }
- 
-
-current.MAC_PRIVATE_IP_POOL = MAC_PRIVATE_IP_POOL
-
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
-current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
-#Added so that changes in modules are instantlly loaded and reflected.
-from gluon.custom_import import track_changes; track_changes(True)
 
 #Email templates and subject constants
 VM_CREATION_TEMPLATE="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[vmRequestTime]} is successfully created and is now available for use. The following operations are allowed on the VM:\n1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nRegards,\nBaadal Admin"
@@ -155,3 +100,6 @@ VM_RAM_SET = (1024,2048,4096,8192)
 VM_vCPU_SET = (1,2,4,8)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
+
+#Added so that changes in modules are instantlly loaded and reflected.
+from gluon.custom_import import track_changes; track_changes(True)

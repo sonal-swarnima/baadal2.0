@@ -46,7 +46,7 @@ def get_security_domain_form():
     
     db.security_domain.id.readable=False 
 
-    fields = (db.security_domain.name, db.security_domain.vlan_tag, db.security_domain.ip_range_lb, db.security_domain.ip_range_ub)
+    fields = (db.security_domain.name, db.security_domain.vlan)
     default_sort_order=[db.security_domain.id]
 
     form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False)
@@ -225,7 +225,9 @@ def update_task_ignore(_task_id):
 
 def get_search_host_form():
     form = FORM('Host IP:',
-                INPUT(_name = 'host_ip',requires = IS_IPV4(error_message=IP_ERROR_MESSAGE), _id='host_ip_id'),
+                INPUT(_name = 'host_ip', _id='host_ip_id', requires = [
+                                IS_IPV4(error_message=IP_ERROR_MESSAGE),
+                                IS_NOT_IN_DB(db, 'host.host_ip', error_message='Host IP is already configured')]),
                 INPUT(_type = 'submit', _value = 'Get Details'))
     return form
 

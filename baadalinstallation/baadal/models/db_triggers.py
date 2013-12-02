@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 # Added to enable code completion in IDE's.
-# from task_scheduler import test123
 if 0:
     from gluon import *  # @UnusedWildImport
     from gluon import request,db

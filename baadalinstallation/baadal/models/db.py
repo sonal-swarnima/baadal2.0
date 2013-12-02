@@ -102,7 +102,7 @@ else:
 ###############################################################################
 
 db.define_table('host',
-    Field('host_ip', 'string', length = 15, notnull = True, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Host IP'),
+    Field('host_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE)]),
     Field('host_name', 'string', length = 30, notnull = True, unique = True),
     Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=IS_MAC_ADDRESS()),
     Field('HDD', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
@@ -132,14 +132,21 @@ db.define_table('template',
     Field('datastore_id', db.datastore, label='Datastore'),
     format = '%(name)s')
 
+db.define_table('vlan',
+    Field('name', 'string', length = 30, notnull = True, unique = True),
+    Field('vlan_tag', 'string', length = 30, notnull = True, unique = True),
+    Field('vlan_addr', 'string', length = 15, notnull = True, requires=IS_IPV4()),
+    format = '%(name)s')
+
 db.define_table('security_domain',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name', requires=[IS_NOT_IN_DB(db,'security_domain.name')]),
-    Field('vlan_tag', 'string', length = 30, notnull = True, label='VLAN Tag'),
-    Field('ip_range_lb', 'string', length = 15, notnull = True, label='IP Range From', requires=IS_IPV4()),
-    Field('ip_range_ub', 'string', length = 15, notnull = True, label='IP Range To', requires=IS_IPV4()),
+    Field('vlan', 'reference vlan'),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
+
+vlan_query = (db.security_domain.vlan != db.vlan.id)
+db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', multiple=False, zero=None)
 
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
@@ -266,10 +273,6 @@ db.task_queue_event.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.task_queue_event.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
 #TODO: to be modified after networking details have been finalized 
-db.define_table('vlan_map',
-    Field('vm_id', db.vm_data))
-
-#TODO: to be modified after networking details have been finalized 
 db.define_table('vnc_server',
     Field('ip_addr', 'string',length = 15,notnull = True))
 
@@ -281,25 +284,3 @@ db.define_table('vnc_access',
     Field('duration', 'integer'),
     Field('time_requested', 'datetime', default = get_datetime()))
 
-if not db(db.constants).count():
-    _dict = dict(DB_CONSTANTS)
-    for _key in _dict.keys():
-        db.constants.insert(name = _key,value = _dict[_key])
-
-if not db(db.user_group).count():
-    _dict = dict(GROUP_DATA)
-    for _key in _dict.keys():
-        db.user_group.insert(role = _key,description = _dict[_key])
-
-if not db(db.organisation).count():
-    _dict = dict(ORG_DATA)
-    for _key in _dict.keys():
-        db.organisation.insert(name = _key,details = _dict[_key])
-
-if not db(db.security_domain).count():
-    _dict = dict(DEFAULT_SECURITY_DOMAIN)
-    db.security_domain.insert(name = _dict['name'],
-                              vlan_tag = _dict['vlan_tag'],
-                              ip_range_lb = _dict['ip_range_lb'],
-                              ip_range_ub = _dict['ip_range_ub'],
-                              visible_to_all = _dict['visible_to_all'])
