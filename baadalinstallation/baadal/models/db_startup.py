@@ -6,7 +6,7 @@ if 0:
 ###################################################################################
 
 
-# from gluon import current
+from gluon import current
 
 #Startup Data
 GROUP_DATA = {ADMIN : 'Super User', 
@@ -55,7 +55,7 @@ MAC_PRIVATE_IP_POOL = {
                 '54:52:00:01:17:93' : '10.208.23.69',
                 '54:52:00:01:17:94' : '10.208.23.70' }
 
-# current.MAC_PRIVATE_IP_POOL = MAC_PRIVATE_IP_POOL
+current.MAC_PRIVATE_IP_POOL = MAC_PRIVATE_IP_POOL
 
 VLAN_DATA = [{'name' : 'VLAN10', 'tag':'vlan10','addr':'10.20.10.0'},
              {'name' : 'VLAN20', 'tag':'vlan20','addr':'10.20.20.0'},

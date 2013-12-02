@@ -43,7 +43,7 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-            <td>{{=pend_request['ports_enabled']}}</td>
+            <td>{{=pend_request['services_enabled']}}</td>
             <td>{{=pend_request['security_domain']}}</td>
             <td>
 	           {{if FACULTY in auth.user_groups.values():}}
@@ -194,8 +194,8 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-            <td>{{=pend_request['old_ports_enabled']}}</td>
-            <td><b>{{=pend_request['ports_enabled']}}</b></td>
+            <td>{{=pend_request['old_services_enabled']}}</td>
+            <td><b>{{=pend_request['services_enabled']}}</b></td>
             <td>{{=pend_request['old_security_domain']}}</td>
             <td><b>{{=pend_request['security_domain']}}</b></td>
             <td>

@@ -58,13 +58,8 @@ def update_install_vm_request(vm_request, element):
         collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
     element['collaborators'] = collaborators
     element['public_ip'] = vm_request.public_ip; 
-    
-    ports_enabled = [] 
-    if vm_request.enable_ssh: ports_enabled.append('SSH')
-    if vm_request.enable_http: ports_enabled.append('HTTP')
-    element['ports_enabled'] = ', '.join(ports_enabled) if ports_enabled else 'None';
-    
-    element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else None;
+    element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if len(vm_request.enable_service) != 0 else '-'; 
+    element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else '-';
     
     if vm_request.extra_HDD != 0:
         element['HDD'] = str(vm_request.HDD)+'GB + ' + str(vm_request.extra_HDD) + 'GB'
@@ -94,21 +89,10 @@ def update_edit_config_request(vm_request, element):
 
     element['old_public_ip'] = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     element['public_ip'] = vm_request.public_ip
+    element['old_services_enabled'] = ', '.join(ser for ser in vm_data.enable_service) if vm_data.enable_service != None else '-';
+    element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if vm_request.enable_service != vm_data.enable_service else 'Same'
 
-    ports_enabled = [] 
-    if vm_data.enable_ssh: ports_enabled.append('SSH')
-    if vm_data.enable_http: ports_enabled.append('HTTP')
-    element['old_ports_enabled'] = ', '.join(ports_enabled) if ports_enabled else 'None';
-    
-    if vm_data.enable_ssh == vm_request.enable_ssh and vm_data.enable_http == vm_request.enable_http:
-        element['ports_enabled'] = 'Same'
-    else:
-        ports_enabled = [] 
-        if vm_request.enable_ssh: ports_enabled.append('SSH')
-        if vm_request.enable_http: ports_enabled.append('HTTP')
-        element['ports_enabled'] = ', '.join(ports_enabled) if ports_enabled else 'None';
-        
-    element['old_security_domain'] = vm_data.security_domain.name if vm_data.security_domain != None else None;
+    element['old_security_domain'] = vm_data.security_domain.name if vm_data.security_domain != None else '-';
     if vm_request.security_domain == vm_data.security_domain: element['security_domain'] = 'Same'
     else: element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else None;
 

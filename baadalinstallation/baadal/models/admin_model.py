@@ -100,8 +100,8 @@ def create_clone_task(req_data, params):
                           owner_id = vm_data.owner_id,
                           requester_id = req_data.requester_id,
                           parent_id = req_data.parent_id,
-                          enable_ssh = vm_data.security_domain,
-                          enable_http = vm_data.security_domain,
+                          enable_service = vm_data.enable_service,
+#                           enable_http = vm_data.security_domain,
                           public_ip = PUBLIC_IP_NOT_ASSIGNED,
                           security_domain = vm_data.security_domain,
                           purpose = TASK_TYPE_CLONE_VM,
@@ -125,8 +125,8 @@ def create_install_task(req_data, params):
                   requester_id = req_data.requester_id,
                   owner_id = req_data.owner_id,
                   purpose = req_data.purpose,
-                  enable_ssh = req_data.enable_ssh,
-                  enable_http = req_data.enable_http,
+                  enable_service = req_data.enable_service,
+#                   enable_http = req_data.enable_http,
                   public_ip = PUBLIC_IP_NOT_ASSIGNED if not(req_data.public_ip) else None,
                   security_domain = req_data.security_domain,
                   status = VM_STATUS_IN_QUEUE)
@@ -141,8 +141,8 @@ def create_edit_config_task(req_data, params):
     if vm_data.RAM != req_data.RAM : params['ram'] = req_data.RAM
     if vm_data.vCPU != req_data.vCPU : params['vcpus'] = req_data.vCPU
     if vm_data.public_ip != req_data.public_ip : params['public_ip'] = req_data.public_ip
-    if vm_data.enable_ssh != req_data.RAM : params['enable_ssh'] = req_data.enable_ssh
-    if vm_data.enable_http != req_data.enable_http : params['enable_http'] = req_data.enable_ssh
+    if vm_data.enable_service != req_data.enable_service : params['enable_service'] = req_data.enable_service
+#     if vm_data.enable_http != req_data.enable_http : params['enable_http'] = req_data.enable_ssh
     if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
 
     add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)

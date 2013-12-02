@@ -151,7 +151,7 @@ def add_security_domain(form):
 
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_ssh', 'enable_http', 'public_ip']
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_service', 'public_ip']
 
     db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
     db.request_queue.requester_id.default = auth.user.id
@@ -199,20 +199,22 @@ def get_vm_config(vm_id):
 
     vminfo = get_vm_info(vm_id)
     
-    vm_info_map = {'id'              : str(vminfo.id),
-                   'name'            : str(vminfo.vm_name),
-                   'hdd'             : str(vminfo.HDD),
-                   'extrahdd'        : str(vminfo.extra_HDD),
-                   'ram'             : str(vminfo.RAM),
-                   'vcpus'           : str(vminfo.vCPU),
-                   'status'          : get_vm_status(vminfo.status),
-                   'ostype'          : 'Linux',
-                   'purpose'         : str(vminfo.purpose),
-                   'totalcost'       : str(vminfo.total_cost),
-                   'currentrunlevel' : str(vminfo.current_run_level)}
+    vm_info_map = {'id'               : str(vminfo.id),
+                   'name'             : str(vminfo.vm_name),
+                   'hdd'              : str(vminfo.HDD)+'GB' + ('+ ' + str(vminfo.extra_HDD) + 'GB' if vminfo.extra_HDD!=0 else ''),
+                   'ram'              : str(vminfo.RAM),
+                   'vcpus'            : str(vminfo.vCPU),
+                   'status'           : get_vm_status(vminfo.status),
+                   'ostype'           : 'Linux',
+                   'purpose'          : str(vminfo.purpose),
+                   'totalcost'        : str(vminfo.total_cost),
+                   'private_ip'       : str(vminfo.private_ip),
+                   'public_ip'        : str(vminfo.public_ip),
+                   'services_enabled' : ', '.join(ser for ser in vminfo.enable_service) if len(vminfo.enable_service) != 0 else '-',
+                   'security_domain'  : str(vminfo.security_domain.name)}
 
     if is_moderator():
-        vm_info_map.update({'host' : str(vminfo.host_id),
+        vm_info_map.update({'host' : str(vminfo.host_id.host_ip),
                              'vnc'  : str(vminfo.vnc_port)})
 
     return vm_info_map  
@@ -299,8 +301,7 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
     db.request_queue.HDD.default = vm_data.HDD
-    db.request_queue.enable_ssh.default = vm_data.enable_ssh
-    db.request_queue.enable_http.default = vm_data.enable_http
+    db.request_queue.enable_service.default = vm_data.enable_service
     db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
@@ -308,7 +309,7 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
     
-    form_fields = ['vm_name','RAM','vCPU','enable_ssh', 'enable_http', 'public_ip', 'security_domain', 'purpose']
+    form_fields = ['vm_name', 'RAM', 'vCPU', 'enable_service', 'public_ip', 'security_domain', 'purpose']
     
     return SQLFORM(db.request_queue, fields = form_fields)
 

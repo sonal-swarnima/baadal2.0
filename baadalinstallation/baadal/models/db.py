@@ -174,8 +174,7 @@ db.define_table('vm_data',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
-    Field('enable_ssh', 'boolean', default = False, label='Enable SSH Port'),
-    Field('enable_http', 'boolean', default = False, label='Enable HTTP Port'),
+    Field('enable_service', 'list:string'),
     Field('security_domain', db.security_domain),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
@@ -189,8 +188,7 @@ db.define_table('request_queue',
     Field('attach_disk', 'integer', label='Disk Size'),
     Field('vCPU', 'integer', label='vCPUs'),
     Field('template_id', db.template),
-    Field('enable_ssh', 'boolean', default = False, label='Enable SSH Port'),
-    Field('enable_http', 'boolean', default = False, label='Enable HTTP Port'),
+    Field('enable_service', 'list:string'),
     Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
     Field('security_domain', db.security_domain, label='Security Domain'),
     Field('requester_id',db.user, represent=lambda x, row: get_full_name(x), label='Requester'),
@@ -200,6 +198,9 @@ db.define_table('request_queue',
     Field('purpose', 'text'),
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('start_time', 'datetime', default = get_datetime()))
+
+db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
+db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),

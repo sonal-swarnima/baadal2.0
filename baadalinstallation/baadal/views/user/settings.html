@@ -18,40 +18,41 @@ function confirm_vm_deletion(){
 
 <div class="post">
 
-	<h2 class="title">VM Configuration </h2>
+    <h2 class="title">VM Configuration </h2>
 
-	<div class="TABLE">
-	<table id="configuration">
-		<tr>
-			<th>Name</th>
-			<th>Default HDD</th>
-			<th>Extra HDD</th>
-			<th>RAM</th>
-			<th>VCPUs</th>
-			<th>Status</th>
-      <th>OS Type</th>
-      {{if is_moderator():}}
-      <th>Host</th>
-      <th>VNCPort</th>
-      {{pass}}
-		</tr>
-		<tr>
-			<td>{{=vminfo['name']}}</td>
-			<td>{{=vminfo['hdd']}}</td>
-			<td>{{=vminfo['extrahdd']}}</td>
-			<td>{{=vminfo['ram']}}</td>
-			<td>{{=vminfo['vcpus']}}</td>
-			<td>{{=vminfo['status']}}</td>
-      <td>{{=vminfo['ostype']}}</td>
-      {{if is_moderator():}}
-      <td>{{=vminfo['host']}}</td>
-      <td>{{=vminfo['vnc']}}</td>
-      {{pass}}
-		</tr>
-	</table>	
-	</div>
-
- <p><br/><strong>Purpose :</strong> {{=vminfo['purpose']}}</p>
+    <div class="TABLE">
+    <table id="configuration">
+        <tr>
+            <th>Name</th>
+            <th>HDD</th>
+            <th>RAM</th>
+            <th>VCPUs</th>
+            <th>OS Type</th>
+            <th>Private IP</th>
+            <th>Public IP</th>
+            <th>Services Enabled</th>
+            <th>Security Domain</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>{{=vminfo['name']}}</td>
+            <td>{{=vminfo['hdd']}}</td>
+            <td>{{=vminfo['ram']}}</td>
+            <td>{{=vminfo['vcpus']}}</td>
+            <td>{{=vminfo['ostype']}}</td>
+            <td>{{=vminfo['private_ip']}}</td>
+            <td>{{=vminfo['public_ip']}}</td>
+            <td>{{=vminfo['services_enabled']}}</td>
+            <td>{{=vminfo['security_domain']}}</td>
+            <td>{{=vminfo['status']}}</td>
+        </tr>
+    </table>    
+    </div>
+    {{if is_moderator():}}
+    <p><strong>Host: </strong>{{=vminfo['host']}}<br/>
+    <strong>VNC: </strong>{{=vminfo['vnc']}}</p>
+    {{pass}}
+ <p><strong>Purpose :</strong> {{=vminfo['purpose']}}</p>
 
 </div>
 <br/>
@@ -61,16 +62,16 @@ function confirm_vm_deletion(){
 <div class="post">
     <h2 class="title">VM Users</h2>
     <table id="vm_users">
-		<tr>
-	  {{for user in vmusers:}}
-		    <td>{{=(str(user.first_name) + " " + str(user.last_name))}}</td>
-		    <td>
-		        <a alt="Remove the user permissions" title="Remove the user permissions" href="{{=URL(request.application, 'admin','delete_user_vm', args=[vminfo['id'], user.id])}}" style="text-decoration:none;color:black;"><b>X<b/>
-		        </a>
-		    </td>
-	  {{pass}}
-		</tr>
-	  </table>
+        <tr>
+      {{for user in vmusers:}}
+            <td>{{=(str(user.first_name) + " " + str(user.last_name))}}</td>
+            <td>
+                <a alt="Remove the user permissions" title="Remove the user permissions" href="{{=URL(request.application, 'admin','delete_user_vm', args=[vminfo['id'], user.id])}}" style="text-decoration:none;color:black;"><b>X<b/>
+                </a>
+            </td>
+      {{pass}}
+        </tr>
+      </table>
 </div>
 {{pass}}
 
@@ -79,12 +80,12 @@ function confirm_vm_deletion(){
 <div class="post">
     <h2 class="title">VM Operations</h2>
     <table id="vm_ops">
-		<tr>
-	  {{for operation in vmoperations:}}
+        <tr>
+      {{for operation in vmoperations:}}
     <td>{{=operation}}</td>
-	  {{pass}}
-		</tr>
-	  </table>
+      {{pass}}
+        </tr>
+      </table>
 </div>
 {{pass}}
 
