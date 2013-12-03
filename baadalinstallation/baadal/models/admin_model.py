@@ -142,7 +142,6 @@ def create_edit_config_task(req_data, params):
     if vm_data.vCPU != req_data.vCPU : params['vcpus'] = req_data.vCPU
     if vm_data.public_ip != req_data.public_ip : params['public_ip'] = req_data.public_ip
     if vm_data.enable_service != req_data.enable_service : params['enable_service'] = req_data.enable_service
-#     if vm_data.enable_http != req_data.enable_http : params['enable_http'] = req_data.enable_ssh
     if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
 
     add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
@@ -378,3 +377,9 @@ def vm_has_snapshots(vm_id):
         return True
     else:
         return False
+    
+def updte_host_status(host_id, status):
+    db(db.host.id == host_id).update(status = status)
+    
+def delete_host_from_db(host_id):
+    del db.host[host_id]

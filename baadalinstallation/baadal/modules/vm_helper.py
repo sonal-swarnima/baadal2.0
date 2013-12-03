@@ -670,6 +670,23 @@ def edit_vm_config(parameters):
             domain.setMemoryFlags(new_ram, VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_MEM_MAXIMUM)
             message +=  " And edited RAM successfully."
             current.db(current.db.vm_data.id == vmid).update(RAM = int(parameters['ram']))
+            
+        if 'public_ip' in parameters:
+            enable_public_ip = parameters['public_ip']
+            #Implement logic to fetch public IP
+            if enable_public_ip:
+                current.db(current.db.vm_data.id == vmid).update(public_ip = '127.0.0.1', mac_addr_2='00:00:00:00:00:00')
+            else:
+                current.db(current.db.vm_data.id == vmid).update(public_ip = PUBLIC_IP_NOT_ASSIGNED, mac_addr_2 = PUBLIC_IP_NOT_ASSIGNED)
+        
+        if 'security_domain' in parameters:
+            #Implement logic
+            current.db(current.db.vm_data.id == vmid).update(security_domain = parameters['security_domain'])
+
+        if 'enable_service' in parameters:
+            #Implement logic
+            current.db(current.db.vm_data.id == vmid).update(enable_service = parameters['enable_service'])
+
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:

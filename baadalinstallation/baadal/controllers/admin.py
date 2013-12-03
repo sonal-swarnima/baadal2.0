@@ -210,29 +210,6 @@ def delete_machine():
 
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
-# @check_moderator
-# @handle_exception
-# def edit_vmconfig():
-# 
-#     vm_id = int(request.args[0])  
-# #     vm_info = get_vm_config(vm_id)
-# 
-#     form = get_edit_vm_config_form(vm_id)
-# 
-#     form.vars.vmname = request.args[0]
-# 
-#     if form.accepts(request.vars, session):
-#         if int(vm_info['status']) == VM_STATUS_SHUTDOWN:
-#             params = {'ram' : form.vars.ram, 'vcpus' : form.vars.vcpus}
-#             add_vm_task_to_queue(vm_id, TASK_TYPE_EDITCONFIG_VM, params)
-#             session.flash = "Your request has been queued!!!"
-#         else:
-#             session.flash='VM is not Off. Turn it off first'
-# 
-#         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-# 
-#     return dict(form=form)
-
 @check_moderator
 def mailToGUI():
     session.flash="Has to be implemented"
@@ -276,3 +253,33 @@ def reject_request():
     session.flash = 'Request Rejected'
     redirect(URL(c='admin', f='list_all_pending_requests'))
 
+@check_moderator
+@handle_exception
+def maintenance_host():
+    host_id=request.args[0]
+    #migration requests to be added to queue
+    updte_host_status(host_id, HOST_STATUS_MAINTENANCE)
+    redirect(URL(c='admin', f='host_details'))
+    
+@check_moderator
+@handle_exception
+def boot_up_host():
+    host_id=request.args[0]
+    updte_host_status(host_id, HOST_STATUS_UP)
+    redirect(URL(c='admin', f='host_details'))
+    
+@check_moderator
+@handle_exception
+def shut_down_host():
+    host_id=request.args[0]
+    #shut down to be implemented
+    updte_host_status(host_id, HOST_STATUS_DOWN)
+    redirect(URL(c='admin', f='host_details'))
+    
+@check_moderator
+@handle_exception
+def delete_host():
+    host_id=request.args[0]
+    delete_host_from_db(host_id)
+    redirect(URL(c='admin', f='host_details'))
+    
