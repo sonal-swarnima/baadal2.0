@@ -144,7 +144,7 @@ def snapshot():
     if is_snapshot_request_in_queue(vm_id):
         session.flash = "Snapshot request already in queue."
     elif check_snapshot_limit(vm_id):
-        add_vm_task_to_queue(vm_id,TASK_TYPE_SNAPSHOT_VM)
+        add_vm_task_to_queue(vm_id, TASK_TYPE_SNAPSHOT_VM, {'snapshot_type': SNAPSHOT_USER})
         session.flash = "Your request to snapshot VM has been queued"
     else:
         session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."

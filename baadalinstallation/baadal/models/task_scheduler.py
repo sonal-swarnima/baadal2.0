@@ -2,8 +2,8 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import db
-    import logger
+    from gluon import db,request
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 import sys, traceback
 from helper import get_datetime
@@ -105,5 +105,27 @@ def processCloneTask(task_event_id, vm_id):
         msg=''.join(traceback.format_exception(etype, value, tb, 10))
         logger.error(msg)
 
+def processSnapshotVM(snapshot_type):
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    logger.debug('############OK########')
+    for vm in vms:
+        params={'snapshot_type':snapshot_type}
+        add_vm_task_to_queue(vm.id,TASK_TYPE_SNAPSHOT_VM, params)
+        db.commit()
+        
+
 from gluon.scheduler import Scheduler
-vm_scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue, clone_task=processCloneTask))
+vm_scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue, 
+                                        clone_task=processCloneTask,
+                                        snapshot_vm=processSnapshotVM))
+
+ss_query = (db.scheduler_task.task_name == 'snapshot_vm') & (db.scheduler_task.status=='QUEUED')
+res = vm_scheduler.task_status(ref=ss_query)
+if not res:
+    vm_scheduler.queue_task('snapshot_vm', 
+                        pvars = dict(snapshot_type = SNAPSHOT_DAILY),
+                        repeats = 0, # run indefinitely
+                        start_time = request.now, 
+                        period = 24 * HOURS, # every 24h
+                        timeout = 5 * MINUTES)
+    

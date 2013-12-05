@@ -41,6 +41,7 @@ def fetch_ldap_user(username):
     searchFilter = "uid="+username
     user_info={'user_name':username}
     user_info['email'] = None
+    user_info['last_name'] = ''
     user_info['organisation'] = 'IIT Delhi'
     _role_list = [current.USER]
 
@@ -59,7 +60,7 @@ def fetch_ldap_user(username):
                                 user_info['first_name'] = name_lst[0]
                                 if len(name_lst) == 2:
                                     user_info['last_name'] = name_lst[1]
-                                else:
+                                elif len(name_lst) > 2:
                                     user_info['last_name'] = vals[0][vals[0].index(' '):].lstrip()
                             if k == 'altEmail':
                                 if vals[0] != 'none':
@@ -97,13 +98,13 @@ def create_or_update_user(user_info, update_session):
         user = current.db.user.insert(username=user_name, registration_id=user_name)
         is_new_user = True
     
-    org_id = current.db(current.db.organisation.name == user_info['organisation']).select(current.db.organisation.id).first()    
+    org_id = current.db(current.db.organisation.name == user_info['organisation']).select(current.db.organisation.id).first()   
     current.db(current.db.user.username==user_name).update(first_name = user_info['first_name'], 
                                                            last_name = user_info['last_name'], 
                                                            email = user_info['email'], 
                                                            organisation_id = org_id)
     if update_session:
-        current.auth.user.organisation_id = org_id
+        current.auth.user.organisation_id = org_id.id
                                                      
     add_or_update_user_memberships(user.id, is_new_user, user_info['roles'], update_session)   
 

@@ -68,6 +68,11 @@ current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
 
 #SNAPSHOTTING LIMIT
 SNAPSHOTTING_LIMIT = 3
+SNAPSHOT_DAILY=1
+SNAPSHOT_MONTHLY=2
+SNAPSHOT_YEARLY=3
+SNAPSHOT_USER=4
+current.SNAPSHOT_USER=SNAPSHOT_USER
 
 ADMIN = 'admin'
 ORGADMIN = 'orgadmin'
@@ -100,6 +105,11 @@ VM_RAM_SET = (1024,2048,4096,8192)
 VM_vCPU_SET = (1,2,4,8)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
+
+SECONDS = 1
+MINUTES = 60 * SECONDS
+HOURS = 60 * MINUTES
+DAYS = 24 * HOURS
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

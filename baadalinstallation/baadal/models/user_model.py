@@ -236,7 +236,7 @@ def is_snapshot_request_in_queue(vm_id):
         return False
 
 def check_snapshot_limit(vm_id):
-    snapshots = db(db.snapshot.vm_id == vm_id).count()
+    snapshots = db(db.snapshot.vm_id == vm_id & db.snapshot.type==SNAPSHOT_USER).count()
     logger.debug("No of snapshots are " + str(snapshots))
     if snapshots < SNAPSHOTTING_LIMIT:
         return True

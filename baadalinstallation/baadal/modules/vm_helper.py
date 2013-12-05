@@ -552,6 +552,7 @@ def delete(parameters):
         current.logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
         current.db(current.db.vm_data.id == vmid).delete()
+        current.db.commit()
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
@@ -590,6 +591,7 @@ def migrate(parameters):
 def snapshot(parameters):
 
     vmid = parameters['vm_id']
+    snapshot_type = parameters['snapshot_type']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -600,7 +602,13 @@ def snapshot(parameters):
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."
         current.logger.debug(message)
-        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name)
+        if type != current.SNAPSHOT_USER:
+            snapshot_cron = current.db((current.db.snapshot.vm_id == vmid) & (current.db.snapshot.type == snapshot_type)).select().first()
+            #Delete the existing Daily/Monthly/Yearly snapshot
+            if snapshot_cron:
+                current.logger.debug(snapshot_cron)
+                delete_snapshot({'vm_id':vmid, 'snapshot_id':snapshot_cron.id})
+        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()

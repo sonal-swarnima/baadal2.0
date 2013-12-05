@@ -59,7 +59,8 @@ current.MAC_PRIVATE_IP_POOL = MAC_PRIVATE_IP_POOL
 
 VLAN_DATA = [{'name' : 'VLAN10', 'tag':'vlan10','addr':'10.20.10.0'},
              {'name' : 'VLAN20', 'tag':'vlan20','addr':'10.20.20.0'},
-             {'name' : 'VLAN30', 'tag':'vlan30','addr':'10.20.30.0'}]
+             {'name' : 'VLAN30', 'tag':'vlan30','addr':'10.20.30.0'},
+             {'name' : 'VLAN40', 'tag':'vlan40','addr':'10.20.40.0'}]
 
 DEFAULT_SECURITY_DOMAIN = {'name' : 'Research', 'vlan':1, 'visible_to_all':True}
 

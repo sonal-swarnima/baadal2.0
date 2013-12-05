@@ -96,9 +96,10 @@ function confirm_vm_deletion(){
         <table id="vm_snaps">          
                      {{for snapshot in vmsnapshots:}}
                      <tr>
+                         <td>{{=snapshot['type']}}</td>
                          <td>{{=snapshot['name']}}</td>
-                         <td>{{=snapshot['delete']}}</td>
                          <td>{{=snapshot['revert']}}</td>
+                         <td>{{=snapshot['delete']}}</td>
                      </tr>
                      {{pass}}
        </table>

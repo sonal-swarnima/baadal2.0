@@ -379,10 +379,12 @@ def get_vm_snapshots(vm_id):
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
 
         snapshot_dict = {}
+        snapshot_type = {SNAPSHOT_USER : 'Custom',
+                         SNAPSHOT_DAILY : 'Daily',
+                         SNAPSHOT_MONTHLY : 'Monthly'}
+        snapshot_dict['type'] = snapshot_type[snapshot.type]
         snapshot_dict['name'] = snapshot.snapshot_name
-        snapshot_dict['delete'] = A(IMG(_src=URL('static','images/delete-snapshot.gif'), _height = 20, _width = 20),
-                                       _href=URL(r=request, f='delete_snapshot', args= [vm_id, snapshot.id]),
-               	 	               _title = "Delete this snapshot",	_alt = "Delete this snapshot")
+        snapshot_dict['delete'] = ' '
         snapshot_dict['revert'] = A(IMG(_src=URL('static','images/revertTosnapshot.png'),_height = 20, _width = 20),
                                        _href=URL(r=request, f='revert_to_snapshot', args= [vm_id, snapshot.id]),
                                        _title = "Revert to this snapshot", _alt = "Revert to this snapshot")

@@ -247,6 +247,7 @@ db.define_table('snapshot',
     Field('vm_id', db.vm_data,notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
     Field('snapshot_name', 'string', length = 50),
+    Field('type', 'integer'),
     Field('path', 'string', length = 255))
 
 db.define_table('task_queue',
