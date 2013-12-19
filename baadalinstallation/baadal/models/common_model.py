@@ -381,6 +381,7 @@ def get_vm_snapshots(vm_id):
         snapshot_dict = {}
         snapshot_type = {SNAPSHOT_USER : 'Custom',
                          SNAPSHOT_DAILY : 'Daily',
+                         SNAPSHOT_WEEKLY : 'Weekly',
                          SNAPSHOT_MONTHLY : 'Monthly'}
         snapshot_dict['type'] = snapshot_type[snapshot.type]
         snapshot_dict['name'] = snapshot.snapshot_name
@@ -472,7 +473,7 @@ def get_performance_graph(graph_type, vm, graph_period):
   
         if os.path.exists(rrd_file):
             if create_graph(vm, graph_type, rrd_file, graph_period):   
-                img_pos = "vm_graphs/" + vm + "_" + graph_type + ".png"
+                img_pos = "images/vm_graphs/" + vm + "_" + graph_type + ".png"
                 img = IMG(_src = URL("static", img_pos), _style = "height:100%")
                 logger.info("Graph created successfully")
             else:
