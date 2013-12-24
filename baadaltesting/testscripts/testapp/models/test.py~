@@ -1,0 +1,1217 @@
+# coding: utf8
+import os
+import thread
+import logging
+import datetime
+import logging.config
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from helper import xml_connect
+from helper import db_connection
+from selenium.webdriver.common.keys import Keys
+import sys
+import time
+
+#creating a logger for logging the records
+logger = logging.getLogger("web2py.app.testapp")
+
+#creating connection to remote database
+baadal_db=db_connection() 
+
+
+
+#################################################################################################################
+#                             The main test function for stress
+                                           #
+#################################################################################################################
+def stress_script(m):
+    
+    
+    logging.debug("inside thread: "+str(m))
+    
+    root = xml_connect()
+    i=m
+    for j in xrange(0,len(root[i])): 
+        driver = webdriver.Remote(
+       command_executor='http://127.0.0.1:4444/wd/hub',
+       desired_capabilities=DesiredCapabilities.FIREFOX)#connect to selenium server
+        driver.implicitly_wait(10)
+        driver.get(root.get("url")) #url of the page to be hit 
+        driver.find_element_by_link_text(root.get("href")).click()
+        image=0
+        for k in xrange(0,len(root[i][j])):
+            field_type=root[i][j][k].get("type")
+            xml_parent=root[i]
+            xml_child=root[i][j]
+            xml_sub_child=root[i][j][k]
+					
+            if field_type=="input": #checking for text fields
+                vm_name1=isInput(driver,xml_sub_child)
+                      
+            elif field_type=="read_only": #checking for submit button
+                isReadOnly(driver, xml_parent,xml_child,xml_sub_child)
+						
+            elif field_type=="submit": #checking for submit button
+                isSubmit(driver, xml_parent,xml_child,xml_sub_child)
+                driver.implicitly_wait(10)
+						
+            elif field_type=="button":#checking for button
+                time.sleep(3)
+                isButton(driver,xml_sub_child)
+					
+            elif field_type=="scroll":#scrolling the page up/down
+                isScroll(driver,xml_sub_child)
+				 		
+            elif field_type=="href":
+                isHref(driver,xml_sub_child)#clicking on the hyper link
+                        
+            elif field_type=="select":
+                isSelect(driver,xml_sub_child)# selecting from dropdown menu
+			 	
+            elif field_type=="table":
+                isTable(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                         
+            elif field_type=="img":#checking for sett
+                table_path=xml_sub_child.get("path")
+                isImage(driver,xml_child,xml_sub_child,table_path,image)
+                 
+								
+            elif field_type=="check_tables":#cheking for host table
+                isCheckTable(driver,xml_parent,xml_child,xml_sub_child)
+                
+            elif field_type=="wait":
+                isWait(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                    
+            elif field_type=="check_data":
+                isCheckdata(driver,vm_name,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                        				
+            else:
+                logging.debug("report problem") #logging the report
+                
+            if k==5:
+                vm_name=vm_name1
+        driver.close()#disconnect from server
+
+
+def stress_test_script():
+    for m in range(0,5):
+        root = xml_connect()
+        total_scripts=root.get("total_scripts")
+        test_no=m%(int(total_scripts)-1)
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        
+        logging.debug("Thread: "+str(m))
+        
+    return
+
+
+def graph_test(test_case_no):
+#Checking memory utilizations
+    print test_case_no
+    import paramiko
+    import datetime
+    import os
+    import time
+    root = xml_connect()
+    i=int(test_case_no)
+    xml_sub_child=root[i-1][0][0]
+    xml_child=root[i-1][0]   
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))   
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_init_data"))
+    initial_data=stdout.readlines()
+    print initial_data
+    current_time=datetime.datetime.now()
+    print current_time
+    ini_data=str(initial_data[2])
+    init_data=ini_data.split()
+    print init_data[0]
+    ssh.connect("10.208.21.113", username="root", password="baadal_test")   
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_run_prgrm"))
+    data=stdout.readlines()
+    for line in data:
+        print lines  
+    time.sleep(600)    
+    ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))  
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_finl_data"))
+    final_data=stdout.readlines()
+    fin_data=str(final_data[2])
+    finl_data=fin_data.split()
+    print_graph_result(finl_data,init_data,xml_child)
+    
+def print_graph_result(finl_data,init_data,xml_child):
+    print finl_data
+    print init_data
+   
+    for i in range(1,7):
+        if init_data[i]=="-nan":
+            i_data=0
+        else:
+            i_data=init_data[i]  
+            print float(finl_data[i])
+            print float(i_data)
+        diff=float(finl_data[i])-float(i_data)
+        print diff
+        if finl_data[i]=="-nan":
+            logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
+        else :
+            if diff<=0:
+                logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
+            else:
+                logger.debug(xml_child.get("value") +':  '+"Correct Data")   
+
+#################################################################################################################
+#                                       The main test function  for unit testing                                            #
+#################################################################################################################
+		
+def test_script(test_case_no):
+    print test_case_no
+    root = xml_connect()
+    num=int(test_case_no)
+    if root[num-1].get("id")==test_case_no:
+        i=num-1
+        vm_name=""
+        
+        for j in xrange(0,len(root[i])):
+            driver = webdriver.Firefox()#connect to selenium server
+            driver.implicitly_wait(10)
+            driver.get(root.get("url")) #url of the page to be hit 
+            driver.find_element_by_link_text(root.get("href")).click()
+            image=0
+            for k in xrange(0,len(root[i][j])):
+                field_type=root[i][j][k].get("type")
+                xml_parent=root[i]
+                xml_child=root[i][j]
+                xml_sub_child=root[i][j][k]
+					
+                if field_type=="input": #checking for text fields
+                    vm_name1=isInput(driver,xml_sub_child)
+                      
+                elif field_type=="read_only": #checking for submit button
+                    isReadOnly(driver, xml_parent,xml_child,xml_sub_child)
+						
+                elif field_type=="submit": #checking for submit button
+                    isSubmit(driver, xml_parent,xml_child,xml_sub_child)
+						
+                elif field_type=="button":#checking for button
+                    time.sleep(3)
+                    isButton(driver,xml_sub_child)
+                elif field_type=="sanity_table":#checking for button
+                    isSanityCheck(driver, xml_parent, xml_child, xml_sub_child)	
+                    
+                elif field_type=="scroll":#scrolling the page up/down
+                    isScroll(driver,xml_sub_child)
+				 		
+                elif field_type=="href":
+                    isHref(driver,xml_sub_child)#clicking on the hyper link
+                    
+                elif field_type=="select":
+                    isSelect(driver,xml_sub_child)# selecting from dropdown menu
+			 	
+                elif field_type=="table":
+                    isTable(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                         
+                elif field_type=="img":#checking for setting image
+                    table_path=xml_sub_child.get("path")
+                    vm_name2=isImage(driver,xml_child,xml_sub_child,table_path)
+				
+                elif field_type=="check_tables":#cheking for host table
+                    isCheckTable(driver,xml_parent,xml_child,xml_sub_child)
+                
+                elif field_type=="wait":
+                    isWait(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                    
+                elif field_type=="check_data":
+                    isCheckdata(driver,vm_name,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                        				
+                else:
+                    logging.debug("report problem") #logging the report
+                
+                if k==5:
+                    vm_name=vm_name1
+            driver.close()#disconnect from server
+
+#################################################################################################################
+#                                        Function  for Network testing                                            #
+#################################################################################################################           
+def packages_install_test(test_case_no): 
+    import paramiko
+    root = xml_connect()
+    xml_sub_child=root[test_case_no-1][0][0]
+    xml_child=root[test_case_no-1][0]    
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))    
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_flush"))
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_pkg"))
+    pkg_list=xml_sub_child.get("pkg_lst").split()
+    for pkg in  pkg_list:
+        cmd=xml_sub_child.get("cmd_srch") + " " +str(pkg)
+        stdin, stdout, stderr =ssh.exec_command(cmd)	
+        data=stdout.readlines()
+        if data:
+            logger.debug(xml_child.get("value") +': '+pkg +" :software has installed properly") 
+            
+        else:
+            logger.debug(xml_child.get("value") +': '+pkg +" :software has not installed properly") 
+ 
+                                                                                          
+def packages_install_host(test_case_no): 
+    import paramiko
+    root = xml_connect()
+    xml_sub_child=root[test_case_no-1][0][0]
+    xml_child=root[test_case_no-1][0]    
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))    
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_flush"))
+    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_pkg"))
+    data =stdout.readlines()
+    pkg_list=xml_sub_child.get("pkg_lst").split()
+    for pkg in  pkg_list:
+        cmd=xml_sub_child.get("cmd_srch") + " " +str(pkg)
+        stdin, stdout, stderr =ssh.exec_command(cmd)	
+        data=stdout.readlines()
+        if data:
+            logger.debug(xml_child.get("value") +': '+pkg +" :software has installed properly") 
+            
+        else:
+            logger.debug(xml_child.get("value") +': '+pkg +" :software has not installed properly")                                                                                
+
+                                         
+def check_stat_on_host():
+    import libvirt
+    import commands
+    import MySQLdb as mdb
+    conn = libvirt.open("qemu+ssh://root@" + '10.208.21.70' + "/system")
+    vm =conn.lookupByName("baadal_testing_vm")
+    output=commands.getoutput('')
+    db=mdb.connect("10.208.21.111","baadaltesting","test_baadal","baadal")
+    cursor1=db.cursor()
+    cursor1.execute("select vm_name,vm_data.status,host_id from vm_data join host where host.id=vm_data.host_id and host_ip='10.208.21.70'")
+    output=cursor1.fetchall()
+    datas=str(output)
+    lists=datas.split("), (")
+    col_count=len(lists)
+    print lists
+    print col_count
+    for i in range(0,col_count):
+        datass=lists[i].split(",")
+        newstr = datass[0].replace("'", "")
+        if i==0:
+            newstr=newstr.replace("((","")
+        for id in conn.listDomainsID():
+            dom = conn.lookupByID(id)
+            infos = dom.info()
+            if newstr==dom.name():
+                print newstr
+                print 'Name =  %s' % dom.name()
+                print 'State = %d' % infos[0]
+                print datass[1]
+                if (((datass[1]==" 5L") & (infos[0]==1)) | ((datass[1]==" 6L") & (infos[0]==3))):
+                    print "yes"                                           
+ 
+#################################################################################################################
+#                         Functions for mailing
+                                           #
+#################################################################################################################    
+def send_mail():
+                                          
+    from gluon.tools import Mail
+    mail = Mail()
+    mail.settings.server = 'smtp.iitd.ernet.in:25'
+    mail.settings.sender = 'monika28@cse.iitd.ernet.in'
+    mail.settings.login = 'jyoti11@cse.iitd.ernet.in:jyoti_saini'
+    mail.send(to=['monika71990@gmail.com'],
+          subject='hello',
+          # If reply_to is omitted, then mail.settings.sender is used
+          message='hi there')
+###############################################################################################################
+#                             Functions used by the input field functions                                     #
+###############################################################################################################		
+
+# checking whether an element is present on the webpage
+def isElementPresent(driver,xml_child,xpath):
+    try:
+        driver.find_element_by_xpath(xpath)
+        return 1
+    except:
+        logger.debug(xml_child.get("value") +': Result:no table exists')
+        return 0	
+   
+
+				
+#checking whether front end data and daatabase entries are equal and printing the result 		
+def print_result(field_text,result,xml_child):
+	query_result=str(result)
+        logger.debug("screen=  "+str(field_text) )
+        logger.debug("db=      "+query_result)
+	if field_text ==query_result:
+		logger.debug(xml_child.get("value") +': Result:correct input') 
+		send_mail()
+	else:
+		logger.debug(xml_child.get("value") +': Result:Incorrect input')
+	return 
+
+	
+			
+def open_error_page(driver,xml_parent,text,row_count):#open error link on differnet page
+	(driver.find_elements_by_link_text(text))[row_count].click()
+	field=driver.find_element_by_xpath(xml_parent.get("error_page"))
+	error_message=field.text
+	driver.find_element_by_link_text(xml_parent.get("error_page_close_text")).click()
+	return error_message
+
+	
+			
+def admin_vm_status(status):#converting vm status bits into status text
+    logger.debug("in")
+    vm_status=["Running","Paused","Shutdown"]
+    if status==5:
+        result=vm_status[0]
+    if status==6:
+        result=vm_status[1]
+    if status==7:
+        result=vm_status[2]
+    return result 
+
+    	
+    	    	    	
+def host_status(status):#converting host status bits into status text
+	host_status={0:"Down",1:"Up",2:"Maintenance"}	
+	if status==0:
+		result=host_status[0]
+	if status==1:
+		result=host_status[1]
+	if status==2:
+		result=host_status[2]
+	return result
+
+		
+	
+def org_task_status(status,name):#converting  status bits into status text
+    print status
+    task_status={0:"Approve  |  Reject",1:"Installation In Progress",2:"Remind Faculty"}
+    if (status==0) | (status==2):
+        result=task_status[0]
+    if name=="org_admin_pending_tasks":
+        result=task_status[0]
+    if (status==3) & (name=="org_admin_pending_tasks"):
+        result=task_status[1]
+    if (status==0) & (name=="faculty_pending_tasks"):
+        result=task_status[2]
+    return result
+
+def approval_status(status,user_name,org_admin_name,xml_sub_child):
+    
+    query_result=execute_query( xml_sub_child.get("query_group_id"),(str(user_name))).fetchone()
+    group_id=query_result[0]
+    if group_id==3:
+        if status==3:
+            results=user_name + " " + "green" + "/n" +  org_admin_name + " "+ "Admin"+ "green"
+        if status==2:
+            results=user_name + " " + "green" + "/n" +  org_admin_name + " "+ "Admin"+ "red"
+        if status==0:
+            results=user_name + " " + "red" + "/n" +  org_admin_name + " "+ "Admin"+ "red"
+    if group_id==4:
+        if status==3:
+            results="pendingvm['organisation']"+ " " +"Admin "+ "green"
+        if status==2:
+            results="pendingvm['organisation']"+ " " +"Admin "+ "red"
+    if group_id==2 & group_id==1:
+        result="Pre-Approved"
+    return results
+    
+
+        
+    
+			
+def execute_query(sql_query,arg=None):
+    cursor=baadal_db.cursor()
+    if arg==None:
+        cursor.execute(sql_query)
+    else:
+        cursor.execute(sql_query,arg)
+    return cursor
+
+
+
+def click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    id=xml_sub_child.get("id")
+    driver.find_element_by_xpath("//*[@href='/user/"+ str(id) +"/"+ str(vm_id) +"']").click()
+    logger.debug(xml_child.get("value") +': Result:Setting button works properly') 
+    return
+    
+            
+def click_on_dialogbox(driver):
+    alert = driver.switch_to_alert()
+    alert.accept()
+    return
+
+def add_extra_disk(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    isInput_add(driver, xml_sub_child)
+    value=xml_sub_child.get("add_button")
+    isButton_add(driver, xml_sub_child,value)
+    logger.debug(xml_sub_child.get("print"))
+    return
+
+def add_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    check_user(driver,xml_child,xml_sub_child,vm_name)
+    isInput_add(driver, xml_sub_child)
+    value=xml_sub_child.get("add_submit")
+    isButton_add(driver, xml_sub_child,value)
+    val=xml_sub_child.get("add_button")
+    isButton_add(driver, xml_sub_child,val) 
+    return
+
+        
+                
+                                
+def check_operation(driver,xml_child,xml_sub_child,vm_name,vm_id):
+    if xml_sub_child.get("op")=="snapshot":
+        max_snap(driver,xml_sub_child,xml_child,vm_name)   
+        click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        
+    else:
+        click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
+    return
+
+
+
+
+def get_snapshot_id(driver,xml_sub_child,xml_child,vm_name):
+    query_result=execute_query( xml_sub_child.get("query_snap_id"),(str(vm_name))).fetchone()
+    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_snap"))
+    for t in field:
+        if str(query_result[1]) in t.text:
+            snap_id=query_result[0]
+            logger.debug("snapshot_id :" + " " + str(snap_id))
+    return snap_id
+
+
+
+
+def action_on_snapshot(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name):
+    path=xml_sub_child.get("xpath_snap")
+    if isElementPresent(driver,xml_child,path):  
+        count_snap=max_snap(driver,xml_sub_child,xml_child,vm_name)
+        if (count_snap==xml_sub_child.get("max")) & (op_name=="revert_to_snapshot"): 
+            logger.debug("Snaphot limit reached.Delete previous snapshots to take new snapshot")
+        snapshot_id=get_snapshot_id(driver,xml_sub_child,xml_child,vm_name) 
+        driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(op_name) +"/"+ str(vm_id) +"/"+ str(snapshot_id) + "']").click()
+
+        
+    
+def action_on_add_user(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name):
+     path=xml_sub_child.get("xpath_user")
+     if isElementPresent(driver,xml_child,path):  
+        user_id=get_user_id(driver,xml_sub_child,xml_child,vm_name) 
+        driver.find_element_by_xpath("//*[@href='/baadal/admin/"+ str(op_name) +"/"+ str(vm_id) +"/"+ str(user_id) + "']").click()
+        
+
+        
+                        
+def get_user_id(driver,xml_sub_child,xml_child,vm_name):
+    query_result=execute_query( xml_sub_child.get("query_user_id"),(str(vm_name))).fetchone()
+    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_user"))
+    for t in field:
+        if str(query_result[1]) in t.text:
+            user_id=query_result[0]
+            logger.debug("user_id :" + " " + str(user_id))
+    return user_id
+
+def check_user_table(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    username=xml_sub_child.get("user_id_data")
+    print username
+    query_length=execute_query( xml_sub_child.get("query5"),(str(vm_name))).fetchone()
+    length=len(query_length)
+    print length
+    query_result=execute_query( xml_sub_child.get("query_user_table"),(str(username))).fetchone()
+    path=xml_sub_child.get("xpath_user")
+    field=driver.find_elements_by_xpath(path)
+    count=0
+    for data in field:
+        if query_result[0] in data.text:
+            print query_result[0]
+            print data.text
+            logger.debug("User name is added to VM")
+
+    return
+
+def check_attach_disk(driver,xml_sub_child,xml_child,vm_name,vm_id,operation_name):  
+    print "Action"  
+    print vm_id
+    driver.find_element_by_partial_link_text("Pending VM Requests").click()
+    field=driver.find_elements_by_xpath("//table[@id='sortTable']/tbody/tr")
+    vm_nam=str(vm_name)+"%"
+    print vm_nam
+    time.sleep(300)
+    query_result=execute_query('select id,vm_name from vm_data where status=3 and vm_name LIKE %s order by start_time desc',((vm_nam))).fetchone()
+    vm_ids= query_result[0]
+    print vm_ids
+    if xml_sub_child.get("action")=="approve_request":    
+        driver.find_element_by_xpath("//*[@href='/baadal/admin/approve_request/"+ str(vm_ids) +"']").click()
+        vm_names=query_result[1]
+        check_vm_task(driver,xml_sub_child,xml_child,vm_names,operation_name)
+    else:
+        print "reject"
+        print vm_ids
+        driver.find_element_by_xpath("//*a[@href='/baadal/admin/reject_request/"+ str(vm_ids) +"']").click()
+        print "done Yehhh"
+    return
+    
+    
+def click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    op_list={'revert_to_snapshot':0,'delete_snapshot':1,'snapshot':'Snapshot VM','pause_machine':'Suspend VM','Delete':'Delete VM','shutdown_machine':'Stop VM','destroy_machine':'Destroy VM','start_machine':'Start VM','user_details':'Add User','attach_extra_disk':"Attach Disk",'clone_vm':'Clone ','delete_user_vm':'Delete User','adjrunlevel':'Adjust Run Level','edit_vmconfig':'Edit VM Config','resume_machine':'Resume VM'}
+    vm_mode=['vm_running_Setting_intgrtn','vm_paused_Setting_integrtn','vm_shutdown_Setting_integrtn']
+    op_name=xml_sub_child.get("op")
+    operation_name=op_list[op_name]
+    if op_name=="user_details":
+        driver.find_element_by_xpath("//*[@href='/baadal/admin/"+ str(op_name) +"/"+ str(vm_id) +"']").click()
+        add_user(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        if xml_sub_child.get("name") in vm_mode:
+            check_user_table(driver,xml_sub_child,xml_child,vm_name,vm_id)
+    elif op_name=="Delete":
+        driver.find_element_by_xpath(xml_sub_child.get("title")).click()
+        click_on_dialogbox(driver)
+        click_on_dialogbox(driver)
+        if xml_sub_child.get("name") in vm_mode:
+            check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    elif op_name in {"revert_to_snapshot","delete_snapshot"}: 
+        action_on_snapshot(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name)
+        if xml_sub_child.get("name") in vm_mode:
+            check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    elif op_name=="delete_user_vm": 
+        action_on_add_user(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name)
+        if xml_sub_child.get("name") in vm_mode:
+            check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    elif op_name in {"attach_extra_disk","clone_vm"}:
+        driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(op_name) +"/"+ str(vm_id) +"']").click()
+        add_extra_disk(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        if xml_sub_child.get("name")in [ 'vm_running_Setting_intgrtn','vm_paused_Setting_integrtn','vm_shutdown_Setting_integrtn']:
+            check_attach_disk(driver,xml_sub_child,xml_child,vm_name,vm_id,operation_name)
+    elif op_name=="edit_vmconfig":
+        driver.find_element_by_xpath("//*[@href='/baadal/admin/"+ str(op_name) +"/"+ str(vm_id) +"']").click()
+    else:
+        driver.find_element_by_xpath("//*[@href='/user/"+ str(op_name) +"/"+ str(vm_id) +"']").click()
+        if xml_sub_child.get("name") in vm_mode:
+            
+            check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    return 
+
+
+def max_snap(driver,xml_sub_child,xml_child,vm_name):
+    query_result=execute_query( xml_sub_child.get("query4"),(str(vm_name))).fetchall()
+    length_snap=len(query_result)
+    if str(length_snap)==xml_sub_child.get("max"):
+        logger.debug("Snaphot limit reached.Delete previous snapshots to take new snapshot")
+    else :
+        logger.debug("Your VM snapshotting request has been queued")
+    return length_snap
+
+
+def vm_running(xml_child,xml_sub_child,driver):
+    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
+    print query_result
+    col_count=len(query_result[0])
+    row_count=len(query_result)
+    count=0
+    for length in range(0,(row_count)):
+        vm_id=query_result[length][1]
+        vm_name=query_result[length][0]
+        status=query_result[length][col_count-1]
+        if status==5:
+            print length
+            click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)
+            check_snapshot(vm_name,driver,xml_child,xml_sub_child)
+            check_user(driver,xml_child,xml_sub_child,vm_name)
+            check_vm_configuration(driver,xml_child,xml_sub_child,vm_name) 
+            check_operation(driver,xml_child,xml_sub_child,vm_name,vm_id)
+            break
+        if (status==7) | (status==6):
+            print row_count
+            print count
+            if (row_count-1)==count: 
+                logger.debug("No VM exist which is in running state,So Please Run a VM before doing this testing")
+                break 
+            count+=1
+            continue
+    return
+    
+     
+def vm_paused(xml_child,xml_sub_child,driver):
+    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
+    print query_result
+    count=0
+    col_count=len(query_result[0])
+    row_count=len(query_result)
+    for length in range(0,(row_count)):
+        
+        status=query_result[length][col_count-1]
+        if status==6:
+            
+            id=xml_sub_child.get("id")
+            vm_id=query_result[length][1]
+            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(vm_id) +"']").click()
+            vm_name=query_result[length][0]
+            logger.debug(xml_child.get("value") +': Result:Setting button works properly')
+            check_operation(driver,xml_child,xml_sub_child,vm_name,vm_id)
+            break
+        if (status==5) | (status==7):
+
+            if (row_count-1)==count: 
+                logger.debug("No VM exist which is in paused mode,So Please Paused a VM before doing this testing")
+                break
+            count+=1
+            continue
+       
+def vm_shutdown(xml_child,xml_sub_child,driver):
+    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
+    print query_result
+    count=0
+    col_count=len(query_result[0])
+    row_count=len(query_result)
+    for length in range(0,(row_count)): 
+        status=query_result[length][col_count-1]
+        if status==7:
+            id=xml_sub_child.get("id")
+            vm_name=query_result[length][0]
+            vm_id=query_result[length][1]
+            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(vm_id) +"']").click()
+            logger.debug(xml_child.get("value") +': Result:Setting button works properly')
+            check_operation(driver,xml_child,xml_sub_child,vm_name,vm_id)
+            break
+        if (status==5) | (status==6):
+            if count==(row_count-1): 
+                logger.debug("No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing")
+                break
+            count+=1
+            continue
+            
+
+                        
+def result_setting_page(field,query_result,driver,xml_child,xml_sub_child):
+    i=0
+    for t in field:
+        print "screen=" + str(t.text)
+        print "db=" + str(query_result[i][0])
+        if str(query_result[i][0]) in t.text:
+            logger.debug("correct inputs")
+        else :
+            logger.debug("Incorrect inputs")
+        i+=1 
+    return
+
+                        
+def check_snapshot(vm_name,driver,xml_child,xml_sub_child):
+    logger.debug("Checking for entries in current snapshot table")
+    path=xml_sub_child.get("xpath_snap")
+    if isElementPresent(driver,xml_child,path):
+        query_result=execute_query(xml_sub_child.get("query4"),(str(vm_name))).fetchall()
+        total_snap=len(query_result)
+        field=driver.find_elements_by_xpath(path)
+        result_setting_page(field,query_result,driver,xml_child,xml_sub_child)
+        return total_snap
+    else :
+        total_snap=""
+        return total_snap
+        
+ 
+       
+def check_user(driver,xml_child,xml_sub_child,vm_name):
+    logger.debug("Checking for entries in user table")
+    path=xml_sub_child.get("xpath_user")
+    if isElementPresent(driver,xml_child,path):
+        query_result=execute_query( xml_sub_child.get("query5"),(str(vm_name))).fetchall()
+        print query_result
+        field=driver.find_elements_by_xpath(path)
+        logger.debug("Checking for entries in Additional user table")
+        result_setting_page(field,query_result,driver,xml_child,xml_sub_child)
+    return
+
+ 
+ 
+def check_vm_configuration(driver,xml_child,xml_sub_child,vm_name):
+    logger.debug("Checking for entries in  configuration table")
+    path=xml_sub_child.get("xpath_conf")
+    if isElementPresent(driver,xml_child,path):
+        query_result=execute_query( xml_sub_child.get("query6"),(str(vm_name))).fetchall()
+        field=driver.find_elements_by_xpath(path)
+        logger.debug("Checking for entries in VM Configuration table")
+        i=0
+        for t in field:
+            print "screen=" + str(t.text)
+            print "db=" + str(query_result[0][i])
+            if str(query_result[0][i]) in t.text:
+                logger.debug("correct inputs")
+            else :
+                logger.debug("Incorrect inputs")
+            i+=1
+    return
+
+def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
+    current_time=datetime.datetime.now()
+    break_pt_time=current_time + datetime.timedelta(seconds=660)  
+    time.sleep(300)
+    count=1
+    while(count):
+        if(datetime.datetime.now()<=break_pt_time):
+            print datetime.datetime.now()
+            print break_pt_time
+            datas=check_vm_in_pending_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+            print datas
+            vm_in_pending=datas[0]
+            task_start_time=datas[2:]
+            print task_start_time
+            if vm_in_pending=="1":
+                print "Pending"
+                print vm_in_pending 
+            else:
+                vm_in_complted=check_vm_in_completed_task(driver,xml_sub_child,vm_name,operation_name,task_start_time)
+                print "Completed"
+                print vm_in_complted
+                if vm_in_complted==1:
+                    logger.debug("VM is in Completed Task Table!!!")
+                    count=0
+                else:
+                    vm_in_failed=check_vm_in_failed_task(driver,xml_sub_child,vm_name,operation_name,task_start_time)
+                    print "failed"
+                    print vm_in_failed
+                    if vm_in_failed==1:
+                        logger.debug("VM is in Failed Task Table!!!")
+                        count=0
+                    else:
+                        logger.debug("VM does not exist in any table,please check it!!!")
+        else:
+            count=0
+    print "Done"
+    if (vm_in_pending=="1"):
+        logger.debug("VM is in Pending Task Table!!!")    
+    return
+    
+    
+    
+def check_vm_in_pending_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
+    driver.find_element_by_partial_link_text("Tasks").click()
+    path="//table[@id='pendingtasks']/tbody/tr"
+    if isElementPresent(driver,xml_child,path):
+        vm_in_pending=0
+        vm_nam=str(vm_name)
+        vm_oprtn=str(operation_name)
+        field=driver.find_elements_by_xpath(path)
+        query_result=execute_query(xml_sub_child.get("task_query"),(vm_nam,vm_oprtn)).fetchone()
+        task_start_time=query_result[1]  
+        for x in field:            
+            if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text):
+                print x.text
+                print task_start_time                   
+                vm_in_pending=1
+            datas=str(vm_in_pending)+ " " +str(task_start_time) 
+    return datas
+         
+def check_vm_in_completed_task(driver,xml_sub_child,vm_name,operation_name,task_start_time):
+    driver.find_element_by_partial_link_text("Completed Tasks").click()
+    print "comp"
+    field=driver.find_elements_by_xpath("//table[@id='completedtasks']/tbody/tr")
+    vm_in_complted=0
+    vm_nam=str(vm_name)
+    for x in field:
+        if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text):
+            print x.text
+            print task_start_time           
+            logger.debug("Your request is Completed!!!!")
+            vm_in_complted=1
+    return vm_in_complted
+                
+                
+def check_collaborator(driver,xml_sub_child):
+    if xml_sub_child.get("data")=="wrong_data":
+        logger.debug("Collaborator Username is not valid")
+    else:
+        logger.debug("Collaborator added")
+
+		
+def check_vm_in_failed_task(driver,xml_sub_child,vm_name,operation_name,task_start_time):
+    driver.find_element_by_partial_link_text("Failed Tasks").click()
+    field=driver.find_elements_by_xpath("//table[@id='failedtasks']/tbody/tr")
+    print "faild"
+    vm_in_failed=0
+    for x in field:
+        if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text):
+            print "yes3"
+            logger.debug("Your request is Failed!!!!")
+            vm_in_failed=1       
+    return vm_in_failed
+
+                                                              			                                                                    			                                                                    			                                                                    
+##############################################################################################################
+#  					           functions for various types of input fields  				          	     #
+##############################################################################################################
+		
+def isInput(driver, xml_sub_child):
+    current_time=datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    field = driver.find_element_by_id(xml_sub_child.get("id"))
+    if xml_sub_child.text!=None:
+        field.send_keys(xml_sub_child.text) # sending the user name/password/vm name/purpose etc
+    else:
+        if not (xml_sub_child.get("id") in ["user_password","user_username"]):
+            field.send_keys(str(current_time))	
+    return current_time
+
+def	isInput_add(driver, xml_sub_child):
+    field = driver.find_element_by_id(xml_sub_child.get("user_id"))
+    field.send_keys(xml_sub_child.get("user_id_data"))
+    return
+
+def isReadOnly(driver, xml_parent,xml_child,xml_sub_child):
+    current_time=datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    field = driver.find_element_by_id(xml_sub_child.get("id"))
+    if field.get_attribute("value")!='':
+        field.send_keys(xml_sub_child.text) # sending the user name/password/vm name/purpose etc
+        if field.get_attribute("value")==xml_sub_child.text:
+            logger.debug(xml_child.get("value")  +': Result:error') #logging the report
+        else:
+            logger.debug(xml_child.get("value")  +': Result:no error') #logging the report
+    else:
+        logger.debug(xml_child.get("value")  +': Result:empty') #logging the report
+    return 
+
+def isWait( driver, xml_parent, xml_child, xml_sub_child):
+    time.sleep(3)
+    return
+
+def isSubmit( driver, xml_parent, xml_child, xml_sub_child):
+    current_time=datetime.datetime.now()
+    user_name=xml_child.find('user_name').text
+    driver.find_element_by_xpath(xml_sub_child.text).click()
+    xpath=xml_parent.get("xpath")
+    status=isElementPresent(driver,xml_child,xpath)
+    field=driver.find_element_by_xpath(xpath)
+    if status==1:
+        if ("Logout" in field.get_attribute("innerHTML")):
+             logger.debug(xml_child.get("value")  +': Result:Valid Login') #logging the report
+        else:
+            logger.debug(xml_child.get("value")  +': Result:Invalid Login') #logging the report 
+    else:
+        logger.debug(xml_child.get("value") +': Result:error') #logging the report
+    return
+	
+def isButton(driver, xml_sub_child):
+	driver.find_element_by_xpath(xml_sub_child.text).click()
+	return
+			
+def isButton_add(driver, xml_sub_child,value):
+    driver.find_element_by_xpath(value).click()
+    return
+	
+def isScroll(driver, xml_sub_child):
+	field=driver.find_element_by_tag_name("html")
+	field.send_keys(xml_sub_child.text)
+	driver.execute_script("window.scrollBy(0,200)", "")
+	return
+	
+def isHref(driver, xml_sub_child):
+    driver.find_element_by_partial_link_text(xml_sub_child.text).click()
+    if xml_sub_child.get("id")=="collaborator":
+        check_collaborator(driver, xml_sub_child)
+	return
+
+def isSelect(driver, xml_sub_child):
+	driver.find_element_by_xpath(xml_sub_child.text).click()
+	return
+
+def isImage(driver,xml_child,xml_sub_child,a):	
+    if isElementPresent(driver,xml_child,a):
+        if xml_sub_child.get("name") in {"vm_running_Setting","vm_running_Setting_intgrtn"}:
+            vm_running(xml_child,xml_sub_child,driver)
+        elif xml_sub_child.get("name") in {"vm_paused_Setting","vm_paused_Setting_integrtn"}:
+            vm_paused(xml_child,xml_sub_child,driver)
+        elif xml_sub_child.get("name") in {"vm_shutdown_Setting","vm_shutdown_Setting_integrtn"}:
+            print "in"
+            vm_shutdown(xml_child,xml_sub_child,driver)
+        else :
+            logger.debug("Error")
+    return 
+    
+def isTable(driver,xml_parent,xml_child,xml_sub_child):
+    status_list={0:"Error",1:"failed_tasks",2:"TRY AGAIN | IGNORE",3:"my_pending_vm",4:"Waiting for admin approval",5:"faculty_pending_tasks",6:"Add_host",7:"org_admin_pending_tasks",8:"org_admin_all_tasks",9:"list_all_vm",10:"pending_request_vm"}
+    table_path=xml_sub_child.text
+    if isElementPresent(driver,xml_child,table_path):
+        
+        query_result=execute_query( xml_parent.get("query3")).fetchall()
+        length=len(query_result[0])#calculate number of columns of query
+        row_count=0 #number of rows in the table
+        col_count=0 #number of columns in the table
+        field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
+        for col in field:
+            field_text=col.text
+            if field_text!="":
+            
+                if field_text==status_list[0]:
+                    text=open_error_page(driver,xml_parent,field_text,row_count)
+                    result=query_result[row_count][col_count]#data form query
+                    print_result(text,result,xml_child)
+                    
+                elif (query_result[row_count][col_count]==4) & (xml_parent.get("name")==status_list[1]):
+                    result=status_list[2]
+                    print_result(field_text,result,xml_child)
+                
+                elif (col_count%int(length)==6) & (xml_parent.get("name")==status_list[9]):
+                    status=query_result[row_count][col_count]
+                    print status
+                    result=admin_vm_status(status)
+                    print_result(field_text,result,xml_child)
+               
+                elif (col_count%int(length)==0) & (xml_parent.get("name")==status_list[10]):
+                     if query_result[row_count][col_count]==4:
+                         result=["Attach Disk","Clone VM"]
+                         print_result(field_text,result,xml_child)
+                     else:
+                         result=["Attach Disk","Clone","Install"]
+                         print_result(field_text,result,xml_child)
+                         
+                elif ((col_count%int(length)==8) | (col_count%int(length)==9) )& (xml_parent.get("name")==status_list[10]):
+                    logger.debug(xml_child.get("value") +': Result:correct input')
+                elif (col_count%int(length)==2) & (xml_parent.get("name")==status_list[10]):
+                    vm_name=query_result[row_count][4]
+                    query_results=execute_query( xml_sub_child.get("query_collbtr"),(str(vm_name))).fetchall()
+                   
+                    len_query=len(query_results)
+                    
+                    if query_results!="None":
+                        for m in range(0,len_query):
+                            result=query_results[m][0]
+                            print_result(field_text,result,xml_child)
+                    else:
+                        logger.debug(xml_child.get("value") +': Result:correct input')
+                    
+                              
+                elif (query_result[row_count][col_count]==2) & (xml_parent.get("name")==status_list[3]):
+                    result=status_list[4]
+                    print_result(field_text,result,xml_child)
+
+                elif (col_count%int(length)==6) & ((xml_parent.get("name")==status_list[5]) | (xml_parent.get("name")==status_list[7]) | (xml_parent.get("name")==status_list[8])):
+                    status=query_result[row_count][col_count]
+                    result=org_task_status(status,xml_parent.get("name"))
+                    print_result(field_text,result,xml_child)
+
+                elif (col_count%int(length)==2) & (xml_parent.get("name")==status_list[6]):
+                    status=query_result[row_count][col_count]
+                    result=host_status(status)
+                    print_result(field_text,result,xml_child)
+						
+                else:
+                    result=query_result[row_count][col_count]
+                    print_result(field_text,result,xml_child)
+                col_count+=1
+                if col_count%int(length)==0:
+                    row_count+=1
+                    col_count=0	
+    return
+
+def isCheckTable(driver, xml_parent, xml_child, xml_sub_child):
+    field=driver.find_elements_by_xpath(xml_sub_child.get("path"))
+    query_result=execute_query(xml_parent.get("query3")).fetchall()
+    table=0
+    for header in field:
+        if query_result[table][0] in header.text:
+            table_path=xml_sub_child.text
+            if isElementPresent(driver,xml_child,table_path):
+                result_fetch=execute_query(xml_parent.get("query4")).fetchall()
+                no_of_cols=len(result_fetch[0])#calculate number of columns of query
+                field=driver.find_elements_by_xpath(xml_sub_child.text)
+                #print field.text
+                row_count=0
+                col_count=0
+                for col in field:
+                    field_text=col.text
+                    if field_text!="":
+                        result=result_fetch[row_count][col_count]
+                        print_result(field_text,result,xml_child)
+                        col_count+=1
+                        if col_count%int(no_of_cols)==0:
+                            row_count+=1
+                            col_count=0		
+        table=table+1
+    return
+
+   
+def isCheckdata(driver,vm_name,xml_parent, xml_child, xml_sub_child):
+    print vm_name
+    table_path=xml_sub_child.text
+    if isElementPresent(driver,xml_child,table_path):
+        print "in"
+        driver.refresh()
+        field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
+        query_result=execute_query( xml_sub_child.get("query3")).fetchone()
+        result=query_result[1]
+        for a in field:
+            row=a.text
+            if (str(vm_name) in row) | (str(query_result[0]) in row):
+                logger.debug("report"  +': Result:Correct Flow') #logging the report
+                id=xml_sub_child.get("id")
+                if id=="settings":
+                     driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(result) +"']").click()
+                if "Approve  |  Reject" in row:
+                    if xml_sub_child.get("click")=="Approve":
+                        print "in1"
+                        print result
+                        print id
+                        driver.find_element_by_xpath("//*[@href='/baadal/"+ str(id) +"/approve_request/"+ str(result) +"']").click()
+                    else:
+                        driver.find_element_by_xpath("//*[@href='/baadal/"+ str(id) +"/reject_request/"+ str(result) +"']").click()
+    return
+
+
+
+
+
+
+def isSanityCheck(driver, xml_parent, xml_child, xml_sub_child):
+  
+    field=driver.find_elements_by_xpath("//div[@id='sanity_check_table']/table/tbody/tr/td")
+#print field.text
+    row_count=0
+    col_count=0
+    host_name=[]
+    vm_status=[]
+    vm_name=[]
+    message=[]
+    operation=[]
+    for col in field:
+        field_text=col.text
+        if col_count%5==0:
+            host_name.insert(row_count,field_text)
+           
+        if col_count%5==1:
+            vm_status.insert(row_count,field_text)
+           
+        if col_count%5==2:
+            vm_name.insert(row_count,field_text)
+           
+        if col_count%5==3:
+            message.insert(row_count,field_text)
+           
+        if col_count%5==4:
+            operation.insert(row_count,field_text)
+           
+        if col_count%5==0:
+            
+            row_count+=1
+            col_count=0	
+        col_count+=1
+       
+    total_vm=len(vm_name)  
+    for i in range(0,total_vm):
+        print host_name[i]
+        print vm_status[i]
+        print vm_name[i]
+        print message[i]
+        print operation[i]
+    conn_host(host_name,vm_status,vm_name,message,total_vm)
+
+
+def conn_host(host_name,vm_status,vm_name,message,total_vm):
+    import libvirt
+    import commands
+    query_result=execute_query("select host_name,host_ip from host").fetchall()
+    no_of_cols=len(query_result)#calculate number of columns of query
+    for host in range(0,no_of_cols):
+        host_nam=query_result[host][0]
+        host_ip=query_result[host][1]
+        print host_nam
+        print host_ip
+        print "12345"
+        print "qemu+ssh://root@" + str(host_ip) + "/system"
+        conn = libvirt.open("qemu+ssh://root@" +str(host_ip)+ "/system")
+        print "in"
+        for id in conn.listDomainsID():
+            dom = conn.lookupByID(id)
+            infos = dom.info()
+            status=infos[0]
+            status_vm=check_vm_status(status)
+            print_sanity_result(status_vm,host_name,vm_status,vm_name,message,total_vm,host_ip,host_nam)
+        for vm in conn.listDefinedDomains():
+            print vm
+            status_vm="off"
+            print_sanity_result(status_vm,host_name,vm_status,vm_name,message,total_vm,host_ip,host_nam)	   
+
+
+
+def print_sanity_result(status_vm,host_name,vm_status,vm_name,message,total_vm,host_ip,host_nam):
+    for i in range(0,total_vm):
+        vm_nm=vm_name[i]
+        if ((vm_nm==vm_name[i]) & (host_nam==host_name[i])):
+            messg=check_messg_in_db(vm_nm,host_ip,host_nam)
+            if vm_nm==vm_name[i]:
+                logger.debug('host='+vm_nm)
+                logger.debug('screen='+vm_name[i])
+                logger.debug('Result:correct input')
+            else:
+                logger.debug('host='+vm_nm)
+                logger.debug('screen='+vm_name[i])
+                logger.debug('Result:Incorrect input')
+                
+            if status_vm==vm_status[i]:
+                logger.debug('host='+status_vm)
+                logger.debug('screen='+vm_status[i])
+                logger.debug('Result:correct input')
+            else:
+                logger.debug('host='+status_vm)
+                logger.debug('screen='+vm_status[i])
+                logger.debug('Result:Incorrect input')
+                	
+            if messg==message[i]:
+                logger.debug('host='+messg)
+                logger.debug('screen='+message[i])
+                logger.debug('Result:correct input')
+            else:
+                logger.debug('host='+messg)
+                logger.debug('screen='+message[i])
+                logger.debug('Result:Incorrect input')
+                
+            if host_nam==host_name[i]:
+                logger.debug('host='+host_nam)
+                logger.debug('screen='+host_name[i])
+                logger.debug('Result:correct input')
+            else:
+                logger.debug('host='+host_nam)
+                logger.debug('screen='+host_name[i])
+                logger.debug('Result:Incorrect input')
+
+
+
+			
+def check_vm_status(status):
+	if status==1:
+		status_vm="Running"
+	if status==3:
+		status_vm="Paused"
+	return status_vm
+
+	
+    
+def check_messg_in_db(vm_nm,host_ip,host_nam):    
+    fetch_result=execute_query(" select vm_name,vm_data.status from vm_data,host where vm_data.host_id=host.id and host_ip=%s",(str(host_ip))).fetchall()
+    print fetch_result
+    no_vm_in_db=len(fetch_result)
+    if fetch_result!=():
+        for j in range(0,no_vm_in_db):
+            if vm_nm==fetch_result[j][0]:
+                vm_in_db="True"
+                messg="VM is on expected host "+host_nam
+            else:
+                vm_in_db="False"
+                messg="Orphan, VM is not in database"
+       
+    else:
+        messg="Orphan, VM is not in database"                
+    return messg
