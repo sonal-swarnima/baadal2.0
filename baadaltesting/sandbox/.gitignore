@@ -1,3 +1,6 @@
 bin/*
-log.*
+disks/*
+utils/*
+ubuntu*
+logs/*
 *~
