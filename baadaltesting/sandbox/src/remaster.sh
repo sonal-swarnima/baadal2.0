@@ -27,7 +27,7 @@ function remaster_ubuntu
 
   cd ..
   rm -f $iso_out
-  mkisofs -D -r -V "ATTENDLESS_UBUNTU" -cache-index -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o $iso_out ubuntuiso 1>$LOGS/log.out 2>$LOGS/log.err
+  mkisofs -D -r -V "ATTENDLESS_UBUNTU" -cache-index -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o $iso_out ubuntuiso 1>>$LOGS/log.out 2>>$LOGS/log.err
 
   umount iso
   rm -rf iso

@@ -3,7 +3,6 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
-  #package_install libvirt-bin
   package_install virtinst
   disk_create $FILER_DISK ${FILER_SPACE}G
   remaster_ubuntu $FILER_KICKSTART $FILER_ISO
@@ -21,6 +20,4 @@ function run
     --cdrom $FILER_ISO \
     1>$LOGS/log.out 2>/$LOGS/log.err
   $ECHO_OK Filer Created
-
-  $LOG_CLEAN
 }

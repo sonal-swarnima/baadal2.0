@@ -1,0 +1,5 @@
+#!/bin/sh
+
+switch='baadalbr0'
+/sbin/ifconfig $1 0.0.0.0 down
+ovs-vsctl del-port ${switch} $1
