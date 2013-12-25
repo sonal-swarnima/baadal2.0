@@ -1,5 +1,5 @@
 <?xml version= "1.0"?>
-<test_scripts url="http://10.208.21.111/baadal" href="Login" xpath="//span[@class='auth_navbar']" total_scripts="132">
+<test_scripts url="https://10.208.21.111/baadal" href="Login" xpath="//span[@class='auth_navbar']" total_scripts="132">
     <test_script1 id="1"  name ="login_test">
 		<test_case1 value="Checking for empty fields">
 			<user_name id="user_username" type="input"></user_name>
@@ -2006,7 +2006,7 @@ print_mode="No VM exist which is in running mode,So Please Running a VM before d
   xpath_user="//table[@id='vm_users']/tbody/tr" 
 xpath_conf="//table[@id='configuration']/tbody/tr/td"  
 xpath_snap="//table[@id='vm_snaps']/tbody/tr"  
- max="3" op="Delete" title="//table[@id='vm_ops']/tbody/tr/td/a[@title='Delete this virtual machine']">
+ max="3" op="Delete" title="//a[@title='Delete this virtual machine']">
             </setting>
 		</test_case1>
 		</test_script82>
@@ -2391,7 +2391,7 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr"
 			<faculty_approver type="input" id="faculty_user">monikay</faculty_approver>
             <list_vm type="href">Verify</list_vm>
 			<submit type="submit">//input[@type='submit']</submit>
-			<list_vm type="href">My VMs</list_vm>
+			
 			
 			
             <login type="href">Logout</login>
@@ -2423,11 +2423,15 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr"
 		<user_name id="user_username" type="input">siy138302</user_name>
 			<password id="user_password" type="input">@lliswell</password>
 			<submit type="submit">//input[@type='submit']</submit>
-		    <setting type="img" name="vm_running_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE  status=2 or status=3 or status=4  ORDER BY start_time DESC " query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" query5="select concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s" query6="select vm_data.vm_name, template.hdd,vm_data.HDD,vm_data.RAM,vm_data.vCPU,vm_data.status,template.os_type,vm_data.host_id,vm_data.vnc_port from vm_data join template where vm_data.datastore_id=template.datastore_id and vm_name=%s"
+		    <list_vm type="href">My VMs</list_vm>
+		    <setting type="attach_disk" name="vm_running_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE  status=2 or status=3 or status=4  ORDER BY start_time DESC " query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" query5="select concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s" query6="select vm_data.vm_name, template.hdd,vm_data.HDD,vm_data.RAM,vm_data.vCPU,vm_data.status,template.os_type,vm_data.host_id,vm_data.vnc_port from vm_data join template where vm_data.datastore_id=template.datastore_id and vm_name=%s"
             task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_id DESC"
  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="destroy_machine" print_mode="No VM exist which is in running mode,So Please Run a VM before doing this testing" status="2" other_status1="3" other_status2="4" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting> 
-		     <check_task type="task_table" id="clone_vm" task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_queue_event.start_time desc">Stop VM</check_task>
-		     <setting type="img" name="vm_shutdown_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE status=2 or status=3 or status=4 ORDER BY start_time DESC" xpath_op="//table[@id='vm_ops']/tbody/tr/td/a[@title='Take VM snapshot']"  query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" max="3"  op="clone_vm" add_button="//input[@type='submit']" user_id="request_queue_clone_count" user_id_data="1"  print_mode="No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing" status="4" other_status1="2" other_status2="3" print="Your request has been sent for approval">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting> 
+		     <wait type="wait"></wait>
+		      <wait type="wait"></wait>
+		       <wait type="wait"></wait>
+		       <list_vm type="href">My VMs</list_vm>
+		     <setting type="attach_disk" name="vm_shutdown_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE status=2 or status=3 or status=4 ORDER BY start_time DESC" xpath_op="//table[@id='vm_ops']/tbody/tr/td/a[@title='Take VM snapshot']"  query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" max="3"  op="clone_vm" add_button="//input[@type='submit']" user_id="request_queue_clone_count" user_id_data="1"  print_mode="No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing" status="4" other_status1="2" other_status2="3" print="Your request has been sent for approval">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting> 
 		     <login type="href">Logout</login>
             <wait type="wait"></wait>
             <login type="href">Login</login>
@@ -3628,13 +3632,14 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 		</test_script77>
 		 
 		 <test_script78 id="121" url="http://10.208.21.111/baadal" href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
-		   <test_case1 value="Checking for VM flow  as User Request  for Edit VM config(Approved by Faculty,org-admin,admin)">
+		  	
+		     <test_case1 value="Checking for VM flow  as User Request  for Edit VM Config(Approved by Faculty,org-admin,admin)">
 			<user_name id="user_username" type="input">siy138302</user_name>
 			<password id="user_password" type="input">@lliswell</password>
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@name='template_id']/option[@value=1]</templet_id>
+			<templet_id type="select">//select[@name='template_id']/option[@value=8]</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">monikay</faculty_approver>
@@ -3663,18 +3668,20 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			 	 <list_vm type="href">Pending Org-Level VM Approvals</list_vm>
 			<table type="check_data" id="orgadmin" path="//table[@id='sortTable1']/tbody/tr/td/a[@class='Approve']"  print_data="Request approved." click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s"  data="integeration">//*[@id='sortTable1']/tbody/tr</table>
 			<list_vm type="href">Pending Requests</list_vm>
-            <table type="check_data" id="baadal/admin" path="//table[@id='sortTable1']/tbody/tr/td/a[@class='Approve']"  print_data="Installation request added to queue" click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s"  data="integeration">//*[@id='sortTable1']/tbody/tr</table>
+            <table type="check_data" id="admin" path="//table[@id='sortTable1']/tbody/tr/td/a[@class='Approve']"  print_data="Installation request added to queue" click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s"  data="integeration">//*[@id='sortTable1']/tbody/tr</table>
 		
-		   <wait type="wait" id=
-"wait"></wait>
+		   <check_task type="task_table"  task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_queue_event.start_time desc">Create VM</check_task>
 		  <login type="href">Logout</login>
             <wait type="wait"></wait>
             <login type="href">Login</login>
 		<user_name id="user_username" type="input">siy138302</user_name>
 			<password id="user_password" type="input">@lliswell</password>
 			<submit type="submit">//input[@type='submit']</submit>
-		    <list_vm type="href">My VMs</list_vm>
-		     <setting type="attach_disk" name="vm_running_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE status=2 or status=3 or status=4  ORDER BY start_time DESC " query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" query5="select concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s" query6="select vm_data.vm_name, template.hdd,vm_data.HDD,vm_data.RAM,vm_data.vCPU,vm_data.status,template.os_type,vm_data.host_id,vm_data.vnc_port from vm_data join template where vm_data.datastore_id=template.datastore_id and vm_name=%s" xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="attach_extra_disk"  max="3" add_button="//input[@type='submit']" user_id="request_queue_attach_disk" user_id_data="10" print="Your request has been sent for approval" print_mode="No VM exist which is in running mode,So Please Run a VM before doing this testing" status="2" other_status1="3" other_status2="4">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting> 
+		    <setting type="img" name="vm_running_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE  status=2 or status=3 or status=4  ORDER BY start_time DESC " query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" query5="select concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s" query6="select vm_data.vm_name, template.hdd,vm_data.HDD,vm_data.RAM,vm_data.vCPU,vm_data.status,template.os_type,vm_data.host_id,vm_data.vnc_port from vm_data join template where vm_data.datastore_id=template.datastore_id and vm_name=%s"
+            task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_id DESC"
+ xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="destroy_machine" print_mode="No VM exist which is in running mode,So Please Run a VM before doing this testing" status="2" other_status1="3" other_status2="4" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting> 
+		     <check_task type="task_table" id="clone_vm" task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_queue_event.start_time desc">Stop VM</check_task>
+		     <setting type="img" name="vm_shutdown_Setting" id="settings" path="//div[@class='TABLE']/table/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE status=2 or status=3 or status=4 ORDER BY start_time DESC" xpath_op="//table[@id='vm_ops']/tbody/tr/td/a[@title='Take VM snapshot']"  query4="select snapshot_name from snapshot join vm_data where vm_data.id=snapshot.vm_id and  vm_name=%s" max="3"  op="edit_vm_config" add_button="//input[@type='submit']" user_id="" user_data=""  query_user_id="select user.id, concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s"  print_mode="No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing"  status="4" other_status1="2" other_status2="3" print="Your request has been sent for approval" query_snap="select * from task_queue where task_type='Snapshot VM' and vm_id=%s and (status=1 | status=2)">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting> 
 		     <login type="href">Logout</login>
             <wait type="wait"></wait>
             <login type="href">Login</login>
@@ -3682,8 +3689,8 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<password id="user_password" type="input">sainijyoti</password>
 			<submit type="submit">//input[@type='submit']</submit>
 			<list_vm type="href">Pending Requests</list_vm>
-			<list_vm type="href">Attach Disk</list_vm>
-			<table type="check_data" path="//table[@id='sortTable3']/tbody/tr/td/a[@class='Approve']"  print_data="Request Approved." click="approve_request" id="faculty" query3=" SELECT id  FROM request_queue WHERE vm_name=%s" data="integeration">//*[@id='sortTable3']/tbody/tr</table>
+			<list_vm type="href">Clone VM</list_vm>
+			<table type="check_data" path="//table[@id='sortTable2']/tbody/tr/td/a[@class='Approve']"  print_data="Request Approved." click="approve_request" id="faculty" query3=" SELECT id  FROM request_queue WHERE vm_name=%s" data="integeration">//*[@id='sortTable2']/tbody/tr</table>
 			<login type="href">Logout</login>
             <wait type="wait"></wait>
             <login type="href">Login</login>
@@ -3694,14 +3701,13 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<org-admin_menu type="href">ORG-ADMIN MENU</org-admin_menu>
 			 <wait type="wait"></wait>
 			 	 <list_vm type="href">Pending Org-Level VM Approvals</list_vm>
-			 	 <list_vm type="href">Attach Disk</list_vm>
-			<table type="check_data" id="orgadmin" path="//table[@id='sortTable3']/tbody/tr/td/a[@class='Approve']"  print_data="Request approved." click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s"  data="integeration">//*[@id='sortTable3']/tbody/tr</table>
+			 	 <list_vm type="href">Clone VM</list_vm>
+			<table type="check_data" id="orgadmin" path="//table[@id='sortTable2']/tbody/tr/td/a[@class='Approve']"  print_data="Request approved." click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s"  data="integeration">//*[@id='sortTable2']/tbody/tr</table>
 			<list_vm type="href">Pending Requests</list_vm>
-            <list_vm type="href">Attach Disk</list_vm>
-            <table type="check_data" id="baadal/admin" path="//table[@id='sortTable3']/tbody/tr/td/a[@class='Approve']"  print_data="Installation request added to queue" click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s "  data="integeration">//*[@id='sortTable3']/tbody/tr</table> 
-            <check_task type="task_table"  task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_queue_event.start_time desc">Create VM</check_task>
+            <list_vm type="href">Clone VM</list_vm>
+            <table type="check_data" id="admin" path="//table[@id='sortTable2']/tbody/tr/td/a[@class='Approve']"  print_data="Installation request added to queue" click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s "  data="integeration">//*[@id='sortTable2']/tbody/tr</table> 
+            <check_task type="task_table"  task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_queue_event.start_time desc">Clone VM</check_task>
 		</test_case1>
-	
 		</test_script78>
 		
 			   
@@ -3956,7 +3962,7 @@ task="graph" cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch " cmd_f
 	</test_script>
 	<test_script id="131">
 	<test_case1 value="Checking VM Performance(CPU)" ip_add='10.208.21.111' usrnam="root" password="duolc123">
-        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now"  cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/network.py"></data>
+        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now"  cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/thread.py"></data>
                 </test_case1>
 	</test_script>
 	<test_script id="132">

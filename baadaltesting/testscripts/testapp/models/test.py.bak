@@ -253,10 +253,11 @@ def test_script(test_case_no):
                         vm_status=vm_status1
                     if k==5:
                         vm_name=vm_name1
-                
+            
+            driver.close()#disconnect from server        
         if vm_status==0:
             logger.debug("Your VM has not created.Please Check it!!!Either its in failed or pending task table!!!")
-        driver.close()#disconnect from server
+        
 
 #################################################################################################################
 #                                        Function  for Network testing                                            #
@@ -654,7 +655,7 @@ def op_migrate_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
         driver.find_element_by_xpath("//input[@value='Migrate']").click()
         query_status=execute_query("select status from vm_data where id=%s",str(vm_id)).fetchone()
         print query_status
-        if query_status[0]=="2":
+        if query_status[0]==2:
             result="Your VM is already running. Kindly turn it off and then retry!!!"
             field_text=message_flash(driver,xml_sub_child,xml_child)
             print_result(field_text,result,xml_child)
@@ -955,10 +956,9 @@ def check_vm_in_pending_task(driver,xml_sub_child,xml_child,vm_name,operation_na
         field=driver.find_elements_by_xpath(path)
         for x in field:          
             if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text): 
-                print vm_name
-                print task_start_time           
+                          
                 vm_in_pending=1
-                print vm_in_pending
+               
     datas=str(vm_in_pending)+ " " +str(task_start_time) 
     return datas
 

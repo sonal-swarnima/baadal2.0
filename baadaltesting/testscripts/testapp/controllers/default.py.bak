@@ -311,7 +311,7 @@ def integration_testing():
                      TR(INPUT(_name='testcase118', _type='checkbox', _value="118"),'User Request Clone VM(Approved by Faculty,org-admin,admin)'),
                    TR(INPUT(_name='testcase119', _type='checkbox', _value="119"),'User Request Clone VM(Approved by Faculty and Rejected by org-admin)'),
                       TR(INPUT(_name='testcase120', _type='checkbox', _value="120"),'User Request Clone VM(Approved by Faculty,org-admin and Rejected by admin)'),
-                      TR(INPUT(_name='testcase121', _type='checkbox', _value="121"),'User Request Clone VM(Rejected by Faculty )'),
+                      TR(INPUT(_name='testcase121', _type='checkbox', _value="121"),'User Request Edit VM Config(Rejected by Faculty )'),
                     TR(INPUT(_name='testcase122', _type='checkbox', _value="122"),'Faculty Request Clone VM(Rejected by org-admin)'),
                     TR(INPUT(_name='testcase123', _type='checkbox', _value="123"),'Faculty Request Clone VM(Approved by org-admin  and Rejected by admin)'),
                     TR(INPUT(_name='testcase124', _type='checkbox', _value="124"),'Faculty Request Clone VM(Approved by org-admin, admin)'),

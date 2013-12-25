@@ -8,7 +8,7 @@ password:test_baadal
 [MYSQL_CONF]
 mysql_user=baadaltesting
 mysql_password=test_baadal
-mysql_ip=10.208.21.111
+mysql_ip=localhost
 mysql_db=baadal
 mysql_conn=mysql://%(mysql_user)s:%(mysql_password)s@%(mysql_ip)s/%(mysql_db)s
 
