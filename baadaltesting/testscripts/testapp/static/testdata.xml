@@ -3957,22 +3957,22 @@ task="graph" cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch " cmd_f
 		<test_script id="129"></test_script>
 	<test_script id="130">
 	<test_case1 value="Checking VM Performance(Memory)" ip_add='10.208.21.111' usrnam="root" password="duolc123">
-        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now"  cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -500s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/network.py"></data>
+        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" ip_add='10.208.21.113' usrnam="root" password="baadal_test" cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -500s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/fact.py"></data>
                 </test_case1>
 	</test_script>
 	<test_script id="131">
 	<test_case1 value="Checking VM Performance(CPU)" ip_add='10.208.21.111' usrnam="root" password="duolc123">
-        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now"  cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/thread.py"></data>
+        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" ip_add='10.208.21.113' usrnam="root" password="baadal_test" cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/thread.py"></data>
                 </test_case1>
 	</test_script>
 	<test_script id="132">
 	<test_case1 value="Checking VM Performance(Network)" ip_add='10.208.21.111' usrnam="root" password="duolc123">
-        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now"  cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/network.py"></data>
+        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" ip_add='10.208.21.113' usrnam="root" password="baadal_test" cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/network.py"></data>
                 </test_case1>
 	</test_script>
 	<test_script id="133">
 	<test_case1 value="Checking VM Performance(Disk)" ip_add='10.208.21.111' usrnam="root" password="duolc123">
-        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now"  cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/network.py"></data>
+        <data cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" ip_add='10.208.21.113' usrnam="root" password="baadal_test" cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch baadal_testing_vm.rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/disk.py"></data>
                 </test_case1>
 	
 	</test_script>
