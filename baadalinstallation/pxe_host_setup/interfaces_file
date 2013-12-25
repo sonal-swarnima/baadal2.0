@@ -1,0 +1,13 @@
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+	address 0.0.0.0
+
+auto br0
+iface br0 inet dhcp
+	post-up /root/ovs-postup.sh
+	bridge_ports eth0
+	bridge_stp off
+
