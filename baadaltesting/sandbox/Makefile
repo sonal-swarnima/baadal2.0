@@ -49,7 +49,23 @@ filer: $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/$@ $(UBUNTU)
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/$@/ks.cfg $(BIN_DIR)/ks.$@.cfg
 
-clean:
+clean-controller:
+	virsh destroy baadal_controller || true
+	virsh undefine baadal_controller || true
+	rm -f $(BIN_CONTROLLER)
+	rm -f $(BIN_DIR)/ks.controller.cfg
+	rm -f $(UTILS_DIR)/ubuntu.controller.iso
+	rm -f $(DISKS_DIR)/controller.img
+
+clean-filer:
+	virsh destroy baadal_filer || true
+	virsh undefine baadal_filer || true
+	rm -f $(BIN_FILER)
+	rm -f $(BIN_DIR)/ks.filer.cfg
+	rm -f $(UTILS_DIR)/ubunt.filer.iso
+	rm -f $(DISKS_DIR)/filer.img
+
+clean: clean-controller clean-filer
 	rm -rf $(BIN_DIR)
 	rm -rf $(LOGS_DIR)
 	rm -rf $(DISKS_DIR)
