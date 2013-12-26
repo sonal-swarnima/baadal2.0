@@ -13,8 +13,6 @@ function run
   virsh_force "net-destroy $OVS_NET"
   virsh_force "net-undefine $OVS_NET"
 
-  route_del $ROUTE_IP $ROUTE_GW $ROUTE_NETMASK $ROUTE_DEV
-
   ovsvsctl_del_br $OVS_BRIDGE
 
   package_install aptitude
@@ -41,8 +39,7 @@ function run
   virsh_run "net-autostart $OVS_NET"
   #file_backup $INTERFACES_DST
 
-  ifconfig_ip $OVS_BRIDGE $ROUTE_DEV_IP
-  route_add $ROUTE_IP $ROUTE_GW $ROUTE_NETMASK $ROUTE_DEV 
+  ifconfig_ip $OVS_BRIDGE $ROUTE_DEV_IP $ROUTE_NETMASK
 }
 
 function libvirt_install
