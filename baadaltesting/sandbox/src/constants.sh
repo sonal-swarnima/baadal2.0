@@ -17,6 +17,7 @@ LOG_CLEAN="rm -f $LOGS/*"
 BRCOMPAT_SRC=$BIN/openvswitch-switch
 BRCOMPAT_DST=/etc/default/openvswitch-switch
 
+#Update this in OVS_NET_XML too
 OVS_BRIDGE=baadalbr1
 OVS_NET=ovs-net
 OVS_NET_XML=$BIN/ovs-net.xml

@@ -42,29 +42,40 @@ $(UBUNTU): $(UTILS_DIR)
 $(LIBVIRT): $(UTILS_DIR)
 	wget -c $(LIBVIRT_SOURCE) -O $@
 
-controller: $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/$@ $(UBUNTU)
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/$@/*.sh > $(BIN_CONTROLLER)
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller $(UBUNTU)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $(BIN_CONTROLLER)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_CONTROLLER)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_CONTROLLER)
 	chmod +x $(BIN_CONTROLLER)
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
-	cp $(SRC_DIR)/$@/ks.cfg $(BIN_DIR)/ks.$@.cfg
+	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
 
-filer: $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/$@ $(UBUNTU)
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/$@/*.sh > $(BIN_FILER)
+$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer $(UBUNTU)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $(BIN_FILER)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_FILER)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_FILER)
 	chmod +x $(BIN_FILER)
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
-	cp $(SRC_DIR)/$@/ks.cfg $(BIN_DIR)/ks.$@.cfg
+	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 
-switch: $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/$@ $(LIBVIRT)
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/$@/*.sh > $(BIN_SWITCH)
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch $(LIBVIRT)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $(BIN_SWITCH)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH)
 	chmod +x $(BIN_SWITCH)
-	cp $(SRC_DIR)/$@/openvswitch-switch $(BIN_DIR)/openvswitch-switch
-	cp $(SRC_DIR)/$@/ovs-net.xml $(BIN_DIR)/ovs-net.xml
+	cp $(SRC_DIR)/switch/openvswitch-switch $(BIN_DIR)/openvswitch-switch
+	cp $(SRC_DIR)/switch/ovs-net.xml $(BIN_DIR)/ovs-net.xml
+
+controller: $(BIN_CONTROLLER)
+	sudo $(BIN_CONTROLLER)
+
+filer: $(BIN_FILER)
+	sudo $(BIN_FILER)
+
+switch: $(BIN_SWITCH)
+	sudo $(BIN_SWITCH)
+
+sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch controller filer
 
 clean-controller:
 	virsh destroy baadal_controller || true
