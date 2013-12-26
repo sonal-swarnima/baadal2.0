@@ -18,6 +18,7 @@ function run
     --os-type=Linux \
     --disk path=$CONTROLLER_DISK,format=qcow2,size=$CONTROLLER_SPACE \
     --cdrom $CONTROLLER_ISO \
+    --network network=$OVS_NET \
     1>$LOGS/log.out 2>/$LOGS/log.err
   $ECHO_OK Controller Created
 }

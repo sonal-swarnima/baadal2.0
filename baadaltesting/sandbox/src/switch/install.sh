@@ -10,6 +10,9 @@ function run
   virsh_force "net-destroy default"
   virsh_force "net-autostart --disable default"
 
+  virsh_force "net-destroy $OVS_NET"
+  virsh_force "net-undefine $OVS_NET"
+
   ovsvsctl_del_br $OVS_BRIDGE
 
   package_install aptitude
