@@ -64,8 +64,6 @@ switch: $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/$@ $(LIBVIRT)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH)
 	chmod +x $(BIN_SWITCH)
 	cp $(SRC_DIR)/$@/openvswitch-switch $(BIN_DIR)/openvswitch-switch
-	cp $(SRC_DIR)/$@/ovs-ifup $(BIN_DIR)/ovs-ifup
-	cp $(SRC_DIR)/$@/ovs-ifdown $(BIN_DIR)/ovs-ifdown
 	cp $(SRC_DIR)/$@/ovs-net.xml $(BIN_DIR)/ovs-net.xml
 
 clean-controller:

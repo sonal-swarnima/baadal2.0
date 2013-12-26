@@ -5,13 +5,15 @@ function run
   package_install qemu-kvm
   package_install virtinst
 
-  libvirt_install
+  #libvirt_install
 
   virsh_force "net-destroy default"
   virsh_force "net-autostart --disable default"
 
   virsh_force "net-destroy $OVS_NET"
   virsh_force "net-undefine $OVS_NET"
+
+  route_del $ROUTE_IP $ROUTE_GW $ROUTE_NETMASK $ROUTE_DEV
 
   ovsvsctl_del_br $OVS_BRIDGE
 
@@ -32,16 +34,15 @@ function run
  
   service_start openvswitch-switch
 
-  file_copy $OVS_IFUP_SRC $OVS_IFUP_DST
-  file_copy $OVS_IFDOWN_SRC $OVS_IFDOWN_DST
-
   ovsvsctl_add_br $OVS_BRIDGE
-  ovsvsctl_add_port $OVS_BRIDGE $OVS_ETHERNET
 
   virsh_run "net-define $OVS_NET_XML"
   virsh_run "net-start $OVS_NET"
   virsh_run "net-autostart $OVS_NET"
   #file_backup $INTERFACES_DST
+
+  ifconfig_ip $OVS_BRIDGE $ROUTE_DEV_IP
+  route_add $ROUTE_IP $ROUTE_GW $ROUTE_NETMASK $ROUTE_DEV 
 }
 
 function libvirt_install

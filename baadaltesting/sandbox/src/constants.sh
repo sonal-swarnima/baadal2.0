@@ -17,14 +17,15 @@ LOG_CLEAN="rm -f $LOGS/*"
 BRCOMPAT_SRC=$BIN/openvswitch-switch
 BRCOMPAT_DST=/etc/default/openvswitch-switch
 
-OVS_BRIDGE=baadalbr0
-OVS_ETHERNET=eth0
-OVS_IFUP_SRC=$BIN/ovs-ifup
-OVS_IFUP_DST=/etc/ovs-ifup
-OVS_IFDOWN_SRC=$BIN/ovs-ifdown
-OVS_IFDOWN_DST=/etc/ovs-ifdown
+OVS_BRIDGE=baadalbr1
 OVS_NET=ovs-net
 OVS_NET_XML=$BIN/ovs-net.xml
+
+ROUTE_IP=20.208.0.0
+ROUTE_GW=20.208.0.1
+ROUTE_NETMASK=255.255.255.0
+ROUTE_DEV=$OVS_BRIDGE
+ROUTE_DEV_IP=20.208.0.3
 
 INTERFACES_DST=/etc/network/interfaces
 
