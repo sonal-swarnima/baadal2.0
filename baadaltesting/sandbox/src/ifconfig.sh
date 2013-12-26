@@ -2,16 +2,17 @@ function ifconfig_ip
 {
   iface=$1
   ip=$2
+  netmask=$3
 
-  $ECHO_PROGRESS "ifconfig $iface $ip"
-  ifconfig $iface $ip 1>>$LOGS/log.out 2>>$LOGS/log.err
+  $ECHO_PROGRESS "ifconfig $iface $ip netmask $netmask"
+  ifconfig $iface $ip netmask $netmask 1>>$LOGS/log.out 2>>$LOGS/log.err
   status=$?
 
   if [[ $status -ne 0 ]]; then
-    $ECHO_ER ifconfig $iface $ip failed. Check logs.
+    $ECHO_ER ifconfig $iface $ip netmask $netmask failed. Check logs.
     exit 1
   else
-    $ECHO_OK ifconfig $iface $ip
+    $ECHO_OK ifconfig $iface $ip netmask $netmask
   fi
 }
 
