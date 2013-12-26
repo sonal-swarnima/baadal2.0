@@ -78,27 +78,27 @@ switch: $(BIN_SWITCH)
 sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch controller filer
 
 clean-controller:
-	virsh destroy baadal_controller || true
-	virsh undefine baadal_controller || true
-	rm -f $(BIN_CONTROLLER)
-	rm -f $(BIN_DIR)/ks.controller.cfg
-	rm -f $(UTILS_DIR)/ubuntu.controller.iso
-	rm -f $(DISKS_DIR)/controller.img
+	sudo virsh destroy baadal_controller || true
+	sudo virsh undefine baadal_controller || true
+	sudo rm -f $(BIN_CONTROLLER)
+	sudo rm -f $(BIN_DIR)/ks.controller.cfg
+	sudo rm -f $(UTILS_DIR)/ubuntu.controller.iso
+	sudo rm -f $(DISKS_DIR)/controller.img
 
 clean-filer:
-	virsh destroy baadal_filer || true
-	virsh undefine baadal_filer || true
-	rm -f $(BIN_FILER)
-	rm -f $(BIN_DIR)/ks.filer.cfg
-	rm -f $(UTILS_DIR)/ubunt.filer.iso
-	rm -f $(DISKS_DIR)/filer.img
+	sudo virsh destroy baadal_filer || true
+	sudo virsh undefine baadal_filer || true
+	sudo rm -f $(BIN_FILER)
+	sudo rm -f $(BIN_DIR)/ks.filer.cfg
+	sudo rm -f $(UTILS_DIR)/ubunt.filer.iso
+	sudo rm -f $(DISKS_DIR)/filer.img
 
 clean-switch:
 
 clean: clean-controller clean-filer
-	rm -rf $(BIN_DIR)
-	rm -rf $(LOGS_DIR)
-	rm -rf $(DISKS_DIR)
+	sudo rm -rf $(BIN_DIR)
+	sudo rm -rf $(LOGS_DIR)
+	sudo rm -rf $(DISKS_DIR)
 
 cleanall: clean
-	rm -rf $(UTILS_DIR)
+	sudo rm -rf $(UTILS_DIR)
