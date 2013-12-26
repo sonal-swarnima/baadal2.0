@@ -18,7 +18,7 @@ function run
     --os-type=Linux \
     --disk path=$FILER_DISK,format=qcow2,size=$FILER_SPACE \
     --cdrom $FILER_ISO \
-    --network bridge=$OVS_BRIDGE \
+    --network network=$OVS_NET \
     1>$LOGS/log.out 2>/$LOGS/log.err
   $ECHO_OK Filer Created
 }
