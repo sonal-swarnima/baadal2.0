@@ -11,10 +11,10 @@ function run
   virsh_force "net-destroy default"
   virsh_force "net-autostart --disable default"
 
-  virsh_force "net-destroy $OVS_NET"
-  virsh_force "net-undefine $OVS_NET"
+  virsh_force "net-destroy $OVS_NET_EXTERNAL"
+  virsh_force "net-undefine $OVS_NET_EXTERNAL"
 
-  ovsvsctl_del_br $OVS_BRIDGE
+  ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
 
   package_install aptitude
   package_remove ebtables
@@ -31,14 +31,14 @@ function run
  
   service_start openvswitch-switch
 
-  ovsvsctl_add_br_force $OVS_BRIDGE
+  ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
 
-  virsh_run "net-define $OVS_NET_XML"
-  virsh_run "net-start $OVS_NET"
-  virsh_run "net-autostart $OVS_NET"
+  virsh_run "net-define $OVS_NET_XML_EXTERNAL"
+  virsh_run "net-start $OVS_NET_EXTERNAL"
+  virsh_run "net-autostart $OVS_NET_EXTERNAL"
   #file_backup $INTERFACES_DST
 
-  ifconfig_ip $OVS_BRIDGE $ROUTE_DEV_IP $ROUTE_NETMASK
+  ifconfig_ip $OVS_BRIDGE_EXTERNAL $ROUTE_DEV_IP_EXTERNAL $ROUTE_NETMASK_EXTERNAL
 }
 
 function libvirt_install

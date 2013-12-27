@@ -21,7 +21,9 @@ LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.0.0.tar.gz
 
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
+BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
+BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
 
 $(BIN_DIR):
 	mkdir -p $@
@@ -66,6 +68,14 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 
+$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $(BIN_NAT)
+	sed -i '1i#!/bin/$(SHELL)' $(BIN_NAT)
+	sed -i '$$a$(RUN_COMMAND)' $(BIN_NAT)
+	chmod +x $(BIN_NAT)
+	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
+	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
+
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $(BIN_SWITCH)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH)
@@ -74,16 +84,30 @@ $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cp $(SRC_DIR)/switch/openvswitch-switch $(BIN_DIR)/openvswitch-switch
 	cp $(SRC_DIR)/switch/ovs-net.xml $(BIN_DIR)/ovs-net.xml
 
+$(BIN_SWITCH_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-external libvirt
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-external/*.sh > $(BIN_SWITCH_EXTERNAL)
+	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH_EXTERNAL)
+	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH_EXTERNAL)
+	chmod +x $(BIN_SWITCH_EXTERNAL)
+	cp $(SRC_DIR)/switch-external/openvswitch-switch $(BIN_DIR)/openvswitch-switch
+	cp $(SRC_DIR)/switch-external/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
+
 controller: $(BIN_CONTROLLER)
 	sudo $(BIN_CONTROLLER)
 
 filer: $(BIN_FILER)
 	sudo $(BIN_FILER)
 
+nat: $(BIN_NAT)
+	sudo $(BIN_NAT)
+
 switch: $(BIN_SWITCH)
 	sudo $(BIN_SWITCH)
 
-sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch controller filer
+switch-external: $(BIN_SWITCH_EXTERNAL)
+	sudo $(BIN_SWITCH_EXTERNAL)
+
+sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch switch-external nat controller filer
 
 clean-controller:
 	sudo virsh destroy baadal_controller || true
@@ -101,9 +125,19 @@ clean-filer:
 	sudo rm -f $(UTILS_DIR)/ubunt.filer.iso
 	sudo rm -f $(DISKS_DIR)/filer.img
 
+clean-nat:
+	sudo virsh destroy baadal_nat || true
+	sudo virsh undefine baadal_nat || true
+	sudo rm -f $(BIN_FILER)
+	sudo rm -f $(BIN_DIR)/ks.nat.cfg
+	sudo rm -f $(UTILS_DIR)/ubunt.nat.iso
+	sudo rm -f $(DISKS_DIR)/nat.img
+
 clean-switch:
 
-clean: clean-controller clean-filer
+clean-switch-external:
+
+clean: clean-controller clean-filer clean-nat
 	sudo rm -rf $(BIN_DIR)
 	sudo rm -rf $(LOGS_DIR)
 	sudo rm -rf $(DISKS_DIR)
