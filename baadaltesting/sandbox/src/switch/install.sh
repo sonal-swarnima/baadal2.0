@@ -13,7 +13,7 @@ function run
   virsh_force "net-destroy $OVS_NET"
   virsh_force "net-undefine $OVS_NET"
 
-  ovsvsctl_del_br $OVS_BRIDGE
+  #ovsvsctl_del_br $OVS_BRIDGE
 
   package_install aptitude
   package_remove ebtables
@@ -32,7 +32,7 @@ function run
  
   service_start openvswitch-switch
 
-  ovsvsctl_add_br $OVS_BRIDGE
+  ovsvsctl_add_br_force $OVS_BRIDGE
 
   virsh_run "net-define $OVS_NET_XML"
   virsh_run "net-start $OVS_NET"

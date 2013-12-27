@@ -16,6 +16,18 @@ function ovsvsctl_add_br
   fi
 }
 
+# function for ovs-vsctl add-br. always pass.
+function ovsvsctl_add_br_force
+{
+  bridge=$1
+
+  $ECHO_PROGRESS "Adding bridge $bridge"
+
+  ovs-vsctl add-br $bridge 1>>$LOGS/log.out 2>>$LOGS/log.err
+
+  $ECHO_OK Bridge added $bridge
+}
+
 # function for ovs-vsctl add-port
 function ovsvsctl_add_port
 {

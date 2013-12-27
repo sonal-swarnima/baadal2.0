@@ -10,10 +10,11 @@ SHELL = bash
 RUN_COMMAND = run
 
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
-UBUNTU_DESKTOP = http://releases.ubuntu.com/precise/ubuntu-12.04.3-alternate-amd64.iso
 UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-alternate-amd64.iso
+UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-alternate-amd64.iso
 UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-server-amd64.iso
-UBUNTU_SOURCE = $(UBUNTU_SERVER)
+UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-server-amd64.iso
+UBUNTU_SOURCE = $(UBUNTU_SERVER_EXTERNAL)
 
 LIBVIRT = $(UTILS_DIR)/libvirt-1.0.0.tar.gz
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.0.0.tar.gz
@@ -36,13 +37,20 @@ $(DISKS_DIR):
 
 $(DIRECTORIES): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR)
 
-$(UBUNTU): $(UTILS_DIR)
+$(UBUNTU):
+	mkdir -p $(UTILS_DIR)
 	wget -c $(UBUNTU_SOURCE) -O $@
 
-$(LIBVIRT): $(UTILS_DIR)
+$(LIBVIRT):
+	mkdir -p $(UTILS_DIR)
 	wget -c $(LIBVIRT_SOURCE) -O $@
 
-$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller $(UBUNTU)
+ubuntu: $(UBUNTU)
+
+libvirt: $(LIBVIRT)
+
+
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $(BIN_CONTROLLER)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_CONTROLLER)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_CONTROLLER)
@@ -50,7 +58,7 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
 
-$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer $(UBUNTU)
+$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $(BIN_FILER)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_FILER)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_FILER)
@@ -58,7 +66,7 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 
-$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch $(LIBVIRT)
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $(BIN_SWITCH)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH)
