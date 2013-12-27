@@ -5,3 +5,5 @@ ubuntu*
 logs/*
 temp/*
 *~
+wget*
+*.swp

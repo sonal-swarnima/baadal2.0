@@ -2,5 +2,5 @@
 	<name>ovs-net-external</name>
 	<forward mode='bridge'/>
 	<bridge name='baadalbr0'/>
-  <virtualport type='openvswitch'/>
+ 	<virtualport type='openvswitch'/>
 </network>
