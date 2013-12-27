@@ -16,7 +16,6 @@ jQuery(document).ready(function(){
     jQuery('#faculty_row').hide();
     jQuery('#collaborator_row').hide();
     jQuery('#request_queue_public_ip__row').hide();
-    jQuery('#request_queue_enable_service__row').hide();
     jQuery('#security_domain_row').hide();
 
     template_check()
@@ -36,7 +35,6 @@ function template_check() {
         jQuery('#faculty_row').hide();
         jQuery('#collaborator_row').hide();
         jQuery('#request_queue_public_ip__row').hide();
-        jQuery('#request_queue_enable_service__row').hide();
         jQuery('#security_domain_row').hide();
     }else{
         jQuery('#request_queue_purpose__row').show();
@@ -44,7 +42,6 @@ function template_check() {
         jQuery('#faculty_row').show();
         jQuery('#collaborator_row').show();
         jQuery('#request_queue_public_ip__row').show();
-        jQuery('#request_queue_enable_service__row').show();
         jQuery('#security_domain_row').show();
         jQuery('[id^=config_row__]').hide();    
         

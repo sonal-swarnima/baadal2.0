@@ -18,20 +18,21 @@
     <thead>
       <tr>
         <th>Requested By</th>
+        <th>Faculty</th>
         <th>VM Name</th>
         <th>vCPUs</th>
         <th>RAM</th>
         <th>HDD</th>
         <th>Public IP</th>
-<!--    <th>Ports Enabled</th> -->
         <th>Security Domain</th>
-        <th>Action</th>
+        <th>Status</th>
       </tr> 
       </thead>
       <tbody>
       {{for pend_request in install_requests:}}
        <tr>
             <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=pend_request['faculty_name']}}</td>
             <td>{{=pend_request['vm_name']}}</td>
             <td>{{=pend_request['vCPUs']}}</td>
             <td>{{=pend_request['RAM']}}</td>
@@ -43,15 +44,16 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-<!--        <td>{{#=pend_request['services_enabled']}}</td> -->
             <td>{{=pend_request['security_domain']}}</td>
             <td>
-	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
-	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
-	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{if pend_request['status'] == REQ_STATUS_REQUESTED:}}
+	               Waiting for faculty approval
+	           {{elif pend_request['status'] == REQ_STATUS_VERIFIED:}}
+	               Waiting for org admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_APPROVED:}}
+	               Waiting for admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
+	               Approved. In Queue.
 	           {{pass}}
             </td>
           </tr>
@@ -70,30 +72,34 @@
     <thead>
       <tr>
         <th>Requested By</th>
+        <th>Faculty</th>
         <th>No. of Clones</th>
         <th>VM Name</th>
         <th>RAM</th>
         <th>HDD</th>
         <th>vCPUs</th>
-        <th>Action</th>
+        <th>Status</th>
       </tr> 
       </thead>
       <tbody>
       {{for pend_request in clone_requests:}}
        <tr>
             <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=pend_request['faculty_name']}}</td>
             <td><b>{{=pend_request['clone_count']}}</b></td>
             <td>{{=pend_request['vm_name']}}</td>
             <td>{{=pend_request['RAM']}}</td>
             <td>{{=pend_request['HDD']}}</td>
             <td>{{=pend_request['vCPUs']}}</td>
             <td>
-	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
-	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
-	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{if pend_request['status'] == REQ_STATUS_REQUESTED:}}
+	               Waiting for faculty approval
+	           {{elif pend_request['status'] == REQ_STATUS_VERIFIED:}}
+	               Waiting for org admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_APPROVED:}}
+	               Waiting for admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
+	               Approved. In Queue.
 	           {{pass}}
             </td>
           </tr>
@@ -112,19 +118,21 @@
     <thead>
       <tr>
         <th>Requested By</th>
+        <th>Faculty</th>
         <th>VM Name</th>
         <th>vCPUs</th>
         <th>RAM</th>
         <th>HDD</th>
         <th>Extra HDD</th>
         <th>Additional HDD</th>
-        <th>Action</th>
+        <th>Status</th>
       </tr> 
       </thead>
       <tbody>
       {{for pend_request in disk_requests:}}
        <tr>
             <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=pend_request['faculty_name']}}</td>
             <td>{{=A(pend_request['vm_name'],_href=URL(r=request, c='user',f='settings', args=[pend_request['parent_vm_id']]))}}</td>
             <td>{{=pend_request['vCPUs']}}</td>
             <td>{{=pend_request['RAM']}}</td>
@@ -132,12 +140,14 @@
             <td>{{=pend_request['extra_HDD']}}</td>
             <td><b>{{=pend_request['attach_disk']}}</b></td>
             <td>
-	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
-	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
-	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{if pend_request['status'] == REQ_STATUS_REQUESTED:}}
+	               Waiting for faculty approval
+	           {{elif pend_request['status'] == REQ_STATUS_VERIFIED:}}
+	               Waiting for org admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_APPROVED:}}
+	               Waiting for admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
+	               Approved. In Queue.
 	           {{pass}}
             </td>
           </tr>
@@ -157,6 +167,7 @@
     <thead>
       <tr>
         <th>Requested<br/>By</th>
+        <th>Faculty</th>
         <th>VM Name</th>
         <th>vCPUs</th>
         <th>New<br/>vCPUs</th>
@@ -164,17 +175,16 @@
         <th>New<br/>RAM</th>
         <th>Public<br/>IP</th>
         <th>New<br/>Public IP</th>
-<!--    <th>Ports<br/>Enabled</th> -->
-<!--    <th>New Ports<br/>Enabled</th> -->
         <th>Security<br/>Domain</th>
         <th>New Security<br/>Domain</th>
-        <th>Action</th>
+        <th>Status</th>
       </tr> 
       </thead>
       <tbody>
       {{for pend_request in edit_requests:}}
        <tr>
             <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=pend_request['faculty_name']}}</td>
             <td>{{=A(pend_request['vm_name'],_href=URL(r=request, c='user',f='settings', args=[pend_request['parent_vm_id']]))}}</td>
             <td>{{=pend_request['old_vCPUs']}}</td>
             <td><b>{{=pend_request['vCPUs']}}</b></td>
@@ -194,17 +204,17 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-<!--        <td>{{#=pend_request['old_services_enabled']}}</td> -->
-<!--        <td><b>{{#=pend_request['services_enabled']}}</b></td> -->
             <td>{{=pend_request['old_security_domain']}}</td>
             <td><b>{{=pend_request['security_domain']}}</b></td>
             <td>
-	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
-	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
-	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	           {{if pend_request['status'] == REQ_STATUS_REQUESTED:}}
+	               Waiting for faculty approval
+	           {{elif pend_request['status'] == REQ_STATUS_VERIFIED:}}
+	               Waiting for org admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_APPROVED:}}
+	               Waiting for admin approval
+	           {{elif pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
+	               Approved. In Queue.
 	           {{pass}}
             </td>
           </tr>
@@ -225,5 +235,3 @@ jQuery(document).ready(function(){
       jQuery("#sortTable4").tablesorter(); 
 });
 </script>
-
-

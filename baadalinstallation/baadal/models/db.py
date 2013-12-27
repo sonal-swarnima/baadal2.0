@@ -115,11 +115,11 @@ db.define_table('host',
 db.define_table('datastore',
     Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
     Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
-    Field('path', 'string', label='Path'),
-    Field('username', 'string', length = 255, label='Username'),
-    Field('password', 'password', label='Password'),
-    Field('used', 'integer', default = 0, readable=False, writable=False),
     Field('capacity', 'integer', label='Capacity'),
+    Field('username', 'string', length = 255, label='Username'),
+    Field('password', 'password', label='Password', readable=False),
+    Field('path', 'string', label='Path'),
+    Field('used', 'integer', default = 0, readable=False, writable=False),
     format = '%(ds_name)s')
 
 db.define_table('template',
@@ -131,6 +131,12 @@ db.define_table('template',
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
     Field('datastore_id', db.datastore, label='Datastore'),
     format = '%(name)s')
+
+db.define_table('vm_config',
+    Field('template_id', 'integer', notnull = True),
+    Field('HDD', 'integer', notnull = True),
+    Field('CPU', 'integer', notnull = True),
+    Field('RAM', 'integer', notnull = True))
 
 db.define_table('vlan',
     Field('name', 'string', length = 30, notnull = True, unique = True),
@@ -286,3 +292,6 @@ db.define_table('vnc_access',
     Field('duration', 'integer'),
     Field('time_requested', 'datetime', default = get_datetime()))
 
+db.define_table('public_ip_pool',
+    Field('public_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE)]),
+    Field('vm_id', db.vm_data, writable = False))

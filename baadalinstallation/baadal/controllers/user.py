@@ -252,3 +252,14 @@ def mail_admin():
         redirect(URL(c='default', f='index'))
     return dict(form = form)
 
+@auth.requires_login()
+@handle_exception
+def list_my_requests():
+    my_requests = get_my_requests()
+    requests = get_segregated_requests(my_requests)
+
+    return dict(install_requests = requests[0], 
+                clone_requests = requests[1], 
+                disk_requests = requests[2], 
+                edit_requests= requests[3])
+        

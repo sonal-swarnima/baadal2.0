@@ -42,7 +42,7 @@ def fetch_ldap_user(username):
     user_info={'user_name':username}
     user_info['email'] = None
     user_info['last_name'] = ''
-    user_info['organisation'] = 'IIT Delhi'
+    user_info['organisation'] = 'IITD'
     _role_list = [current.USER]
 
     try:

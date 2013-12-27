@@ -107,7 +107,6 @@ def processCloneTask(task_event_id, vm_id):
 
 def processSnapshotVM(snapshot_type):
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-    logger.debug('############OK########')
     for vm in vms:
         params={'snapshot_type':snapshot_type}
         add_vm_task_to_queue(vm.id,TASK_TYPE_SNAPSHOT_VM, params)
@@ -127,5 +126,12 @@ if not res:
                         repeats = 0, # run indefinitely
                         start_time = request.now, 
                         period = 24 * HOURS, # every 24h
+                        timeout = 5 * MINUTES)
+    
+    vm_scheduler.queue_task('snapshot_vm', 
+                        pvars = dict(snapshot_type = SNAPSHOT_WEEKLY),
+                        repeats = 0, # run indefinitely
+                        start_time = request.now, 
+                        period = 7 * DAYS, # every 24h
                         timeout = 5 * MINUTES)
     

@@ -25,7 +25,7 @@
         <th>RAM</th>
         <th>HDD</th>
         <th>Public IP</th>
-        <th>Ports Enabled</th>
+<!--    <th>Ports Enabled</th> -->
         <th>Security Domain</th>
         <th>Approval Status</th>
         <th>Action</th>
@@ -48,7 +48,7 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-            <td>{{=pend_request['services_enabled']}}</td>
+<!--        <td>{{#=pend_request['services_enabled']}}</td> -->
             <td>{{=pend_request['security_domain']}}</td>
             <td>
             {{if pend_request['requested_by'] == USER:}}
@@ -248,8 +248,8 @@
         <th>New<br/>RAM</th>
         <th>Public<br/>IP</th>
         <th>New<br/>Public IP</th>
-        <th>Ports<br/>Enabled</th>
-        <th>New Ports<br/>Enabled</th>
+<!--    <th>Ports<br/>Enabled</th> -->
+<!--    <th>New Ports<br/>Enabled</th> -->
         <th>Security<br/>Domain</th>
         <th>New Security<br/>Domain</th>
         <th>Approval<br/>Status</th>
@@ -280,8 +280,8 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-            <td>{{=pend_request['old_services_enabled']}}</td>
-            <td><b>{{=pend_request['services_enabled']}}</b></td>
+<!--        <td>{{#=pend_request['old_services_enabled']}}</td> -->
+<!--        <td><b>{{#=pend_request['services_enabled']}}</b></td> -->
             <td>{{=pend_request['old_security_domain']}}</td>
             <td><b>{{=pend_request['security_domain']}}</b></td>
             <td>

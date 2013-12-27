@@ -30,7 +30,7 @@ function confirm_vm_deletion(){
             <th>OS Type</th>
             <th>Private IP</th>
             <th>Public IP</th>
-            <th>Services Enabled</th>
+<!--        <th>Services Enabled</th> -->
             <th>Security Domain</th>
             <th>Status</th>
         </tr>
@@ -42,7 +42,7 @@ function confirm_vm_deletion(){
             <td>{{=vminfo['ostype']}}</td>
             <td>{{=vminfo['private_ip']}}</td>
             <td>{{=vminfo['public_ip']}}</td>
-            <td>{{=vminfo['services_enabled']}}</td>
+<!--        <td>{{#=vminfo['services_enabled']}}</td> -->
             <td>{{=vminfo['security_domain']}}</td>
             <td>{{=vminfo['status']}}</td>
         </tr>

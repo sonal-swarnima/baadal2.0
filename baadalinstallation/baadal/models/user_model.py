@@ -8,10 +8,10 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_orgadmin, is_faculty, get_vm_template_config
+from helper import is_moderator, is_orgadmin, is_faculty
 from auth_user import fetch_ldap_user, create_or_update_user
 
-def get_my_pending_vm():
+def get_my_requests():
     
     requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
     return get_pending_request_list(requests)
@@ -27,23 +27,27 @@ def get_my_hosted_vm():
 #Create configuration dropdowns
 def get_configuration_elem(form):
     
-    xmldoc = get_vm_template_config() # Read vm_template_config.xml
-    itemlist = xmldoc.getElementsByTagName('template')
-    _id=0 #for default configurations set, select box id will be configuration_0 
-    for item in itemlist:
-        if item.attributes['default'].value != 'true': #if not default, get the id 
-            _id=item.attributes['id'].value
-        select=SELECT(_name='configuration_'+str(_id)) # create HTML select with name as configuration_id
-        cfglist = item.getElementsByTagName('config')
-        i=0
-        for cfg in cfglist:
-            #Create HTML options and insert into select
-            select.insert(i,OPTION(cfg.attributes['display'].value,_value=cfg.attributes['value'].value))
-            i+=1
+    vm_configs = db().select(db.vm_config.ALL, orderby =db.vm_config.template_id)
+
+    _id=0
+    i=0
+    select = SELECT(_name='configuration_'+str(_id))
+    for config in vm_configs:
+        if config.template_id != _id:
+            config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
+            form[0].insert(2,config_elem)#insert tr element in the form
+            _id = config.template_id
+            select = SELECT(_name='configuration_'+str(_id))
+            i=0
+        
+        display = str(config.CPU) + ' CPU, ' + str(config.RAM) + 'GB RAM, ' + str(config.HDD) + 'GB HDD'
+        value = str(config.CPU) + ',' + str(config.RAM) + ',' + str(config.HDD)
+        select.insert(i,OPTION(display, _value=value))
+        i+=1
         
         #Create HTML tr, and insert label and select box
-        config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
-        form[0].insert(2,config_elem)#insert tr element in the form
+    config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
+    form[0].insert(2,config_elem)#insert tr element in the form
 
 # Gets CPU, RAM and HDD information on the basis of template selected.
 def set_configuration_elem(form):
@@ -151,7 +155,8 @@ def add_security_domain(form):
 
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_service', 'public_ip']
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'public_ip']
+#     form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_service', 'public_ip']
 
     db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
     db.request_queue.requester_id.default = auth.user.id
@@ -210,7 +215,7 @@ def get_vm_config(vm_id):
                    'totalcost'        : str(vminfo.total_cost),
                    'private_ip'       : str(vminfo.private_ip),
                    'public_ip'        : str(vminfo.public_ip),
-                   'services_enabled' : ', '.join(ser for ser in vminfo.enable_service) if len(vminfo.enable_service) != 0 else '-',
+#                    'services_enabled' : ', '.join(ser for ser in vminfo.enable_service) if len(vminfo.enable_service) != 0 else '-',
                    'security_domain'  : str(vminfo.security_domain.name)}
 
     if is_moderator():
@@ -301,7 +306,7 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
     db.request_queue.HDD.default = vm_data.HDD
-    db.request_queue.enable_service.default = vm_data.enable_service
+#     db.request_queue.enable_service.default = vm_data.enable_service
     db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
@@ -309,7 +314,8 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
     
-    form_fields = ['vm_name', 'RAM', 'vCPU', 'enable_service', 'public_ip', 'security_domain', 'purpose']
+    form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain', 'purpose']
+#     form_fields = ['vm_name', 'RAM', 'vCPU', 'enable_service', 'public_ip', 'security_domain', 'purpose']
     
     return SQLFORM(db.request_queue, fields = form_fields)
 

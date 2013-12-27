@@ -24,16 +24,16 @@ if auth.is_logged_in():
         (H2('USER MENU'),False, dict(_href='#', _id='menu_user')),
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
+        (T('Pending Requests'), False, URL('user','list_my_requests')),
         (T('My VMs'), False, URL('user','list_my_vm')),
         (T('My Tasks'), False, URL('user','list_my_task')),
         (T('Mail Admin'), False, URL('user','mail_admin'))
-#        (T('Report Bug'), False, URL('default','page_under_construction'))
         ]
     
     if (is_moderator() | is_orgadmin() | is_faculty()):
         response.faculty_menu = [
             (H2('FACULTY MENU'),False, dict(_href='#', _id='menu_faculty')),
-            (T('Pending Requests {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests'))
+            (T('Pending Approvals {'+str(len(get_pending_requests()))+'} '), False, URL('faculty','pending_requests'))
             ]
             
         if (is_moderator() | is_orgadmin()):
@@ -47,7 +47,7 @@ if auth.is_logged_in():
                 response.admin_menu = [
                     (H2('ADMIN MENU'),False, dict(_href='#', _id='menu_admin')),
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
-                    (T('Pending Requests {'+str(get_all_pending_vm_count())+'} '), False, URL('admin','list_all_pending_requests')),
+                    (T('All Pending Requests {'+str(get_all_pending_vm_count())+'} '), False, URL('admin','list_all_pending_requests')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
                     (T('Sanity Check'), False, URL('admin','sanity_check')),
@@ -55,6 +55,7 @@ if auth.is_logged_in():
                         (T('Configure Host'), False, URL('admin','host_details')),
                         (T('Configure Template'), False, URL('admin','manage_template')),
                         (T('Configure Datastore'), False, URL('admin','manage_datastore')),
-                        (T('Configure Security Domain'), False, URL('admin','manage_security_domain'))
+                        (T('Configure Security Domain'), False, URL('admin','manage_security_domain')),
+                        (T('Configure IP Pool'), False, URL('admin','manage_public_ip_pool'))
                         ])
                     ]

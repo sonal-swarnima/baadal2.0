@@ -283,3 +283,21 @@ def delete_host():
     delete_host_from_db(host_id)
     redirect(URL(c='admin', f='host_details'))
     
+@check_moderator
+@handle_exception
+def manage_public_ip_pool():
+    form = get_manage_ip_pool_form()
+    return dict(form=form)
+
+@check_moderator
+@handle_exception
+def validate_public_ip_range():
+    rangeFrom = request.vars['rangeFrom']
+    rangeTo = request.vars['rangeTo']
+    
+    from helper import validate_ip_range
+    if validate_ip_range(rangeFrom, rangeTo):
+        failed = add_public_ip_range(rangeFrom, rangeTo)
+        return str(failed)
+    else:
+        return '-1'

@@ -25,7 +25,7 @@ def get_config_file():
 
     import ConfigParser    
     config = ConfigParser.ConfigParser()
-    config.read(os.path.join(get_context_path(), 'static/config-db.cfg'));
+    config.read(os.path.join(get_context_path(), 'static/baadalapp.cfg'));
     return config
 
 def get_context_path():
@@ -37,12 +37,6 @@ def get_datetime():
     import datetime
     return datetime.datetime.now()
 
-
-def get_vm_template_config():
-    from xml.dom import minidom
-
-    xmldoc = minidom.parse(os.path.join(get_context_path(), 'static/vm_template_config.xml'))
-    return xmldoc
 
 def get_constant(constant_name):
     constant = current.db(current.db.constants.name == constant_name).select().first()['value']
@@ -61,6 +55,21 @@ def get_email(user_id):
     user = current.db.user[user_id]
     if user:
         return user.email
+    
+def is_valid_ipv4(value):
+    regex = re.compile(
+        '^(([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])\.){3}([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])$')
+    return regex.match(value)
+
+def validate_ip_range(ipFrom, ipTo):
+    
+    if is_valid_ipv4(ipFrom) and is_valid_ipv4(ipTo):
+        ip1 = ipFrom.split('.')
+        ip2 = ipTo.split('.')
+        if ip1[0] == ip2[0] and ip1[1] == ip2[1] and ip1[2] == ip2[2] and int(ip1[3]) < int(ip2[3]):
+            return True
+
+    return False
     
 class IS_MAC_ADDRESS(Validator):
     

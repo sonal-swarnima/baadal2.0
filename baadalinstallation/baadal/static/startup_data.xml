@@ -1,0 +1,86 @@
+<dataset>
+	<table name="user_group">
+		<row role="admin" description="Super User"/>
+		<row role="orgadmin" description="Organisation Level Admin"/>
+		<row role="faculty" description="Faculty User"/>
+		<row role="user" description="Normal User"/>
+	</table>
+	
+	<table name="organisation">
+		<row name="IITD" details="Indian Institude of Technology, Delhi"/>
+		<row name="IITB" details="Indian Institude of Technology, Mumbai"/>
+		<row name="DU" details="University of Delhi"/>
+	</table>
+	
+	<table name="vm_config">
+		<row template_id="0" HDD="40" CPU="1" RAM="1"/>
+		<row template_id="0" HDD="40" CPU="1" RAM="2"/>
+		<row template_id="0" HDD="40" CPU="2" RAM="2"/>
+		<row template_id="0" HDD="40" CPU="2" RAM="4"/>
+		<row template_id="0" HDD="40" CPU="4" RAM="4"/>
+		<row template_id="0" HDD="40" CPU="4" RAM="8"/>
+		<row template_id="0" HDD="40" CPU="8" RAM="8"/>
+		<row template_id="0" HDD="40" CPU="8" RAM="16"/>
+	</table>
+	
+	<table name="constants">
+		<row name="vmfiles_path" value="/mnt/testdatastore"/>
+		<row name="datastore_int" value="ds_"/>
+		<row name="vncport_range" value="20000"/>
+		<row name="templates_dir" value="vm_templates"/>
+		<row name="archives_dir" value="vm_archives"/>
+		<row name="vmcount" value="1"/>
+		<row name="vm_rrds_dir" value="vm_rrds"/>
+		<row name="graph_file_dir" value="/home/www-data/web2py/applications/baadal/static/images/vm_graphs/"/>
+		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
+		<row name="vms" value="/vms"/>
+	</table>
+
+	<table name="public_ip_pool">
+		<row public_ip="10.208.21.74"/>
+		<row public_ip="10.208.21.75"/>
+		<row public_ip="10.208.21.76"/>
+		<row public_ip="10.208.21.77"/>
+		<row public_ip="10.208.21.78"/>
+		<row public_ip="10.208.21.79"/>
+		<row public_ip="10.208.21.80"/>
+		<row public_ip="10.208.21.81"/>
+		<row public_ip="10.208.21.82"/>
+		<row public_ip="10.208.21.83"/>
+		<row public_ip="10.208.21.84"/>
+		<row public_ip="10.208.21.85"/>
+		<row public_ip="10.208.21.86"/>
+		<row public_ip="10.208.21.87"/>
+		<row public_ip="10.208.21.88"/>
+		<row public_ip="10.208.21.89"/>
+		<row public_ip="10.208.23.61"/>
+		<row public_ip="10.208.23.62"/>
+		<row public_ip="10.208.23.63"/>
+		<row public_ip="10.208.23.64"/>
+		<row public_ip="10.208.23.65"/>
+		<row public_ip="10.208.23.66"/>
+		<row public_ip="10.208.23.67"/>
+		<row public_ip="10.208.23.68"/>
+		<row public_ip="10.208.23.69"/>
+		<row public_ip="10.208.23.70"/>
+	</table>
+
+	<table name="vlan">
+		<row name="VLAN10" vlan_tag="vlan10" vlan_addr="10.20.10.0" />
+		<row name="VLAN20" vlan_tag="vlan20" vlan_addr="10.20.20.0" />
+		<row name="VLAN30" vlan_tag="vlan30" vlan_addr="10.20.30.0" />
+		<row name="VLAN40" vlan_tag="vlan40" vlan_addr="10.20.40.0" />
+	</table>
+
+	<table name="security_domain">
+		<row name="Research" vlan="1" visible_to_all="True" />
+	</table>
+
+	<table name="datastore">
+		<row ds_name="filer" ds_ip="10.208.21.111" path="/vol/baadalcse_test" username="root" password="dummy" used="1" capacity="1024"/>
+	</table>
+
+	<table name="template">
+		<row name="ubuntu-1204-desktop-amd64" os_type="Linux" arch="amd64" hdd="25" hdfile="ubuntu-1204-desktop-amd64.qcow2" type="QCOW2" datastore_id="1"/>
+	</table>
+</dataset>

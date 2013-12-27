@@ -58,7 +58,7 @@ def update_install_vm_request(vm_request, element):
         collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
     element['collaborators'] = collaborators
     element['public_ip'] = vm_request.public_ip; 
-    element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if len(vm_request.enable_service) != 0 else '-'; 
+#     element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if len(vm_request.enable_service) != 0 else '-'; 
     element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else '-';
     
     if vm_request.extra_HDD != 0:
@@ -89,8 +89,8 @@ def update_edit_config_request(vm_request, element):
 
     element['old_public_ip'] = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     element['public_ip'] = vm_request.public_ip
-    element['old_services_enabled'] = ', '.join(ser for ser in vm_data.enable_service) if vm_data.enable_service != None else '-';
-    element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if vm_request.enable_service != vm_data.enable_service else 'Same'
+#     element['old_services_enabled'] = ', '.join(ser for ser in vm_data.enable_service) if vm_data.enable_service != None else '-';
+#     element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if vm_request.enable_service != vm_data.enable_service else 'Same'
 
     element['old_security_domain'] = vm_data.security_domain.name if vm_data.security_domain != None else '-';
     if vm_request.security_domain == vm_data.security_domain: element['security_domain'] = 'Same'
