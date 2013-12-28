@@ -47,3 +47,19 @@ function ifconfig_down
     $ECHO_OK ifconfig $iface down
   fi
 }
+
+function ifconfig_null
+{
+  iface=$1
+
+  $ECHO_PROGRESS "ifconfig $iface 0.0.0.0 up"
+  ifconfig $iface 0.0.0.0 up 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER ifconfig $iface 0.0.0.0 up failed. Check logs.
+    exit 1
+  else
+    $ECHO_OK ifconfig $iface 0.0.0.0 up
+  fi
+}

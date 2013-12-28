@@ -45,3 +45,19 @@ function service_stop
 
   $ECHO_OK Service stopped $service
 }
+
+function network_restart
+{
+  service=$1
+  $ECHO_PROGRESS "Restarting Networking service"
+
+  $service restart 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER Failed to restart service $service. Check logs.
+    exit 1
+  else
+    $ECHO_OK Service restarted $service
+  fi  
+}

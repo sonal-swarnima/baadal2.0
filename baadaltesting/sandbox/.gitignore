@@ -6,4 +6,5 @@ logs/*
 temp/*
 *~
 wget*
+logs*
 *.swp

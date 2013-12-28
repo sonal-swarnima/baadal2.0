@@ -91,6 +91,7 @@ $(BIN_SWITCH_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-ex
 	chmod +x $(BIN_SWITCH_EXTERNAL)
 	cp $(SRC_DIR)/switch-external/openvswitch-switch $(BIN_DIR)/openvswitch-switch
 	cp $(SRC_DIR)/switch-external/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
+	cp $(SRC_DIR)/switch-external/switch-external-interfaces $(BIN_DIR)/switch-external-interfaces
 
 controller: $(BIN_CONTROLLER)
 	sudo $(BIN_CONTROLLER)

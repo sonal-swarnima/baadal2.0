@@ -32,6 +32,13 @@ function run
   service_start openvswitch-switch
 
   ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
+  ovsvsctl_add_port $OVS_BRIDGE_EXTERNAL $ETHERNET_IF
+  
+  file_backup $INTERFACES_DST
+  file_copy $OVS_EXTERNEL_CUSTOM_IFS $INTERFACES_DST
+  
+  ifconfig_null $ETHERNET_IF
+  network_restart $NETWORKING
 
   virsh_run "net-define $OVS_NET_XML_EXTERNAL"
   virsh_run "net-start $OVS_NET_EXTERNAL"

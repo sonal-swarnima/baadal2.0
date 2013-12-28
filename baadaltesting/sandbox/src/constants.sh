@@ -25,6 +25,7 @@ OVS_NET_XML=$BIN/ovs-net.xml
 OVS_BRIDGE_EXTERNAL=baadalbr0
 OVS_NET_EXTERNAL=ovs-net-external
 OVS_NET_XML_EXTERNAL=$BIN/ovs-net-external.xml
+OVS_EXTERNEL_CUSTOM_IFS=$BIN/switch-external-interfaces
 
 ROUTE_GW=10.209.0.1
 ROUTE_DEV_IP=10.209.0.4
@@ -36,6 +37,10 @@ ROUTE_DEV_IP_EXTERNAL=192.168.1.10
 ROUTE_NETMASK_EXTERNAL=255.255.255.0
 ROUTE_DEV_EXTERNAL=$OVS_BRIDGE_EXTERNAL
 
+#The default ethernet interface of the system running sandbox.
+ETHERNET_IF=eth0
+
+NETWORKING=/etc/init.d/networking
 INTERFACES_DST=/etc/network/interfaces
 
 NAT_DISK=$DISKS/nat.img
