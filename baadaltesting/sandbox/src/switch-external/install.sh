@@ -38,7 +38,7 @@ function run
   virsh_run "net-autostart $OVS_NET_EXTERNAL"
   #file_backup $INTERFACES_DST
 
-  ifconfig_ip $OVS_BRIDGE_EXTERNAL $ROUTE_DEV_IP_EXTERNAL $ROUTE_NETMASK_EXTERNAL
+#  ifconfig_ip $OVS_BRIDGE_EXTERNAL $ROUTE_DEV_IP_EXTERNAL $ROUTE_NETMASK_EXTERNAL
 }
 
 function libvirt_install
