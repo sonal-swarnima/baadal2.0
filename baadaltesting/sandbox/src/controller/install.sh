@@ -5,7 +5,7 @@ function run
   package_install qemu-kvm
   package_install virtinst
   disk_create $CONTROLLER_DISK ${CONTROLLER_SPACE}G
-  remaster_ubuntu $CONTROLLER_KICKSTART $CONTROLLER_ISO
+  remaster_ubuntu $CONTROLLER_KICKSTART $CONTROLLER_TRANSFER $CONTROLLER_ISO
 
   $ECHO_PROGRESS Installing OS
   virt-install \

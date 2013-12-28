@@ -16,6 +16,23 @@ function ifconfig_ip
   fi
 }
 
+#function for 'ifconfig dev 0'
+function ifconfig_noip
+{
+  iface=$1
+
+  $ECHO_PROGRESS "ifconfig $iface 0"
+  ifconfig $iface $ip 0 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER ifconfig $iface 0 failed. Check logs.
+    exit 1
+  else
+    $ECHO_OK ifconfig $iface 0
+  fi
+}
+
 function ifconfig_up
 {
   iface=$1

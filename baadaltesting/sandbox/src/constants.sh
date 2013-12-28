@@ -17,11 +17,15 @@ LOG_CLEAN="rm -f $LOGS/*"
 BRCOMPAT_SRC=$BIN/openvswitch-switch
 BRCOMPAT_DST=/etc/default/openvswitch-switch
 
+OVS_ETHERNET=eth0
+OVS_ETHERNET_GW=10.252.220.1
+
 #Update this in OVS_NET_XML too
 OVS_BRIDGE=baadalbr1
 OVS_NET=ovs-net
 OVS_NET_XML=$BIN/ovs-net.xml
 
+#Update this in OVS_NET_XML_EXTERNAL too
 OVS_BRIDGE_EXTERNAL=baadalbr0
 OVS_NET_EXTERNAL=ovs-net-external
 OVS_NET_XML_EXTERNAL=$BIN/ovs-net-external.xml
@@ -51,6 +55,7 @@ NAT_RAM=1024
 NAT_VCPUS=1
 NAT_ISO=$UTILS/ubuntu.nat.iso
 NAT_KICKSTART=$BIN/ks.nat.cfg
+NAT_TRANSFER=$BIN/transfer.nat/
 
 CONTROLLER_DISK=$DISKS/controller.img
 CONTROLLER_SPACE=5
@@ -60,6 +65,7 @@ CONTROLLER_RAM=1024
 CONTROLLER_VCPUS=1
 CONTROLLER_ISO=$UTILS/ubuntu.controller.iso
 CONTROLLER_KICKSTART=$BIN/ks.controller.cfg
+CONTROLLER_TRANSFER=$BIN/transfer.controller/
 
 FILER_DISK=$DISKS/filer.img
 FILER_SPACE=50
@@ -69,3 +75,4 @@ FILER_RAM=1024
 FILER_VCPUS=1
 FILER_ISO=$UTILS/ubuntu.filer.iso
 FILER_KICKSTART=$BIN/ks.filer.cfg
+FILER_TRANSFER=$BIN/transfer.filer/

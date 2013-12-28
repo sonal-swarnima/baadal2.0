@@ -4,7 +4,8 @@ function remaster_ubuntu
   $ECHO_PROGRESS "Remastering Ubuntu ISO for preseeding"
 
   kickstart=$1
-  iso_out=$2
+  transfer=$2
+  iso_out=$3
 
   cache_pwd=$PWD
 
@@ -25,6 +26,9 @@ function remaster_ubuntu
   cp $kickstart ks.cfg
   #cp ../ks.preseed .
  
+  mkdir transfer
+  cp -R $transfer transfer
+
   sed -i 's:--:ks=cdrom\:/ks.cfg --:g' isolinux/txt.cfg
   sed -i 's:^.*timeout.*$:timeout 10:g' isolinux/isolinux.cfg
 

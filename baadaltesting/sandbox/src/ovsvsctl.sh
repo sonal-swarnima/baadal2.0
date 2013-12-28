@@ -47,6 +47,19 @@ function ovsvsctl_add_port
   fi
 }
 
+# function for ovs-vsctl add-port
+function ovsvsctl_add_port_force
+{
+  bridge=$1
+  port=$2
+
+  $ECHO_PROGRESS "Adding port $port to bridge $bridge"
+
+  ovs-vsctl add-port $bridge $port 1>>$LOGS/log.out 2>>$LOGS/log.err
+
+  $ECHO_OK Port $port added to bridge $bridge
+}
+
 # function for ovs-vsctl del-br
 function ovsvsctl_del_br
 {
@@ -57,4 +70,17 @@ function ovsvsctl_del_br
   ovs-vsctl del-br $bridge 1>>$LOGS/log.out 2>>$LOGS/log.err
 
   $ECHO_OK Bridge deleted $bridge
+}
+
+# function for ovs-vsctl del-port
+function ovsvsctl_del_port
+{
+  bridge=$1
+  port=$2
+
+  $ECHO_PROGRESS "Deleting port $port"
+
+  ovs-vsctl del-port $bridge $port 1>>$LOGS/log.out 2>>$LOGS/log.err
+
+  $ECHO_OK Port deleted $port
 }

@@ -24,6 +24,7 @@ BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
+BIN_SWITCH_FIX = $(BIN_DIR)/fix_switch.sh
 
 $(BIN_DIR):
 	mkdir -p $@
@@ -59,6 +60,7 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	chmod +x $(BIN_CONTROLLER)
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
+	cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
 
 $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $(BIN_FILER)
@@ -67,6 +69,7 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	chmod +x $(BIN_FILER)
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
+	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
 
 $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $(BIN_NAT)
@@ -75,6 +78,7 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	chmod +x $(BIN_NAT)
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
+	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $(BIN_SWITCH)
@@ -91,7 +95,12 @@ $(BIN_SWITCH_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-ex
 	chmod +x $(BIN_SWITCH_EXTERNAL)
 	cp $(SRC_DIR)/switch-external/openvswitch-switch $(BIN_DIR)/openvswitch-switch
 	cp $(SRC_DIR)/switch-external/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
-	cp $(SRC_DIR)/switch-external/switch-external-interfaces $(BIN_DIR)/switch-external-interfaces
+
+$(BIN_SWITCH_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-fix
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-fix/*.sh > $(BIN_SWITCH_FIX)
+	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH_FIX)
+	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH_FIX)
+	chmod +x $(BIN_SWITCH_FIX)
 
 controller: $(BIN_CONTROLLER)
 	sudo $(BIN_CONTROLLER)
@@ -107,6 +116,9 @@ switch: $(BIN_SWITCH)
 
 switch-external: $(BIN_SWITCH_EXTERNAL)
 	sudo $(BIN_SWITCH_EXTERNAL)
+
+fix-switch: $(BIN_SWITCH_FIX)
+	sudo $(BIN_SWITCH_FIX)
 
 sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch switch-external nat controller filer
 

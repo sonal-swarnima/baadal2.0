@@ -32,20 +32,17 @@ function run
   service_start openvswitch-switch
 
   ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
-  ovsvsctl_add_port $OVS_BRIDGE_EXTERNAL $ETHERNET_IF
-  
-  file_backup $INTERFACES_DST
-  file_copy $OVS_EXTERNEL_CUSTOM_IFS $INTERFACES_DST
-  
-  ifconfig_null $ETHERNET_IF
-  network_restart $NETWORKING
+  ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
 
   virsh_run "net-define $OVS_NET_XML_EXTERNAL"
   virsh_run "net-start $OVS_NET_EXTERNAL"
   virsh_run "net-autostart $OVS_NET_EXTERNAL"
   #file_backup $INTERFACES_DST
 
-#  ifconfig_ip $OVS_BRIDGE_EXTERNAL $ROUTE_DEV_IP_EXTERNAL $ROUTE_NETMASK_EXTERNAL
+  ifconfig_noip $OVS_BRIDGE_EXTERNAL
+  ifconfig_noip $OVS_ETHERNET
+
+  route_add_net $ROUTE_GW 0.0.0.0 $OVS_BRIDGE
 }
 
 function libvirt_install
