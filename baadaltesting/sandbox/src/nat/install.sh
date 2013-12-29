@@ -20,6 +20,13 @@ function run
     --cdrom $NAT_ISO \
     --network network=$OVS_NET_EXTERNAL \
     --network network=$OVS_NET \
+    --noautoconsole \
     1>$LOGS/log.out 2>/$LOGS/log.err
-  $ECHO_OK NAT VM Created
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER NAT vm creation error. Check logs.
+  else
+    $ECHO_OK NAT vm created
+  fi
 }

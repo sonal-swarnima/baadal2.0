@@ -19,6 +19,13 @@ function run
     --disk path=$CONTROLLER_DISK,format=qcow2,size=$CONTROLLER_SPACE \
     --cdrom $CONTROLLER_ISO \
     --network network=$OVS_NET \
+    --noautoconsole \
     1>$LOGS/log.out 2>/$LOGS/log.err
-  $ECHO_OK Controller Created
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER Controller vm creation error. Check logs.
+  else
+    $ECHO_OK Controller vm created
+  fi
 }

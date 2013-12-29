@@ -16,9 +16,6 @@ function run
 
   ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
 
-  package_install aptitude
-  package_remove ebtables
-
   package_install openvswitch-datapath-lts-raring-dkms
   package_install openvswitch-datapath-lts-raring-source
 
@@ -34,10 +31,9 @@ function run
   ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
   ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
 
-  virsh_run "net-define $OVS_NET_XML_EXTERNAL"
-  virsh_run "net-start $OVS_NET_EXTERNAL"
-  virsh_run "net-autostart $OVS_NET_EXTERNAL"
-  #file_backup $INTERFACES_DST
+  virsh_force "net-define $OVS_NET_XML_EXTERNAL"
+  virsh_force "net-start $OVS_NET_EXTERNAL"
+  virsh_force "net-autostart $OVS_NET_EXTERNAL"
 
   ifconfig_noip $OVS_BRIDGE_EXTERNAL
   ifconfig_noip $OVS_ETHERNET

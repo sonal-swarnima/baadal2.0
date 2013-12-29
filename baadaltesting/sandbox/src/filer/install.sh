@@ -19,6 +19,13 @@ function run
     --disk path=$FILER_DISK,format=qcow2,size=$FILER_SPACE \
     --cdrom $FILER_ISO \
     --network network=$OVS_NET \
+    --noautoconsole \
     1>$LOGS/log.out 2>/$LOGS/log.err
-  $ECHO_OK Filer Created
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER Filer vm creation error. Check logs.
+  else
+    $ECHO_OK Filer vm created
+  fi
 }

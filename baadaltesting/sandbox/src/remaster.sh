@@ -12,9 +12,9 @@ function remaster_ubuntu
   cd $UTILS
 
   mkdir -p iso
-  mount -o ro,loop $UBUNTU iso
+  mount -o ro,loop $UBUNTU iso 1>>$LOGS/log.out 2>>$LOGS/log.err
 
-  mkdir -p ubuntuiso
+  mkdir -p ubuntuiso 1>>$LOGS/log.out 2>>$LOGS/log.err
   cp -rT iso ubuntuiso
 
   umount iso
@@ -31,6 +31,7 @@ function remaster_ubuntu
 
   sed -i 's:--:ks=cdrom\:/ks.cfg --:g' isolinux/txt.cfg
   sed -i 's:^.*timeout.*$:timeout 10:g' isolinux/isolinux.cfg
+  sed -i '1id-i netcfg/disable_autoconfig boolean true' preseed/ubuntu-server.seed
 
   cd ..
   rm -f $iso_out
