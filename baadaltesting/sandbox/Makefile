@@ -26,6 +26,7 @@ BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
 BIN_SWITCH_FIX = $(BIN_DIR)/fix_switch.sh
+BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
 
 IP_NAT = 10.209.0.1
 IP_CONTROLLER = 10.209.0.2
@@ -59,7 +60,7 @@ ubuntu: $(UBUNTU)
 libvirt: $(LIBVIRT)
 
 
-$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $(BIN_CONTROLLER)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_CONTROLLER)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_CONTROLLER)
@@ -67,8 +68,10 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
 	cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
+	mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
+	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
 
-$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu
+$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $(BIN_FILER)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_FILER)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_FILER)
@@ -76,8 +79,10 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
+	mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
+	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
 
-$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu
+$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $(BIN_NAT)
 	sed -i '1i#!/bin/$(SHELL)' $(BIN_NAT)
 	sed -i '$$a$(RUN_COMMAND)' $(BIN_NAT)
@@ -85,6 +90,8 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
 	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
+	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
+	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
 
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $(BIN_SWITCH)
@@ -126,7 +133,7 @@ switch-external: $(BIN_SWITCH_EXTERNAL)
 fix-switch: $(BIN_SWITCH_FIX)
 	sudo $(BIN_SWITCH_FIX)
 
-sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch switch-external nat controller filer
+sandbox: switch switch-external nat controller filer
 
 config: clean-config
 	mkdir -p $(CONFIG_DIR)
@@ -138,6 +145,35 @@ config: clean-config
 	ln -s ../$(SRC_DIR)/switch-external/ovs-net-external.xml $(CONFIG_DIR)/ovs-net-external.xml
 	ln -s ../$(SRC_DIR)/nat/transfer/etc/iptables.conf $(CONFIG_DIR)/nat.iptables.conf
 	ln -s ../$(SRC_DIR)/nat/transfer/etc/network/interfaces $(CONFIG_DIR)/nat.interfaces
+
+$(BIN_DIR)/id_rsa.sandbox.pub: ~/.ssh/id_rsa
+	cp $<.pub $@
+	cat $<.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+
+$(BIN_DIR)/id_rsa.controller:
+	ssh-keygen -q -f $@ -N '' -C 'baadal-controller'
+	cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+
+$(BIN_DIR)/id_rsa.filer:
+	ssh-keygen -q -f $@ -N '' -C 'baadal-filer'
+	cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+
+$(BIN_DIR)/id_rsa.nat:
+	ssh-keygen -q -f $@ -N '' -C 'baadal-nat'
+	cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+
+~/.ssh/id_rsa:
+	ssh-keygen -q -f $@ -N ''
+
+keygen-ssh-sandbox: $(BIN_DIR)/id_rsa.sandbox.pub
+
+keygen-ssh-controller: $(BIN_DIR)/id_rsa.controller
+
+keygen-ssh-filer: $(BIN_DIR)/id_rsa.filer
+
+keygen-ssh-nat: $(BIN_DIR)/id_rsa.nat
+
+keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-filer keygen-ssh-nat
 
 ssh-nat:
 	ssh baadal@$(IP_NAT)
