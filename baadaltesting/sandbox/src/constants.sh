@@ -18,7 +18,6 @@ BRCOMPAT_SRC=$BIN/openvswitch-switch
 BRCOMPAT_DST=/etc/default/openvswitch-switch
 
 OVS_ETHERNET=eth0
-OVS_ETHERNET_GW=10.252.220.1
 
 #Update this in OVS_NET_XML too
 OVS_BRIDGE=baadalbr1
@@ -35,9 +34,6 @@ ROUTE_GW=10.209.0.1
 ROUTE_DEV_IP=10.209.0.4
 ROUTE_NETMASK=255.255.0.0
 ROUTE_DEV=$OVS_BRIDGE
-
-NETWORKING=/etc/init.d/networking
-INTERFACES_DST=/etc/network/interfaces
 
 NAT_DISK=$DISKS/nat.img
 NAT_SPACE=5
