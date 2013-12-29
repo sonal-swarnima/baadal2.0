@@ -4,6 +4,7 @@ utils/*
 ubuntu*
 logs/*
 temp/*
+config.ln/*
 *~
 wget*
 logs*

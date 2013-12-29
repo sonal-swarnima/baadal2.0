@@ -8,21 +8,37 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0 inet static
-  address 10.252.221.58
-  netmask 255.255.254.0
-  network 10.252.220.0
-  broadcast 10.252.221.255
-  gateway 10.252.220.1
-	dns-nameservers 10.10.1.2
+address 10.252.221.58
+netmask 255.255.254.0
+network 10.252.220.0
+broadcast 10.252.221.255
+gateway 10.252.220.1
+# dns-* options are implemented by the resolvconf package, if installed
+dns-nameservers 10.10.1.2
+
+auto eth0:sandbox
+iface eth0:sandbox inet static
+address 10.252.221.59
+netmask 255.255.254.0
+
+auto eth0:controller
+iface eth0:controller inet static
+address 10.252.221.60
+netmask 255.255.254.0
+
+auto eth0:filer
+iface eth0:filer inet static
+address 10.252.221.61
+netmask 255.255.254.0
 
 # The primary network interface
 auto eth1
 iface eth1 inet static
-	address 10.209.0.1
-	netmask 255.255.0.0
-	network 10.209.0.0
-  # we want eth0 to be the default network with gateway
-	broadcast 10.209.255.255
-	# gateway 10.209.0.1 -- adding this will set eth1 as the default network with gateway
-	# dns-* options are implemented by the resolvconf package, if installed
+address 10.209.0.1
+netmask 255.255.0.0
+network 10.209.0.0
+broadcast 10.209.255.255
+# gateway 10.209.0.1
+# dns-* options are implemented by the resolvconf package, if installed
+dns-nameservers 10.10.1.2
 post-up iptables-restore < /etc/iptables.conf

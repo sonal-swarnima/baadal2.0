@@ -4,6 +4,7 @@ UTILS_DIR = utils
 LOGS_DIR = logs
 DISKS_DIR = disks
 TEMP_DIR = temp
+CONFIG_DIR = config.ln
 
 SHELL = bash
 
@@ -25,6 +26,11 @@ BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
 BIN_SWITCH_FIX = $(BIN_DIR)/fix_switch.sh
+
+IP_NAT = 10.209.0.1
+IP_CONTROLLER = 10.209.0.2
+IP_FILER = 10.209.0.3
+IP_SANDBOX = 10.209.0.4
 
 $(BIN_DIR):
 	mkdir -p $@
@@ -122,6 +128,29 @@ fix-switch: $(BIN_SWITCH_FIX)
 
 sandbox: $(BIN_SWITCH) $(BIN_CONTROLLER) $(BIN_FILER) switch switch-external nat controller filer
 
+config: clean-config
+	mkdir -p $(CONFIG_DIR)
+	ln -s ../$(SRC_DIR)/constants.sh $(CONFIG_DIR)/constants.sh
+	ln -s ../$(SRC_DIR)/controller/ks.cfg $(CONFIG_DIR)/controller.ks.cfg
+	ln -s ../$(SRC_DIR)/filer/ks.cfg $(CONFIG_DIR)/filer.ks.cfg
+	ln -s ../$(SRC_DIR)/nat/ks.cfg $(CONFIG_DIR)/nat.ks.cfg
+	ln -s ../$(SRC_DIR)/switch/ovs-net.xml $(CONFIG_DIR)/ovs-net.xml
+	ln -s ../$(SRC_DIR)/switch-external/ovs-net-external.xml $(CONFIG_DIR)/ovs-net-external.xml
+	ln -s ../$(SRC_DIR)/nat/transfer/etc/iptables.conf $(CONFIG_DIR)/nat.iptables.conf
+	ln -s ../$(SRC_DIR)/nat/transfer/etc/network/interfaces $(CONFIG_DIR)/nat.interfaces
+
+ssh-nat:
+	ssh baadal@$(IP_NAT)
+
+ssh-conroller:
+	ssh baadal@$(IP_CONTROLLER)
+
+ssh-filer:
+	ssh baadal@$(IP_FILER)
+
+clean-config:
+	rm -rf $(CONFIG_DIR)
+
 clean-controller:
 	sudo virsh destroy baadal_controller || true
 	sudo virsh undefine baadal_controller || true
@@ -155,5 +184,5 @@ clean: clean-controller clean-filer clean-nat
 	sudo rm -rf $(LOGS_DIR)
 	sudo rm -rf $(DISKS_DIR)
 
-cleanall: clean
+cleanall: clean clean-config
 	sudo rm -rf $(UTILS_DIR)
