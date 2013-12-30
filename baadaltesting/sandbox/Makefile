@@ -7,10 +7,11 @@ TEMP_DIR = temp
 CONFIG_DIR = config.ln
 
 SHELL = bash
-
 RUN_COMMAND = run
 
 DIR_BAADAL_INSTALLATION = ../../baadalinstallation
+
+HOST_ID = 0
 
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
 UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-alternate-amd64.iso
@@ -25,6 +26,7 @@ LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.0.0.tar.gz
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
+BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
 BIN_NET_EXTERNAL = $(BIN_DIR)/net_external.sh
@@ -98,6 +100,12 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
 
+$(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
+
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
@@ -134,6 +142,9 @@ filer: $(BIN_FILER)
 
 nat: $(BIN_NAT)
 	sudo $<
+
+host: $(BIN_HOST)
+	sudo HOST_ID=$(HOST_ID) $<
 
 switch: $(BIN_SWITCH)
 	sudo $<
@@ -227,6 +238,12 @@ clean-nat:
 	sudo rm -rf $(BIN_DIR)/transfer.nat
 	sudo rm -f $(UTILS_DIR)/ubunt.nat.iso
 	sudo rm -f $(DISKS_DIR)/nat.img
+
+clean-host:
+	sudo virsh destroy baadal_host_$(HOST_ID) || true
+	sudo virsh undefine baadal_host_$(HOST_ID) || true
+	sudo rm -f $(BIN_HOST)
+	sudo rm -f $(DISKS_DIR)/host.$(HOST_ID).img
 
 clean-switch:
 
