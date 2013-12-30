@@ -26,7 +26,6 @@ function remaster_ubuntu
   cp $kickstart ks.cfg
   #cp ../ks.preseed .
  
-  mkdir transfer
   cp -R $transfer transfer
 
   sed -i 's:--:ks=cdrom\:/ks.cfg --:g' isolinux/txt.cfg

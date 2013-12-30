@@ -25,7 +25,8 @@ BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
-BIN_SWITCH_FIX = $(BIN_DIR)/fix_switch.sh
+BIN_NET_EXTERNAL = $(BIN_DIR)/net_external.sh
+BIN_NET_FIX = $(BIN_DIR)/fix_net.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
 
 IP_NAT = 10.209.0.1
@@ -61,10 +62,10 @@ libvirt: $(LIBVIRT)
 
 
 $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $(BIN_CONTROLLER)
-	sed -i '1i#!/bin/$(SHELL)' $(BIN_CONTROLLER)
-	sed -i '$$a$(RUN_COMMAND)' $(BIN_CONTROLLER)
-	chmod +x $(BIN_CONTROLLER)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
 	cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
@@ -72,10 +73,10 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
 
 $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $(BIN_FILER)
-	sed -i '1i#!/bin/$(SHELL)' $(BIN_FILER)
-	sed -i '$$a$(RUN_COMMAND)' $(BIN_FILER)
-	chmod +x $(BIN_FILER)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
@@ -83,10 +84,10 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
 
 $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $(BIN_NAT)
-	sed -i '1i#!/bin/$(SHELL)' $(BIN_NAT)
-	sed -i '$$a$(RUN_COMMAND)' $(BIN_NAT)
-	chmod +x $(BIN_NAT)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
 	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
@@ -94,44 +95,53 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
 
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $(BIN_SWITCH)
-	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH)
-	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH)
-	chmod +x $(BIN_SWITCH)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 	cp $(SRC_DIR)/switch/openvswitch-switch $(BIN_DIR)/openvswitch-switch
 	cp $(SRC_DIR)/switch/ovs-net.xml $(BIN_DIR)/ovs-net.xml
 
 $(BIN_SWITCH_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-external libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-external/*.sh > $(BIN_SWITCH_EXTERNAL)
-	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH_EXTERNAL)
-	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH_EXTERNAL)
-	chmod +x $(BIN_SWITCH_EXTERNAL)
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-external/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 	cp $(SRC_DIR)/switch-external/openvswitch-switch $(BIN_DIR)/openvswitch-switch
 	cp $(SRC_DIR)/switch-external/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
 
-$(BIN_SWITCH_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-fix
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-fix/*.sh > $(BIN_SWITCH_FIX)
-	sed -i '1i#!/bin/$(SHELL)' $(BIN_SWITCH_FIX)
-	sed -i '$$a$(RUN_COMMAND)' $(BIN_SWITCH_FIX)
-	chmod +x $(BIN_SWITCH_FIX)
+$(BIN_NET_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-external libvirt
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-external/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
+
+$(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-fix/*.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 
 controller: $(BIN_CONTROLLER)
-	sudo $(BIN_CONTROLLER)
+	sudo $<
 
 filer: $(BIN_FILER)
-	sudo $(BIN_FILER)
+	sudo $<
 
 nat: $(BIN_NAT)
-	sudo $(BIN_NAT)
+	sudo $<
 
 switch: $(BIN_SWITCH)
-	sudo $(BIN_SWITCH)
+	sudo $<
 
 switch-external: $(BIN_SWITCH_EXTERNAL)
-	sudo $(BIN_SWITCH_EXTERNAL)
+	sudo $<
 
-fix-switch: $(BIN_SWITCH_FIX)
-	sudo $(BIN_SWITCH_FIX)
+net-external: $(BIN_NET_EXTERNAL)
+	sudo $<
+
+fix-net: $(BIN_NET_FIX)
+	sudo $<
 
 sandbox: switch switch-external nat controller filer
 
@@ -192,6 +202,7 @@ clean-controller:
 	sudo virsh undefine baadal_controller || true
 	sudo rm -f $(BIN_CONTROLLER)
 	sudo rm -f $(BIN_DIR)/ks.controller.cfg
+	sudo rm -rf $(BIN_DIR)/transfer.controller
 	sudo rm -f $(UTILS_DIR)/ubuntu.controller.iso
 	sudo rm -f $(DISKS_DIR)/controller.img
 
@@ -200,14 +211,16 @@ clean-filer:
 	sudo virsh undefine baadal_filer || true
 	sudo rm -f $(BIN_FILER)
 	sudo rm -f $(BIN_DIR)/ks.filer.cfg
+	sudo rm -rf $(BIN_DIR)/transfer.filer
 	sudo rm -f $(UTILS_DIR)/ubunt.filer.iso
 	sudo rm -f $(DISKS_DIR)/filer.img
 
 clean-nat:
 	sudo virsh destroy baadal_nat || true
 	sudo virsh undefine baadal_nat || true
-	sudo rm -f $(BIN_FILER)
+	sudo rm -f $(BIN_NAT)
 	sudo rm -f $(BIN_DIR)/ks.nat.cfg
+	sudo rm -rf $(BIN_DIR)/transfer.nat
 	sudo rm -f $(UTILS_DIR)/ubunt.nat.iso
 	sudo rm -f $(DISKS_DIR)/nat.img
 
@@ -216,6 +229,9 @@ clean-switch:
 clean-switch-external:
 
 clean: clean-controller clean-filer clean-nat
+	sudo umount $(UTILS_DIR)/iso || true
+	sudo rm -rf $(UTILS_DIR)/iso
+	sudo rm -rf $(UTILS_DIR)/ubuntuiso
 	sudo rm -rf $(BIN_DIR)
 	sudo rm -rf $(LOGS_DIR)
 	sudo rm -rf $(DISKS_DIR)

@@ -29,16 +29,10 @@ function run
   service_start openvswitch-switch
 
   ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
-  ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
 
   virsh_force "net-define $OVS_NET_XML_EXTERNAL"
   virsh_force "net-start $OVS_NET_EXTERNAL"
   virsh_force "net-autostart $OVS_NET_EXTERNAL"
-
-  ifconfig_noip $OVS_BRIDGE_EXTERNAL
-  ifconfig_noip $OVS_ETHERNET
-
-  route_add_net $ROUTE_GW 0.0.0.0 $OVS_BRIDGE
 }
 
 function libvirt_install
