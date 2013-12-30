@@ -10,6 +10,8 @@ SHELL = bash
 
 RUN_COMMAND = run
 
+DIR_BAADAL_INSTALLATION = ../../baadalinstallation
+
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
 UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-alternate-amd64.iso
 UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-alternate-amd64.iso
@@ -71,6 +73,7 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
 	mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
+	cp -R $(DIR_BAADAL_INSTALLATION) $(BIN_DIR)/transfer.controller/baadal
 
 $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
