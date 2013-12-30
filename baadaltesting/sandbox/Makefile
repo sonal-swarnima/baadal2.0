@@ -74,6 +74,7 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
 	cp -R $(DIR_BAADAL_INSTALLATION) $(BIN_DIR)/transfer.controller/baadal
+	cp $(UBUNTU) $(BIN_DIR)/transfer.controller/baadal
 
 $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@

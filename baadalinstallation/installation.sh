@@ -1,6 +1,6 @@
 ################################ FILE CONSTANTS USED ###########################
 
-Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inted tftpd-hpa dhcp3-server apache2 apt-mirror)
+Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -206,7 +206,7 @@ Instl_Pkgs()
 						skip_pkg_installation=1
 					
 					fi
-
+        fi
 			fi
 				
 			if test $skip_pkg_installation -eq 0; then
@@ -524,7 +524,7 @@ echo -e $final_interfaces_string >> interfaces_file
 cp $BASE_PATH/sources.list sources.list
 sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' sources.list
 
-cp $BASE_PATH/host_installation.sh host_installation
+cp $BASE_PATH/host_installation.sh host_installation.sh
 sed -i -e 's/PORTGROUPS/'"$PORTGROUP_STRING"'/g' host_installation.sh
 sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g/' host_installation.sh
 
@@ -538,10 +538,23 @@ Configure_Local_Ubuntu_Repo()
 {
 
 if test $LOCAL_REPO_FLAG -eq 1; then
-	mkdir /var/local_rep
-	sed -i -e 's/^/^#/g' /etc/apt/mirror.list
-	echo -e "set base_path\t/var/local_rep\nset nthreads\t5\nset _tilde 0\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntupartner precise partner\ndeb-amd64 http://repo.iitd.ernet.in/ubuntupartner precise partner" >> /etc/apt/mirror.list
-	apt-mirror
+  echo "deb http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse
+  deb-src http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse
+
+  deb http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse
+  deb-src http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse
+
+  deb http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse
+  deb-src http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse
+
+  deb http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse
+  deb-src http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse
+
+  deb http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse
+  deb-src http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse
+
+  deb http://repo.iitd.ernet.in/ubuntupartner precise partner
+  deb-src http://repo.iitd.ernet.in/ubuntupartner precise partner" > /etc/apt/sources.list
 fi
 
 
@@ -600,7 +613,6 @@ Enbl_Modules()
 	
 	Configure_Tftp
 	Configure_Dhcp_Pxe
-	Configure_Local_Ubuntu_Repo
 
 }
 
@@ -725,8 +737,10 @@ source installation.cfg
 
 Chk_Root_Login
 
+Configure_Local_Ubuntu_Repo
+
 apt-get update
-apt-get upgrade
+DEBIAN_FRONTEND=noninteractive apt-get upgrade
 
 Instl_Pkgs
 Setup_Web2py
