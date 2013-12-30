@@ -4,6 +4,7 @@ function run
   #package_update_db
   package_install qemu-kvm
   package_install virtinst
+  package_install virt-manager
   disk_create $CONTROLLER_DISK ${CONTROLLER_SPACE}G
   remaster_ubuntu $CONTROLLER_KICKSTART $CONTROLLER_TRANSFER $CONTROLLER_ISO
 
