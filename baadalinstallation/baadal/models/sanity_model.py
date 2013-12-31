@@ -7,6 +7,7 @@ if 0:
 ###################################################################################
 import libvirt
 from libvirt import *  # @UnusedWildImport
+from lxml import etree
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,
@@ -74,7 +75,7 @@ def check_sanity():
                             
                         vm_list.append(vm.vm_name)
                             
-                    else:
+                    elif vm_state != VIR_DOMAIN_SHUTOFF:
                         vmcheck.append({'host':host.host_name,
                                         'host_id':host.id,
                                         'vmname':dom.name(),
@@ -125,23 +126,58 @@ def delete_orhan_vm(vm_name, host_id):
     logger.debug(vm_name + " is deleted successfully.")
 
 
-#To be implemented
 def add_orhan_vm(vm_name, host_id):
-    from xml.dom import minidom
 
     host_details = db.host[host_id]
     connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip + "/system")
     domain = connection_object.lookupByName(vm_name)
-    raw_xml = domain.XMLDesc(0)
-    xml = minidom.parseString(raw_xml)
-    mac_elem = xml.getElementsByTagName('mac')[0]
-    mac_address = mac_elem.getAttribute('address')
-    if mac_address in MAC_PRIVATE_IP_POOL:
-        ip_address = MAC_PRIVATE_IP_POOL[mac_address]
+    vm_state = domain.info()[0]
+    vm_status = vm_state_map[vm_state]    
+    root = etree.fromstring(domain.XMLDesc(0))
+
+    ram_elem = root.xpath('memory')[0]
+    ram_in_kb = int(ram_elem.text)
+    ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
+
+    cpu_elem = root.xpath('vcpu')[0]
+    cpu = int(cpu_elem.text)
+
+    vnc_elem = root.xpath("devices/graphics[@type='vnc']")[0]
+    vnc_port = vnc_elem.attrib['port']
+    
+    mac_elem = root.xpath("devices/interface[@type='bridge']/mac")[0]
+    mac_address = mac_elem.attrib['address']
+
+    ip_addr = db(db.private_ip_pool.mac_addr == mac_address).select(db.private_ip_pool.private_ip)
+    ip_address = '127.0.0.1'
+    if ip_addr:
+        ip_address = ip_addr.first()['private_ip']
+    
+    template_elem = root.xpath("devices/disk[@type='file']/source")[0]
+    template_file = template_elem.attrib['file']
+    
+    command = "qemu-img info " + template_file + " | grep 'virtual size'"
+    ret = execute_command(host_details.host_ip, 'root',command) # Returns e.g. virtual size: 40G (42949672960 bytes)
+    hdd = int(ret[ret.index(':')+1:ret.index('G ')].strip())
+
+    db.vm_data.insert(
+        vm_name = vm_name, 
+        RAM = ram_in_gb,
+        HDD = hdd,
+        extra_HDD = 0,
+        vCPU = cpu,
+        host_id = host_id,
+        template_id = 1,
+        owner_id = -1,
+        requester_id = -1,
+        private_ip = ip_address,
+        mac_addr_1 = mac_address,
+        vnc_port = vnc_port,
+        purpose = 'Added by System',
+        status = vm_status)
         
     return
 
-#To be implemented
 def delete_vm_info(vm_name):
 
     vm_details = db(db.vm_data.vm_name == vm_name).select().first()

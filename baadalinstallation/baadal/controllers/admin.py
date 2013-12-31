@@ -286,7 +286,7 @@ def delete_host():
 @check_moderator
 @handle_exception
 def manage_public_ip_pool():
-    form = get_manage_ip_pool_form()
+    form = get_manage_public_ip_pool_form()
     return dict(form=form)
 
 @check_moderator
@@ -301,3 +301,10 @@ def validate_public_ip_range():
         return str(failed)
     else:
         return '-1'
+
+@check_moderator
+@handle_exception
+def manage_private_ip_pool():
+    form = get_manage_private_ip_pool_form()
+    return dict(form=form)
+

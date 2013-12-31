@@ -1,0 +1,54 @@
+{{extend 'layout.html'}}
+
+<h2 class="subtitle">{{=T('Manage Public IP Pool')}}</h2>
+{{=form}}
+
+<script>
+jQuery(document).ready(function(){
+	$('<span>Add New Public IP</span>').insertAfter($('.icon-plus'));
+    range_check()
+});
+
+jQuery('#public_ip_pool_range').click(function(){
+    range_check()
+});
+
+function range_check() {
+	var _value=$('#public_ip_pool_range').is(':checked');
+	if (_value != 'undefined'){
+		$('#public_ip_pool_rangeFrom').prop('disabled', !_value);
+		$('#public_ip_pool_rangeTo').prop('disabled', !_value);
+		$('#public_ip_pool_public_ip').prop('disabled', _value);
+	}
+}
+
+jQuery('form').submit(function(){
+	var _value=$('#public_ip_pool_range').is(':checked');
+	if (_value){
+		$('#public_ip_pool_public_ip').val('');
+
+	    var add_ip_url = "{{=URL('validate_public_ip_range')}}";
+	    var rangeFrom = $('#public_ip_pool_rangeFrom').val();
+	    var rangeTo = $('#public_ip_pool_rangeTo').val();
+
+	    jQuery.post(add_ip_url, {rangeFrom:rangeFrom,rangeTo:rangeTo},
+	        function(result){
+	            if(result == '-1'){
+	                jQuery('.flash').html('Enter valid IP range!').slideDown();
+	            }else
+	            {
+					$('#public_ip_pool_rangeFrom').val('');
+					$('#public_ip_pool_rangeTo').val('');
+					if(result == '0'){
+		                jQuery('.flash').html('Success!').slideDown();
+					}else{
+		                jQuery('.flash').html(result + ' IP(s) from the range already present. Rest added successfully!').slideDown();
+					}
+	            }
+	        }
+	    );
+		return false;
+	}
+});
+
+</script>

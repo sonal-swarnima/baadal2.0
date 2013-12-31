@@ -35,7 +35,7 @@ def get_vm_link(row):
         return A(vm_data.vm_name, _href=URL(r=request, c='user',f='settings', args=vm_data.id))
 
 
-def get_manage_ip_pool_form():
+def get_manage_public_ip_pool_form():
     db.public_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
     db.public_ip_pool.vm_id.readable=False
 
@@ -54,6 +54,17 @@ def get_manage_ip_pool_form():
                                         INPUT(_name='rangeTo', _id='public_ip_pool_rangeTo')),TD()))
         
         grid.create_form.process()
+
+    return grid
+
+def get_manage_private_ip_pool_form():
+    db.private_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
+    db.private_ip_pool.vm_id.readable=False
+
+    default_sort_order=[db.private_ip_pool.id]
+
+    #Creating the grid object
+    grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Assigned to', body=get_vm_link)], csv=False, searchable=False, details=False, showbuttontext=False)
 
     return grid
 

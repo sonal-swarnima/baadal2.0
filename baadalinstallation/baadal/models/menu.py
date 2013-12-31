@@ -56,6 +56,7 @@ if auth.is_logged_in():
                         (T('Configure Template'), False, URL('admin','manage_template')),
                         (T('Configure Datastore'), False, URL('admin','manage_datastore')),
                         (T('Configure Security Domain'), False, URL('admin','manage_security_domain')),
-                        (T('Configure IP Pool'), False, URL('admin','manage_public_ip_pool'))
+                        (T('Configure Private IP Pool'), False, URL('admin','manage_private_ip_pool')),
+                        (T('Configure Public IP Pool'), False, URL('admin','manage_public_ip_pool'))
                         ])
                     ]

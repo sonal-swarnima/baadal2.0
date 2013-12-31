@@ -13,8 +13,9 @@ __all__ =['enqueue_vm_request','get_mail_admin_form','send_email_to_admin','get_
             'handle_exception','get_full_name','delete_user_vm_access','update_vm_lock','get_request_vm_form','logger','get_manage_template_form',
             'get_add_host_form','get_manage_datastore_form','get_configuration_elem','set_configuration_elem','get_create_vm_form','add_vm_task_to_queue',
             'add_vm_users','add_to_cost','get_all_vm_list','get_task_list','get_all_pending_vm_count','send_remind_faculty_email','send_email_to_user',
-            'get_attach_extra_disk_form','vm_has_snapshots','is_snapshot_request_in_queue','get_security_domain_form', 'get_manage_ip_pool_form',
-            'get_request_info','get_request_status','get_segregated_requests','updte_host_status','delete_host_from_db', 'add_public_ip_range']
+            'get_attach_extra_disk_form','vm_has_snapshots','is_snapshot_request_in_queue','get_security_domain_form', 'get_manage_public_ip_pool_form',
+            'get_request_info','get_request_status','get_segregated_requests','updte_host_status','delete_host_from_db', 'add_public_ip_range', 
+            'get_manage_private_ip_pool_form', 'execute_command']
 
 if 0:
     from admin_model import *
