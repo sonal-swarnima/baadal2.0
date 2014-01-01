@@ -48,6 +48,7 @@ if auth.is_logged_in():
                     (H2('ADMIN MENU'),False, dict(_href='#', _id='menu_admin')),
                     (T('All VM''s'), False, URL('admin','list_all_vm')),
                     (T('All Pending Requests {'+str(get_all_pending_vm_count())+'} '), False, URL('admin','list_all_pending_requests')),
+                    (T('VM Utilization'), False, URL('admin','vm_utilization')),
                     (T('Host and VMs'), False, URL('admin','hosts_vms')),
                     (T('Tasks'), False, URL('admin','task_list')),
                     (T('Sanity Check'), False, URL('admin','sanity_check')),

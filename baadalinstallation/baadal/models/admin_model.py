@@ -432,3 +432,31 @@ def updte_host_status(host_id, status):
     
 def delete_host_from_db(host_id):
     del db.host[host_id]
+    
+def get_util_period_form():
+    
+    _dict = {VM_UTIL_24_HOURS : 'Last 24 hours' , 
+             VM_UTIL_ONE_WEEK : 'Last One Week',
+             VM_UTIL_ONE_MNTH : 'Last One Month',
+             VM_UTIL_ONE_YEAR : 'Last One Year'}
+    
+    form = FORM(TR("Show:", 
+           SELECT(_name='util_period', _id='period_select_id',
+           *[OPTION(_dict[key], _value=str(key)) for key in _dict.keys()]), 
+            A(SPAN(_class='icon-refresh'), _onclick = '$(this).closest(\'form\').submit()', _href='#')))
+    return form
+
+def get_vm_util_data(util_period):
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    vmlist = []
+    for vm in vms:
+        util_result = fetch_rrd_data(vm.vm_name, util_period)
+        element = {'vm_id' : vm.id,
+                   'vm_name' : vm.vm_name,
+                   'memory' : util_result[0],
+                   'cpu' : util_result[1],
+                   'network' : util_result[2],
+                   'disk' : util_result[3]}
+        vmlist.append(element)
+    return vmlist
+        

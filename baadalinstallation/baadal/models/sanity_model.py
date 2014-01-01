@@ -174,6 +174,7 @@ def add_orhan_vm(vm_name, host_id):
         mac_addr_1 = mac_address,
         vnc_port = vnc_port,
         purpose = 'Added by System',
+        security_domain = 1,
         status = vm_status)
         
     return

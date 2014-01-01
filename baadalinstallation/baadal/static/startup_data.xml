@@ -116,7 +116,7 @@
 	</table>
 
 	<table name="security_domain">
-		<row name="Research" vlan="1" visible_to_all="True" />
+		<row id="1" name="Research" vlan="1" visible_to_all="True" />
 	</table>
 
 	<table name="datastore">

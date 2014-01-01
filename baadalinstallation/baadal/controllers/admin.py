@@ -308,3 +308,17 @@ def manage_private_ip_pool():
     form = get_manage_private_ip_pool_form()
     return dict(form=form)
 
+@check_moderator
+@handle_exception
+def vm_utilization():
+
+    form = get_util_period_form()
+    util_period = VM_UTIL_24_HOURS
+    form.vars.util_period = util_period
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        util_period = int(form.vars.util_period)
+    
+    vm_util_data = get_vm_util_data(util_period)
+    
+    return dict(vm_util_data=vm_util_data, form=form)

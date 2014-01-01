@@ -1,0 +1,45 @@
+{{extend 'layout.html'}}
+<div style="text-align:right;padding-right:40px">
+{{=form}}
+</div>
+
+{{if len(vm_util_data) == 0:}}
+<h3>No Pending Requests</h3>
+    {{else:}}
+	
+	<h2 class="subtitle" id="pageUtilHeader"></h2>
+
+    <table id="sortTable1" class="tablesorter">
+    <thead>
+      <tr>
+        <th>VM Name</th>
+        <th>Memory</th>
+        <th>CPU</th>
+        <th>Network</th>
+        <th>Disk</th>
+      </tr> 
+      </thead>
+      <tbody>
+      {{for util_data in vm_util_data:}}
+       <tr>
+       		<td>{{=A(util_data['vm_name'],_href=URL(r=request, c='user',f='show_vm_performance', args=[util_data['vm_id']]))}}</td>
+            <td>{{=util_data['memory']}}</td>
+            <td>{{=util_data['cpu']}}</td>
+            <td>{{=util_data['network']}}</td>
+            <td>{{=util_data['disk']}}</td>
+          </tr>
+      {{pass}}
+	</tbody>
+    </table>
+{{pass}}
+<script>
+
+jQuery(document).ready(function(){
+    jQuery("#sortTable1").tablesorter();
+
+    var _header = $('#pageUtilHeader');
+	if (_header != 'undefined'){
+        _header.html('VM Utilization Data for ' + $('#period_select_id option:selected').text());
+	}
+});
+</script>

@@ -112,5 +112,9 @@ MINUTES = 60 * SECONDS
 HOURS = 60 * MINUTES
 DAYS = 24 * HOURS
 
+VM_UTIL_24_HOURS = 1
+VM_UTIL_ONE_WEEK = 2
+VM_UTIL_ONE_MNTH = 3
+VM_UTIL_ONE_YEAR = 4
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
