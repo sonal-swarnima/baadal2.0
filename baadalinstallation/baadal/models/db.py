@@ -297,7 +297,7 @@ db.define_table('public_ip_pool',
     Field('vm_id', db.vm_data, writable = False))
 
 db.define_table('private_ip_pool',
-    Field('private_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE)]),
-    Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=IS_MAC_ADDRESS()),
+    Field('private_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]),
+    Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=[IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')]),
     Field('vlan', db.vlan, notnull = True),
     Field('vm_id', db.vm_data, writable = False))
