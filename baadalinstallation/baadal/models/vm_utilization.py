@@ -158,9 +158,9 @@ def fetch_rrd_data(vm_name, period=VM_UTIL_24_HOURS):
             if row[nwr_idx] != None: nwr_data.append(float(row[nwr_idx]))
             if row[nww_idx] != None: nww_data.append(float(row[nww_idx]))
     
-    return (sum(mem_data)/float(len(mem_data)), 
-            sum(cpu_data)/float(len(cpu_data)), 
-            sum(dskr_data)/float(len(dskr_data)),
-            sum(dskw_data)/float(len(dskw_data)),
-            sum(nwr_data)/float(len(nwr_data)),
-            sum(nww_data)/float(len(nww_data)))
+    return (sum(mem_data)/float(len(mem_data)) if len(mem_data) > 0 else 0, 
+            sum(cpu_data)/float(len(cpu_data)) if len(cpu_data) > 0 else 0, 
+            sum(dskr_data)/float(len(dskr_data)) if len(dskr_data) > 0 else 0,
+            sum(dskw_data)/float(len(dskw_data)) if len(dskw_data) > 0 else 0,
+            sum(nwr_data)/float(len(nwr_data)) if len(nwr_data) > 0 else 0,
+            sum(nww_data)/float(len(nww_data)) if len(nww_data) > 0 else 0)

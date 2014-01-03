@@ -159,7 +159,7 @@ def add_to_cost(vm_id):
     return totalcost
 
 def get_full_name(user_id):
-    return get_fullname(user_id)
+    return get_fullname(user_id) if user_id > 0 else 'System User'
 
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
