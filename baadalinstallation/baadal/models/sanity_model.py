@@ -170,7 +170,7 @@ def add_orhan_vm(vm_name, host_id):
         owner_id = -1,
         requester_id = -1,
         private_ip = ip_address,
-        mac_addr_1 = mac_address,
+        mac_addr = mac_address,
         vnc_port = vnc_port,
         purpose = 'Added by System',
         security_domain = 1,
