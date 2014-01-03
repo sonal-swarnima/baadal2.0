@@ -378,6 +378,7 @@ def get_vm_snapshots(vm_id):
                          SNAPSHOT_DAILY : 'Daily',
                          SNAPSHOT_WEEKLY : 'Weekly',
                          SNAPSHOT_MONTHLY : 'Monthly'}
+        
         snapshot_dict['type'] = snapshot_type[snapshot.type]
         snapshot_dict['name'] = snapshot.snapshot_name
         snapshot_dict['delete'] = ' '

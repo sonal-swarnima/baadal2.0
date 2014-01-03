@@ -453,10 +453,12 @@ def get_vm_util_data(util_period):
         util_result = fetch_rrd_data(vm.vm_name, util_period)
         element = {'vm_id' : vm.id,
                    'vm_name' : vm.vm_name,
-                   'memory' : util_result[0],
-                   'cpu' : util_result[1],
-                   'network' : util_result[2],
-                   'disk' : util_result[3]}
+                   'memory' : round(util_result[0], 2),
+                   'cpu' : round(util_result[1], 2),
+                   'diskr' : round(util_result[2], 2),
+                   'diskw' : round(util_result[3], 2),
+                   'nwr' : round(util_result[4], 2),
+                   'nww' : round(util_result[5], 2)}
         vmlist.append(element)
     return vmlist
         

@@ -143,7 +143,7 @@ def fetch_rrd_data(vm_name, period=VM_UTIL_24_HOURS):
 #         time_info = rrd_ret[0]
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2]
-        cpu_idx = fld_info.index('cputime')
+        cpu_idx = fld_info.index('cpuusage')
         mem_idx = fld_info.index('memory')
         dskr_idx = fld_info.index('diskr')
         dskw_idx = fld_info.index('diskw')
@@ -151,14 +151,16 @@ def fetch_rrd_data(vm_name, period=VM_UTIL_24_HOURS):
         nww_idx = fld_info.index('nww')
         
         for row in data_info:
-            cpu_data.append(float(row[cpu_idx]) if row[cpu_idx] != None else 0)
-            mem_data.append(float(row[mem_idx]) if row[mem_idx] != None else 0)
-            dskr_data.append(float(row[dskr_idx]) if row[dskr_idx] != None else 0)
-            dskw_data.append(float(row[dskw_idx]) if row[dskw_idx] != None else 0)
-            nwr_data.append(float(row[nwr_idx]) if row[nwr_idx] != None else 0)
-            nww_data.append(float(row[nww_idx]) if row[nww_idx] != None else 0)
+            if row[cpu_idx] != None: cpu_data.append(float(row[cpu_idx])) 
+            if row[mem_idx] != None: mem_data.append(float(row[mem_idx]))
+            if row[dskr_idx] != None: dskr_data.append(float(row[dskr_idx]))
+            if row[dskw_idx] != None: dskw_data.append(float(row[dskw_idx]))
+            if row[nwr_idx] != None: nwr_data.append(float(row[nwr_idx]))
+            if row[nww_idx] != None: nww_data.append(float(row[nww_idx]))
     
     return (sum(mem_data)/float(len(mem_data)), 
             sum(cpu_data)/float(len(cpu_data)), 
             sum(dskr_data)/float(len(dskr_data)),
-            sum(nwr_data)/float(len(nwr_data)))
+            sum(dskw_data)/float(len(dskw_data)),
+            sum(nwr_data)/float(len(nwr_data)),
+            sum(nww_data)/float(len(nww_data)))

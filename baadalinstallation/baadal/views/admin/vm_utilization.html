@@ -15,8 +15,10 @@
         <th>VM Name</th>
         <th>Memory</th>
         <th>CPU</th>
-        <th>Network</th>
-        <th>Disk</th>
+        <th>Network Read</th>
+        <th>Network Write</th>
+        <th>Disk Read</th>
+        <th>Disk Write</th>
       </tr> 
       </thead>
       <tbody>
@@ -24,9 +26,11 @@
        <tr>
        		<td>{{=A(util_data['vm_name'],_href=URL(r=request, c='user',f='show_vm_performance', args=[util_data['vm_id']]))}}</td>
             <td>{{=util_data['memory']}}</td>
-            <td>{{=util_data['cpu']}}</td>
-            <td>{{=util_data['network']}}</td>
-            <td>{{=util_data['disk']}}</td>
+            <td>{{=util_data['cpu']}}%</td>
+            <td>{{=util_data['diskr']}}</td>
+            <td>{{=util_data['diskw']}}</td>
+            <td>{{=util_data['nwr']}}</td>
+            <td>{{=util_data['nww']}}</td>
           </tr>
       {{pass}}
 	</tbody>

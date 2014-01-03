@@ -20,169 +20,202 @@ import helper
 
 from xml.etree import ElementTree
 
+TIME_DIFF_MS = 300
+
 def create_rrd(rrd_file):
 
-	ret = rrdtool.create( rrd_file, "--start", str(int(time.time())),
-		"DS:cputime:GAUGE:300:0:U",
-		"DS:memory:GAUGE:300:0:U",
-		"DS:diskr:GAUGE:300:0:U",
-		"DS:diskw:GAUGE:300:0:U",
-		"DS:nwr:GAUGE:300:0:U",
-		"DS:nww:GAUGE:300:0:U",
-		"DS:cpus:GAUGE:300:0:U", 
-		"RRA:MIN:0:1:525600",
-		"RRA:AVERAGE:0:12:43800",
-		"RRA:AVERAGE:0:2016:261",
-		"RRA:AVERAGE:0:43200:61",
-		"RRA:AVERAGE:0:105120:5")
-	
-	if ret:
-		logger.warn(rrdtool.error())	
+    ret = rrdtool.create( rrd_file, "--start", str(int(time.time())),
+        "DS:cputime:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:cpuusage:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:memory:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:diskr:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:diskw:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:nwr:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:nww:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:cpus:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "RRA:MIN:0:1:525600",
+        "RRA:AVERAGE:0:12:43800",
+        "RRA:AVERAGE:0:2016:261",
+        "RRA:AVERAGE:0:43200:61",
+        "RRA:AVERAGE:0:105120:5")
+    
+    if ret:
+        logger.warn(rrdtool.error())    
 
-
-	logger.info("RRD Created")
+    logger.info("RRD Created")
 
 def get_dom_mem_usage(dom_name, host):
-	logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
-	
-	import paramiko
-	ssh = paramiko.SSHClient()
-	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	ssh.connect(host, username='root', password='')
-	cmd = "ps aux | grep '\-name " + dom_name + " -uuid'"
-	stdin, stdout, stderr = ssh.exec_command(cmd)
-	output = stdout.readlines()
-	ssh.close()
+    logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
+    
+    import paramiko
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, username='root', password='')
+    cmd = "ps aux | grep '\-name " + dom_name + " -uuid'"
+    stdin, stdout, stderr = ssh.exec_command(cmd)
+    output = stdout.readlines()
+    ssh.close()
 
-	if len(output) == 3:
-		return int(re.split('\s+', output[0])[5])
-	else:
-		logger.warn("Unable to fetch memory usage details for dom %s" % (dom_name))
+    if len(output) == 3:
+        return int(re.split('\s+', output[0])[5])
+    else:
+        logger.warn("Unable to fetch memory usage details for dom %s" % (dom_name))
 
 def get_dom_nw_usage(dom_obj):
 
-	tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
-	nwr = 0
-	nww = 0
+    tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
+    nwr = 0
+    nww = 0
 
-	for target in tree.findall("devices/interface/target"):
-		device = target.get("dev")
-		stats  = dom_obj.interfaceStats(device)
-		nwr   += stats[0]
-		nww   += stats[4]
+    for target in tree.findall("devices/interface/target"):
+        device = target.get("dev")
+        stats  = dom_obj.interfaceStats(device)
+        nwr   += stats[0]
+        nww   += stats[4]
 
-	logger.info("%s%s" % (nwr, nww))
+    logger.info("%s%s" % (nwr, nww))
 
-	return [nwr, nww]
+    return [nwr, nww]
 
 def get_dom_disk_usage(dom_obj):
 
-	tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
-	bytesr = 0
-	bytesw = 0
-	rreq  = 0
-	wreq  = 0
+    tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
+    bytesr = 0
+    bytesw = 0
+    rreq  = 0
+    wreq  = 0
 
-	for target in tree.findall("devices/disk/target"):
+    for target in tree.findall("devices/disk/target"):
 
-       		device = target.get("dev")
-		stats  = dom_obj.blockStats(device)
-		rreq   += stats[0]
-		bytesr += stats[1]
-		wreq   += stats[2]
-		bytesw += stats[3]
-	
-	logger.info("rreq: %s bytesr: %s wreq: %s bytesw: %s" % (rreq, bytesr, wreq, bytesw))
+        device = target.get("dev")
+        stats  = dom_obj.blockStats(device)
+        rreq   += stats[0]
+        bytesr += stats[1]
+        wreq   += stats[2]
+        bytesw += stats[3]
+    
+    logger.info("rreq: %s bytesr: %s wreq: %s bytesw: %s" % (rreq, bytesr, wreq, bytesw))
 
-	return [bytesr, bytesw]
+    return [bytesr, bytesw]
 
 def get_dom_info(dom_id, host_ip, conn):
-	dom		= conn.lookupByID(dom_id)
-	dom_name	= dom.name()
-	dom_info	= dom.info()
-	dom_status	= dom_info[0]
-	dom_maxmem	= dom_info[1]
-#	dom_memused	= dom_info[2]       Python libvirt unable to fetch correct memory usage details of a domain
-	dom_cpus	= dom_info[3]
-	dom_cputime	= dom_info[4]
-	dom_memusage	= get_dom_mem_usage(dom_name, host_ip)
-	dom_nw_usage	= get_dom_nw_usage(dom)
-	dom_nwr		= dom_nw_usage[0]
-	dom_nww		= dom_nw_usage[1]
-	dom_disk_usage	= get_dom_disk_usage(dom)
-	dom_diskr	= dom_disk_usage[0]
-	dom_diskw	= dom_disk_usage[1]
+    dom            = conn.lookupByID(dom_id)
+    dom_name       = dom.name()
+    dom_info       = dom.info()
+    dom_status     = dom_info[0]
+    dom_maxmem     = dom_info[1]
+#    dom_memused    = dom_info[2]       Python libvirt unable to fetch correct memory usage details of a domain
+    dom_cpus       = dom_info[3]
+    dom_cputime    = dom_info[4]
+    dom_memusage   = get_dom_mem_usage(dom_name, host_ip)
+    dom_nw_usage   = get_dom_nw_usage(dom)
+    dom_nwr        = dom_nw_usage[0]
+    dom_nww        = dom_nw_usage[1]
+    dom_disk_usage = get_dom_disk_usage(dom)
+    dom_diskr      = dom_disk_usage[0]
+    dom_diskw      = dom_disk_usage[1]
 
+    logger.info(dom_name)
+    logger.warn("As we get VM mem usage info from rrs size of the process running on host therefore it is observed that the memused is sometimes greater than max mem specified in case when the VM uses memory near to its mam memory")
 
-	logger.info(dom_name)
-	logger.warn("As we get VM mem usage info from rrs size of the process running on host therefore it is observed that the memused is sometimes greater than max mem specified in case when the VM uses memory near to its mam memory")
-
-	return [dom_name, dom_maxmem, dom_memusage, dom_cputime, dom_cpus, dom_nwr, dom_nww, dom_diskr, dom_diskw]
+    return [dom_name, dom_maxmem, dom_memusage, dom_cputime, dom_cpus, dom_nwr, dom_nww, dom_diskr, dom_diskw]
 
 def get_rrd_file_abs_path(dom_name):
         return helper.get_constant('vmfiles_path') + os.sep + helper.get_constant('vm_rrds_dir') + os.sep + dom_name + ".rrd"
 
+def calculate_cpu_usage(rrd_file, time_now, cputime, n_cores):
+    
+    logger.debug('time_now: '+ str(time_now))
+    rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', 'now-%s'%(str(TIME_DIFF_MS*2)))
+    time_info = rrd_ret[0]
+    logger.debug('time_info: '+ str(time_info))
+    data_info = rrd_ret[2]
+    logger.debug('data_info: '+ str(data_info))
+    cputime1 = data_info[0][0]
+    logger.debug('cputime1: '+ str(cputime1))
+    logger.debug('n_cores: '+ str(n_cores))
+
+    if cputime1 == None: return 0
+    
+    cpu_time_diff = cputime - cputime1
+    time_diff = time_now - time_info[0]
+    
+    logger.debug('time_diff: '+ str(time_diff))
+    
+    cpu_usage = 100 * cpu_time_diff / (time_diff * n_cores * 1000000000)
+    logger.debug('cpu_usage: '+ str(cpu_usage))
+    
+    return cpu_usage
+
 @handle_exception
 def update_rrd():
 
-	active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
-	logger.debug(active_host_list)
-
-	for host in active_host_list:
-
-		conn = None
-		try:
-			host_ip = host['host_ip']
-			conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
-			logger.debug(conn.getHostname())
-			
-			active_dom_ids = conn.listDomainsID()
-			logger.debug(active_dom_ids)
-			for dom_id in active_dom_ids:
-
-			   try:
-	
-				dom_info = get_dom_info(dom_id, host_ip, conn)			
-				logger.info(dom_info)
-				rrd_file = get_rrd_file_abs_path(dom_info[0])
-	
-				if not (os.path.exists(rrd_file)):
-					logger.warn("RRD file does not exists")
-					logger.warn("Creating new RRD file")
-					create_rrd(rrd_file)
-					time.sleep(1)
-
-
-				print str(dom_info[2])
-
-				ret = rrdtool.update(rrd_file, str(int(time.time())) + ":" + str(dom_info[3]) + ":" + str(dom_info[2]) + ":" + str(dom_info[7]) + ":" + str(dom_info[8]) + ":" + str(dom_info[5]) + ":" + str(dom_info[6]) + ":" + str(dom_info[4]) )
-
-				if ret:
-					logger.warn("Error while Updating %s.rrd" % (dom_info[0]))
-					logger.warn(rrdtool.error())
-				else:
-					logger.info("rrd updated successfully.")
-			   except:
-				import sys, traceback
-				etype, value, tb = sys.exc_info()
-				logger.warn("Error occured while creating/updating rrd.")
-				msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-				logger.error(msg)
-				pass
-
-		except:
-			import sys, traceback
-			etype, value, tb = sys.exc_info()
-			logger.warn("Error occured while creating/updating rrd or host.")
-			msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
-			logger.error(msg)           
-			pass
-		finally: 
-			if conn:
-				conn.close()
+    active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
+    logger.debug(active_host_list)
+    
+    for host in active_host_list:
+    
+        conn = None
+        try:
+            host_ip = host['host_ip']
+            conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
+            logger.debug(conn.getHostname())
+            
+            active_dom_ids = conn.listDomainsID()
+            logger.debug(active_dom_ids)
+            for dom_id in active_dom_ids:
+            
+                try:
+                
+                    dom_info = get_dom_info(dom_id, host_ip, conn)
+                    timestamp_now = int(time.time())
+                    logger.info(dom_info)
+                    rrd_file = get_rrd_file_abs_path(dom_info[0])
+                    
+                    if not (os.path.exists(rrd_file)):
+                        logger.warn("RRD file does not exists")
+                        logger.warn("Creating new RRD file")
+                        create_rrd(rrd_file)
+                        time.sleep(1)
+                    
+                    print str(dom_info[2])
+                    
+                    cpu_usage = calculate_cpu_usage(rrd_file, timestamp_now, dom_info[3], dom_info[4])
+                    ret = rrdtool.update(rrd_file, 
+                                str(timestamp_now) + ":" + 
+                                str(dom_info[3]) + ":" + 
+                                str(cpu_usage) + ":" + 
+                                str(dom_info[2]) + ":" + 
+                                str(dom_info[7]) + ":" + 
+                                str(dom_info[8]) + ":" + 
+                                str(dom_info[5]) + ":" + 
+                                str(dom_info[6]) + ":" + 
+                                str(dom_info[4]) )
+                    
+                    if ret:
+                        logger.warn("Error while Updating %s.rrd" % (dom_info[0]))
+                        logger.warn(rrdtool.error())
+                    else:
+                        logger.info("rrd updated successfully.")
+                except:
+                    import sys, traceback
+                    etype, value, tb = sys.exc_info()
+                    logger.warn("Error occured while creating/updating rrd.")
+                    msg = ''.join(traceback.format_exception(etype, value, tb, 10))
+                    logger.error(msg)
+                    pass
+            
+        except:
+            import sys, traceback
+            etype, value, tb = sys.exc_info()
+            logger.warn("Error occured while creating/updating rrd or host.")
+            msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
+            logger.error(msg)           
+            pass
+        finally: 
+            if conn:
+                conn.close()
 
 
 if __name__=="__main__":
-	update_rrd()
-
-
+    update_rrd()
