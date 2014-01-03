@@ -159,7 +159,7 @@ def add_orhan_vm(vm_name, host_id):
     ret = execute_command(host_details.host_ip, 'root',command) # Returns e.g. virtual size: 40G (42949672960 bytes)
     hdd = int(ret[ret.index(':')+1:ret.index('G ')].strip())
 
-    db.vm_data.insert(
+    vm_id = db.vm_data.insert(
         vm_name = vm_name, 
         RAM = ram_in_gb,
         HDD = hdd,
@@ -176,6 +176,7 @@ def add_orhan_vm(vm_name, host_id):
         security_domain = 1,
         status = vm_status)
         
+    db.private_ip_pool[ip_addr.id] = dict(vm_id=vm_id)
     return
 
 def delete_vm_info(vm_name):
