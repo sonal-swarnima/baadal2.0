@@ -503,7 +503,7 @@ done
 
 echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 sed -i -e 's/option\ domain-name\ /#\ option\ domain-name\ /g' /etc/dhcp/dhcpd.conf
-sed -i -e 's/ns1.example.org,\ ns2.example.org/$CONTROLLER_IP/g' /etc/dhcp/dhcpd.conf
+sed -i -e 's/ns1.example.org,\ ns2.example.org/'"$CONTROLLER_IP"'/g' /etc/dhcp/dhcpd.conf
 sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"eth0\"/g' /etc/default/isc-dhcp-server
 
 /etc/init.d/isc-dhcp-server restart
