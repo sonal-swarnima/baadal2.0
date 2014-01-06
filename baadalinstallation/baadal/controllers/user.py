@@ -206,7 +206,6 @@ def clone_vm():
 
     vm_id = request.args[0]
     form = get_clone_vm_form(vm_id)
-#     if form.accepts(request.vars,session, onvalidation=clone_vm_validation):
     if form.accepts(request.vars,session):
         session.flash = "Your request has been sent for approval."
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))

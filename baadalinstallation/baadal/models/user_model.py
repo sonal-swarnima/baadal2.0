@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db,auth,request
+    from gluon import db,auth,request,response
     import gluon
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
@@ -101,6 +101,7 @@ def get_request_status():
     return status
     
 def request_vm_validation(form):
+    
     set_configuration_elem(form)
     form.vars.status = get_request_status()
 
@@ -118,7 +119,22 @@ def request_vm_validation(form):
         for vm_user in vm_users[1:-1].split('|'):
             user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
     form.vars.collaborators = user_list
+
+    user_list.append(form.vars.owner_id)
+    user_list.append(auth.user.id)
+
+    vms = db((db.vm_data.id == db.user_vm_map.vm_id) &
+             (db.user_vm_map.user_id.belongs(user_list))).select(db.vm_data.vm_name)
     
+    if vms.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
+        form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
+
+    requests = db((db.request_queue.owner_id.belongs(user_list)) |
+             (db.request_queue.requester_id.belongs(user_list))).select(db.request_queue.vm_name)
+    
+    if requests.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
+        form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
+        
 
 def add_faculty_approver(form):
 
@@ -156,7 +172,6 @@ def add_security_domain(form):
 def get_request_vm_form():
     
     form_fields = ['vm_name','template_id','extra_HDD','purpose', 'public_ip']
-#     form_fields = ['vm_name','template_id','extra_HDD','purpose', 'enable_service', 'public_ip']
 
     db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
     db.request_queue.requester_id.default = auth.user.id

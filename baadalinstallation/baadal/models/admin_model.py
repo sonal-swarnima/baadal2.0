@@ -133,6 +133,13 @@ def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
+def get_vm_identity(vm_name, owner_id):
+    vm_owner = db.user[owner_id]
+    
+    vm_identity = '%s_%s_%s'%(vm_owner.organisation_id.name, vm_owner.username, vm_name)
+    
+    return vm_identity
+
 def create_clone_task(req_data, params):
 
     clone_count = req_data.clone_count
@@ -151,6 +158,7 @@ def create_clone_task(req_data, params):
         
         clone_vm_id = db.vm_data.insert(
                           vm_name = clone_vm_name, 
+                          vm_identity = get_vm_identity(clone_vm_name, vm_data.owner_id), 
                           RAM = vm_data.RAM,
                           HDD = vm_data.HDD,
                           extra_HDD = vm_data.extra_HDD,
@@ -176,6 +184,7 @@ def create_install_task(req_data, params):
 
     vm_id = db.vm_data.insert(
                   vm_name = req_data.vm_name, 
+                  vm_identity = get_vm_identity(req_data.vm_name, req_data.owner_id), 
                   RAM = req_data.RAM,
                   HDD = req_data.HDD,
                   extra_HDD = req_data.extra_HDD,
@@ -264,9 +273,10 @@ def get_task_by_status(task_status, task_num):
 
 def update_task_retry(_task_id):
     #Mark status for VM as 'In Queue'
-    db(db.vm_data.id.belongs(db(
-        (db.task_queue.id == _task_id) & db.task_queue.task_type == TASK_TYPE_CREATE_VM)
-                             ._select(db.task_queue.vm_id))).update(status = VM_STATUS_IN_QUEUE)
+    task_queue_data = db.task_queue[_task_id]
+    if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
+        db.task_queue[_task_id] = dict(status=VM_STATUS_IN_QUEUE)
+
     #Mark current task event for the task as IGNORE. 
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
     #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task
@@ -462,7 +472,7 @@ def get_vm_util_data(util_period):
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     vmlist = []
     for vm in vms:
-        util_result = fetch_rrd_data(vm.vm_name, util_period)
+        util_result = fetch_rrd_data(vm.vm_identity, util_period)
         element = {'vm_id' : vm.id,
                    'vm_name' : vm.vm_name,
                    'memory' : round(util_result[0], 2),

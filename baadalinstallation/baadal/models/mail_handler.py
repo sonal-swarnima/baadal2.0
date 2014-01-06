@@ -23,12 +23,14 @@ def send_mail(to_address, email_subject, email_template, context, reply_to_addre
     context['userName'] = (auth.user.first_name + ' ' + auth.user.last_name) 
     email_message = email_template.format(context)
     push_email(to_address, email_subject, email_message, reply_to_address)
+
     
 def push_email(to_address, email_subject, email_message, reply_to_address):
-    if not reply_to_address:
-        mail.send(to=to_address, subject=email_subject, message = email_message)
-    else:
-        mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
+    if config.getboolean("MAIL_CONF","mail_active"):
+        if not reply_to_address:
+            mail.send(to=to_address, subject=email_subject, message = email_message)
+        else:
+            mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
 
 
 def send_email_to_faculty(faculty_id, vm_name, vm_request_time):

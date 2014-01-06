@@ -37,7 +37,6 @@ mail.settings.sender = config.get("MAIL_CONF","mail_sender")
 mail.settings.login = config.get("MAIL_CONF","mail_login")
 mail.settings.tls = True
 
-
 #added to make auth and db objects available in modules 
 from gluon import current  # @Reimport
 current.auth = auth
@@ -156,7 +155,7 @@ db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s
 
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-#     Field('vm_identity', 'string', length = 255, notnull = True, unique = True),
+    Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
@@ -215,7 +214,7 @@ db.define_table('user_vm_map',
 db.define_table('vm_data_event',
     Field('vm_id', 'integer'),
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-#     Field('vm_identity', 'string', length = 255, notnull = True, unique = True),
+    Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),

@@ -103,7 +103,7 @@ def get_private_ip_mac(security_domain_id):
         return(private_ip_pool.private_ip, private_ip_pool.mac_addr)
     else:
         sd = current.db.security_domain[security_domain_id]
-        raise Exception(("Available MACs are exhausted for security domain '%s'."%(sd.name)))
+        raise Exception(("Available MACs are exhausted for security domain '%s'." % sd.name))
 
 # Chooses mac address, ip address and vncport for a vm to be installed
 def choose_mac_ip(vm_properties):
@@ -184,8 +184,8 @@ def create_vm_image(vm_details, datastore):
 
     # Creates a directory for the new vm
     current.logger.debug("Creating vm directory...")
-    if not os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name):
-        os.makedirs(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name)
+    if not os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity):
+        os.makedirs(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity)
     else:
         raise Exception("Directory with same name as vmname already exists.")
 
@@ -198,7 +198,7 @@ def create_vm_image(vm_details, datastore):
     command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + \ 
                           datastore.path + '/' + get_constant("templates_dir") + '/tmp'
     """
-    vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name + '/' + vm_details.vm_name + '.qcow2'
+    vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
 
     current.logger.debug("Copy in progress...")
     rcode = os.system('cp %s %s' % (template_location, vm_image_location))
@@ -227,7 +227,7 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
         variant_command = ' --os-variant=' + template.arch 
     
     install_command = 'virt-install \
-                     --name=' + vm_details.vm_name + ' \
+                     --name=' + vm_details.vm_identity + ' \
                      --ram=' + str(vm_properties['ram']) + ' \
                      --vcpus=' + str(vm_properties['vcpus']) + optional + variant_command + ' \
                      --disk path=' + vm_image_location + format_command + bus + ' \
@@ -298,9 +298,9 @@ def serve_extra_disk_request(vm_details, disk_size, host_ip):
     current.logger.debug("Starting to serve extra disk request...")
     datastore = choose_datastore()
     already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
-    disk_name = vm_details.vm_name + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
+    disk_name = vm_details.vm_identity + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
 
-    if (attach_disk(vm_details.vm_name, disk_name, disk_size, host_ip, datastore, already_attached_disks)):
+    if (attach_disk(vm_details.vm_identity, disk_name, disk_size, host_ip, datastore, already_attached_disks)):
         current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size) 
         return True
     else:
@@ -344,8 +344,8 @@ def check_if_vm_defined(hostip, vmname):
 # Frees vm properties
 def free_vm_properties(vm_details):
 
-    if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name):
-        shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name)
+    if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity):
+        shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity)
     return
     
 
@@ -399,7 +399,7 @@ def create_NAT_IP_mapping(action, public_ip, private_ip):
     nat_ip = config.get("GENERAL_CONF","nat_ip")
     nat_user = config.get("GENERAL_CONF","nat_user")
     nat_password = config.get("GENERAL_CONF","nat_password")
-    nat_script = config.get("GENERAL_CONF","nat_script")
+    nat_script = config.get("GENERAL_CONF","nat_script_path")
     
     command = "sh %s %s %s %s"%(nat_script, action, public_ip, private_ip)
     
@@ -427,7 +427,7 @@ def install(parameters):
             attach_disk_status_message = launch_vm_on_host(vm_details, vm_image_location, vm_properties)       
 
             # Checking if vm has been installed successfully
-            assert(check_if_vm_defined(vm_properties['host'].host_ip, vm_details.vm_name)), "VM is not installed. Check logs."
+            assert(check_if_vm_defined(vm_properties['host'].host_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
 
             if vm_properties['public_ip_req']:
                 create_NAT_IP_mapping('add', vm_properties['public_ip'], vm_properties['private_ip'])
@@ -438,7 +438,7 @@ def install(parameters):
             message = "VM is installed successfully." + attach_disk_status_message
 
             #send email to requesting user on successful VM creation
-            #send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_name, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+            #send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_identity, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:            
@@ -455,10 +455,10 @@ def start(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.create()
         current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_RUNNING)  
-        message = vm_details.vm_name + " is started successfully."
+        message = vm_details.vm_identity + " is started successfully."
         current.logger.debug(message) 
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -472,10 +472,10 @@ def suspend(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.suspend()
         current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_SUSPENDED)       
-        message = vm_details.vm_name + " is suspended successfully." 
+        message = vm_details.vm_identity + " is suspended successfully." 
         current.logger.debug(message)       
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -489,10 +489,10 @@ def resume(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.resume()
         current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_RUNNING) 
-        message = vm_details.vm_name + " is resumed successfully."
+        message = vm_details.vm_identity + " is resumed successfully."
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -507,10 +507,10 @@ def destroy(parameters):
     current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.destroy()
         current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_SHUTDOWN) 
-        message = vm_details.vm_name + " is destroyed successfully."
+        message = vm_details.vm_identity + " is destroyed successfully."
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -525,17 +525,17 @@ def clean_up_database_after_vm_deletion(vm_details):
     # moving vm image folder to archives folder
     if not os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('archives_dir')):
             os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('archives_dir'))
-    source_file = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name
-    archive_filename = vm_details.vm_name + str(get_datetime())
+    source_file = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity
+    archive_filename = vm_details.vm_identity + str(get_datetime())
     current.logger.debug(archive_filename)
     destination_file = get_constant('vmfiles_path') + '/' + get_constant('archives_dir') + '/' + archive_filename
     shutil.move(source_file, destination_file)
 
     # removing hdd        
     if os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + vm_details.datastore_id.ds_name \
-                          + "/" + vm_details.vm_name):
+                          + "/" + vm_details.vm_identity):
         shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + vm_details.datastore_id.ds_name \
-                          + "/" + vm_details.vm_name)
+                          + "/" + vm_details.vm_identity)
 
     # updating the count of guest vms on host
     count = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
@@ -573,7 +573,7 @@ def delete(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         current.logger.debug(str(vm_details.status))
         if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
@@ -582,7 +582,7 @@ def delete(parameters):
             delete_vm_snapshots(vmid, domain)
         current.logger.debug("Starting to delete it...")
         domain.undefine()
-        message = vm_details.vm_name + " is deleted successfully."
+        message = vm_details.vm_identity + " is deleted successfully."
         current.logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
         current.db(current.db.vm_data.id == vmid).delete()
@@ -607,7 +607,7 @@ def migrate(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = current_host_connection_object.lookupByName(vm_details.vm_name)            
+        domain = current_host_connection_object.lookupByName(vm_details.vm_identity)            
         domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
         current.logger.debug("Migrated successfully..")
         current.db(current.db.vm_data.id == vmid).update(host_id = destination_host_id)
@@ -615,7 +615,7 @@ def migrate(parameters):
         current.db(current.db.host.id == vm_details.host_id).update(vm_count = vm_count_on_old_host - 1)
         vm_count_on_new_host = current.db(current.db.host.id == destination_host_id).select().first()['vm_count']
         current.db(current.db.host.id == destination_host_id).update(vm_count = vm_count_on_new_host + 1) 
-        message = vm_details.vm_name + " is migrated successfully."
+        message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
@@ -630,7 +630,7 @@ def snapshot(parameters):
     try:
         snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         datetime = get_datetime()
         xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
@@ -657,7 +657,7 @@ def revert(parameters):
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         domain.revertToSnapshot(snapshot, 0)
@@ -678,7 +678,7 @@ def delete_snapshot(parameters):
     current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         snapshot.delete(0)
@@ -721,7 +721,7 @@ def edit_vm_config(parameters):
     message = ""
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_name)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
 
         if 'vcpus' in parameters:
             new_vcpus = int(parameters['vcpus'])
@@ -751,7 +751,7 @@ def edit_vm_config(parameters):
             else:
                 create_NAT_IP_mapping('remove', vm_details.public_ip, vm_details.private_ip)
                 current.db(current.db.public_ip_pool.public_ip == vm_details.public_ip).update(vm_id = None)
-                current.db.vm_data[vmid] = dict(public_ip=public_ip_pool.public_ip)
+                current.db.vm_data[vmid] = dict(public_ip=current.PUBLIC_IP_NOT_ASSIGNED)
         
         if 'security_domain' in parameters:
             xmlfile = update_security_domain(vm_details, parameters['security_domain'], domain.XMLDesc(0))
@@ -785,27 +785,27 @@ def get_clone_properties(vm_details, cloned_vm_details):
 
     # Creates a directory for the cloned vm
     current.logger.debug("Creating directory for cloned vm...")
-    if not os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + cloned_vm_details.vm_name):
-        os.makedirs(get_constant('vmfiles_path') + get_constant('vms') + '/' + cloned_vm_details.vm_name)
+    if not os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + cloned_vm_details.vm_identity):
+        os.makedirs(get_constant('vmfiles_path') + get_constant('vms') + '/' + cloned_vm_details.vm_identity)
         clone_file_parameters = ' --file ' + get_constant('vmfiles_path') + get_constant('vms') + '/' + \
-                                cloned_vm_details.vm_name + '/' + cloned_vm_details.vm_name + '.qcow2'
+                                cloned_vm_details.vm_identity + '/' + cloned_vm_details.vm_identity + '.qcow2'
     else:
         raise Exception("Directory with same name as vmname already exists.")
 
     # Creates a folder for additional disks of the cloned vm
-    vm = current.db(current.db.vm_data.vm_name == vm_details.vm_name).select().first()
+    vm = current.db(current.db.vm_data.vm_identity == vm_details.vm_identity).select().first()
     already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
 
     if already_attached_disks > 0:
         if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name \
-                                  +  '/' + cloned_vm_details.vm_name):
+                                  +  '/' + cloned_vm_details.vm_identity):
             current.logger.debug("Making Directory")          
             os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/'  \
-                         + cloned_vm_details.vm_name)
+                         + cloned_vm_details.vm_identity)
 
     while already_attached_disks > 0:
         clone_file_parameters += ' --file ' + get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' \
-                                  + datastore.ds_name + '/' + cloned_vm_details.vm_name + '/' + cloned_vm_details.vm_name + \
+                                  + datastore.ds_name + '/' + cloned_vm_details.vm_identity + '/' + cloned_vm_details.vm_identity + \
                                   '_disk' + str(already_attached_disks + 1) + '.qcow2'
         already_attached_disks -= 1
 
@@ -818,7 +818,7 @@ def clone(vmid):
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
         (vm_properties, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
-        clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_details.vm_name + \
+        clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
         exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
         current.logger.debug("Updating db after cloning")
