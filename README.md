@@ -9,7 +9,7 @@ Prerequisites: nfs-server, firewall(including NAT/PAT), physical switch, authent
 7. Mount the nfs-server on the hosts and  controller.
 
 
-Networking Setup:
+Hardware Networking Setup:
 
 
 
