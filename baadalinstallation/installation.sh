@@ -1,6 +1,6 @@
 ################################ FILE CONSTANTS USED ###########################
 
-Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inted tftpd-hpa dhcp3-server apache2 apt-mirror)
+Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -206,6 +206,7 @@ Instl_Pkgs()
 						skip_pkg_installation=1
 					
 					fi
+				fi
 
 			fi
 				
@@ -340,24 +341,23 @@ if test $TFTP_MOUNT_FLAG -eq 1; then
 	mount $ISO_LOCATION $TFTP_DIR/ubuntu
 	cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
 	cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
-	cd $TFTP_DIR
-	mkdir pxelinux.cfg
-	cd pxelinux.cfg
-	touch default
-	echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> default
-	cd ..
-	touch mybootmenu.cfg
-	echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> mybootmenu.cfg
+#	cd $TFTP_DIR
+	mkdir $TFTP_DIR/pxelinux.cfg
+#	cd pxelinux.cfg
+	touch $TFTP_DIR/pxelinux.cfg/default
+	echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
+#	cd ..
+	touch $TFTP_DIR/mybootmenu.cfg
+	echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> $TFTP_DIR/mybootmenu.cfg
 
 	cp $BASE_PATH/libvirt-1.0.0.tar.gz $TFTP_DIR/libvirt-1.0.0.tar.gz
-	ln -s $TFTP_DIR/libvirt-1.0.0.tar.gz libvirt-1.0.0.tar.gz
-	chmod 777 -R $TFTP_DIR
+	ln -s $TFTP_DIR/libvirt-1.0.0.tar.gz /var/www/libvirt-1.0.0.tar.gz
 fi
 
 /etc/init.d/tftpd-hpa restart
 /etc/init.d/inetutils-inetd restart
 
-
+echo "tftp is configured."
 
 }
 
@@ -502,34 +502,31 @@ do
 done
 
 echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
-sed -i -e 's/#authoritative/authoritative/g' /etc/dhcp/dhcpd.conf
+sed -i -e 's/option\ domain-name\ /#\ option\ domain-name\ /g' /etc/dhcp/dhcpd.conf
+sed -i -e 's/ns1.example.org,\ ns2.example.org/$CONTROLLER_IP/g' /etc/dhcp/dhcpd.conf
 sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"eth0\"/g' /etc/default/isc-dhcp-server
 
 /etc/init.d/isc-dhcp-server restart
 
 
 # Host ubuntu ISO, local repository and other files in www directory for host PXE boot and installation
-cd /var/www
 #create link for ubuntu iso in www for PXE boot
-ln -s $TFTP_DIR/ubuntu ubuntu-12.04-server-amd64
-#create link for local repositories in www for making them accessible
-ln -s ../local_rep/mirror/repo.iitd.ernet.in/ubuntu/ ubuntu
-ln -s ../local_rep/mirror/repo.iitd.ernet.in/ubuntupartner/ ubuntupartner
+ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 
 echo "portgroups $PORTGROUP_STRING"
-cp $BASE_PATH/ks.cfg  ks.cfg
-sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' ks.cfg
-cp $BASE_PATH/interfaces_file interfaces_file
-echo -e $final_interfaces_string >> interfaces_file
-cp $BASE_PATH/sources.list sources.list
-sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' sources.list
+cp $BASE_PATH/ks.cfg  /var/www/ks.cfg
+sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/ks.cfg
+cp $BASE_PATH/interfaces_file /var/www/interfaces_file
+echo -e $final_interfaces_string >> /var/www/interfaces_file
+cp $BASE_PATH/sources.list /var/www/sources.list
+sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/sources.list
 
-cp $BASE_PATH/host_installation.sh host_installation
-sed -i -e 's/PORTGROUPS/'"$PORTGROUP_STRING"'/g' host_installation.sh
-sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g/' host_installation.sh
+cp $BASE_PATH/host_installation.sh /var/www/.
+sed -i -e 's/PORTGROUPS/'"$PORTGROUP_STRING"'/g' /var/www/host_installation.sh
+sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/host_installation.sh
 
-touch ovs-postup.sh
-echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > ovs-postup.sh
+touch /var/www/ovs-postup.sh
+echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
 
 }
 
@@ -538,10 +535,16 @@ Configure_Local_Ubuntu_Repo()
 {
 
 if test $LOCAL_REPO_FLAG -eq 1; then
-	mkdir /var/local_rep
-	sed -i -e 's/^/^#/g' /etc/apt/mirror.list
+	mkdir -p /var/local_rep/var
+	cp postmirror.sh /var/local_rep/var/.
+	sed -i -e 's/^/#/g' /etc/apt/mirror.list
 	echo -e "set base_path\t/var/local_rep\nset nthreads\t5\nset _tilde 0\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntupartner precise partner\ndeb-amd64 http://repo.iitd.ernet.in/ubuntupartner precise partner" >> /etc/apt/mirror.list
 	apt-mirror
+
+	#create link for local repositories in www for making them accessible
+	ln -s ../local_rep/mirror/repo.iitd.ernet.in/ubuntu/ /var/www/ubuntu
+	ln -s ../local_rep/mirror/repo.iitd.ernet.in/ubuntupartner/ /var/www/ubuntupartner
+
 fi
 
 
@@ -607,11 +610,14 @@ Enbl_Modules()
 #Function to create SSL certificate
 Create_SSL_Certi()
 {
+	echo "current path"
+	pwd
+
 	mkdir /etc/apache2/ssl
 	echo "creating Self Signed Certificate................................."
 	openssl genrsa 1024 > /etc/apache2/ssl/self_signed.key
 	chmod 400 /etc/apache2/ssl/self_signed.key
-	openssl req -new -x509 -nodes -sha1 -days 365 -key /etc/apache2/ssl/self_signed.key -config config-file > /etc/apache2/ssl/self_signed.cert
+	openssl req -new -x509 -nodes -sha1 -days 365 -key /etc/apache2/ssl/self_signed.key -config installation.cfg > /etc/apache2/ssl/self_signed.cert
 	openssl x509 -noout -fingerprint -text < /etc/apache2/ssl/self_signed.cert > /etc/apache2/ssl/self_signed.info
 }
 
@@ -709,8 +715,6 @@ Start_Web2py()
 	sudo -u www-data python -c "from gluon.widget import console; console();"
 	sudo -u www-data python -c "from gluon.main import save_password; save_password(\"$web2py_password\",443)"
 
-	cd /home/www-data/web2py/logs/
-
 	python /home/www-data/web2py/web2py.py -K  baadal &
 
 }
@@ -721,12 +725,12 @@ Start_Web2py()
 ################################ SCRIPT ########################################
 
 #Including Config File to the current script
-source installation.cfg
+. ./installation.cfg 2>> /dev/null
 
 Chk_Root_Login
 
 apt-get update
-apt-get upgrade
+apt-get -y upgrade
 
 Instl_Pkgs
 Setup_Web2py
