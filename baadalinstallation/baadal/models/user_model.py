@@ -254,7 +254,7 @@ def get_clone_vm_form(vm_id):
     
     clone_name = vm_data.vm_name + '_clone'
     cnt = 1;
-    while(db.vm_data(vm_name=(clone_name+str(cnt)))):
+    while(db.request_queue(vm_name=(clone_name+str(cnt)))):
         cnt = cnt+1
     
     db.request_queue.parent_id.default = vm_data.id

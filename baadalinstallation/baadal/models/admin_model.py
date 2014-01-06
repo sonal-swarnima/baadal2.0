@@ -138,9 +138,17 @@ def create_clone_task(req_data, params):
     clone_count = req_data.clone_count
     vm_data = db.vm_data[req_data.parent_id]
     
+    clone_name = req_data.vm_name
+    cnt = 1;
+    
     vm_id_list = []
-    for count in range(1, clone_count+1):
-        clone_vm_name = req_data.vm_name + str(count)
+    for count in range(0, clone_count):  # @UnusedVariable
+
+        while(db.vm_data(vm_name=(clone_name+str(cnt)))):
+            cnt = cnt+1
+
+        clone_vm_name = clone_name + str(cnt)
+        
         clone_vm_id = db.vm_data.insert(
                           vm_name = clone_vm_name, 
                           RAM = vm_data.RAM,
@@ -151,7 +159,6 @@ def create_clone_task(req_data, params):
                           owner_id = vm_data.owner_id,
                           requester_id = req_data.requester_id,
                           parent_id = req_data.parent_id,
-#                           enable_service = vm_data.enable_service,
                           public_ip = PUBLIC_IP_NOT_ASSIGNED,
                           security_domain = vm_data.security_domain,
                           purpose = TASK_TYPE_CLONE_VM,
@@ -160,6 +167,8 @@ def create_clone_task(req_data, params):
         vm_id_list.append(clone_vm_id)
         
         add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id)
+        cnt = cnt+1
+        
     params.update({'clone_vm_id':vm_id_list})
     add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params)
 
@@ -175,7 +184,6 @@ def create_install_task(req_data, params):
                   requester_id = req_data.requester_id,
                   owner_id = req_data.owner_id,
                   purpose = req_data.purpose,
-#                   enable_service = req_data.enable_service,
                   public_ip = PUBLIC_IP_NOT_ASSIGNED if not(req_data.public_ip) else None,
                   security_domain = req_data.security_domain,
                   status = VM_STATUS_IN_QUEUE)
