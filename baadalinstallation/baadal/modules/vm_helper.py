@@ -139,6 +139,7 @@ def allocate_vm_properties(vm_details):
     current.logger.debug("Host selected is: " + str(vm_properties['host']))
 
     vm_properties['public_ip_req'] = False if (vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED) else True
+    vm_properties['security_domain'] = vm_details.security_domain
     choose_mac_ip_vncport(vm_properties)
 
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
@@ -147,6 +148,7 @@ def allocate_vm_properties(vm_details):
     (vm_properties['ram'], vm_properties['vcpus']) = compute_effective_ram_vcpu(vm_details.RAM, vm_details.vCPU, 1)
 
     return vm_properties
+
 
 # Executes command on host machine using paramiko module
 def exec_command_on_host(machine_ip, user_name, command, password=None):
@@ -341,6 +343,7 @@ def free_vm_properties(vm_details):
         shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name)
     return
     
+
 # Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None):
 
@@ -724,6 +727,10 @@ def edit_vm_config(parameters):
         
         if 'security_domain' in parameters:
             current.db(current.db.vm_data.id == vmid).update(security_domain = parameters['security_domain'])
+            # fetch new private IP from db from given security domain
+            # stop VM. update vm config to add new mac address. start VM
+            # update NAT IP mapping, if public IP present
+            # update vm_data, private_ip_pool
 
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)

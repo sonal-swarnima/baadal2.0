@@ -230,12 +230,12 @@ def get_all_hosts() :
     hosts = db().select(db.host.ALL) 
     results = []
     for host in hosts:
-        results.append({'ip':host.host_ip, 
-                        'id':host.id, 
-                        'name':host.host_name, 
+        results.append({'ip'    :host.host_ip, 
+                        'id'    :host.id, 
+                        'name'  :host.host_name, 
                         'status':host.status, 
-                        'RAM':host.RAM,
-                        'CPUs':host.CPUs})    
+                        'RAM'   :host.RAM,
+                        'CPUs'  :host.CPUs})    
     return results
 
 
@@ -266,9 +266,13 @@ def update_task_retry(_task_id):
 
 
 def update_task_ignore(_task_id):
+
+    task_process = db.task_queue[_task_id] 
+    if 'request_id' in task_process.parameters:
+        del db.request_queue[task_process.parameters['request_id']]
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
     #Delete task from task_queue
-    db(db.task_queue.id == _task_id).delete()
+    del db.task_queue[_task_id]
 
 
 def get_search_host_form():

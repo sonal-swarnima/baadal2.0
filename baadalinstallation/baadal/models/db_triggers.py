@@ -11,6 +11,7 @@ def schedule_task(fields, _id):
     task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             vm_id = fields['vm_id'],
+                            requester_id = fields['requester_id'],
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 

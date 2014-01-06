@@ -57,7 +57,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
             ds = 'DEF:ram=' + vm_name + '.rrd:memory:' + consolidation
             line = 'LINE1:ram#0000FF:Memory'
         elif graph_type == 'cpu':
-            ds = 'DEF:cpu=' + vm_name + '.rrd:cpus:' + consolidation
+            ds = 'DEF:cpu=' + vm_name + '.rrd:cpuusage:' + consolidation
             line = 'LINE1:cpu#0000FF:CPU'
                 
         rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds, line)

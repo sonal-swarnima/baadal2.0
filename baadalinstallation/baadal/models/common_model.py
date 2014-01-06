@@ -177,13 +177,13 @@ def get_task_list(events):
 
     tasks = []
     for event in events:
-        element = {'task_type':event.task_type,
-                   'task_id':event.task_id,
-                   'vm_name':event.vm_id.vm_name,
-                   'user_name':get_full_name(event.vm_id.owner_id),
+        element = {'task_type' :event.task_type,
+                   'task_id'   :event.task_id,
+                   'vm_name'   :event.vm_id.vm_name,
+                   'user_name' :get_full_name(event.requester_id),
                    'start_time':event.start_time,
-                   'end_time':event.end_time,
-                   'error_msg':event.error}
+                   'end_time'  :event.end_time,
+                   'error_msg' :event.error}
         tasks.append(element)
     return tasks
 
@@ -199,6 +199,7 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}):
     params.update({'vm_id' : vm_id})
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
+                         requester_id=auth.user.id,
                          parameters=params, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
@@ -295,12 +296,12 @@ def get_vm_operations(vm_id):
             if (db(db.host.id > 0).count() >= 2):
 
                 valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
-               	     _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
+                        _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
                      _title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
 
         if is_moderator() or is_orgadmin() or is_faculty():
             valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
-               	 	_onclick="confirm_vm_deletion()",	_title="Delete this virtual machine",	_alt="Delete this virtual machine"))
+                        _onclick="confirm_vm_deletion()",    _title="Delete this virtual machine",    _alt="Delete this virtual machine"))
   
         if vmstatus == VM_STATUS_SUSPENDED:
             
@@ -315,8 +316,8 @@ def get_vm_operations(vm_id):
         if vmstatus == VM_STATUS_SHUTDOWN:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-               	 	_href=URL(r=request, f='start_machine', args=[vm_id]), 
-                	_title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
+                        _href=URL(r=request, f='start_machine', args=[vm_id]), 
+                    _title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
                 _href=URL(r=request,c='user', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
@@ -374,9 +375,9 @@ def get_vm_snapshots(vm_id):
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
 
         snapshot_dict = {}
-        snapshot_type = {SNAPSHOT_USER : 'Custom',
-                         SNAPSHOT_DAILY : 'Daily',
-                         SNAPSHOT_WEEKLY : 'Weekly',
+        snapshot_type = {SNAPSHOT_USER    : 'Custom',
+                         SNAPSHOT_DAILY   : 'Daily',
+                         SNAPSHOT_WEEKLY  : 'Weekly',
                          SNAPSHOT_MONTHLY : 'Monthly'}
         
         snapshot_dict['type'] = snapshot_type[snapshot.type]

@@ -54,6 +54,8 @@
 	               Waiting for admin approval
 	           {{elif pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
 	               Approved. In Queue.
+	           {{elif pend_request['status'] == REQ_STATUS_FAILED:}}
+	               Task failed. Contact administrator.
 	           {{pass}}
             </td>
           </tr>

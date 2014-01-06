@@ -68,7 +68,7 @@
 
 <div id="page">
   <div id="content">
-    <div class="flash">{{=response.flash or ''}}
+    <div class="flash"><flash id="flash_message">{{=response.flash}} </flash>{{''}}
     </div>
     {{include}}
   </div>
