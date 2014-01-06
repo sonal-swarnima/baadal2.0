@@ -94,18 +94,23 @@ def find_new_host(runlevel, RAM, vCPU):
         raise Exception("No active host is available for a new vm.")
 
 
-# Chooses mac address, ip address and vncport for a vm to be installed
-def choose_mac_ip(vm_properties):
-
-    vlans = current.db(current.db.security_domain.id == vm_properties['security_domain'])._select(current.db.security_domain.vlan)
+def get_private_ip_mac(security_domain_id):
+    vlans = current.db(current.db.security_domain.id == security_domain_id)._select(current.db.security_domain.vlan)
     private_ip_pool = current.db((current.db.private_ip_pool.vm_id == None) & 
                          (current.db.private_ip_pool.vlan.belongs(vlans))).select(orderby='<random>').first()
 
     if private_ip_pool:
-        vm_properties['private_ip'] = private_ip_pool.private_ip
-        vm_properties['mac_addr'] = private_ip_pool.mac_addr
+        return(private_ip_pool.private_ip, private_ip_pool.mac_addr)
     else:
-        raise Exception("Available MACs are exhausted.")
+        sd = current.db.security_domain[security_domain_id]
+        raise Exception(("Available MACs are exhausted for security domain '%s'."%(sd.name)))
+
+# Chooses mac address, ip address and vncport for a vm to be installed
+def choose_mac_ip(vm_properties):
+
+    private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
+    vm_properties['private_ip'] = private_ip_info[0]
+    vm_properties['mac_addr']   = private_ip_info[1]
 
     if vm_properties['public_ip_req']:
         public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
@@ -623,10 +628,10 @@ def snapshot(parameters):
     snapshot_type = parameters['snapshot_type']
     vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
+        snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_name)
         datetime = get_datetime()
-        snapshot_name = datetime.strftime("%I:%M%p on %B %d,%Y")
         xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."
@@ -685,6 +690,29 @@ def delete_snapshot(parameters):
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
+
+def update_security_domain(vm_details, security_domain_id, xmlDesc):
+    # fetch new private IP from db from given security domain
+    private_ip_info = get_private_ip_mac(security_domain_id)
+    # update vm config to add new mac address.
+    root = etree.fromstring(xmlDesc)
+    mac_elem = root.xpath("devices/interface[@type='bridge']/mac")[0]
+    mac_elem.set('address', private_ip_info[1])
+    
+    # update NAT IP mapping, if public IP present
+    if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
+        create_NAT_IP_mapping('remove', vm_details.public_ip, vm_details.private_ip)
+        create_NAT_IP_mapping('add', vm_details.public_ip, private_ip_info[0])
+    
+    # update vm_data, private_ip_pool
+    current.db(current.db.private_ip_pool.private_ip == vm_details.private_ip).update(vm_id = None)
+    current.db(current.db.private_ip_pool.private_ip == private_ip_info[0]).update(vm_id = vm_details.id)
+    current.db(current.db.vm_data.id == vm_details.id).update(security_domain = security_domain_id, 
+                                                              private_ip = private_ip_info[0], 
+                                                              mac_addr = private_ip_info[1])
+    
+    return etree.tostring(root)
+
 # Edits vm configuration
 def edit_vm_config(parameters):
 
@@ -726,11 +754,10 @@ def edit_vm_config(parameters):
                 current.db.vm_data[vmid] = dict(public_ip=public_ip_pool.public_ip)
         
         if 'security_domain' in parameters:
-            current.db(current.db.vm_data.id == vmid).update(security_domain = parameters['security_domain'])
-            # fetch new private IP from db from given security domain
-            # stop VM. update vm config to add new mac address. start VM
-            # update NAT IP mapping, if public IP present
-            # update vm_data, private_ip_pool
+            xmlfile = update_security_domain(vm_details, parameters['security_domain'], domain.XMLDesc(0))
+            domain = connection_object.defineXML(xmlfile)
+            domain.reboot(0)
+            domain.isActive()
 
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
