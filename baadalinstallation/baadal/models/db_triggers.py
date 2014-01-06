@@ -11,6 +11,7 @@ def schedule_task(fields, _id):
     task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             vm_id = fields['vm_id'],
+                            requester_id = fields['requester_id'],
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 
@@ -53,8 +54,7 @@ def update_vm_data_event(fields, _id):
                                           datastore_id = fields['datastore_id'], 
                                           private_ip = fields['private_ip'], 
                                           vnc_port = fields['vnc_port'], 
-                                          mac_addr_1 = fields['mac_addr_1'], 
-                                          mac_addr_2 = fields['mac_addr_2'], 
+                                          mac_addr = fields['mac_addr'], 
                                           start_time = fields['start_time'], 
                                           current_run_level = fields['current_run_level'],
                                           last_run_level = fields['last_run_level'],

@@ -55,6 +55,7 @@ REQ_STATUS_REJECTED  = 2
 REQ_STATUS_VERIFIED  = 3
 REQ_STATUS_APPROVED  = 4
 REQ_STATUS_IN_QUEUE  = 5
+REQ_STATUS_FAILED    =-1
 #VM Status
 VM_STATUS_UNKNOWN   =-1
 VM_STATUS_IN_QUEUE  = 1
@@ -86,6 +87,7 @@ current.FACULTY = FACULTY
 current.USER = USER
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
+current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 
@@ -112,5 +114,9 @@ MINUTES = 60 * SECONDS
 HOURS = 60 * MINUTES
 DAYS = 24 * HOURS
 
+VM_UTIL_24_HOURS = 1
+VM_UTIL_ONE_WEEK = 2
+VM_UTIL_ONE_MNTH = 3
+VM_UTIL_ONE_YEAR = 4
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

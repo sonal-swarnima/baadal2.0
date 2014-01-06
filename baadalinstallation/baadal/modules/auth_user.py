@@ -3,13 +3,15 @@
 from gluon import current
 from helper import get_config_file
 
+config = get_config_file()
+
 def login_callback(form):
     if current.auth.is_logged_in():
-        _role = current.USER
-        
         member = current.db(current.db.user_membership.user_id == current.auth.user.id).select().first()
         if not member:
-            add_membership_db(current.auth.user.id, _role, True)
+            roles = fetch_user_role(current.auth.user.username)
+            for role in roles:
+                add_membership_db(current.auth.user.id, role, True)
     
 
 def login_ldap_callback(form):
@@ -22,9 +24,20 @@ def login_ldap_callback(form):
             else:
                 current.logger.error('Unable To Update User Info!!!')
 
+def fetch_user_role(username):
+
+    _role_list = [current.USER]
+    
+    if username in config.get("GENERAL_CONF","admin_uid"):
+        _role_list.append(current.ADMIN)
+    if username in config.get("GENERAL_CONF","orgadmin_uid"):
+        _role_list.append(current.ORGADMIN)
+    if username in config.get("GENERAL_CONF","faculty_uid"):
+        _role_list.append(current.FACULTY)
+            
+    return _role_list
 
 def fetch_ldap_user(username):
-    config = get_config_file()
     ldap_url = config.get("LDAP_CONF","ldap_url")
     base_dn = config.get("LDAP_CONF","ldap_dn")
 
@@ -43,7 +56,6 @@ def fetch_ldap_user(username):
     user_info['email'] = None
     user_info['last_name'] = ''
     user_info['organisation'] = 'IITD'
-    _role_list = [current.USER]
 
     try:
         ldap_result_id = l.search(base_dn, searchScope, searchFilter, retrieveAttributes)  
@@ -68,14 +80,7 @@ def fetch_ldap_user(username):
  
 #TODO: find role and organisation from ldap and set in db accordingly (current iitd ldap does not support this feature entirely) 
                                     
-        if username in config.get("GENERAL_CONF","admin_uid"):
-            _role_list.append(current.ADMIN)
-        if username in config.get("GENERAL_CONF","orgadmin_uid"):
-            _role_list.append(current.ORGADMIN)
-        if username in config.get("GENERAL_CONF","faculty_uid"):
-            _role_list.append(current.FACULTY)
-            
-        user_info['roles'] = _role_list
+        user_info['roles'] = fetch_user_role(username)
 
     except ldap.LDAPError, e:
         current.logger.error(e)

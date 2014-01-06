@@ -35,7 +35,7 @@ def get_vm_link(row):
         return A(vm_data.vm_name, _href=URL(r=request, c='user',f='settings', args=vm_data.id))
 
 
-def get_manage_ip_pool_form():
+def get_manage_public_ip_pool_form():
     db.public_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
     db.public_ip_pool.vm_id.readable=False
 
@@ -54,6 +54,17 @@ def get_manage_ip_pool_form():
                                         INPUT(_name='rangeTo', _id='public_ip_pool_rangeTo')),TD()))
         
         grid.create_form.process()
+
+    return grid
+
+def get_manage_private_ip_pool_form():
+    db.private_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
+    db.private_ip_pool.vm_id.readable=False
+
+    default_sort_order=[db.private_ip_pool.id]
+
+    #Creating the grid object
+    grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Assigned to', body=get_vm_link)], csv=False, searchable=False, details=False, showbuttontext=False)
 
     return grid
 
@@ -219,12 +230,12 @@ def get_all_hosts() :
     hosts = db().select(db.host.ALL) 
     results = []
     for host in hosts:
-        results.append({'ip':host.host_ip, 
-                        'id':host.id, 
-                        'name':host.host_name, 
+        results.append({'ip'    :host.host_ip, 
+                        'id'    :host.id, 
+                        'name'  :host.host_name, 
                         'status':host.status, 
-                        'RAM':host.RAM,
-                        'CPUs':host.CPUs})    
+                        'RAM'   :host.RAM,
+                        'CPUs'  :host.CPUs})    
     return results
 
 
@@ -255,9 +266,13 @@ def update_task_retry(_task_id):
 
 
 def update_task_ignore(_task_id):
+
+    task_process = db.task_queue[_task_id] 
+    if 'request_id' in task_process.parameters:
+        del db.request_queue[task_process.parameters['request_id']]
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
     #Delete task from task_queue
-    db(db.task_queue.id == _task_id).delete()
+    del db.task_queue[_task_id]
 
 
 def get_search_host_form():
@@ -421,3 +436,33 @@ def updte_host_status(host_id, status):
     
 def delete_host_from_db(host_id):
     del db.host[host_id]
+    
+def get_util_period_form():
+    
+    _dict = {VM_UTIL_24_HOURS : 'Last 24 hours' , 
+             VM_UTIL_ONE_WEEK : 'Last One Week',
+             VM_UTIL_ONE_MNTH : 'Last One Month',
+             VM_UTIL_ONE_YEAR : 'Last One Year'}
+    
+    form = FORM(TR("Show:", 
+           SELECT(_name='util_period', _id='period_select_id',
+           *[OPTION(_dict[key], _value=str(key)) for key in _dict.keys()]), 
+            A(SPAN(_class='icon-refresh'), _onclick = '$(this).closest(\'form\').submit()', _href='#')))
+    return form
+
+def get_vm_util_data(util_period):
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    vmlist = []
+    for vm in vms:
+        util_result = fetch_rrd_data(vm.vm_name, util_period)
+        element = {'vm_id' : vm.id,
+                   'vm_name' : vm.vm_name,
+                   'memory' : round(util_result[0], 2),
+                   'cpu' : round(util_result[1], 2),
+                   'diskr' : round(util_result[2], 2),
+                   'diskw' : round(util_result[3], 2),
+                   'nwr' : round(util_result[4], 2),
+                   'nww' : round(util_result[5], 2)}
+        vmlist.append(element)
+    return vmlist
+        

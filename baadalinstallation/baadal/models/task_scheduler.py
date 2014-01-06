@@ -44,17 +44,19 @@ def processTaskQueue(task_event_id):
         #On return, update the status and end time in task event table
         db.task_queue_event[task_event_id] = dict(status=ret[0], end_time=get_datetime())
         
-        if 'request_id' in task_process.parameters:
-            del db.request_queue[task_process.parameters['request_id']]
-        
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             markFailedTask(task_process.id, task_event_id, ret[1])
             if task_process.task_type == TASK_TYPE_CREATE_VM:
-                db.vm_data[task_process.vm_id] = dict(status = -1)
+                db.vm_data[task_process.vm_id] = dict(status = VM_STATUS_UNKNOWN)
+            if 'request_id' in task_process.parameters:
+                db.request_queue[task_process.parameters['request_id']] = dict(status = REQ_STATUS_FAILED)
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # For successful task, delete the task from queue 
             del db.task_queue[task_process.id]
+            if 'request_id' in task_process.parameters:
+                del db.request_queue[task_process.parameters['request_id']]
+        
         db.commit()
         logger.debug('Task done')
     except:

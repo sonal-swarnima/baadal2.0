@@ -1,0 +1,15 @@
+{{extend 'layout.html'}}
+
+<h2 class="subtitle">{{=T('Manage Private IP Pool')}}</h2>
+{{=form}}
+
+<script>
+jQuery(document).ready(function(){
+	$('<span>Add New Private IP</span>').insertAfter($('.icon-plus'));
+    range_check()
+});
+
+jQuery('form').submit(function(){
+});
+
+</script>

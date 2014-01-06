@@ -25,8 +25,10 @@ if not db(db.constants).count():
         rows = item.getElementsByTagName('row')
         _dict = {}
         for row in rows:
+            idx = False
             for attr in row.attributes.keys():
                 _dict[attr] = row.attributes[attr].value
-            tableref.insert(**tableref._filter_fields(_dict))
+                if attr == 'id': idx = True
+            tableref.insert(**tableref._filter_fields(_dict, id=idx))
 
         db.commit()

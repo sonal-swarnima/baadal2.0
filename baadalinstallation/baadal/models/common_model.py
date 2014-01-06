@@ -4,16 +4,11 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,H3,IS_INT_IN_RANGE,A,SPAN,IMG,request
+    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,IS_INT_IN_RANGE,A,SPAN,IMG,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import os
-import shutil
-import time
 
-import rrdtool
-
-from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty, get_constant
+from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
 
 def get_vm_status(iStatus):
     vm_status_map = {
@@ -42,7 +37,7 @@ def get_hosted_vm_list(vms):
         element = {'id' : vm.id,
                    'name' : vm.vm_name,
                    'private_ip' : vm.private_ip, 
-                   'owner' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name, 
+                   'owner' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name if vm.owner_id > 0 else 'System User', 
                    'hostip' : vm.host_id.host_ip,
                    'RAM' : vm.RAM,
                    'vcpus' : vm.vCPU,
@@ -164,7 +159,7 @@ def add_to_cost(vm_id):
     return totalcost
 
 def get_full_name(user_id):
-    return get_fullname(user_id)
+    return get_fullname(user_id) if user_id > 0 else 'System User'
 
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
@@ -182,13 +177,13 @@ def get_task_list(events):
 
     tasks = []
     for event in events:
-        element = {'task_type':event.task_type,
-                   'task_id':event.task_id,
-                   'vm_name':event.vm_id.vm_name,
-                   'user_name':get_full_name(event.vm_id.owner_id),
+        element = {'task_type' :event.task_type,
+                   'task_id'   :event.task_id,
+                   'vm_name'   :event.vm_id.vm_name,
+                   'user_name' :get_full_name(event.requester_id),
                    'start_time':event.start_time,
-                   'end_time':event.end_time,
-                   'error_msg':event.error}
+                   'end_time'  :event.end_time,
+                   'error_msg' :event.error}
         tasks.append(element)
     return tasks
 
@@ -204,6 +199,7 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}):
     params.update({'vm_id' : vm_id})
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
+                         requester_id=auth.user.id,
                          parameters=params, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
@@ -300,12 +296,12 @@ def get_vm_operations(vm_id):
             if (db(db.host.id > 0).count() >= 2):
 
                 valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
-               	     _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
+                        _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
                      _title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
 
         if is_moderator() or is_orgadmin() or is_faculty():
             valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
-               	 	_onclick="confirm_vm_deletion()",	_title="Delete this virtual machine",	_alt="Delete this virtual machine"))
+                        _onclick="confirm_vm_deletion()",    _title="Delete this virtual machine",    _alt="Delete this virtual machine"))
   
         if vmstatus == VM_STATUS_SUSPENDED:
             
@@ -320,8 +316,8 @@ def get_vm_operations(vm_id):
         if vmstatus == VM_STATUS_SHUTDOWN:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-               	 	_href=URL(r=request, f='start_machine', args=[vm_id]), 
-                	_title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
+                        _href=URL(r=request, f='start_machine', args=[vm_id]), 
+                    _title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
                 _href=URL(r=request,c='user', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
@@ -379,10 +375,11 @@ def get_vm_snapshots(vm_id):
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
 
         snapshot_dict = {}
-        snapshot_type = {SNAPSHOT_USER : 'Custom',
-                         SNAPSHOT_DAILY : 'Daily',
-                         SNAPSHOT_WEEKLY : 'Weekly',
+        snapshot_type = {SNAPSHOT_USER    : 'Custom',
+                         SNAPSHOT_DAILY   : 'Daily',
+                         SNAPSHOT_WEEKLY  : 'Weekly',
                          SNAPSHOT_MONTHLY : 'Monthly'}
+        
         snapshot_dict['type'] = snapshot_type[snapshot.type]
         snapshot_dict['name'] = snapshot.snapshot_name
         snapshot_dict['delete'] = ' '
@@ -391,112 +388,6 @@ def get_vm_snapshots(vm_id):
                                        _title = "Revert to this snapshot", _alt = "Revert to this snapshot")
         vm_snapshots_list.append(snapshot_dict)
     return vm_snapshots_list
-
-def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
-
-    logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
-    rrd_file = vm_name + '.rrd'       
-
-    shutil.copyfile(rrd_file_path, rrd_file)
-    graph_file = vm_name + "_" + graph_type + ".png"
-
-    start_time = None
-    grid = None
-    ret = None
-    consolidation = 'AVERAGE'
-    ds = ds1 = ds2 = None
-    line = line1 = line2 = None
-    vdef1 = vdef2 = None
-    
-    if graph_period == 'hour':
-        start_time = 'now - ' + str(24*60*60)
-        grid = 'HOUR:1:HOUR:1:HOUR:1:0:%k'
-        consolidation = 'MIN'
-    elif graph_period == 'day':
-        start_time = '-1w'
-        grid = 'DAY:1:DAY:1:DAY:1:86400:%a'
-    elif graph_period == 'month':
-        start_time = '-1y'
-        grid = 'MONTH:1:MONTH:1:MONTH:1:2592000:%b'
-    elif graph_period == 'week':
-        start_time = '-1m'
-        grid = 'WEEK:1:WEEK:1:WEEK:1:604800:Week %W'
-    elif graph_period == 'year':
-        start_time = '-5y'
-        grid = 'YEAR:1:YEAR:1:YEAR:1:31536000:%Y'
-  
-    if ((graph_type == 'ram') or (graph_type == 'cpu')):
-
-        if graph_type == 'ram':
-            ds = 'DEF:ram=' + vm_name + '.rrd:memory:' + consolidation
-            line = 'LINE1:ram#0000FF:Memory'
-        elif graph_type == 'cpu':
-            ds = 'DEF:cpu=' + vm_name + '.rrd:cpus:' + consolidation
-            line = 'LINE1:cpu#0000FF:CPU'
-                
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds, line)
-
-    else:
-
-        if graph_type == 'nw':
-            ds1 = 'DEF:nwr=' + vm_name + '.rrd:nwr:' + consolidation
-            ds2 = 'DEF:nww=' + vm_name + '.rrd:nww:' + consolidation
-            line1 = 'LINE1:nwr#0000FF:Receive'
-            line2 = 'LINE2:nww#FF7410:Transmit'
-            vdef1 = "VDEF:nwread=nwr,read"
-            vdef2 = "VDEF:nwwrite=nww"
-
-        elif graph_type == 'disk':
-            ds1 = 'DEF:diskr=' + vm_name + '.rrd:diskr:' + consolidation
-            ds2 = 'DEF:diskw=' + vm_name + '.rrd:diskw:' + consolidation
-            line1 = 'LINE1:diskr#0000FF:DiskRead'
-            line2 = 'LINE2:diskw#FF7410:DiskWrite'
-            vdef1 = "VDEF:diskread=diskr"
-            vdef2 = "VDEF:diskwrite=diskw"
-
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2)
-
-    shutil.copy2(graph_file, get_constant('graph_file_dir'))
-
-    if os.path.exists(get_constant('graph_file_dir') + os.sep + graph_file):
-        return True
-    else:
-        return False
-    
-def get_performance_graph(graph_type, vm, graph_period):
-
-    error = None
-    img = IMG(_src = URL("static" , "images/no_graph.jpg") , _style = "height:100px")
-
-    try:
-        rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + vm + ".rrd"
-  
-        if os.path.exists(rrd_file):
-            if create_graph(vm, graph_type, rrd_file, graph_period):   
-                img_pos = "images/vm_graphs/" + vm + "_" + graph_type + ".png"
-                img = IMG(_src = URL("static", img_pos), _style = "height:100%")
-                logger.info("Graph created successfully")
-            else:
-                logger.warn("Unable to create graph from rrd file!!!")
-                error = H3("Unable to create graph from rrd file")
-        else:
-            logger.warn("VMs RRD File Unavailable!!!")
-            error = "VMs RRD File Unavailable!!!"
-    except: 
-
-        import sys, traceback
-        etype, value, tb = sys.exc_info()
-        logger.warn("Error occured while creating graph.")
-        msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
-        logger.error(msg)           
-        error = msg
-
-    finally:
-        if (is_moderator() and (error != None)):
-            return H3(error)
-        else:
-            logger.info("Returning image.")
-            return img
 
 def get_faculty_info(faculty_id):
     faculty_info = db(db.user.id==faculty_id).select()

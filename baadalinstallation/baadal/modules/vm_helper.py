@@ -7,7 +7,7 @@ if 0:
     global db; db = gluon.sql.DAL()
 ###################################################################################
 
-import sys, math, shutil, paramiko, traceback, random, libvirt
+import sys, math, shutil, paramiko, traceback, libvirt
 import xml.etree.ElementTree as etree
 #from mail_handler import send_email_for_vm_creation
 from libvirt import *  # @UnusedWildImport
@@ -93,27 +93,33 @@ def find_new_host(runlevel, RAM, vCPU):
     else:
         raise Exception("No active host is available for a new vm.")
 
+
 # Chooses mac address, ip address and vncport for a vm to be installed
-def choose_mac_ip(temporary_pool):
+def choose_mac_ip(vm_properties):
 
-    while True:
-        mac_selected = random.choice(temporary_pool.keys())
-        current.logger.debug("Checking mac = " + str(mac_selected))
-        
-        vms = current.db(current.db.vm_data).select()
-        if vms.find(lambda row: row.mac_addr_1==mac_selected or row.mac_addr_2==mac_selected):
-            temporary_pool.pop(mac_selected)
+    vlans = current.db(current.db.security_domain.id == vm_properties['security_domain'])._select(current.db.security_domain.vlan)
+    private_ip_pool = current.db((current.db.private_ip_pool.vm_id == None) & 
+                         (current.db.private_ip_pool.vlan.belongs(vlans))).select(orderby='<random>').first()
+
+    if private_ip_pool:
+        vm_properties['private_ip'] = private_ip_pool.private_ip
+        vm_properties['mac_addr'] = private_ip_pool.mac_addr
+    else:
+        raise Exception("Available MACs are exhausted.")
+
+    if vm_properties['public_ip_req']:
+        public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
+        if public_ip_pool:
+            vm_properties['public_ip'] = public_ip_pool.public_ip
         else:
-            break
+            raise Exception("Available Public IPs are exhausted.")
+    else:
+        vm_properties['public_ip'] = current.PUBLIC_IP_NOT_ASSIGNED
 
-        if not temporary_pool:
-            raise Exception("Available MACs are exhausted.")
-
-    return (mac_selected, temporary_pool[mac_selected])
 
 def choose_mac_ip_vncport(vm_properties):
     
-    (vm_properties['mac_addr_1'], vm_properties['private_ip']) = choose_mac_ip(current.MAC_PRIVATE_IP_POOL)
+    choose_mac_ip(vm_properties)
 
     count = int(get_constant('vmcount')) 
     vm_properties['vnc_port'] = str(int(get_constant('vncport_range')) + count)
@@ -132,22 +138,26 @@ def allocate_vm_properties(vm_details):
     vm_properties['host'] = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
     current.logger.debug("Host selected is: " + str(vm_properties['host']))
 
+    vm_properties['public_ip_req'] = False if (vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED) else True
+    vm_properties['security_domain'] = vm_details.security_domain
     choose_mac_ip_vncport(vm_properties)
-    current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
+
+    current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
                           + str(vm_properties['vnc_port']))
     
     (vm_properties['ram'], vm_properties['vcpus']) = compute_effective_ram_vcpu(vm_details.RAM, vm_details.vCPU, 1)
 
     return vm_properties
 
+
 # Executes command on host machine using paramiko module
-def exec_command_on_host(machine_ip, user_name, command):
+def exec_command_on_host(machine_ip, user_name, command, password=None):
 
     try:
         current.logger.debug("Starting to establish SSH connection with host " + str(machine_ip))
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(machine_ip, username = user_name)
+        ssh.connect(machine_ip, username = user_name, password = password)
         stdin,stdout,stderr = ssh.exec_command(command)
         current.logger.debug(stdout.readlines())
         install_error_message = stderr.readlines()
@@ -216,7 +226,7 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
                      --ram=' + str(vm_properties['ram']) + ' \
                      --vcpus=' + str(vm_properties['vcpus']) + optional + variant_command + ' \
                      --disk path=' + vm_image_location + format_command + bus + ' \
-                     --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr_1'] + ' \
+                     --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr'] + ' \
                      --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
                      --noautoconsole \
                      --description \
@@ -238,8 +248,6 @@ def generate_xml(diskpath,target_disk):
 # Attaches a disk with vm
 def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_disks):
    
-    vm = current.db(current.db.vm_data.vm_name == vmname).select().first()
-
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
         domain = connection_object.lookupByName(vmname)
@@ -335,6 +343,7 @@ def free_vm_properties(vm_details):
         shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_name)
     return
     
+
 # Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None):
 
@@ -353,6 +362,9 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +        
                                                                 int(template_hdd))
 
+    current.db(current.db.private_ip_pool.private_ip == vm_properties['private_ip']).update(vm_id = vm_details.id)
+    if vm_properties['public_ip_req']:
+        current.db(current.db.public_ip_pool.public_ip == vm_properties['public_ip']).update(vm_id = vm_details.id)
     # vm_status (function : status) :- (install : running) ; (clone : shutdown)
     if parent_id:
         vm_status = current.VM_STATUS_SHUTDOWN
@@ -364,7 +376,8 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
                                                                datastore_id = datastore.id, 
                                                                private_ip = vm_properties['private_ip'], 
                                                                vnc_port = vm_properties['vnc_port'],
-                                                               mac_addr_1 = vm_properties['mac_addr_1'],
+                                                               mac_addr = vm_properties['mac_addr'],
+                                                               public_ip = vm_properties['public_ip'], 
                                                                start_time = get_datetime(), 
                                                                current_run_level = 3, 
                                                                last_run_level = 3,
@@ -374,6 +387,19 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
 
     current.logger.debug("Updated db")    
     return
+
+
+def create_NAT_IP_mapping(action, public_ip, private_ip):
+    config = get_config_file()
+    nat_ip = config.get("GENERAL_CONF","nat_ip")
+    nat_user = config.get("GENERAL_CONF","nat_user")
+    nat_password = config.get("GENERAL_CONF","nat_password")
+    nat_script = config.get("GENERAL_CONF","nat_script")
+    
+    command = "sh %s %s %s %s"%(nat_script, action, public_ip, private_ip)
+    
+    exec_command_on_host(nat_ip, nat_user, command, nat_password)
+    
     
 # Installs a vm
 def install(parameters):
@@ -397,6 +423,9 @@ def install(parameters):
 
             # Checking if vm has been installed successfully
             assert(check_if_vm_defined(vm_properties['host'].host_ip, vm_details.vm_name)), "VM is not installed. Check logs."
+
+            if vm_properties['public_ip_req']:
+                create_NAT_IP_mapping('add', vm_properties['public_ip'], vm_properties['private_ip'])
 
             # Update database after vm installation
             update_db_after_vm_installation(vm_details, vm_properties) 
@@ -545,7 +574,7 @@ def delete(parameters):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
             #domain.destroy()
         if (vm_has_snapshots(vmid)):
-             delete_vm_snapshots(vmid, domain)
+            delete_vm_snapshots(vmid, domain)
         current.logger.debug("Starting to delete it...")
         domain.undefine()
         message = vm_details.vm_name + " is deleted successfully."
@@ -681,19 +710,27 @@ def edit_vm_config(parameters):
             
         if 'public_ip' in parameters:
             enable_public_ip = parameters['public_ip']
-            #Implement logic to fetch public IP
             if enable_public_ip:
-                current.db(current.db.vm_data.id == vmid).update(public_ip = '127.0.0.1', mac_addr_2='00:00:00:00:00:00')
+                current.db(current.db.vm_data.id == vmid).update(public_ip = '127.0.0.1')
+                public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
+                if public_ip_pool:
+                    create_NAT_IP_mapping('add', public_ip_pool.public_ip, vm_details.private_ip)
+                    current.db.public_ip_pool[public_ip_pool.id] = dict(vm_id=vmid)
+                    current.db.vm_data[vmid] = dict(public_ip=public_ip_pool.public_ip)
+                    
+                else:
+                    raise Exception("Available Public IPs are exhausted.")
             else:
-                current.db(current.db.vm_data.id == vmid).update(public_ip = PUBLIC_IP_NOT_ASSIGNED, mac_addr_2 = PUBLIC_IP_NOT_ASSIGNED)
+                create_NAT_IP_mapping('remove', vm_details.public_ip, vm_details.private_ip)
+                current.db(current.db.public_ip_pool.public_ip == vm_details.public_ip).update(vm_id = None)
+                current.db.vm_data[vmid] = dict(public_ip=public_ip_pool.public_ip)
         
         if 'security_domain' in parameters:
-            #Implement logic
             current.db(current.db.vm_data.id == vmid).update(security_domain = parameters['security_domain'])
-
-        if 'enable_service' in parameters:
-            #Implement logic
-            current.db(current.db.vm_data.id == vmid).update(enable_service = parameters['enable_service'])
+            # fetch new private IP from db from given security domain
+            # stop VM. update vm config to add new mac address. start VM
+            # update NAT IP mapping, if public IP present
+            # update vm_data, private_ip_pool
 
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -712,7 +749,7 @@ def get_clone_properties(vm_details, cloned_vm_details):
 
     # Finds mac address, ip address and vnc port for the cloned vm
     choose_mac_ip_vncport(vm_properties)
-    current.logger.debug("MAC is : " + str(vm_properties['mac_addr_1']) + " IP is : " + str(vm_properties['private_ip']) + \
+    current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + \
                          " VNCPORT is : " + str(vm_properties['vnc_port']))
   
     # Template and host of parent vm
@@ -755,7 +792,7 @@ def clone(vmid):
     try:
         (vm_properties, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
         clone_command = "virt-clone --original " + vm_details.vm_name + " --name " + cloned_vm_details.vm_name + \
-                        clone_file_parameters + " --mac " + vm_properties['mac_addr_1']
+                        clone_file_parameters + " --mac " + vm_properties['mac_addr']
         exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
         current.logger.debug("Updating db after cloning")
         update_db_after_vm_installation(cloned_vm_details, vm_properties, parent_id = vm_details.id)

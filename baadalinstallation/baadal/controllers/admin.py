@@ -20,9 +20,9 @@ def list_all_pending_requests():
     requests = get_segregated_requests(pending_requests)
 
     return dict(install_requests = requests[0], 
-                clone_requests = requests[1], 
-                disk_requests = requests[2], 
-                edit_requests= requests[3])
+                clone_requests   = requests[1], 
+                disk_requests    = requests[2], 
+                edit_requests    = requests[3])
 
 @check_moderator
 @handle_exception
@@ -286,7 +286,7 @@ def delete_host():
 @check_moderator
 @handle_exception
 def manage_public_ip_pool():
-    form = get_manage_ip_pool_form()
+    form = get_manage_public_ip_pool_form()
     return dict(form=form)
 
 @check_moderator
@@ -301,3 +301,24 @@ def validate_public_ip_range():
         return str(failed)
     else:
         return '-1'
+
+@check_moderator
+@handle_exception
+def manage_private_ip_pool():
+    form = get_manage_private_ip_pool_form()
+    return dict(form=form)
+
+@check_moderator
+@handle_exception
+def vm_utilization():
+
+    form = get_util_period_form()
+    util_period = VM_UTIL_24_HOURS
+    form.vars.util_period = util_period
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        util_period = int(form.vars.util_period)
+    
+    vm_util_data = get_vm_util_data(util_period)
+    
+    return dict(vm_util_data=vm_util_data, form=form)
