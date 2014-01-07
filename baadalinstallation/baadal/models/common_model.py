@@ -173,6 +173,15 @@ def get_vm_info(_vm_id):
 def get_request_info(request_id):
     return db.request_queue[request_id]
 
+def is_vm_owner(vm_id):
+    if is_moderator() or is_orgadmin():
+        return True
+    
+    if db((db.user_vm_map.vm_id == vm_id) & db.user_vm_map.user_id == auth.user.id).select():
+        return True
+    else:
+        return False
+
 def get_task_list(events):
 
     tasks = []
@@ -298,13 +307,13 @@ def get_vm_operations(vm_id):
         if vmstatus == VM_STATUS_SUSPENDED:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/play2.png'), _height=20, _width=20),
-                _href=URL(r=request, f='resume_machine', args=[vm_id]), 
+                _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_RESUME_VM, vm_id]), 
                 _title="Unpause this virtual machine", _alt="Unpause on this virtual machine"))
                 
         elif vmstatus == VM_STATUS_SHUTDOWN:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-                        _href=URL(r=request, f='start_machine', args=[vm_id]), 
+                        _href=URL(r=request, f='handle_vm_operation', args=[TASK_TYPE_START_VM, vm_id]), 
                     _title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
@@ -327,11 +336,11 @@ def get_vm_operations(vm_id):
         elif vmstatus == VM_STATUS_RUNNING:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='pause_machine', args=[vm_id]), 
+                    _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_SUSPEND_VM, vm_id]), 
                     _title="Pause this virtual machine", _alt="Pause this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='shutdown_machine', args=[vm_id]), _title="Gracefully shut down this virtual machine",
+                    _href=URL(r=request, f='handle_vm_operation', args=[TASK_TYPE_STOP_VM, vm_id]), _title="Gracefully shut down this virtual machine",
                     _alt="Gracefully shut down this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
@@ -342,7 +351,7 @@ def get_vm_operations(vm_id):
         if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED):
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='destroy_machine', args= [vm_id]), 
+                    _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_DESTROY_VM, vm_id]), 
                     _title="Forcefully power off this virtual machine",
                     _alt="Forcefully power off this virtual machine"))
 

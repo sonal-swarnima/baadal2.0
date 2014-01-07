@@ -67,65 +67,25 @@ def settings():
     
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
 
-
 @auth.requires_login()
 @handle_exception
-def start_machine():
-    vm_id=request.args[0]       
-    add_vm_task_to_queue(vm_id,TASK_TYPE_START_VM)
-    session.flash = 'Request to start machine added to queue'
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-
-@auth.requires_login()
-@handle_exception
-def shutdown_machine():
-    vm_id=request.args[0]      
-    add_vm_task_to_queue(vm_id,TASK_TYPE_STOP_VM)        
-    session.flash = 'Request to shutdown machine added to queue'
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-
-@auth.requires_login()
-@handle_exception
-def destroy_machine():
-    vm_id=request.args[0]       
-    add_vm_task_to_queue(vm_id,TASK_TYPE_DESTROY_VM)        
-    session.flash = 'Request to destroy machine added to queue'
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-
-@auth.requires_login()
-@handle_exception       
-def resume_machine():
-    vm_id=request.args[0]     
-    add_vm_task_to_queue(vm_id,TASK_TYPE_RESUME_VM)        
-    session.flash = 'Request to resume machine added to queue'
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-
-@auth.requires_login()
-@handle_exception       
-def delete_machine():
-    vm_id = request.args[0]      
-    add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)        
-    session.flash = 'Request to delete machine added to queue'
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-
-@auth.requires_login()
-@handle_exception       
-def pause_machine():
-    vm_id=request.args[0]  
-    add_vm_task_to_queue(vm_id,TASK_TYPE_SUSPEND_VM)        
-    session.flash = 'Request to pause machine added to queue'
+def handle_vm_operation():
+    task_type=request.args[0]    
+    vm_id=request.args[1]    
+    if not is_vm_owner(vm_id):
+        session.flash = "Not authorized"
+    elif is_request_in_queue(vm_id, task_type):
+        session.flash = "%s request already in queue." %task_type
+    else:
+        add_vm_task_to_queue(vm_id,task_type)
+        session.flash = '%s request added to queue.' %task_type
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception       
 def snapshot():
     vm_id = int(request.args[0])
-    if is_snapshot_request_in_queue(vm_id):
+    if is_request_in_queue(vm_id, TASK_TYPE_SNAPSHOT_VM):
         session.flash = "Snapshot request already in queue."
     elif check_snapshot_limit(vm_id):
         add_vm_task_to_queue(vm_id, TASK_TYPE_SNAPSHOT_VM, {'snapshot_type': SNAPSHOT_USER})

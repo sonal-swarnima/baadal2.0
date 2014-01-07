@@ -247,9 +247,10 @@ def get_vm_user_list(vm_id) :
         user_id_lst.append(vm_user)
     return user_id_lst
 
-def is_snapshot_request_in_queue(vm_id):
+def is_request_in_queue(vm_id, task_type):
+
     if db((db.task_queue.vm_id == vm_id) 
-          & (db.task_queue.task_type == TASK_TYPE_SNAPSHOT_VM) 
+          & (db.task_queue.task_type == task_type) 
           & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select():
         return True
     else:
