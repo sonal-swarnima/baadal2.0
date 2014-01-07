@@ -1,6 +1,6 @@
 {{extend 'layout.html'}}
   {{for vmhosts in hostvmlist:}}
-    <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}MB, vCPUs= {{=vmhosts['cpus']}}]</h2>
+    <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}GB, vCPUs= {{=vmhosts['cpus']}}]</h2>
     <div class="TABLE">
     <table>
       <tr>

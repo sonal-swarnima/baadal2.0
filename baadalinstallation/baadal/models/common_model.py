@@ -194,12 +194,12 @@ def get_task_num_form():
     return form
     
 
-def add_vm_task_to_queue(vm_id, task_type, params = {}):
+def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
     
     params.update({'vm_id' : vm_id})
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
-                         requester_id=auth.user.id,
+                         requester_id=requested_by if requested_by != None else auth.user.id,
                          parameters=params, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
@@ -291,14 +291,6 @@ def get_vm_operations(vm_id):
                     _href=URL(r=request, c='user' ,f='show_vm_performance', args=[vm_id]), 
                     _title="Check VM performance", _alt="Check VM Performance"))
 
-        if is_moderator():
-
-            if (db(db.host.id > 0).count() >= 2):
-
-                valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
-                        _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
-                     _title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
-
         if is_moderator() or is_orgadmin() or is_faculty():
             valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
                         _onclick="confirm_vm_deletion()",    _title="Delete this virtual machine",    _alt="Delete this virtual machine"))
@@ -309,11 +301,7 @@ def get_vm_operations(vm_id):
                 _href=URL(r=request, f='resume_machine', args=[vm_id]), 
                 _title="Unpause this virtual machine", _alt="Unpause on this virtual machine"))
                 
-            valid_operations_list.append(A(IMG(_src=URL('static','images/cpu.png'), _height=20, _width=20),
-                _href=URL(r=request, f='adjrunlevel', args = vm_id),
-                _title="Adjust your machines resource utilization", _alt="Adjust your machines resource utilization"))
-            
-        if vmstatus == VM_STATUS_SHUTDOWN:
+        elif vmstatus == VM_STATUS_SHUTDOWN:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
                         _href=URL(r=request, f='start_machine', args=[vm_id]), 
@@ -336,7 +324,7 @@ def get_vm_operations(vm_id):
                     _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
                     _title="Assign VNC", _alt="Assign VNC"))
                     
-        if vmstatus == VM_STATUS_RUNNING:
+        elif vmstatus == VM_STATUS_RUNNING:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
                     _href=URL(r=request, f='pause_machine', args=[vm_id]), 
@@ -359,10 +347,17 @@ def get_vm_operations(vm_id):
                     _alt="Forcefully power off this virtual machine"))
 
         if is_moderator():
-       
+
             valid_operations_list.append(A(IMG(_src=URL('static','images/user_add.png'), _height=20, _width=20),
                         _href=URL(r = request, c = 'admin', f = 'user_details', args = vm_id), _title="Add User to VM", 
                         _alt="Add User to VM"))
+
+            if (db(db.host.id > 0).count() >= 2):
+
+                valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
+                        _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
+                     _title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
+
    
    
     else:

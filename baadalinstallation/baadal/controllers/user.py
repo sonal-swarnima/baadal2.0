@@ -123,22 +123,6 @@ def pause_machine():
 
 @auth.requires_login()
 @handle_exception       
-def adjrunlevel():
-    #Adjust the run level of the virtual machine
-    vm_id=request.args[0]
-    vminfo = get_vm_config(vm_id)        
-    return dict(vm=vminfo)
-
-@auth.requires_login()
-@handle_exception       
-def changelevel():
-    vm_id=request.args[0]     
-    add_vm_task_to_queue(vm_id,TASK_TYPE_CHANGELEVEL_VM)        
-    session.flash = 'Request to change level added to queue'
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
-
-@auth.requires_login()
-@handle_exception       
 def snapshot():
     vm_id = int(request.args[0])
     if is_snapshot_request_in_queue(vm_id):

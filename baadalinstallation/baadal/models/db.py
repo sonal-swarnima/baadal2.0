@@ -144,13 +144,13 @@ db.define_table('vlan',
     format = '%(name)s')
 
 db.define_table('security_domain',
-    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name', requires=[IS_NOT_IN_DB(db,'security_domain.name')]),
+    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
     Field('vlan', 'reference vlan'),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
 
-vlan_query = (db.security_domain.vlan != db.vlan.id)
+vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
 db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', multiple=False, zero=None)
 
 db.define_table('vm_data',

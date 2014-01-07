@@ -13,7 +13,7 @@ def get_manage_template_form():
     default_sort_order=[db.template.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 def get_manage_datastore_form():
@@ -23,7 +23,7 @@ def get_manage_datastore_form():
     default_sort_order=[db.datastore.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 
@@ -100,7 +100,7 @@ def get_security_domain_form():
     fields = (db.security_domain.name, db.security_domain.vlan)
     default_sort_order=[db.security_domain.id]
 
-    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 
@@ -178,7 +178,7 @@ def create_clone_task(req_data, params):
         cnt = cnt+1
         
     params.update({'clone_vm_id':vm_id_list})
-    add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params)
+    add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params=params, requested_by=req_data.requester_id)
 
 def create_install_task(req_data, params):
 
@@ -198,7 +198,7 @@ def create_install_task(req_data, params):
                   status = VM_STATUS_IN_QUEUE)
         
     add_vm_users(vm_id, req_data.requester_id, req_data.owner_id, req_data.collaborators)
-    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params)
+    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params=params, requested_by=req_data.requester_id)
 
 def create_edit_config_task(req_data, params):
     
@@ -210,7 +210,7 @@ def create_edit_config_task(req_data, params):
 #     if vm_data.enable_service != req_data.enable_service : params['enable_service'] = req_data.enable_service
     if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
 
-    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
+    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params)
 
 def enqueue_vm_request(request_id):
     
@@ -225,7 +225,7 @@ def enqueue_vm_request(request_id):
         create_edit_config_task(req_data, params)
     elif req_data.request_type == TASK_TYPE_ATTACH_DISK:
         params.update({'disk_size' : req_data.attach_disk})
-        add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
+        add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params, requested_by=req_data.requester_id)
     
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 
@@ -276,6 +276,11 @@ def update_task_retry(_task_id):
     task_queue_data = db.task_queue[_task_id]
     if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
         db.task_queue[_task_id] = dict(status=VM_STATUS_IN_QUEUE)
+
+    if 'request_id' in task_queue_data.parameters:
+        req_queue_data = db.request_queue[task_queue_data.parameters['request_id']]
+        if req_queue_data:
+            db.request_queue[task_queue_data.parameters['request_id']] = dict(status=REQ_STATUS_IN_QUEUE)
 
     #Mark current task event for the task as IGNORE. 
     db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
