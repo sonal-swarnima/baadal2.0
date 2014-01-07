@@ -68,9 +68,9 @@ Enbl_Modules()
 	module-assistant --text-mode --force auto-install openvswitch-datapath
 
 	brcompat_exist=`lsmod | grep brcompat`
-	if test -z $brcompat_exist ; then
+	if test -z "$brcompat_exist" ; then
 		echo "brcompat module is not configured properly. Please retry with \" rmmod bridge \" followed by \"service openvswitch-switch restart\" "
-		exit
+		exit 1
 	fi
 
 	echo "Configuring OpenvSwitch"
