@@ -33,19 +33,20 @@ def get_request_status(iStatus):
 def get_hosted_vm_list(vms):
     vmlist = []
     for vm in vms:
-        total_cost = add_to_cost(vm.id)
         element = {'id' : vm.id,
                    'name' : vm.vm_name,
-                   'private_ip' : vm.private_ip, 
+                   'organisation' : vm.owner_id.organisation_id.name,
                    'owner' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name if vm.owner_id > 0 else 'System User', 
+                   'private_ip' : vm.private_ip, 
+                   'public_ip' : vm.public_ip, 
                    'hostip' : vm.host_id.host_ip,
                    'RAM' : vm.RAM,
                    'vcpus' : vm.vCPU,
-                   'status' : get_vm_status(vm.status),
-                   'cost' : total_cost}
+                   'status' : get_vm_status(vm.status)}
         vmlist.append(element)
     return vmlist
 
+#Update the dictionary with values specific to pending Install request tab
 def update_install_vm_request(vm_request, element):
     collaborators = '-'
     if vm_request.collaborators != None:
@@ -59,17 +60,18 @@ def update_install_vm_request(vm_request, element):
     if vm_request.extra_HDD != 0:
         element['HDD'] = str(vm_request.HDD)+'GB + ' + str(vm_request.extra_HDD) + 'GB'
     
-
+#Update the dictionary with values specific to pending Clone request tab
 def update_clone_vm_request(vm_request, element):
     element['clone_count'] = vm_request.clone_count
     
-
+#Update the dictionary with values specific to pending Attach Disk request tab
 def update_attach_disk_request(vm_request, element):
     element['parent_vm_id'] = vm_request.parent_id
     element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD !=0 else 'None'
     element['attach_disk'] = str(vm_request.attach_disk) + 'GB'
     
 
+#Update the dictionary with values specific to pending Edit Configuration request tab
 def update_edit_config_request(vm_request, element):
     vm_data = db.vm_data[vm_request.parent_id]
     
@@ -91,6 +93,32 @@ def update_edit_config_request(vm_request, element):
     if vm_request.security_domain == vm_data.security_domain: element['security_domain'] = 'Same'
     else: element['security_domain'] = vm_request.security_domain.name if vm_request.security_domain != None else None;
 
+
+def get_pending_request_query(statusList):
+
+    if is_moderator():
+        _query = db(db.request_queue.status.belongs(statusList))
+    elif is_orgadmin():
+        users_of_same_org = db(auth.user.organisation_id == db.user.organisation_id)._select(db.user.id)
+        _query = db((db.request_queue.status.belongs(statusList)) & (db.request_queue.requester_id.belongs(users_of_same_org)))
+    else:
+        _query = db((db.request_queue.status.belongs(statusList)) & (db.request_queue.owner_id == auth.user.id))
+        
+    return _query
+
+
+def get_pending_approval_count():
+    
+    _query = get_pending_request_query([REQ_STATUS_VERIFIED])
+    return _query.count()
+
+def get_all_pending_req_count():
+
+    _query = get_pending_request_query([REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED])
+    return _query.count()
+
+#Creates dictionary of pending requests for differnt request types.
+#It is used for HTML rendering
 def get_pending_request_list(vm_requests):
 
     request_list = []
@@ -102,6 +130,7 @@ def get_pending_request_list(vm_requests):
                    'requester_id' : vm_request.requester_id, 
                    'owner_id' : vm_request.owner_id,
                    'requester_name' : vm_request.requester_id.first_name + ' ' + vm_request.requester_id.last_name,
+                   'org_id' : vm_request.requester_id.organisation_id,
                    'organisation' : vm_request.requester_id.organisation_id.name,
                    'vCPUs' : str(vm_request.vCPU)+' CPU', 
                    'RAM' : str(vm_request.RAM/1024) + 'GB' if vm_request.RAM else None, 
@@ -177,7 +206,7 @@ def is_vm_owner(vm_id):
     if is_moderator() or is_orgadmin():
         return True
     
-    if db((db.user_vm_map.vm_id == vm_id) & db.user_vm_map.user_id == auth.user.id).select():
+    if db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == auth.user.id)).count()>0:
         return True
     else:
         return False
@@ -186,7 +215,8 @@ def get_task_list(events):
 
     tasks = []
     for event in events:
-        element = {'task_type' :event.task_type,
+        element = {'event_id'  :event.id,
+                   'task_type' :event.task_type,
                    'task_id'   :event.task_id,
                    'vm_name'   :event.vm_id.vm_name,
                    'user_name' :get_full_name(event.requester_id),
@@ -232,6 +262,7 @@ def handle_exception(fn):
             exception_handler()
     return decorator    
 
+
 def exception_handler():
     import sys, traceback
     etype, value, tb = sys.exc_info()
@@ -246,7 +277,7 @@ def exception_handler():
 # Generic check moderator decorator
 def check_moderator(fn):
     def decorator(*args, **kwargs):
-        if (auth.is_logged_in()) & is_moderator():
+        if is_moderator():
             return fn(*args, **kwargs)
         else:
             session.flash = "You don't have admin privileges"
@@ -257,7 +288,7 @@ def check_moderator(fn):
 # Generic check orgadmin decorator
 def check_orgadmin(fn):
     def decorator(*args, **kwargs):
-        if (auth.is_logged_in()) & (is_moderator() | is_orgadmin()):
+        if (is_moderator() or is_orgadmin()):
             return fn(*args, **kwargs)
         else:
             session.flash = "You don't have org admin privileges"
@@ -268,23 +299,14 @@ def check_orgadmin(fn):
 # Generic check faculty decorator
 def check_faculty(fn):
     def decorator(*args, **kwargs):
-        if (auth.is_logged_in()) & (is_faculty() | is_orgadmin() | is_moderator()):
+        if (is_faculty() or is_orgadmin() or is_moderator()):
             return fn(*args, **kwargs)
         else:
             session.flash = "You don't have faculty privileges"
             redirect(URL(c='default', f='index'))
     return decorator    
 
-def get_pending_approval_count():
-    
-    users_of_same_org = db(auth.user.organisation_id == db.user.organisation_id)._select(db.user.id)
-    vm_count = db((db.request_queue.requester_id.belongs(users_of_same_org)) & (db.request_queue.status == REQ_STATUS_VERIFIED)).count()
 
-    return vm_count
-
-def get_all_pending_vm_count():
-    return db(db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED)).count()
-             
 def get_vm_operations(vm_id):
 
     valid_operations_list = []

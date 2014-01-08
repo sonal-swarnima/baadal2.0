@@ -59,7 +59,6 @@ def update_vm_data_event(fields, _id):
                                           start_time = fields['start_time'], 
                                           current_run_level = fields['current_run_level'],
                                           last_run_level = fields['last_run_level'],
-                                          total_cost = fields['total_cost'],
                                           status = fields['status'] )
 
 def vm_data_update_callback(dbset, new_fields):

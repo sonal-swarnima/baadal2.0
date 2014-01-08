@@ -197,8 +197,8 @@ def ignore_task():
 @check_moderator
 @handle_exception
 def retry_task():
-    task_id=request.args[0]
-    update_task_retry(task_id)
+    event_id=request.args[0]
+    update_task_retry(event_id)
     
     redirect(URL(r=request,c='admin',f='task_list'))
 
@@ -322,3 +322,11 @@ def vm_utilization():
     vm_util_data = get_vm_util_data(util_period)
     
     return dict(vm_util_data=vm_util_data, form=form)
+
+@check_moderator
+@handle_exception
+def remind_orgadmin():
+    vm_id=request.args[0]
+    send_remind_orgadmin_email(vm_id)
+    session.flash = 'Organisation Admin Reminded'
+    redirect(URL(c='orgadmin', f='pending_approvals'))

@@ -85,7 +85,7 @@ def find_new_host(runlevel, RAM, vCPU):
             current.logger.debug("used ram:" + str(used_ram) + " used cpu:" + str(used_cpu) + " host ram:" + str(host_ram) +  \
                                  " host cpu" + str(host_cpu))
             (effective_ram,effective_vcpu) = compute_effective_ram_vcpu(RAM,vCPU,runlevel)
-            if(host_selected == None and (used_ram + effective_ram) <= ((host_ram * 1024))):
+            if(host_selected == None and ((used_ram + effective_ram) <= ((host_ram * 1024)))):
                 host_selected = host
 
     if host_selected != None:
@@ -774,6 +774,7 @@ def get_clone_properties(vm_details, cloned_vm_details):
     vm_properties['datastore'] = datastore
     current.logger.debug("Datastore selected is: " + str(datastore))
 
+    vm_properties['security_domain'] = vm_details.security_domain
     # Finds mac address, ip address and vnc port for the cloned vm
     choose_mac_ip_vncport(vm_properties)
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + \

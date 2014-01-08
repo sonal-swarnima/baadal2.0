@@ -87,13 +87,25 @@ def validate_approver(form):
         form.errors.faculty_user='Faculty Approver Username is not valid'
 
 
-def send_remind_faculty_email(vm_id):
-    vm_data = db.vm_data[vm_id]
-    send_email_to_faculty(vm_data.owner_id, vm_data.vm_name, vm_data.start_time)
+def send_remind_faculty_email(req_id):
+    req_data = db.request_queue[req_id]
+    send_email_to_approver(req_data.owner_id, req_data.requester_id, req_data.request_type, req_data.start_time)
+
+
+def send_remind_orgadmin_email(req_id):
+    req_data = db.request_queue[req_id]
+    admins = db((db.user.organisation_id == req_data.requester_id.organisation_id) 
+                & (db.user.id == db.user_membership.user_id) 
+                & (db.user_membership.group_id == db.user_group.id) 
+                & (db.user_group.role == ORGADMIN)).select(db.user.id)
+                
+    for admin in admins:
+        send_email_to_approver(admin.id, req_data.requester_id, req_data.request_type, req_data.start_time)
+
 
 def get_request_status():
     status = REQ_STATUS_REQUESTED
-    if (is_moderator() | is_orgadmin()):
+    if (is_moderator() or is_orgadmin()):
         status = REQ_STATUS_APPROVED
     elif is_faculty():
         status = REQ_STATUS_VERIFIED
@@ -105,7 +117,7 @@ def request_vm_validation(form):
     set_configuration_elem(form)
     form.vars.status = get_request_status()
 
-    if (is_moderator() | is_orgadmin()):
+    if (is_moderator() or is_orgadmin()):
         form.vars.owner_id = auth.user.id
     elif is_faculty():
         form.vars.owner_id = auth.user.id
@@ -123,7 +135,7 @@ def request_vm_validation(form):
     user_list.append(form.vars.owner_id)
     user_list.append(auth.user.id)
 
-    vms = db((db.vm_data.id == db.user_vm_map.vm_id) &
+    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
              (db.user_vm_map.user_id.belongs(user_list))).select(db.vm_data.vm_name)
     
     if vms.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
@@ -179,7 +191,7 @@ def get_request_vm_form():
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    if not(is_moderator() | is_orgadmin() | is_faculty()):
+    if not(is_moderator() or is_orgadmin() or is_faculty()):
         add_faculty_approver(form)
     add_collaborators(form)
     add_security_domain(form)
@@ -188,10 +200,15 @@ def get_request_vm_form():
 
 def get_user_info(username, roles):
     user_query = db((db.user.username == username) 
+             & (db.user.organisation_id == auth.user.organisation_id)
              & (db.user.id == db.user_membership.user_id)
              & (db.user_membership.group_id == db.user_group.id)
              & (db.user_group.role.belongs(roles)))
-    user = user_query.select().first()
+    
+    user = user_query.select(db.user.ALL).first()
+    print db._lastsql
+    print user
+    
     # If user not present in DB
     if not user:
         if current.auth_type == 'ldap':
@@ -199,10 +216,10 @@ def get_user_info(username, roles):
             if user_info:
                 if [obj for obj in roles if obj in user_info['roles']]:
                     create_or_update_user(user_info, False)
-                    user = user_query.select().first()
+                    user = user_query.select(db.user.ALL).first()
     
     if user:
-        return (user.user.id, (user.user.first_name + ' ' + user.user.last_name))	
+        return (user['id'], (user['first_name'] + ' ' + user['last_name']))	
 
 
 def get_my_task_list(task_status, task_num):
@@ -227,10 +244,8 @@ def get_vm_config(vm_id):
                    'status'           : get_vm_status(vminfo.status),
                    'ostype'           : 'Linux',
                    'purpose'          : str(vminfo.purpose),
-                   'totalcost'        : str(vminfo.total_cost),
                    'private_ip'       : str(vminfo.private_ip),
                    'public_ip'        : str(vminfo.public_ip),
-#                    'services_enabled' : ', '.join(ser for ser in vminfo.enable_service) if len(vminfo.enable_service) != 0 else '-',
                    'security_domain'  : str(vminfo.security_domain.name)}
 
     if is_moderator():
@@ -257,7 +272,7 @@ def is_request_in_queue(vm_id, task_type):
         return False
 
 def check_snapshot_limit(vm_id):
-    snapshots = db(db.snapshot.vm_id == vm_id & db.snapshot.type==SNAPSHOT_USER).count()
+    snapshots = db((db.snapshot.vm_id == vm_id) & (db.snapshot.type == SNAPSHOT_USER)).count()
     logger.debug("No of snapshots are " + str(snapshots))
     if snapshots < SNAPSHOTTING_LIMIT:
         return True

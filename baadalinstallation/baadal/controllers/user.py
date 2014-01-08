@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin, get_datetime
+from helper import is_moderator, is_faculty, is_orgadmin
 
 @auth.requires_login()
 @handle_exception
@@ -19,8 +19,8 @@ def request_vm():
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         
         send_email_to_user(form.vars.vm_name)
-        if not(is_moderator() | is_orgadmin() | is_faculty()):
-            send_email_to_faculty(form.vars.owner_id, form.vars.vm_name, get_datetime())
+        if not(is_moderator() or is_orgadmin() or is_faculty()):
+            send_remind_faculty_email(form.vars.id)
 
         logger.debug('VM requested successfully')
         redirect(URL(c='default', f='index'))
@@ -58,7 +58,7 @@ def settings():
     vm_users = None
     vm_info = get_vm_config(vm_id)
     
-    if is_moderator() | is_faculty() | is_orgadmin():
+    if is_moderator() or is_faculty() or is_orgadmin():
         vm_users = get_vm_user_list(vm_id)
     
     vm_operations = get_vm_operations(vm_id)
@@ -74,12 +74,14 @@ def handle_vm_operation():
     vm_id=request.args[1]    
     if not is_vm_owner(vm_id):
         session.flash = "Not authorized"
-    elif is_request_in_queue(vm_id, task_type):
-        session.flash = "%s request already in queue." %task_type
+        redirect(URL(c='default', f='index'))
     else:
-        add_vm_task_to_queue(vm_id,task_type)
-        session.flash = '%s request added to queue.' %task_type
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+        if is_request_in_queue(vm_id, task_type):
+            session.flash = "%s request already in queue." %task_type
+        else:
+            add_vm_task_to_queue(vm_id,task_type)
+            session.flash = '%s request added to queue.' %task_type
+        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
 @handle_exception       

@@ -130,7 +130,8 @@ def get_all_vm_list():
     return get_hosted_vm_list(vms)
 
 def get_all_vm_ofhost(hostid):
-    vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id == hostid )).select()
+    vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) 
+             & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
 def get_vm_identity(vm_name, owner_id):
@@ -271,31 +272,32 @@ def get_task_by_status(task_status, task_num):
     return get_task_list(events)
     
 
-def update_task_retry(_task_id):
-    #Mark status for VM as 'In Queue'
-    task_queue_data = db.task_queue[_task_id]
-    if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
-        db.task_queue[_task_id] = dict(status=VM_STATUS_IN_QUEUE)
+def update_task_retry(event_id):
 
-    if 'request_id' in task_queue_data.parameters:
-        req_queue_data = db.request_queue[task_queue_data.parameters['request_id']]
+    #Mark status for request as 'In Queue'
+    task_event_data = db.task_queue_event[event_id]
+    if 'request_id' in task_event_data.parameters:
+        req_queue_data = db.request_queue[task_event_data.parameters['request_id']]
         if req_queue_data:
-            db.request_queue[task_queue_data.parameters['request_id']] = dict(status=REQ_STATUS_IN_QUEUE)
+            db.request_queue[task_event_data.parameters['request_id']] = dict(status=REQ_STATUS_IN_QUEUE)
 
     #Mark current task event for the task as IGNORE. 
-    db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
+    db.task_queue_event[event_id] = dict(status=TASK_QUEUE_STATUS_IGNORE)
     #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task
-    db(db.task_queue.id == _task_id).update(status = TASK_QUEUE_STATUS_RETRY)
+    db(db.task_queue.id == task_event_data.task_id).update(status = TASK_QUEUE_STATUS_RETRY)
 
 
-def update_task_ignore(_task_id):
+def update_task_ignore(event_id):
 
-    task_process = db.task_queue[_task_id] 
-    if 'request_id' in task_process.parameters:
-        del db.request_queue[task_process.parameters['request_id']]
-    db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
+    task_event_data = db.task_queue_event[event_id]
+    if 'request_id' in task_event_data.parameters:
+        req_queue_data = db.request_queue[task_event_data.parameters['request_id']]
+        if req_queue_data:
+            del db.request_queue[task_event_data.parameters['request_id']]
+    db.task_queue_event[event_id] = dict(status=TASK_QUEUE_STATUS_IGNORE)
+
     #Delete task from task_queue
-    del db.task_queue[_task_id]
+    del db.task_queue[task_event_data.task_id]
 
 
 def get_search_host_form():
@@ -417,7 +419,8 @@ def validate_user(form):
     if not user_info:
         form.errors.user_id = 'Username is not valid'
     else:
-        if db((db.user_vm_map.user_id == user_info[0]) & (db.user_vm_map.vm_id == vm_id)).select():
+        if db((db.user_vm_map.user_id == user_info[0]) 
+              & (db.user_vm_map.vm_id == vm_id)).select():
             form.errors.user_id = 'User is already this vm user'
     return form
 

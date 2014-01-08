@@ -20,7 +20,6 @@ def send_email_for_vm_creation(requester_id, vm_name, vm_request_time):
 
 def send_mail(to_address, email_subject, email_template, context, reply_to_address):
     
-    context['userName'] = (auth.user.first_name + ' ' + auth.user.last_name) 
     email_message = email_template.format(context)
     push_email(to_address, email_subject, email_message, reply_to_address)
 
@@ -33,21 +32,25 @@ def push_email(to_address, email_subject, email_message, reply_to_address):
             mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
 
 
-def send_email_to_faculty(faculty_id, vm_name, vm_request_time):
+def send_email_to_approver(approver_id, requester_id, request_type, request_time):
 
-    faculty_email = get_email(faculty_id)
-    if faculty_email:
-        faculty_name = get_fullname(faculty_id)
-        context = dict(facultyName = faculty_name, vmName = vm_name, 
-                       vmRequestTime=vm_request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+    approver_email = get_email(approver_id)
+    if approver_email:
+        approver_name = get_fullname(approver_id)
+        requester_name = get_fullname(requester_id)
+        context = dict(approverName = approver_name, 
+                       userName = requester_name, 
+                       requestType = request_type, 
+                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
         noreply_email = config.get("MAIL_CONF","mail_noreply")
-        send_mail(faculty_email, VM_APPROVAL_SUBJECT_FOR_FACULTY, VM_APPROVAL_TEMPLATE_FOR_FACULTY, context, noreply_email)
+        send_mail(approver_email, REQ_APPROVAL_REMINDER_SUBJECT, REQ_APPROVAL_REMINDER_TEMPLATE, context, noreply_email)
 
 
 def send_email_to_user(vm_name):
 
     email_address = get_email(auth.user.id)
-    context = dict(vmName = vm_name)
+    context = dict(vmName = vm_name, 
+                   userName = (auth.user.first_name + ' ' + auth.user.last_name))
     noreply_email = config.get("MAIL_CONF","mail_noreply")
     send_mail(email_address, VM_REQUEST_SUBJECT_FOR_USER, VM_REQUEST_TEMPLATE_FOR_USER, context, noreply_email)
     
