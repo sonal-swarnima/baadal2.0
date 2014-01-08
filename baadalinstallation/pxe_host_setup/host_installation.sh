@@ -1,5 +1,5 @@
-Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm libvirt-bin libvirt0 python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan munin-node munin-libvirt-plugins vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay)
-
+Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm libvirt-bin libvirt0 python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan munin-node munin-libvirt-plugins vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay cgroup-bin)
+ 
 Chk_Root_Login()
 {
 	username=`whoami`
@@ -65,7 +65,7 @@ Enbl_Modules()
 	apt-get -y install openvswitch-controller openvswitch-brcompat openvswitch-switch openvswitch-datapath-source
 	echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
 	service openvswitch-switch start
-	module-assistant --text-mode --force auto-install openvswitch-datapath
+	module-assistant --non-inter --quiet auto-install openvswitch-datapath
 
 	brcompat_exist=`lsmod | grep brcompat`
 	if test -z "$brcompat_exist" ; then
