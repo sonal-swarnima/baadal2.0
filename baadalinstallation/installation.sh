@@ -526,7 +526,7 @@ sed -i -e 's/PORTGROUPS/'"$PORTGROUP_STRING"'/g' /var/www/host_installation.sh
 sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/host_installation.sh
 
 touch /var/www/ovs-postup.sh
-echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
+echo -e "rmmod bridge\nservice openvswitch-switch restart\n$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
 
 }
 
