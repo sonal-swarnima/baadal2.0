@@ -112,6 +112,7 @@ Enbl_Modules()
 	virsh net-destroy default
 	virsh net-autostart --disable default
 
+	cd -
 	touch ovs-net.xml
 	
         ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='br0'/>\n<virtualport type='openvswitch'/>\nPORTGROUPS</network>"
