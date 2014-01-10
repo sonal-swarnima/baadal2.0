@@ -386,7 +386,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
                                                                start_time = get_datetime(), 
                                                                current_run_level = 3, 
                                                                last_run_level = 3,
-                                                               total_cost = 0, 
                                                                parent_id = parent_id,
                                                                status = vm_status)
 
