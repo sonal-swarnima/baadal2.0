@@ -222,13 +222,13 @@ def get_task_list(events):
                    'user_name' :get_full_name(event.requester_id),
                    'start_time':event.start_time,
                    'end_time'  :event.end_time,
-                   'error_msg' :event.error}
+                   'error_msg' :event.message}
         tasks.append(element)
     return tasks
 
 def get_task_num_form():
     form = FORM('Show:',
-                INPUT(_name = 'task_num', _class='task_num', requires = IS_INT_IN_RANGE(1,101)),
+                INPUT(_name = 'task_num', _class='task_num', requires = IS_INT_IN_RANGE(1,101), _id='task_num_id'),
                 A(SPAN(_class='icon-refresh'), _onclick = 'tab_refresh();$(this).closest(\'form\').submit()', _href='#'))
     return form
     
@@ -401,7 +401,7 @@ def get_vm_snapshots(vm_id):
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
 
         snapshot_dict = {}
-        snapshot_type = {SNAPSHOT_USER    : 'Custom',
+        snapshot_type = {SNAPSHOT_USER    : 'User',
                          SNAPSHOT_DAILY   : 'Daily',
                          SNAPSHOT_WEEKLY  : 'Weekly',
                          SNAPSHOT_MONTHLY : 'Monthly'}

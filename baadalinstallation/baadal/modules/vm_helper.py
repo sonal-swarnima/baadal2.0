@@ -446,7 +446,7 @@ def install(parameters):
             message = ''.join(traceback.format_exception(etype, value, tb, 10))
             current.logger.error("Exception " + message)
             free_vm_properties(vm_details)
-            return (current.TASK_QUEUE_STATUS_FAILED, message)
+            return (current.TASK_QUEUE_STATUS_FAILED, str(value))
 
 # Starts a vm
 def start(parameters):
@@ -775,6 +775,7 @@ def get_clone_properties(vm_details, cloned_vm_details):
     current.logger.debug("Datastore selected is: " + str(datastore))
 
     vm_properties['security_domain'] = vm_details.security_domain
+    vm_properties['public_ip_req'] = False
     # Finds mac address, ip address and vnc port for the cloned vm
     choose_mac_ip_vncport(vm_properties)
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + \
@@ -831,7 +832,7 @@ def clone(vmid):
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
-        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+        return (current.TASK_QUEUE_STATUS_FAILED, str(value)) 
 
 # Attaches extra disk to VM
 def attach_extra_disk(parameters):

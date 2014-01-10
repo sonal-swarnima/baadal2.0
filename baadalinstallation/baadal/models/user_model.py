@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db,auth,request,response
+    from gluon import db,auth,request
     import gluon
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
@@ -223,7 +223,7 @@ def get_user_info(username, roles):
 
 
 def get_my_task_list(task_status, task_num):
-    task_query = db((db.task_queue_event.status == task_status) 
+    task_query = db((db.task_queue_event.status.belongs(task_status)) 
                     & (db.task_queue_event.vm_id == db.vm_data.id) 
                     & (db.vm_data.requester_id==auth.user.id))
 
@@ -280,7 +280,6 @@ def check_snapshot_limit(vm_id):
         return False
 
 def get_clone_vm_form(vm_id):
-
     vm_data = db.vm_data[vm_id]
     
     clone_name = vm_data.vm_name + '_clone'

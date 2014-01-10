@@ -268,36 +268,55 @@ def get_vm_groupby_hosts() :
 
 
 def get_task_by_status(task_status, task_num):
-    events = db(db.task_queue_event.status == task_status).select(orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
+    events = db(db.task_queue_event.status.belongs(task_status)).select(orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
     return get_task_list(events)
     
 
 def update_task_retry(event_id):
 
-    #Mark status for request as 'In Queue'
-    task_event_data = db.task_queue_event[event_id]
-    if 'request_id' in task_event_data.parameters:
-        req_queue_data = db.request_queue[task_event_data.parameters['request_id']]
-        if req_queue_data:
-            db.request_queue[task_event_data.parameters['request_id']] = dict(status=REQ_STATUS_IN_QUEUE)
+    task_event = db.task_queue_event[event_id]
+    task_queue = db.task_queue[task_event.task_id]
+    
+    if 'request_id' in task_queue.parameters:
+        #Mark status for request as 'In Queue'
+        request_id = task_queue.parameters['request_id']
+        if db.request_queue[request_id]:
+            db.request_queue[request_id] = dict(status=REQ_STATUS_IN_QUEUE)
+    
+    if task_event.task_type == TASK_TYPE_CREATE_VM:
+        db.vm_data[task_event.vm_id] = dict(status=VM_STATUS_IN_QUEUE)
+    elif task_event.task_type == TASK_TYPE_CLONE_VM:
+        vm_list = task_queue.parameters['clone_vm_id']
+        for vm in vm_list:
+            db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
 
     #Mark current task event for the task as IGNORE. 
-    db.task_queue_event[event_id] = dict(status=TASK_QUEUE_STATUS_IGNORE)
-    #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task
-    db(db.task_queue.id == task_event_data.task_id).update(status = TASK_QUEUE_STATUS_RETRY)
+    task_event.update_record(status=TASK_QUEUE_STATUS_IGNORE)
+    #Mark task as RETRY. This will call task_queue_update_callback; which will schedule a new task
+    task_queue.update_record(status=TASK_QUEUE_STATUS_RETRY)
 
 
 def update_task_ignore(event_id):
 
-    task_event_data = db.task_queue_event[event_id]
-    if 'request_id' in task_event_data.parameters:
-        req_queue_data = db.request_queue[task_event_data.parameters['request_id']]
-        if req_queue_data:
-            del db.request_queue[task_event_data.parameters['request_id']]
-    db.task_queue_event[event_id] = dict(status=TASK_QUEUE_STATUS_IGNORE)
+    task_event = db.task_queue_event[event_id]
+    task_queue = db.task_queue[task_event.task_id]
+
+    if 'request_id' in task_queue.parameters:
+        request_id = task_queue.parameters['request_id']
+        if db.request_queue[request_id]:
+            del db.request_queue[request_id]
+    
+    if task_event.task_type == TASK_TYPE_CREATE_VM:
+        if db.vm_data[task_event.vm_id]: del db.vm_data[task_event.vm_id]
+    elif task_event.task_type == TASK_TYPE_CLONE_VM:
+        vm_list = task_queue.parameters['clone_vm_id']
+        for vm in vm_list:
+            if db.vm_data[vm]: del db.vm_data[vm]
+
+    task_event.update_record(task_id = None, status=TASK_QUEUE_STATUS_IGNORE)
 
     #Delete task from task_queue
-    del db.task_queue[task_event_data.task_id]
+    del db.task_queue[task_queue.id]
 
 
 def get_search_host_form():

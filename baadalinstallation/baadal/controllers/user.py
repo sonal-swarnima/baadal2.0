@@ -62,7 +62,6 @@ def settings():
         vm_users = get_vm_user_list(vm_id)
     
     vm_operations = get_vm_operations(vm_id)
-
     vm_snapshots = get_vm_snapshots(vm_id)
     
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
@@ -124,9 +123,9 @@ def list_my_task():
     if form.accepts(request.vars, session, keepvalues=True):
         task_num = int(form.vars.task_num)
     
-    pending = get_my_task_list(TASK_QUEUE_STATUS_PENDING, task_num)
-    success = get_my_task_list(TASK_QUEUE_STATUS_SUCCESS, task_num)
-    failed = get_my_task_list(TASK_QUEUE_STATUS_FAILED, task_num)
+    pending = get_my_task_list([TASK_QUEUE_STATUS_PENDING], task_num)
+    success = get_my_task_list([TASK_QUEUE_STATUS_SUCCESS], task_num)
+    failed = get_my_task_list([TASK_QUEUE_STATUS_FAILED, TASK_QUEUE_STATUS_PARTIAL_SUCCESS], task_num)
 
     return dict(pending=pending, success=success, failed=failed, form=form)  
 

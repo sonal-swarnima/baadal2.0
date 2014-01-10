@@ -180,9 +180,9 @@ def task_list():
     if form.accepts(request.vars, session, keepvalues=True):
         task_num = int(form.vars.task_num)
     
-    pending = get_task_by_status(TASK_QUEUE_STATUS_PENDING, task_num)
-    success = get_task_by_status(TASK_QUEUE_STATUS_SUCCESS, task_num)
-    failed = get_task_by_status(TASK_QUEUE_STATUS_FAILED, task_num)
+    pending = get_task_by_status([TASK_QUEUE_STATUS_PENDING], task_num)
+    success = get_task_by_status([TASK_QUEUE_STATUS_SUCCESS], task_num)
+    failed = get_task_by_status([TASK_QUEUE_STATUS_FAILED, TASK_QUEUE_STATUS_PARTIAL_SUCCESS], task_num)
     
     return dict(pending=pending, success=success, failed=failed, form=form)
 
