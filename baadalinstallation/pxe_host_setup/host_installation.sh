@@ -32,9 +32,10 @@ Instl_Pkgs()
                                 echo "Installing Package: $pkg.................."
                                 DEBIAN_FRONTEND=noninteractive apt-get -y install $pkg --force-yes
 				if test $pkg == "debconf-utils"; then
-					echo "dhcp3-relay dhcp3-relay/servers CONTROLLER_IP" | debconf-set-selections
-        				echo "dhcp3-relay dhcp3-relay/interfaces \"\"" | debconf-set-selections
-				        echo "dhcp3-relay dhcp3-relay/options \"\"" | debconf-set-selections
+					echo "dhcp3-relay dhcp3-relay/servers string CONTROLLER_IP" | debconf-set-selections
+					echo "isc-dhcp-relay isc-dhcp-relay/servers string CONTROLLER_IP" | debconf-set-selections
+        				echo "dhcp3-relay dhcp3-relay/interfaces string \"\"" | debconf-set-selections
+				        echo "dhcp3-relay dhcp3-relay/options string \"\"" | debconf-set-selections
 				fi
 
                 done
@@ -111,6 +112,7 @@ Enbl_Modules()
 	virsh net-destroy default
 	virsh net-autostart --disable default
 
+	cd -
 	touch ovs-net.xml
 	
         ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='br0'/>\n<virtualport type='openvswitch'/>\nPORTGROUPS</network>"
