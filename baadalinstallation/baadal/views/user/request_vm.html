@@ -72,18 +72,35 @@ function verify_faculty() {
 }
 
 function add_collaborator() {
-	var users_num = jQuery('[id^=user_]').length;
-	if(users_num == 3){
-		jQuery('.flash').html('Only upto 3 collaborators can be added to the VM').slideDown();
-		return;
-	}
+    var users_num = jQuery('[id^=user_]').length;
+    if(users_num == 5){
+        jQuery('.flash').html('Only upto 5 collaborators can be added to the VM').slideDown();
+        return;
+    }
     var vm_users = jQuery('[name="vm_users"]').val();
     var user = jQuery('#collaborator').val();
     if(vm_users.indexOf('|'+user+'|') != -1)
     {
-		jQuery('.flash').html('A collaborator cannot be added twice').slideDown();
-		return;
+        $('.flash').html('A collaborator cannot be added twice').slideDown();
+        $('#collaborator').val('');
+        return;
     }
+    if(user == '{{=auth.user.username}}')
+    {
+        $('.flash').html('Requester name need not be added as collaborator.').slideDown();
+        $('#collaborator').val('');
+        return;
+    }
+    if($('#faculty_user').val() != undefined)
+    {
+        if(user == $('[name="vm_owner"]').val())
+        {
+            $('.flash').html('Faculty approver need not be added as collaborator.').slideDown();
+            $('#collaborator').val('');
+            return;
+        }    
+    }
+    var faculty_user = jQuery('#faculty_user').val();
 
     var verify_url = "{{=URL('add_collaborator')}}";
     jQuery.post(verify_url, {keywords:user},
@@ -104,10 +121,10 @@ function add_collaborator() {
 }
 
 function remove_collaborator(vm_user){
-	var vm_users = jQuery('[name="vm_users"]').val()
-	vm_users = vm_users.replace(vm_user+'|', '');
-	jQuery('[name="vm_users"]').val(vm_users);
-	$('#user_'+vm_user).remove();
+    var vm_users = jQuery('[name="vm_users"]').val()
+    vm_users = vm_users.replace(vm_user+'|', '');
+    jQuery('[name="vm_users"]').val(vm_users);
+    $('#user_'+vm_user).remove();
 }
 
 jQuery('form').submit(function(){

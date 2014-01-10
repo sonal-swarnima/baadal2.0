@@ -206,8 +206,6 @@ def get_user_info(username, roles):
              & (db.user_group.role.belongs(roles)))
     
     user = user_query.select(db.user.ALL).first()
-    print db._lastsql
-    print user
     
     # If user not present in DB
     if not user:
@@ -223,11 +221,12 @@ def get_user_info(username, roles):
 
 
 def get_my_task_list(task_status, task_num):
+    
     task_query = db((db.task_queue_event.status.belongs(task_status)) 
-                    & (db.task_queue_event.vm_id == db.vm_data.id) 
-                    & (db.vm_data.requester_id==auth.user.id))
-
-    events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
+                    & ((db.task_queue_event.vm_id.belongs(
+                            db(auth.user.id == db.user_vm_map.user_id)._select(db.user_vm_map.vm_id))) 
+                     | (db.task_queue_event.requester_id == auth.user.id)))
+    events = task_query.select(db.task_queue_event.ALL, distinct=True, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)
 

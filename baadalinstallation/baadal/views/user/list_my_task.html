@@ -21,15 +21,17 @@
       <tr>
         <th>Task</th>
         <th>VM</th>
+        <th>Requested By</th>
         <th>Request Time</th>
-        <th>Final Time</th>
+        <th>Attention Time</th>
       </tr>
 	{{for task in pending:}}
       <tr>
         <td>{{=task['task_type']}}</td>
         <td>{{=task['vm_name']}}</td>
+        <td>{{=task['user_name']}}</td>
         <td>{{=task['start_time']}}</td>
-        <td>{{=task['end_time']}}</td>
+        <td>{{=task['att_time']}}</td>
       </tr>
 	{{pass}}
 </table>
@@ -47,6 +49,7 @@
       <tr>
         <th>Task</th>
         <th>VM</th>
+        <th>Requested By</th>
         <th>Request Time</th>
         <th>Final Time</th>
       </tr>
@@ -54,6 +57,7 @@
       <tr>
         <td>{{=task['task_type']}}</td>
         <td>{{=task['vm_name']}}</td>
+        <td>{{=task['user_name']}}</td>
         <td>{{=task['start_time']}}</td>
         <td>{{=task['end_time']}}</td>
       </tr>
@@ -88,6 +92,7 @@ function clicker(content){
       <tr>
         <th>Task</th>
         <th>VM</th>
+        <th>Requested By</th>
         <th>Debug Info</th>
         <th>Request Time</th>
         <th>Final Time</th>
@@ -96,6 +101,7 @@ function clicker(content){
       <tr>
         <td>{{=task['task_type']}}</td>
         <td>{{=task['vm_name']}}</td>
+        <td>{{=task['user_name']}}</td>
         <div id="errorcontent{{=str(counter)}}" style="display:none;">{{=task['error_msg']}}</div>
         <td><div id="error{{=str(counter)}}" style="display: none;"></div><a href='#' onclick='return clicker("{{=counter}}");'>Error</a></td>
         <td>{{=task['start_time']}}</td>

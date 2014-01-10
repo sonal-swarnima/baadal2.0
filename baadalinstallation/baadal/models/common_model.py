@@ -221,6 +221,7 @@ def get_task_list(events):
                    'vm_name'   :event.vm_id.vm_name,
                    'user_name' :get_full_name(event.requester_id),
                    'start_time':event.start_time,
+                   'att_time'  :event.attention_time,
                    'end_time'  :event.end_time,
                    'error_msg' :event.message}
         tasks.append(element)
