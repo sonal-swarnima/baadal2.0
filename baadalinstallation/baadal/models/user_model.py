@@ -132,17 +132,18 @@ def request_vm_validation(form):
             user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
     form.vars.collaborators = user_list
 
-    user_list.append(form.vars.owner_id)
-    user_list.append(auth.user.id)
+    user_set = set(user_list)
+    user_set.add(form.vars.owner_id)
+    user_set.add(auth.user.id)
 
     vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
-             (db.user_vm_map.user_id.belongs(user_list))).select(db.vm_data.vm_name)
+             (db.user_vm_map.user_id.belongs(user_set))).select(db.vm_data.vm_name)
     
     if vms.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
 
-    requests = db((db.request_queue.owner_id.belongs(user_list)) |
-             (db.request_queue.requester_id.belongs(user_list))).select(db.request_queue.vm_name)
+    requests = db((db.request_queue.owner_id.belongs(user_set)) |
+             (db.request_queue.requester_id.belongs(user_set))).select(db.request_queue.vm_name)
     
     if requests.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
