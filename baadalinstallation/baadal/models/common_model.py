@@ -48,10 +48,13 @@ def get_hosted_vm_list(vms):
 
 #Update the dictionary with values specific to pending Install request tab
 def update_install_vm_request(vm_request, element):
+
     collaborators = '-'
     if vm_request.collaborators != None:
         vm_users = db(db.user.id.belongs(vm_request.collaborators)).select()
-        collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
+        if len(vm_users) > 0:
+            collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
+
     element['collaborators'] = collaborators
     element['public_ip'] = vm_request.public_ip; 
 #     element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if len(vm_request.enable_service) != 0 else '-'; 

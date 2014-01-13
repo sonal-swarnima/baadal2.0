@@ -117,9 +117,7 @@ def request_vm_validation(form):
     set_configuration_elem(form)
     form.vars.status = get_request_status()
 
-    if (is_moderator() or is_orgadmin()):
-        form.vars.owner_id = auth.user.id
-    elif is_faculty():
+    if (is_moderator() or is_orgadmin() or is_faculty()):
         form.vars.owner_id = auth.user.id
     else:
         validate_approver(form)
@@ -130,10 +128,12 @@ def request_vm_validation(form):
     if vm_users and len(vm_users) > 1:
         for vm_user in vm_users[1:-1].split('|'):
             user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    
+    if request.post_vars.faculty_user:
+        user_list.append(form.vars.owner_id)
     form.vars.collaborators = user_list
 
     user_set = set(user_list)
-    user_set.add(form.vars.owner_id)
     user_set.add(auth.user.id)
 
     vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 

@@ -91,7 +91,8 @@ function add_collaborator() {
         $('#collaborator').val('');
         return;
     }
-    if($('#faculty_user').val() != undefined)
+
+    if($('#faculty_user').val() != undefined & $('[name="vm_owner"]').val() != '')
     {
         if(user == $('[name="vm_owner"]').val())
         {

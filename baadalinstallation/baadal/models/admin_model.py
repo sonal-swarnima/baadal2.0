@@ -316,7 +316,8 @@ def update_task_ignore(event_id):
     task_event.update_record(task_id = None, status=TASK_QUEUE_STATUS_IGNORE)
 
     #Delete task from task_queue
-    del db.task_queue[task_queue.id]
+    if db.task_queue[task_queue.id]:
+        del db.task_queue[task_queue.id]
 
 
 def get_search_host_form():
