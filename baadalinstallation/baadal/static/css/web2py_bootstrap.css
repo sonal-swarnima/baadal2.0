@@ -40,7 +40,7 @@ div.flash.flash-top,div.flash.flash-top:hover{
 .auth_navbar,.auth_navbar a{color:inherit;}
 .ie-lte7 .auth_navbar,.auth_navbar a{color:expression(this.parentNode.currentStyle['color']); /* ie7 doesn't support inherit */}
 .auth_navbar a{white-space:nowrap;} /* to avoid the nav split on more lines */
-.auth_navbar a:hover{color:white;text-decoration:none;}
+.auth_navbar a:hover{text-decoration:underline;}
 ul#navbar>.auth_navbar{
   display:inline-block;
   padding:5px;
