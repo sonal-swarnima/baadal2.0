@@ -199,7 +199,7 @@ db.define_table('request_queue',
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('start_time', 'datetime', default = get_datetime()))
 
-db.request_queue.vm_name.requires=IS_MATCH('^[a-zA-Z0-9\-\_]$', error_message=VM_NAME_ERROR_MESSAGE)
+db.request_queue.vm_name.requires=IS_MATCH('^[\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE)
 db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
 db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 
