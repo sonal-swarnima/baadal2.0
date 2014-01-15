@@ -72,6 +72,7 @@ db.define_table(
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
 custom_auth_table.last_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
+custom_auth_table.password.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
 custom_auth_table.email.requires = [
   IS_EMAIL(error_message = auth.messages.invalid_email),
   IS_NOT_IN_DB(db, custom_auth_table.email)]
@@ -144,14 +145,11 @@ db.define_table('vlan',
     format = '%(name)s')
 
 db.define_table('security_domain',
-    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name', requires=[IS_NOT_IN_DB(db,'security_domain.name')]),
-    Field('vlan', 'reference vlan'),
+    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
+    Field('vlan', 'reference vlan', requires = IS_NOT_IN_DB(db,'security_domain.vlan')),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
-
-vlan_query = (db.security_domain.vlan != db.vlan.id)
-db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', multiple=False, zero=None)
 
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
@@ -171,7 +169,6 @@ db.define_table('vm_data',
     Field('datastore_id', db.datastore),
     Field('purpose', 'text'),
     Field('expiry_date', 'date'),
-    Field('total_cost', 'float', default = 0),
     Field('current_run_level', 'integer', default = 0),
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
@@ -188,8 +185,8 @@ db.define_table('request_queue',
     Field('request_type', 'string', length = 20, notnull = True),
     Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
-    Field('extra_HDD', 'integer', label='Extra HDD'),
-    Field('attach_disk', 'integer', label='Disk Size'),
+    Field('extra_HDD', 'integer', label='Extra HDD(GB)'),
+    Field('attach_disk', 'integer', label='Disk Size(GB)'),
     Field('vCPU', 'integer', label='vCPUs'),
     Field('template_id', db.template),
     Field('enable_service', 'list:string'),
@@ -203,6 +200,9 @@ db.define_table('request_queue',
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('start_time', 'datetime', default = get_datetime()))
 
+db.request_queue.vm_name.requires=[IS_MATCH('^[\w\-]+$', error_message=VM_NAME_ERROR_MESSAGE)]
+db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(1,1025))
+db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
 db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 
@@ -214,7 +214,7 @@ db.define_table('user_vm_map',
 db.define_table('vm_data_event',
     Field('vm_id', 'integer'),
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-    Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
+    Field('vm_identity', 'string', length = 100, notnull = True),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),
@@ -230,7 +230,6 @@ db.define_table('vm_data_event',
     Field('datastore_id', db.datastore),
     Field('purpose', 'text'),
     Field('expiry_date', 'date'),
-    Field('total_cost', 'integer', default = 0),
     Field('current_run_level', 'integer', default = 0),
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
@@ -240,7 +239,7 @@ db.define_table('vm_data_event',
     Field('status', 'integer'))
 
 db.define_table('attached_disks',
-    Field('vm_id', db.vm_data,notnull = True),
+    Field('vm_id', db.vm_data, notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
     Field('attached_disk_name', 'string', length=30, notnull = True),
     Field('capacity', 'string',length = 45),
@@ -265,13 +264,13 @@ db.task_queue.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.task_queue.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
 db.define_table('task_queue_event',
-    Field('task_id', 'integer', notnull = True),
+    Field('task_id', 'integer', notnull = False),
     Field('task_type', 'string', length = 30, notnull = True),
     Field('vm_id', db.vm_data, notnull = True),
     Field('requester_id', db.user),
     Field('parameters', 'text', default={}),
     Field('status', 'integer', notnull = True),
-    Field('error', 'text'),
+    Field('message', 'text'),
     Field('start_time', 'datetime', default = get_datetime()),
     Field('attention_time', 'datetime'),
     Field('end_time', 'datetime'))

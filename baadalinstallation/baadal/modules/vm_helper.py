@@ -85,7 +85,7 @@ def find_new_host(runlevel, RAM, vCPU):
             current.logger.debug("used ram:" + str(used_ram) + " used cpu:" + str(used_cpu) + " host ram:" + str(host_ram) +  \
                                  " host cpu" + str(host_cpu))
             (effective_ram,effective_vcpu) = compute_effective_ram_vcpu(RAM,vCPU,runlevel)
-            if(host_selected == None and (used_ram + effective_ram) <= ((host_ram * 1024))):
+            if(host_selected == None and ((used_ram + effective_ram) <= ((host_ram * 1024)))):
                 host_selected = host
 
     if host_selected != None:
@@ -386,7 +386,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
                                                                start_time = get_datetime(), 
                                                                current_run_level = 3, 
                                                                last_run_level = 3,
-                                                               total_cost = 0, 
                                                                parent_id = parent_id,
                                                                status = vm_status)
 
@@ -446,7 +445,7 @@ def install(parameters):
             message = ''.join(traceback.format_exception(etype, value, tb, 10))
             current.logger.error("Exception " + message)
             free_vm_properties(vm_details)
-            return (current.TASK_QUEUE_STATUS_FAILED, message)
+            return (current.TASK_QUEUE_STATUS_FAILED, str(value))
 
 # Starts a vm
 def start(parameters):
@@ -774,6 +773,8 @@ def get_clone_properties(vm_details, cloned_vm_details):
     vm_properties['datastore'] = datastore
     current.logger.debug("Datastore selected is: " + str(datastore))
 
+    vm_properties['security_domain'] = vm_details.security_domain
+    vm_properties['public_ip_req'] = False
     # Finds mac address, ip address and vnc port for the cloned vm
     choose_mac_ip_vncport(vm_properties)
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + \
@@ -830,7 +831,7 @@ def clone(vmid):
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
-        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+        return (current.TASK_QUEUE_STATUS_FAILED, str(value)) 
 
 # Attaches extra disk to VM
 def attach_extra_disk(parameters):

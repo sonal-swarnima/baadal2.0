@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db,auth,request,response
+    from gluon import db,auth,request
     import gluon
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
@@ -87,13 +87,25 @@ def validate_approver(form):
         form.errors.faculty_user='Faculty Approver Username is not valid'
 
 
-def send_remind_faculty_email(vm_id):
-    vm_data = db.vm_data[vm_id]
-    send_email_to_faculty(vm_data.owner_id, vm_data.vm_name, vm_data.start_time)
+def send_remind_faculty_email(req_id):
+    req_data = db.request_queue[req_id]
+    send_email_to_approver(req_data.owner_id, req_data.requester_id, req_data.request_type, req_data.start_time)
+
+
+def send_remind_orgadmin_email(req_id):
+    req_data = db.request_queue[req_id]
+    admins = db((db.user.organisation_id == req_data.requester_id.organisation_id) 
+                & (db.user.id == db.user_membership.user_id) 
+                & (db.user_membership.group_id == db.user_group.id) 
+                & (db.user_group.role == ORGADMIN)).select(db.user.id)
+                
+    for admin in admins:
+        send_email_to_approver(admin.id, req_data.requester_id, req_data.request_type, req_data.start_time)
+
 
 def get_request_status():
     status = REQ_STATUS_REQUESTED
-    if (is_moderator() | is_orgadmin()):
+    if (is_moderator() or is_orgadmin()):
         status = REQ_STATUS_APPROVED
     elif is_faculty():
         status = REQ_STATUS_VERIFIED
@@ -105,9 +117,7 @@ def request_vm_validation(form):
     set_configuration_elem(form)
     form.vars.status = get_request_status()
 
-    if (is_moderator() | is_orgadmin()):
-        form.vars.owner_id = auth.user.id
-    elif is_faculty():
+    if (is_moderator() or is_orgadmin() or is_faculty()):
         form.vars.owner_id = auth.user.id
     else:
         validate_approver(form)
@@ -118,19 +128,22 @@ def request_vm_validation(form):
     if vm_users and len(vm_users) > 1:
         for vm_user in vm_users[1:-1].split('|'):
             user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    
+    if request.post_vars.faculty_user:
+        user_list.append(form.vars.owner_id)
     form.vars.collaborators = user_list
 
-    user_list.append(form.vars.owner_id)
-    user_list.append(auth.user.id)
+    user_set = set(user_list)
+    user_set.add(auth.user.id)
 
-    vms = db((db.vm_data.id == db.user_vm_map.vm_id) &
-             (db.user_vm_map.user_id.belongs(user_list))).select(db.vm_data.vm_name)
+    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
+             (db.user_vm_map.user_id.belongs(user_set))).select(db.vm_data.vm_name)
     
     if vms.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
 
-    requests = db((db.request_queue.owner_id.belongs(user_list)) |
-             (db.request_queue.requester_id.belongs(user_list))).select(db.request_queue.vm_name)
+    requests = db((db.request_queue.owner_id.belongs(user_set)) |
+             (db.request_queue.requester_id.belongs(user_set))).select(db.request_queue.vm_name)
     
     if requests.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
@@ -179,7 +192,7 @@ def get_request_vm_form():
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    if not(is_moderator() | is_orgadmin() | is_faculty()):
+    if not(is_moderator() or is_orgadmin() or is_faculty()):
         add_faculty_approver(form)
     add_collaborators(form)
     add_security_domain(form)
@@ -188,10 +201,13 @@ def get_request_vm_form():
 
 def get_user_info(username, roles):
     user_query = db((db.user.username == username) 
+             & (db.user.organisation_id == auth.user.organisation_id)
              & (db.user.id == db.user_membership.user_id)
              & (db.user_membership.group_id == db.user_group.id)
              & (db.user_group.role.belongs(roles)))
-    user = user_query.select().first()
+    
+    user = user_query.select(db.user.ALL).first()
+    
     # If user not present in DB
     if not user:
         if current.auth_type == 'ldap':
@@ -199,18 +215,19 @@ def get_user_info(username, roles):
             if user_info:
                 if [obj for obj in roles if obj in user_info['roles']]:
                     create_or_update_user(user_info, False)
-                    user = user_query.select().first()
+                    user = user_query.select(db.user.ALL).first()
     
     if user:
-        return (user.user.id, (user.user.first_name + ' ' + user.user.last_name))	
+        return (user['id'], (user['first_name'] + ' ' + user['last_name']))	
 
 
 def get_my_task_list(task_status, task_num):
-    task_query = db((db.task_queue_event.status == task_status) 
-                    & (db.task_queue_event.vm_id == db.vm_data.id) 
-                    & (db.vm_data.requester_id==auth.user.id))
-
-    events = task_query.select(db.task_queue_event.ALL, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
+    
+    task_query = db((db.task_queue_event.status.belongs(task_status)) 
+                    & ((db.task_queue_event.vm_id.belongs(
+                            db(auth.user.id == db.user_vm_map.user_id)._select(db.user_vm_map.vm_id))) 
+                     | (db.task_queue_event.requester_id == auth.user.id)))
+    events = task_query.select(db.task_queue_event.ALL, distinct=True, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)
 
@@ -227,10 +244,8 @@ def get_vm_config(vm_id):
                    'status'           : get_vm_status(vminfo.status),
                    'ostype'           : 'Linux',
                    'purpose'          : str(vminfo.purpose),
-                   'totalcost'        : str(vminfo.total_cost),
                    'private_ip'       : str(vminfo.private_ip),
                    'public_ip'        : str(vminfo.public_ip),
-#                    'services_enabled' : ', '.join(ser for ser in vminfo.enable_service) if len(vminfo.enable_service) != 0 else '-',
                    'security_domain'  : str(vminfo.security_domain.name)}
 
     if is_moderator():
@@ -247,16 +262,17 @@ def get_vm_user_list(vm_id) :
         user_id_lst.append(vm_user)
     return user_id_lst
 
-def is_snapshot_request_in_queue(vm_id):
+def is_request_in_queue(vm_id, task_type):
+
     if db((db.task_queue.vm_id == vm_id) 
-          & (db.task_queue.task_type == TASK_TYPE_SNAPSHOT_VM) 
+          & (db.task_queue.task_type == task_type) 
           & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select():
         return True
     else:
         return False
 
 def check_snapshot_limit(vm_id):
-    snapshots = db(db.snapshot.vm_id == vm_id & db.snapshot.type==SNAPSHOT_USER).count()
+    snapshots = db((db.snapshot.vm_id == vm_id) & (db.snapshot.type == SNAPSHOT_USER)).count()
     logger.debug("No of snapshots are " + str(snapshots))
     if snapshots < SNAPSHOTTING_LIMIT:
         return True
@@ -264,7 +280,6 @@ def check_snapshot_limit(vm_id):
         return False
 
 def get_clone_vm_form(vm_id):
-
     vm_data = db.vm_data[vm_id]
     
     clone_name = vm_data.vm_name + '_clone'

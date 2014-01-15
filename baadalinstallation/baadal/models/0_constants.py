@@ -70,10 +70,10 @@ current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
 #SNAPSHOTTING LIMIT
 SNAPSHOTTING_LIMIT = 3
 SNAPSHOT_DAILY=1
-SNAPSHOT_WEEKLY=1
-SNAPSHOT_MONTHLY=2
-SNAPSHOT_YEARLY=3
-SNAPSHOT_USER=4
+SNAPSHOT_WEEKLY=2
+SNAPSHOT_MONTHLY=3
+SNAPSHOT_YEARLY=4
+SNAPSHOT_USER=5
 current.SNAPSHOT_USER=SNAPSHOT_USER
 
 ADMIN = 'admin'
@@ -100,14 +100,15 @@ VM_REQUEST_TEMPLATE_FOR_USER="Dear {0[userName]},\n\nYour request for VM({0[vmNa
                     
 VM_REQUEST_SUBJECT_FOR_USER = "VM request successful"
                     
-VM_APPROVAL_TEMPLATE_FOR_FACULTY ="Dear {0[facultyName]},\n\n{0[userName]} requested a VM {0[vmName]} on {0[vmRequestTime]} and is pending approval from you.\n\nRegards,\nBaadal Admin"
+REQ_APPROVAL_REMINDER_TEMPLATE ="Dear {0[approverName]},\n\n{0[userName]} has made a {0[requestType]} request on {0[requestTime]}. It is waiting for your approval.\n\nRegards,\nBaadal Admin"
                     
-VM_APPROVAL_SUBJECT_FOR_FACULTY = "VM pending approval"
+REQ_APPROVAL_REMINDER_SUBJECT = "Request waiting for your approval"
 
 VM_RAM_SET = (1024,2048,4096,8192)
 VM_vCPU_SET = (1,2,4,8)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
+VM_NAME_ERROR_MESSAGE = 'VM name can only contain letters, numbers, dash and underscore'
 
 SECONDS = 1
 MINUTES = 60 * SECONDS

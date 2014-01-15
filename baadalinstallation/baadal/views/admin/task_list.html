@@ -107,7 +107,7 @@ function clicker(content){
         <td><div id="error{{=str(counter)}}" style="display: none;"></div><a href='#' onclick='return clicker("{{=counter}}");'>Error</a></td>
         <td>{{=task['start_time']}}</td>
         <td>{{=task['end_time']}}</td>
-        <td><a href="{{=URL(request.application,'admin','retry_task',args=[task['task_id']])}}">TRY AGAIN</a> | <a href="{{=URL(request.application,'admin','ignore_task',args=[task['task_id']])}}">IGNORE</a></td>
+        <td><a href="{{=URL(request.application,'admin','retry_task',args=[task['event_id']])}}">TRY AGAIN</a> | <a href="{{=URL(request.application,'admin','ignore_task',args=[task['event_id']])}}">IGNORE</a></td>
       </tr>
       {{counter=counter+1}}
 	{{pass}}

@@ -1,5 +1,5 @@
-Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm libvirt-bin libvirt0 python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan munin-node munin-libvirt-plugins vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay)
-
+Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm libvirt-bin libvirt0 python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan munin-node munin-libvirt-plugins vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay cgroup-bin)
+ 
 Chk_Root_Login()
 {
 	username=`whoami`
@@ -32,9 +32,10 @@ Instl_Pkgs()
                                 echo "Installing Package: $pkg.................."
                                 DEBIAN_FRONTEND=noninteractive apt-get -y install $pkg --force-yes
 				if test $pkg == "debconf-utils"; then
-					echo "dhcp3-relay dhcp3-relay/servers CONTROLLER_IP" | debconf-set-selections
-        				echo "dhcp3-relay dhcp3-relay/interfaces \"\"" | debconf-set-selections
-				        echo "dhcp3-relay dhcp3-relay/options \"\"" | debconf-set-selections
+					echo "dhcp3-relay dhcp3-relay/servers string CONTROLLER_IP" | debconf-set-selections
+					echo "isc-dhcp-relay isc-dhcp-relay/servers string CONTROLLER_IP" | debconf-set-selections
+        				echo "dhcp3-relay dhcp3-relay/interfaces string \"\"" | debconf-set-selections
+				        echo "dhcp3-relay dhcp3-relay/options string \"\"" | debconf-set-selections
 				fi
 
                 done
@@ -65,7 +66,7 @@ Enbl_Modules()
 	apt-get -y install openvswitch-controller openvswitch-brcompat openvswitch-switch openvswitch-datapath-source
 	echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
 	service openvswitch-switch start
-	module-assistant --text-mode --force auto-install openvswitch-datapath
+	module-assistant --non-inter --quiet auto-install openvswitch-datapath
 
 	brcompat_exist=`lsmod | grep brcompat`
 	if test -z "$brcompat_exist" ; then
@@ -111,6 +112,7 @@ Enbl_Modules()
 	virsh net-destroy default
 	virsh net-autostart --disable default
 
+	cd -
 	touch ovs-net.xml
 	
         ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='br0'/>\n<virtualport type='openvswitch'/>\nPORTGROUPS</network>"

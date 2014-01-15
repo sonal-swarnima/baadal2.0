@@ -13,7 +13,7 @@ def get_manage_template_form():
     default_sort_order=[db.template.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 def get_manage_datastore_form():
@@ -23,7 +23,7 @@ def get_manage_datastore_form():
     default_sort_order=[db.datastore.id]
 
     #Creating the grid object
-    form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 
@@ -100,7 +100,7 @@ def get_security_domain_form():
     fields = (db.security_domain.name, db.security_domain.vlan)
     default_sort_order=[db.security_domain.id]
 
-    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False)
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 
@@ -130,7 +130,8 @@ def get_all_vm_list():
     return get_hosted_vm_list(vms)
 
 def get_all_vm_ofhost(hostid):
-    vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) & (db.vm_data.host_id == hostid )).select()
+    vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) 
+             & (db.vm_data.host_id == hostid )).select()
     return get_hosted_vm_list(vms)
 
 def get_vm_identity(vm_name, owner_id):
@@ -178,7 +179,7 @@ def create_clone_task(req_data, params):
         cnt = cnt+1
         
     params.update({'clone_vm_id':vm_id_list})
-    add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params)
+    add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params=params, requested_by=req_data.requester_id)
 
 def create_install_task(req_data, params):
 
@@ -198,7 +199,7 @@ def create_install_task(req_data, params):
                   status = VM_STATUS_IN_QUEUE)
         
     add_vm_users(vm_id, req_data.requester_id, req_data.owner_id, req_data.collaborators)
-    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params)
+    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params=params, requested_by=req_data.requester_id)
 
 def create_edit_config_task(req_data, params):
     
@@ -210,7 +211,7 @@ def create_edit_config_task(req_data, params):
 #     if vm_data.enable_service != req_data.enable_service : params['enable_service'] = req_data.enable_service
     if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
 
-    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
+    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params)
 
 def enqueue_vm_request(request_id):
     
@@ -225,7 +226,7 @@ def enqueue_vm_request(request_id):
         create_edit_config_task(req_data, params)
     elif req_data.request_type == TASK_TYPE_ATTACH_DISK:
         params.update({'disk_size' : req_data.attach_disk})
-        add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params)
+        add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params, requested_by=req_data.requester_id)
     
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 
@@ -267,30 +268,56 @@ def get_vm_groupby_hosts() :
 
 
 def get_task_by_status(task_status, task_num):
-    events = db(db.task_queue_event.status == task_status).select(orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
+    events = db(db.task_queue_event.status.belongs(task_status)).select(orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
     return get_task_list(events)
     
 
-def update_task_retry(_task_id):
-    #Mark status for VM as 'In Queue'
-    task_queue_data = db.task_queue[_task_id]
-    if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
-        db.task_queue[_task_id] = dict(status=VM_STATUS_IN_QUEUE)
+def update_task_retry(event_id):
+
+    task_event = db.task_queue_event[event_id]
+    task_queue = db.task_queue[task_event.task_id]
+    
+    if 'request_id' in task_queue.parameters:
+        #Mark status for request as 'In Queue'
+        request_id = task_queue.parameters['request_id']
+        if db.request_queue[request_id]:
+            db.request_queue[request_id] = dict(status=REQ_STATUS_IN_QUEUE)
+    
+    if task_event.task_type == TASK_TYPE_CREATE_VM:
+        db.vm_data[task_event.vm_id] = dict(status=VM_STATUS_IN_QUEUE)
+    elif task_event.task_type == TASK_TYPE_CLONE_VM:
+        vm_list = task_queue.parameters['clone_vm_id']
+        for vm in vm_list:
+            db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
 
     #Mark current task event for the task as IGNORE. 
-    db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
-    #Mark task as RETRY. This will call task_queue_update_callback; which will schedule the task
-    db(db.task_queue.id == _task_id).update(status = TASK_QUEUE_STATUS_RETRY)
+    task_event.update_record(status=TASK_QUEUE_STATUS_IGNORE)
+    #Mark task as RETRY. This will call task_queue_update_callback; which will schedule a new task
+    task_queue.update_record(status=TASK_QUEUE_STATUS_RETRY)
 
 
-def update_task_ignore(_task_id):
+def update_task_ignore(event_id):
 
-    task_process = db.task_queue[_task_id] 
-    if 'request_id' in task_process.parameters:
-        del db.request_queue[task_process.parameters['request_id']]
-    db(db.task_queue_event.task_id == _task_id).update(status = TASK_QUEUE_STATUS_IGNORE)
+    task_event = db.task_queue_event[event_id]
+    task_queue = db.task_queue[task_event.task_id]
+
+    if 'request_id' in task_queue.parameters:
+        request_id = task_queue.parameters['request_id']
+        if db.request_queue[request_id]:
+            del db.request_queue[request_id]
+    
+    if task_event.task_type == TASK_TYPE_CREATE_VM:
+        if db.vm_data[task_event.vm_id]: del db.vm_data[task_event.vm_id]
+    elif task_event.task_type == TASK_TYPE_CLONE_VM:
+        vm_list = task_queue.parameters['clone_vm_id']
+        for vm in vm_list:
+            if db.vm_data[vm]: del db.vm_data[vm]
+
+    task_event.update_record(task_id = None, status=TASK_QUEUE_STATUS_IGNORE)
+
     #Delete task from task_queue
-    del db.task_queue[_task_id]
+    if db.task_queue[task_queue.id]:
+        del db.task_queue[task_queue.id]
 
 
 def get_search_host_form():
@@ -412,7 +439,8 @@ def validate_user(form):
     if not user_info:
         form.errors.user_id = 'Username is not valid'
     else:
-        if db((db.user_vm_map.user_id == user_info[0]) & (db.user_vm_map.vm_id == vm_id)).select():
+        if db((db.user_vm_map.user_id == user_info[0]) 
+              & (db.user_vm_map.vm_id == vm_id)).select():
             form.errors.user_id = 'User is already this vm user'
     return form
 

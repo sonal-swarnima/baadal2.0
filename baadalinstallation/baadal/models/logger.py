@@ -12,7 +12,7 @@ def get_configured_logger(name):
         # This logger has no handlers, so we can assume it hasn't yet been configured.
         import os
         formatter="%(asctime)s %(levelname)s %(funcName)s():%(lineno)d %(message)s"
-        handler = logging.handlers.RotatingFileHandler(os.path.join(request.folder,'logs/%s.log'%(name)),maxBytes=1024,backupCount=2)
+        handler = logging.handlers.RotatingFileHandler(os.path.join(request.folder,'logs/%s.log'%(name)),maxBytes=1000000,backupCount=5)
         handler.setFormatter(logging.Formatter(formatter))
 
         handler.setLevel(logging.DEBUG)
