@@ -44,7 +44,7 @@ ovs_str+="ovs-vsct set port br0 tag=$NAT_VLAN\n"
 trunk_str=$(echo ${trunk_str:1:${#trunk_str}-2})
 
 echo -e "$ovs_str\novs-vsctl set port $INTERNAL_INTERFACE trunk=$trunk_str" > $BASE_PATH/ovs_postup.sh
-echo -e "\nauto eth0\niface $INTERNAL_INTERFACE inet static\n\taddress 0.0.0.0\n\nauto br0\niface br0 inet dhcp\n\tpost-up $BASE_PATH/ovs_postup.sh\n\tbridge_ports $INTERNAL_INTERFACE\n\tbridge_stp off" >> /etc/network/interfaces
+echo -e "\nauto $INTERNAL_INTERFACE\niface $INTERNAL_INTERFACE inet static\n\taddress 0.0.0.0\n\nauto br0\niface br0 inet dhcp\n\tpost-up $BASE_PATH/ovs_postup.sh\n\tbridge_ports $INTERNAL_INTERFACE\n\tbridge_stp off" >> /etc/network/interfaces
 
 while read line
 do
