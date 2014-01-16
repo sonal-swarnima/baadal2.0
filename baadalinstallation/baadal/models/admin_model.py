@@ -100,10 +100,15 @@ def get_security_domain_form():
     fields = (db.security_domain.name, db.security_domain.vlan)
     default_sort_order=[db.security_domain.id]
 
-    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30)
     return form
 
-
+def check_delete_security_domain(sd_id):
+    if db((db.vm_data.security_domain == sd_id)).count() > 0:
+        return SECURITY_DOMAIN_DELETE_MESSAGE
+    elif db.security_domain[sd_id].name == 'Research':
+        return 'Security Domain ''Research'' can''t be deleted.'
+    
 def get_all_pending_requests():
 
     vms = db(db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED, REQ_STATUS_IN_QUEUE)).select()

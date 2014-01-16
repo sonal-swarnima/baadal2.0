@@ -16,7 +16,7 @@ __all__ =['enqueue_vm_request','get_mail_admin_form','send_email_to_admin','get_
             'get_attach_extra_disk_form','vm_has_snapshots','is_vm_owner','is_request_in_queue','get_security_domain_form', 'get_manage_public_ip_pool_form',
             'get_request_info','get_request_status','get_segregated_requests','updte_host_status','delete_host_from_db', 'add_public_ip_range', 
             'get_manage_private_ip_pool_form', 'execute_command', 'get_util_period_form', 'get_vm_util_data','fetch_rrd_data','send_remind_orgadmin_email',
-            'get_pending_request_query','get_pending_requests_count']
+            'get_pending_request_query','get_pending_requests_count','check_delete_security_domain']
 
 if 0:
     from admin_model import *

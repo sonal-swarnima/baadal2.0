@@ -313,7 +313,7 @@ def get_attach_extra_disk_form(vm_id):
     db.request_queue.RAM.default = vm_data.RAM
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.HDD.default = vm_data.HDD
-    db.request_queue.extra_HDD.default = vm_data.extra_HDD
+    db.request_queue.extra_HDD.default = vm_data.extra_HDD if vm_data.extra_HDD != 0 else ''
     db.request_queue.request_type.default = TASK_TYPE_ATTACH_DISK
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
