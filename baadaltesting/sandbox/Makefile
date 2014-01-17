@@ -20,23 +20,17 @@ UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.0
 UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-server-amd64.iso
 UBUNTU_SOURCE = $(UBUNTU_SERVER_EXTERNAL)
 
-LIBVIRT = $(UTILS_DIR)/libvirt-1.0.0.tar.gz
-LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.0.0.tar.gz
+LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
+LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
 
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
-BIN_SWITCH = $(BIN_DIR)/switch.sh
+BIN_SWITCH_INTERNAL = $(BIN_DIR)/switch_internal.sh
 BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
-BIN_NET_EXTERNAL = $(BIN_DIR)/net_external.sh
 BIN_NET_FIX = $(BIN_DIR)/fix_net.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
-
-IP_NAT = 10.209.0.1
-IP_CONTROLLER = 10.209.0.2
-IP_FILER = 10.209.0.3
-IP_SANDBOX = 10.209.0.4
 
 $(BIN_DIR):
 	mkdir -p $@
@@ -70,7 +64,6 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
 	cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
 	mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
@@ -83,7 +76,6 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
 	mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
@@ -94,11 +86,11 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	# cp $(SRC_DIR)/controller/preseed.cfg $(BIN_DIR)/preseed.cfg
 	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
 	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
+	cp -R $(DIR_BAADAL_INSTALLATION)/nat_setup/* $(BIN_DIR)/transfer.nat/baadal
 
 $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
@@ -106,27 +98,19 @@ $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ub
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
 
-$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
+$(BIN_SWITCH_INTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-internal libvirt
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-internal/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	cp $(SRC_DIR)/switch/openvswitch-switch $(BIN_DIR)/openvswitch-switch
-	cp $(SRC_DIR)/switch/ovs-net.xml $(BIN_DIR)/ovs-net.xml
+	cp $(SRC_DIR)/switch-internal/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
 
 $(BIN_SWITCH_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-external libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-external/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	cp $(SRC_DIR)/switch-external/openvswitch-switch $(BIN_DIR)/openvswitch-switch
 	cp $(SRC_DIR)/switch-external/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
-
-$(BIN_NET_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-external libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-external/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
 
 $(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-fix/*.sh > $@
@@ -199,15 +183,6 @@ keygen-ssh-filer: $(BIN_DIR)/id_rsa.filer
 keygen-ssh-nat: $(BIN_DIR)/id_rsa.nat
 
 keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-filer keygen-ssh-nat
-
-ssh-nat:
-	ssh baadal@$(IP_NAT)
-
-ssh-conroller:
-	ssh baadal@$(IP_CONTROLLER)
-
-ssh-filer:
-	ssh baadal@$(IP_FILER)
 
 clean-config:
 	rm -rf $(CONFIG_DIR)

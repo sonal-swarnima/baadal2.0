@@ -1,40 +1,7 @@
 function run
 {
   check_root
-  #package_update_db
-  package_install qemu-kvm
-  package_install virtinst
-
-  libvirt_install
-  service_restart libvirt-bin
-
-  virsh_force "net-destroy default"
-  virsh_force "net-autostart --disable default"
-
-  virsh_force "net-destroy $OVS_NET"
-  virsh_force "net-undefine $OVS_NET"
-
-  ovsvsctl_del_br $OVS_BRIDGE
-
-  package_install openvswitch-datapath-lts-raring-dkms
-  package_install openvswitch-datapath-lts-raring-source
-
-  file_copy $BRCOMPAT_SRC $BRCOMPAT_DST
-  kernelmod_remove bridge
-
-  package_install openvswitch-controller
-  package_install openvswitch-switch
-  package_install openvswitch-brcompat
- 
-  service_start openvswitch-switch
-
-  ovsvsctl_add_br_force $OVS_BRIDGE
-
-  virsh_force "net-define $OVS_NET_XML"
-  virsh_force "net-start $OVS_NET"
-  virsh_force "net-autostart $OVS_NET"
-
-  ifconfig_ip $OVS_BRIDGE $ROUTE_DEV_IP $ROUTE_NETMASK
+  sandbox_setup 
 }
 
 function libvirt_install

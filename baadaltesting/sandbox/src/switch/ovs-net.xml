@@ -1,6 +1,0 @@
-<network>
-	<name>ovs-net</name>
-	<forward mode='bridge'/>
-	<bridge name='baadalbr1'/>
-  <virtualport type='openvswitch'/>
-</network>

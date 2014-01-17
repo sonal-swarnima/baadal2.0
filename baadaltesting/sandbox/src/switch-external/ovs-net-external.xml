@@ -1,6 +1,6 @@
 <network>
-	<name>ovs-net-external</name>
+	<name>ovs-external</name>
 	<forward mode='bridge'/>
-	<bridge name='baadalbr0'/>
+	<bridge name='baadal-br-external'/>
  	<virtualport type='openvswitch'/>
 </network>
