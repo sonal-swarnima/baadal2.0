@@ -5,7 +5,7 @@ rmmod bridge
 apt-get -y install openvswitch-controller openvswitch-brcompat openvswitch-switch openvswitch-datapath-source
 echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
 service openvswitch-switch start
-module-assistant --text-mode --force auto-install openvswitch-datapath
+module-assistant --non-inter --quiet auto-install openvswitch-datapath
 
 ovs-vsctl add-br br0
 ovs-vsctl add-br br0 $INTERNAL_INTERFACE
