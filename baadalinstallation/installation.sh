@@ -441,7 +441,7 @@ echo "subnet mask is $subnet"
 		exit 1
 	fi
 	
-	ovs-vsctl add-br bro
+	ovs-vsctl add-br br0
 	ovs-vsctl add-port br0 eth0
 
 #Assign IP to controller NIC
@@ -521,7 +521,7 @@ done
 
 touch /var/www/ovs-postup.sh
 echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
-chmod /var/www/ovs-postup.sh
+chmod u+x /var/www/ovs-postup.sh
 /var/www/ovs-postup.sh 
 
 echo -e "$final_interfaces_string" >> /etc/network/interfaces
