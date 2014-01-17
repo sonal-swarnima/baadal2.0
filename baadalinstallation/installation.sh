@@ -1,6 +1,6 @@
 ################################ FILE CONSTANTS USED ###########################
 
-Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtooli python-lxml)
+Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -428,9 +428,25 @@ fi
 echo "subnet mask is $subnet"
 #Subnet mask calculated
 
+#Setup openvswitch
+	rmmod bridge
+	apt-get -y purge ebtables
+	apt-get -y install openvswitch-switch openvswitch-brcompat openvswitch-controller openvswitch-datapath-source
+	echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
+	module-assistant --non-inter --quiet auto-install openvswitch-datapath
+
+	brcompat_exist=`lsmod | grep brcompat`
+	if test -z "$brcompat_exist" ; then
+		echo "brcompat module is not configured properly. Please retry with \" rmmod bridge \" followed by \"service openvswitch-switch restart\" "
+		exit 1
+	fi
+	
+	ovs-vsctl add-br bro
+	ovs-vsctl add-port br0 eth0
+
 #Assign IP to controller NIC
-echo -e "auto eth0\niface eth0 inet static\n\taddress $CONTROLLER_IP\n\tnetmask $subnet" >> /etc/network/interfaces
-/etc/init.d/networking restart
+echo -e "\nauto eth0\niface eth0 inet static\n\taddress 0.0.0.0\n\nauto br0\niface bro inet static\n\taddress $CONTROLLER_IP\n\tnetmask $subnet" >> /etc/network/interfaces
+sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ start/" /etc/network/interfaces
 
 num_hosts=$NUMBER_OF_HOSTS
 #Calculation of subnet declaration for default VLAN in dhcp
@@ -451,6 +467,7 @@ final_interfaces_string=""
 final_ovs_string=""
 final_trunk_string=""
 PORTGROUP_STRING=""
+VALNS=""
 #Default VLAN configuration is already figured out, remaining (NUMBER_OF_VLANS -1) VLANs are configured here
 for (( i=1;i<$NUMBER_OF_VLANS;i++ )) 
 do
@@ -492,19 +509,30 @@ do
 	forth_range_octet=$(( ($num_hosts & 255) + 1))
 	range_str="10.$second_octet.$third_octet.2 10.$end_range_str.$forth_range_octet"
 	final_subnet_string+=$(echo "$subnet_block$second_octet.$third_octet.$forth_octet netmask $subnet {\n\trange $range_str;\n\toption routers 10.$second_octet.$third_octet.1;\n\toption broadcast-address $broadcast_str;\n\toption subnet-mask $subnet;\n}\n\n")
-	final_interfaces_string+="auto vlan$vlan_tag\niface vlan$vlan_tag inet static\n\taddress 10.$second_octet.$third_octet.1\n\tnetmask $subnet\n\tvlan_raw_device br0\n\n"
+	final_interfaces_string+="auto vlan$vlan_tag\niface vlan$vlan_tag inet static\n\taddress 10.$second_octet.$third_octet.1\n\tnetmask $subnet\n\n"
 	final_ovs_string+="ovs-vsctl add-br vlan$vlan_tag br0 $vlan_tag\n"
 	final_trunk_string+=$(echo "$vlan_tag")
 	if test $i -ne $(($NUMBER_OF_VLANS-1)); then
 		final_trunk_string+=","
 	fi
 	PORTGROUP_STRING+="<portgroup name=\'vlan$vlan_tag\'>\\\n\\\t<vlan><tag id=\'$vlan_tag\'\/><\/vlan>\\\n<\/portgroup>\\\n"
+	VLANS+="vlan$vlan_tag,"
 done
+
+touch /var/www/ovs-postup.sh
+echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
+chmod /var/www/ovs-postup.sh
+/var/www/ovs-postup.sh 
+
+echo -e "$final_interfaces_string" >> /etc/network/interfaces
+/etc/init.d/networking restart
+
+VLANS=$(echo ${VLANS:0:-1})
 
 echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 sed -i -e 's/option\ domain-name\ /#\ option\ domain-name\ /g' /etc/dhcp/dhcpd.conf
 sed -i -e 's/ns1.example.org,\ ns2.example.org/'"$CONTROLLER_IP"'/g' /etc/dhcp/dhcpd.conf
-sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"eth0\"/g' /etc/default/isc-dhcp-server
+sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"br0,'"$VLANS"'\"/g' /etc/default/isc-dhcp-server
 
 /etc/init.d/isc-dhcp-server restart
 
@@ -524,10 +552,7 @@ sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/sources.list
 cp $BASE_PATH/host_installation.sh /var/www/.
 sed -i -e 's/PORTGROUPS/'"$PORTGROUP_STRING"'/g' /var/www/host_installation.sh
 sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/host_installation.sh
-
-touch /var/www/ovs-postup.sh
-echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
-
+sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' /var/www/host_installation.sh
 }
 
 #creating local ubuntu repo for precise(12.04)
