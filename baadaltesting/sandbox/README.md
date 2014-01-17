@@ -10,7 +10,7 @@ Pre-requisites
 
 Setup Instructions
 -----------------------------------------------
-* __make configure__ - required to initialized some configurations required by the sandbox system, the IP address required is the starting address you would like to use for the internal sandbox network.
+* __make configure__ - required to initialise some configurations required by the sandbox system, the IP address required is the starting address you would like to use for the internal sandbox network.
 
 * __make sandbox__ - should set up ovs switch on sandbox system, create virtual machines for NAT, Controller, Filer  
         
@@ -49,13 +49,12 @@ All virtual machines
 * __password__ : baadal
 * __root access__ : __sudo su__ from baadal
 
-__Internal IPs__
+__Internal IPs__ - These values could be changed using __make configure__
 * Sandbox System - 10.0.0.1
 * Controller System - 10.0.0.2
 * NAT System - 10.0.0.3
 * Filer System - 10.0.0.4
 * Internal Gateway - NAT System (10.0.0.3)
-(These values could be changed using __make configure__.)
 
 __External IPs__
 * Sandbox System - baadal-br-ext (DHCP)
