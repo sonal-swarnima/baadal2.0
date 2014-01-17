@@ -165,29 +165,41 @@ def add_collaborators(form):
     form[0].insert(-1, collaborator_elem)#insert tr element in the form
 
 
-def get_security_domain():
-    sec_domains = db((db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))).select()
-    return sec_domains
+# def get_security_domain1(request_id=None, vm_id=None):
+#     
+#     org_id = auth.user.organisation_id
+#     if request_id != None:
+#         data = db.request_queue[request_id]
+#         org_id = data.requester_id.organisation_id
+#     elif vm_id != None:
+#         data = db.vm_data[vm_id]
+#         org_id = data.requester_id.organisation_id
+#         
+#     sec_domains = db((db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(org_id))).select()
+#     return sec_domains
 
 
-def add_security_domain(form):
-    
-    select=SELECT(_name='sec_domain') # create HTML select
-    i=0
-    for sec_domain in get_security_domain():
-        select.insert(i, OPTION(sec_domain['name'], _value = sec_domain['id']))
-        i = i+1
-
-    vlan_elem = TR(LABEL('Security Domain:'), select ,TD(), _id='security_domain_row')
-    form[0].insert(-1, vlan_elem)#insert tr element in the form
+# def add_security_domain(form, request_id=None, vm_id=None):
+#     
+#     select=SELECT(_name='security_domain', _id='request_queue_security_domain') # create HTML select
+#     i=0
+#     for sec_domain in get_security_domain(request_id=request_id, vm_id=vm_id):
+#         select.insert(i, OPTION(sec_domain['name'], _value = sec_domain['id']))
+#         i = i+1
+# 
+#     vlan_elem = TR(LABEL('Security Domain:'), select ,TD(), _id='request_queue_security_domain__row')
+#     form[0].insert(-2, vlan_elem)#insert tr element in the form
 
 
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'public_ip']
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'security_domain', 'public_ip']
 
     db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
     db.request_queue.requester_id.default = auth.user.id
+    _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
+    db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
+    db.request_queue.security_domain.default = 1
 
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
@@ -195,7 +207,6 @@ def get_request_vm_form():
     if not(is_moderator() or is_orgadmin() or is_faculty()):
         add_faculty_approver(form)
     add_collaborators(form)
-    add_security_domain(form)
     return form
 
 
@@ -343,11 +354,13 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
+    _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(vm_data.requester_id.organisation_id))
+    db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
     
-    form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain', 'purpose']
-#     form_fields = ['vm_name', 'RAM', 'vCPU', 'enable_service', 'public_ip', 'security_domain', 'purpose']
-    
-    return SQLFORM(db.request_queue, fields = form_fields)
+    form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain','purpose']
+    form = SQLFORM(db.request_queue, fields = form_fields)
+#     add_security_domain(form, vm_id=vm_id)
+    return form
 
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),

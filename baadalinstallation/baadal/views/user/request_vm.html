@@ -16,7 +16,7 @@ jQuery(document).ready(function(){
     jQuery('#faculty_row').hide();
     jQuery('#collaborator_row').hide();
     jQuery('#request_queue_public_ip__row').hide();
-    jQuery('#security_domain_row').hide();
+    jQuery('#request_queue_security_domain__row').hide();
 
     template_check()
 });
@@ -35,14 +35,14 @@ function template_check() {
         jQuery('#faculty_row').hide();
         jQuery('#collaborator_row').hide();
         jQuery('#request_queue_public_ip__row').hide();
-        jQuery('#security_domain_row').hide();
+        jQuery('#request_queue_security_domain__row').hide();
     }else{
         jQuery('#request_queue_purpose__row').show();
         jQuery('#request_queue_extra_HDD__row').show();
         jQuery('#faculty_row').show();
         jQuery('#collaborator_row').show();
         jQuery('#request_queue_public_ip__row').show();
-        jQuery('#security_domain_row').show();
+        jQuery('#request_queue_security_domain__row').show();
         jQuery('[id^=config_row__]').hide();    
         
         if(jQuery('#config_row__'+_value).length == 0){
