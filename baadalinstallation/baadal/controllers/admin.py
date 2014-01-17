@@ -54,14 +54,19 @@ def manage_security_domain():
 def host_details():
     hosts = get_all_hosts()
 
-    form=get_search_host_form()
-    if form.accepts(request.vars,session):
+    form1=get_search_host_form()
+    form2=get_configure_host_form()
+
+    if form1.process(formname='form_ip').accepted:
         session.flash='Check the details'
-        redirect(URL(c='admin', f='add_host',args=form.vars.host_ip))
-    elif form.errors:
-        session.flash='Error in form'
+        redirect(URL(c='admin', f='add_host',args=form1.vars.host_ip))
         
-    return dict(form=form,hosts=hosts)   
+    if form2.process(formname='form_mac').accepted:
+        configure_host_by_mac(form2.vars.host_mac_addr)
+        session.flash='Host configured. Proceed for PXE boot.'
+        redirect(URL(c='admin', f='host_details'))
+
+    return dict(form1=form1, form2=form2, hosts=hosts)   
 
 @check_moderator
 @handle_exception

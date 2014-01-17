@@ -7,9 +7,8 @@
 	</table>
 	
 	<table name="organisation">
-		<row name="IITD" details="Indian Institude of Technology, Delhi"/>
-		<row name="IITB" details="Indian Institude of Technology, Mumbai"/>
-		<row name="DU" details="University of Delhi"/>
+		<row id="1" name="IITD" details="Indian Institude of Technology, Delhi"/>
+		<row id="2" name="IITB" details="Indian Institude of Technology, Mumbai"/>
 	</table>
 	
 	<table name="vm_config">
@@ -116,7 +115,10 @@
 	</table>
 
 	<table name="security_domain">
-		<row id="1" name="Research" vlan="1" visible_to_all="True" />
+		<row id="1" name="Private" vlan="1" visible_to_all="False" />
+		<row id="2" name="Research" vlan="2" visible_to_all="True" />
+		<row id="3" name="IITD_SD" vlan="3" visible_to_all="False" org_visibility="1" />
+		<row id="4" name="IITB_SD" vlan="4" visible_to_all="False" org_visibility="2" />
 	</table>
 
 	<table name="datastore">
