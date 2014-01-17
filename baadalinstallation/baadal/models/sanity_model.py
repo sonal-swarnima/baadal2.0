@@ -46,12 +46,12 @@ def check_sanity():
             for _id in ids:
                 domains.append(conn.lookupByID(_id))
             names = conn.listDefinedDomains()
-            for name in names:
-                domains.append(conn.lookupByName(name))
+            for dom_name in names:
+                domains.append(conn.lookupByName(dom_name))
             for dom in domains:
                 try:
-                    name = dom.name()
-                    vm = db(db.vm_data.vm_name == name).select().first()
+                    domain_name = dom.name()
+                    vm = db(db.vm_data.vm_identity == domain_name).select().first()
                     vm_state = dom.info()[0]
                     status = vminfo_to_state(vm_state)
                     if(vm):
@@ -62,7 +62,7 @@ def check_sanity():
                                             'status':status,
                                             'message':'Moved from '+vm.host_id.host_name+' to '+host.host_name, 'operation':'None'})#Bad VMs
                             #If VM has been migrated to another host; Host information updated
-                            db(db.vm_data.vm_name==name).update(host_id = host.id)
+                            db(db.vm_data.vm_identity == domain_name).update(host_id = host.id)
                         else:
                             vmcheck.append({'host':host.host_name,
                                             'host_id':host.id,
@@ -71,9 +71,9 @@ def check_sanity():
                                             'message':'VM is on expected host '+vm.host_id.host_name, 'operation':'None'})#Good VMs
                         if vm_state_map[vm_state] != vm.status:
                             #If not in sync with actual state of VM; status of VM updated in DB
-                            db(db.vm_data.vm_name == name).update(status = vm_state_map[vm_state])
+                            db(db.vm_data.vm_identity == domain_name).update(status = vm_state_map[vm_state])
                             
-                        vm_list.append(vm.vm_name)
+                        vm_list.append(vm.vm_identity)
                             
                     elif vm_state != VIR_DOMAIN_SHUTOFF:
                         vmcheck.append({'host':host.host_name,
@@ -98,15 +98,16 @@ def check_sanity():
             conn.close()
         except:pass
         db.commit()
-        db_vms=db(db.vm_data.host_id == host.id & db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-        for db_vm in db_vms:
-            if(db_vm.vm_name not in vm_list):
-                vmcheck.append({'vmname':db_vm.vm_name,
-                                'host':db_vm.host_id.host_name,
-                                'host_id':db_vm.host_id,
-                                'status':'Undefined',
-                                'message':'VM not found', 
-                                'operation':'Undefined'})
+        
+    db_vms=db(db.vm_data.host_id == host.id & db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    for db_vm in db_vms:
+        if(db_vm.vm_identity not in vm_list):
+            vmcheck.append({'vmname':db_vm.vm_identity,
+                            'host':db_vm.host_id.host_name,
+                            'host_id':db_vm.host_id,
+                            'status':'Undefined',
+                            'message':'VM not found', 
+                            'operation':'Undefined'})
             
     return vmcheck
 
@@ -161,6 +162,7 @@ def add_orhan_vm(vm_name, host_id):
 
     vm_id = db.vm_data.insert(
         vm_name = vm_name, 
+        vm_identity = ('system_'+ vm_name), 
         RAM = ram_in_gb,
         HDD = hdd,
         extra_HDD = 0,
@@ -179,9 +181,9 @@ def add_orhan_vm(vm_name, host_id):
     db.private_ip_pool[ip_addr.id] = dict(vm_id=vm_id)
     return
 
-def delete_vm_info(vm_name):
+def delete_vm_info(vm_identity):
 
-    vm_details = db(db.vm_data.vm_name == vm_name).select().first()
+    vm_details = db(db.vm_data.vm_identity == vm_identity).select().first()
     count = vm_details.host_id.vm_count
     db(db.host.id == vm_details.host_id).update(vm_count = count - 1)
 

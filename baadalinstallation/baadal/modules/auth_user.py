@@ -117,9 +117,10 @@ def create_or_update_user(user_info, update_session):
 def add_or_update_user_memberships(user_id, new_user, roles, update_session):
 
     if not new_user:
-        current_roles = current.db((user_id == current.db.user_membership.user_id) & (current.db.user_membership.group_id == current.db.user_group.id)).select(current.db.user_group.role).as_list()
+        current_roles = current.db((user_id == current.db.user_membership.user_id) 
+                                   and (current.db.user_membership.group_id == current.db.user_group.id)).select(current.db.user_group.role).as_list()
 
-        current.logger.info("users current roles: %s",current_roles)
+        current.logger.info("users current roles: %s", current_roles)
 
         for role in current_roles:
             roles.pop(roles.index(role['role']))

@@ -13,24 +13,23 @@
         <th>Owner</th>
         <th>Host</th>
         <th>Private IP</th>
+        <th>Public IP</th>
 		<th>RAM</th>
 		<th>vCPUs</th>
         <th>Status</th>
-		<th>Cost</th>
         <th>Settings</th>
       </tr>
   {{for vm in hosted_vm:}}
       <form>
       <tr>
         <td>{{=vm['name']}}</td>
-        <input type = "hidden" name = "vm" value="{{=vm['id']}}"/>
         <td>{{=(vm['owner'])}}</td>
         <td>{{=vm['hostip']}}</td>
         <td>{{=vm['private_ip']}}</td>
+        <td>{{=vm['public_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
 		<td>{{=vm['vcpus']}}</td>
         <td>{{=vm['status']}}</td>
-        <td>{{=vm['cost']}}</td>
         <td>
         <div id = '{{=vm['name']}}'>
         {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),

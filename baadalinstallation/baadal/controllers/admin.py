@@ -39,6 +39,13 @@ def manage_template():
 @check_moderator
 @handle_exception
 def manage_security_domain():
+
+    if request.args(0) == 'delete' or request.vars['delete_this_record'] == 'on':
+        error_message = check_delete_security_domain(request.args(2))
+        if error_message != None:
+            session.flash = error_message
+            redirect(URL(c='admin', f='manage_security_domain'))
+
     form = get_security_domain_form()
     return dict(form = form)
 
@@ -180,9 +187,9 @@ def task_list():
     if form.accepts(request.vars, session, keepvalues=True):
         task_num = int(form.vars.task_num)
     
-    pending = get_task_by_status(TASK_QUEUE_STATUS_PENDING, task_num)
-    success = get_task_by_status(TASK_QUEUE_STATUS_SUCCESS, task_num)
-    failed = get_task_by_status(TASK_QUEUE_STATUS_FAILED, task_num)
+    pending = get_task_by_status([TASK_QUEUE_STATUS_PENDING], task_num)
+    success = get_task_by_status([TASK_QUEUE_STATUS_SUCCESS], task_num)
+    failed = get_task_by_status([TASK_QUEUE_STATUS_FAILED, TASK_QUEUE_STATUS_PARTIAL_SUCCESS], task_num)
     
     return dict(pending=pending, success=success, failed=failed, form=form)
 
@@ -197,8 +204,8 @@ def ignore_task():
 @check_moderator
 @handle_exception
 def retry_task():
-    task_id=request.args[0]
-    update_task_retry(task_id)
+    event_id=request.args[0]
+    update_task_retry(event_id)
     
     redirect(URL(r=request,c='admin',f='task_list'))
 
@@ -322,3 +329,11 @@ def vm_utilization():
     vm_util_data = get_vm_util_data(util_period)
     
     return dict(vm_util_data=vm_util_data, form=form)
+
+@check_moderator
+@handle_exception
+def remind_orgadmin():
+    vm_id=request.args[0]
+    send_remind_orgadmin_email(vm_id)
+    session.flash = 'Organisation Admin Reminded'
+    redirect(URL(c='orgadmin', f='pending_approvals'))

@@ -37,7 +37,6 @@ mail.settings.sender = config.get("MAIL_CONF","mail_sender")
 mail.settings.login = config.get("MAIL_CONF","mail_login")
 mail.settings.tls = True
 
-
 #added to make auth and db objects available in modules 
 from gluon import current  # @Reimport
 current.auth = auth
@@ -73,6 +72,7 @@ db.define_table(
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
 custom_auth_table.last_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
+custom_auth_table.password.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
 custom_auth_table.email.requires = [
   IS_EMAIL(error_message = auth.messages.invalid_email),
   IS_NOT_IN_DB(db, custom_auth_table.email)]
@@ -115,12 +115,13 @@ db.define_table('host',
 db.define_table('datastore',
     Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
     Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
-    Field('capacity', 'integer', label='Capacity'),
+    Field('capacity', 'integer', label='Capacity(GB)'),
     Field('username', 'string', length = 255, label='Username'),
     Field('password', 'password', label='Password', readable=False),
     Field('path', 'string', label='Path'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
     format = '%(ds_name)s')
+db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('template',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name of Template'),
@@ -131,6 +132,7 @@ db.define_table('template',
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
     Field('datastore_id', db.datastore, label='Datastore'),
     format = '%(name)s')
+db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('vm_config',
     Field('template_id', 'integer', notnull = True),
@@ -145,18 +147,20 @@ db.define_table('vlan',
     format = '%(name)s')
 
 db.define_table('security_domain',
-    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name', requires=[IS_NOT_IN_DB(db,'security_domain.name')]),
+    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
     Field('vlan', 'reference vlan'),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
 
-vlan_query = (db.security_domain.vlan != db.vlan.id)
-db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', multiple=False, zero=None)
+vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
+db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
+# db.security_domain.vlan.widget=SQLFORM.widgets.options.widget
+# db.security_domain.vlan.requires=[IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None), IS_NOT_IN_DB(db,'security_domain.vlan')]
 
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-#     Field('vm_identity', 'string', length = 255, notnull = True, unique = True),
+    Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
@@ -170,9 +174,8 @@ db.define_table('vm_data',
     Field('public_ip', 'string',length = 15, label='Public IP', default=PUBLIC_IP_NOT_ASSIGNED),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
-    Field('purpose', 'text'),
+    Field('purpose', 'string', length = 512),
     Field('expiry_date', 'date'),
-    Field('total_cost', 'float', default = 0),
     Field('current_run_level', 'integer', default = 0),
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
@@ -189,8 +192,8 @@ db.define_table('request_queue',
     Field('request_type', 'string', length = 20, notnull = True),
     Field('RAM', 'integer', label='RAM'),
     Field('HDD', 'integer'),
-    Field('extra_HDD', 'integer', label='Extra HDD'),
-    Field('attach_disk', 'integer', label='Disk Size'),
+    Field('extra_HDD', 'integer', label='Extra HDD(GB)'),
+    Field('attach_disk', 'integer', label='Disk Size(GB)'),
     Field('vCPU', 'integer', label='vCPUs'),
     Field('template_id', db.template),
     Field('enable_service', 'list:string'),
@@ -200,12 +203,16 @@ db.define_table('request_queue',
     Field('owner_id', db.user, represent=lambda x, row: get_full_name(x), label='Owner'),
     Field('collaborators', 'list:reference user'),
     Field('clone_count', 'integer', label='No. of Clones'),
-    Field('purpose', 'text'),
+    Field('purpose', 'string', length = 512),
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('start_time', 'datetime', default = get_datetime()))
 
+db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE)]
+db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(1,1025))
+db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
 db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
+db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),
@@ -215,7 +222,7 @@ db.define_table('user_vm_map',
 db.define_table('vm_data_event',
     Field('vm_id', 'integer'),
     Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
-#     Field('vm_identity', 'string', length = 255, notnull = True, unique = True),
+    Field('vm_identity', 'string', length = 100, notnull = True),
     Field('host_id', db.host),
     Field('RAM', 'integer'),
     Field('HDD', 'integer'),
@@ -229,9 +236,8 @@ db.define_table('vm_data_event',
     Field('public_ip', 'string',length = 15),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
-    Field('purpose', 'text'),
+    Field('purpose', 'string', length = 512),
     Field('expiry_date', 'date'),
-    Field('total_cost', 'integer', default = 0),
     Field('current_run_level', 'integer', default = 0),
     Field('last_run_level', 'integer'),
     Field('next_run_level', 'integer'),
@@ -241,7 +247,7 @@ db.define_table('vm_data_event',
     Field('status', 'integer'))
 
 db.define_table('attached_disks',
-    Field('vm_id', db.vm_data,notnull = True),
+    Field('vm_id', db.vm_data, notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
     Field('attached_disk_name', 'string', length=30, notnull = True),
     Field('capacity', 'string',length = 45),
@@ -266,13 +272,13 @@ db.task_queue.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.task_queue.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
 db.define_table('task_queue_event',
-    Field('task_id', 'integer', notnull = True),
+    Field('task_id', 'integer', notnull = False),
     Field('task_type', 'string', length = 30, notnull = True),
     Field('vm_id', db.vm_data, notnull = True),
     Field('requester_id', db.user),
     Field('parameters', 'text', default={}),
     Field('status', 'integer', notnull = True),
-    Field('error', 'text'),
+    Field('message', 'text'),
     Field('start_time', 'datetime', default = get_datetime()),
     Field('attention_time', 'datetime'),
     Field('end_time', 'datetime'))
@@ -293,11 +299,15 @@ db.define_table('vnc_access',
     Field('time_requested', 'datetime', default = get_datetime()))
 
 db.define_table('public_ip_pool',
-    Field('public_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE)]),
+    Field('public_ip', 'string', length = 15, notnull = True, unique = True),
     Field('vm_id', db.vm_data, writable = False))
+
+db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
 
 db.define_table('private_ip_pool',
     Field('private_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]),
     Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=[IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')]),
     Field('vlan', db.vlan, notnull = True),
     Field('vm_id', db.vm_data, writable = False))
+
+db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]

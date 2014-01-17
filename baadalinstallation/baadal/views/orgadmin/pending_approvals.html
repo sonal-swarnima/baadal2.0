@@ -23,7 +23,6 @@
         <th>RAM</th>
         <th>HDD</th>
         <th>Public IP</th>
-<!--    <th>Ports Enabled</th> -->
         <th>Security Domain</th>
         <th>Action</th>
       </tr> 
@@ -43,15 +42,16 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-<!--        <td>{{#=pend_request['services_enabled']}}</td> -->
             <td>{{=pend_request['security_domain']}}</td>
             <td>
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
-            	{{else:}}
+            	{{elif is_orgadmin() and (auth.user.organisation_id == pend_request['org_id']):}}
 					{{=A('Approve',_href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
 					&nbsp;|&nbsp;
 					{{=A('Reject',_href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+            	{{else:}}
+	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin',_href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
             </td>
           </tr>
@@ -90,10 +90,12 @@
             <td>
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
-            	{{else:}}
+            	{{elif is_orgadmin() & auth.user.organisation_id == pend_request['org_id']:}}
 					{{=A('Approve',_href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
 					&nbsp;|&nbsp;
 					{{=A('Reject',_href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+            	{{else:}}
+	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin',_href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
             </td>
           </tr>
@@ -134,10 +136,12 @@
             <td>
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
-            	{{else:}}
+            	{{elif is_orgadmin() & auth.user.organisation_id == pend_request['org_id']:}}
 					{{=A('Approve',_href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
 					&nbsp;|&nbsp;
 					{{=A('Reject',_href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+            	{{else:}}
+	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin',_href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
             </td>
           </tr>
@@ -201,10 +205,12 @@
             <td>
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
-            	{{else:}}
+            	{{elif is_orgadmin() & auth.user.organisation_id == pend_request['org_id']:}}
 					{{=A('Approve',_href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
 					&nbsp;|&nbsp;
 					{{=A('Reject',_href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+            	{{else:}}
+	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin',_href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
             </td>
           </tr>

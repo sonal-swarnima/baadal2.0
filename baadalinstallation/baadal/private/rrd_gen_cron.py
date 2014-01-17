@@ -25,14 +25,14 @@ TIME_DIFF_MS = 300
 def create_rrd(rrd_file):
 
     ret = rrdtool.create( rrd_file, "--start", str(int(time.time())),
-        "DS:cputime:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:cpuusage:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:memory:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:diskr:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:diskw:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:nwr:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:nww:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
-        "DS:cpus:GAUGE:%s:0:U"%(str(TIME_DIFF_MS)),
+        "DS:cputime:GAUGE:%s:0:U"  % str(TIME_DIFF_MS),
+        "DS:cpuusage:GAUGE:%s:0:U" % str(TIME_DIFF_MS),
+        "DS:memory:GAUGE:%s:0:U"   % str(TIME_DIFF_MS),
+        "DS:diskr:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
+        "DS:diskw:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
+        "DS:nwr:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "DS:nww:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "DS:cpus:GAUGE:%s:0:U"     % str(TIME_DIFF_MS),
         "RRA:MIN:0:1:525600",
         "RRA:AVERAGE:0:12:43800",
         "RRA:AVERAGE:0:2016:261",
@@ -177,8 +177,6 @@ def update_rrd():
                         logger.warn("Creating new RRD file")
                         create_rrd(rrd_file)
                         time.sleep(1)
-                    
-                    print str(dom_info[2])
                     
                     cpu_usage = calculate_cpu_usage(rrd_file, timestamp_now, dom_info[3], dom_info[4])
                     ret = rrdtool.update(rrd_file, 

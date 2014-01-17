@@ -120,8 +120,8 @@ def get_performance_graph(graph_type, vm, graph_period):
             logger.info("Returning image.")
             return img
 
-def fetch_rrd_data(vm_name, period=VM_UTIL_24_HOURS):
-    rrd_file = get_rrd_file(vm_name)
+def fetch_rrd_data(vm_identity, period=VM_UTIL_24_HOURS):
+    rrd_file = get_rrd_file(vm_identity)
 
     start_time = 'now - ' + str(24 * HOURS)
     end_time = 'now'
