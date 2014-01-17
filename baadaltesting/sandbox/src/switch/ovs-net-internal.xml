@@ -1,7 +1,7 @@
 <network>
     <name>ovs-internal</name>
     <forward mode="bridge" />
-    <bridge name="baadal-br-internal" />
+    <bridge name="baadal-br-int" />
     <virtualport type="openvswitch" />
     <portgroup name="vlan101">
         <vlan trunk="yes">

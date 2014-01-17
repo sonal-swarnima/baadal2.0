@@ -27,17 +27,20 @@ function sandbox_setup
 
 	mv /etc/network/interfaces /etc/network/interfaces.bak
 
-	cp interfaces.sandbox /etc/network/interfaces
+	cp $OVS_EXTERNEL_CUSTOM_IFS /etc/network/interfaces
 	/etc/init.d/networking restart
 
-	echo "Installing libvirt-1.0"
-	tar -xvzf $LIBVIRT_TAR	
-	cd $LIBVIRT
-	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
-	make
-	make install
-	/etc/init.d/libvirt-bin restart
-	cd -
+	VERSION=$(virsh --version 2>/dev/null)
+	if [[ $VERSION != "1.2.1" ]]; then
+		echo "Installing $LIBVIRT"
+		tar -xvzf $LIBVIRT_TAR	
+		cd $LIBVIRT
+		./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
+		make
+		make install
+		/etc/init.d/libvirt-bin restart
+		cd -
+	fi
 
 	virsh net-define $OVS_NET_XML_INTERNAL
 	virsh net-start $OVS_NET_INTERNAL

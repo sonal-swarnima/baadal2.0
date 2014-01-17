@@ -22,6 +22,7 @@ function run
     --network network=$OVS_NET_EXTERNAL \
     --network network=$OVS_NET_INTERNAL \
     --noautoconsole \
+    --graphics vnc,listen=0.0.0.0 \
     1>$LOGS/log.out 2>/$LOGS/log.err
   status=$?
 

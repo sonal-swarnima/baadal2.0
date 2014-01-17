@@ -21,12 +21,12 @@ BRCOMPAT_DST=/etc/default/openvswitch-switch
 OVS_ETHERNET=eth0
 
 #Update this in OVS_NET_XML too
-OVS_BRIDGE_INTERNAL=baadal-br-internal
+OVS_BRIDGE_INTERNAL=baadal-br-int
 OVS_NET_INTERNAL=ovs-internal
 OVS_NET_XML_INTERNAL=$BIN/ovs-net-internal.xml
 
 #Update this in OVS_NET_XML_EXTERNAL too
-OVS_BRIDGE_EXTERNAL=baadal-br-external
+OVS_BRIDGE_EXTERNAL=baadal-br-ext
 OVS_NET_EXTERNAL=ovs-external
 OVS_NET_XML_EXTERNAL=$BIN/ovs-net-external.xml
 OVS_EXTERNEL_CUSTOM_IFS=$BIN/interfaces.sandbox

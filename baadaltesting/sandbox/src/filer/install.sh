@@ -19,8 +19,9 @@ function run
     --os-type=Linux \
     --disk path=$FILER_DISK,format=qcow2,size=$FILER_SPACE \
     --cdrom $FILER_ISO \
-    --network network=$OVS_NET \
+    --network network=$OVS_NET_INTERNAL \
     --noautoconsole \
+    --graphics vnc,listen=0.0.0.0 \
     1>$LOGS/log.out 2>/$LOGS/log.err
   status=$?
 

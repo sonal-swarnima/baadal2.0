@@ -9,3 +9,5 @@ config.ln/*
 wget*
 logs*
 *.swp
+*.swo
+libvirt*

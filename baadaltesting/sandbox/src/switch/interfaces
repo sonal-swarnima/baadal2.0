@@ -1,0 +1,15 @@
+auto lo
+iface lo inet loopback
+up service openvswitch-switch restart
+
+auto eth0
+iface eth0 inet static
+address 0.0.0.0
+
+auto baadal-br-ext
+iface baadal-br-ext inet dhcp
+
+auto baadal-br-int
+iface baadal-br-int inet static
+address 10.0.0.1
+netmask 255.255.0.0

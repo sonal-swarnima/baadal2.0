@@ -18,7 +18,7 @@ UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-1
 UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-alternate-amd64.iso
 UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-server-amd64.iso
 UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-server-amd64.iso
-UBUNTU_SOURCE = $(UBUNTU_SERVER_EXTERNAL)
+UBUNTU_SOURCE = $(UBUNTU_SERVER)
 
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
@@ -27,8 +27,7 @@ BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
-BIN_SWITCH_INTERNAL = $(BIN_DIR)/switch_internal.sh
-BIN_SWITCH_EXTERNAL = $(BIN_DIR)/switch_external.sh
+BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_NET_FIX = $(BIN_DIR)/fix_net.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
 
@@ -80,6 +79,8 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
 	mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
+	mkdir -p $(BIN_DIR)/transfer.filer/baadal
+	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
 
 $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $@
@@ -90,6 +91,7 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
+	mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	cp -R $(DIR_BAADAL_INSTALLATION)/nat_setup/* $(BIN_DIR)/transfer.nat/baadal
 
 $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
@@ -98,19 +100,14 @@ $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ub
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
 
-$(BIN_SWITCH_INTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-internal libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-internal/*.sh > $@
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	cp $(SRC_DIR)/switch-internal/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
-
-$(BIN_SWITCH_EXTERNAL): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch-external libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch-external/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
-	cp $(SRC_DIR)/switch-external/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
+	cp $(SRC_DIR)/switch/interfaces $(BIN_DIR)/interfaces.sandbox
+	cp $(SRC_DIR)/switch/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
+	cp $(SRC_DIR)/switch/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
 
 $(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-fix/*.sh > $@
@@ -133,16 +130,10 @@ host: $(BIN_HOST)
 switch: $(BIN_SWITCH)
 	sudo $<
 
-switch-external: $(BIN_SWITCH_EXTERNAL)
-	sudo $<
-
-net-external: $(BIN_NET_EXTERNAL)
-	sudo $<
-
 fix-net: $(BIN_NET_FIX)
 	sudo $<
 
-sandbox: switch switch-external nat controller filer
+sandbox: switch nat controller filer
 
 config: clean-config
 	mkdir -p $(CONFIG_DIR)
@@ -150,10 +141,8 @@ config: clean-config
 	ln -s ../$(SRC_DIR)/controller/ks.cfg $(CONFIG_DIR)/controller.ks.cfg
 	ln -s ../$(SRC_DIR)/filer/ks.cfg $(CONFIG_DIR)/filer.ks.cfg
 	ln -s ../$(SRC_DIR)/nat/ks.cfg $(CONFIG_DIR)/nat.ks.cfg
-	ln -s ../$(SRC_DIR)/switch/ovs-net.xml $(CONFIG_DIR)/ovs-net.xml
+	ln -s ../$(SRC_DIR)/switch/ovs-net.xml $(CONFIG_DIR)/ovs-net-internal.xml
 	ln -s ../$(SRC_DIR)/switch-external/ovs-net-external.xml $(CONFIG_DIR)/ovs-net-external.xml
-	ln -s ../$(SRC_DIR)/nat/transfer/etc/iptables.conf $(CONFIG_DIR)/nat.iptables.conf
-	ln -s ../$(SRC_DIR)/nat/transfer/etc/network/interfaces $(CONFIG_DIR)/nat.interfaces
 
 $(BIN_DIR)/id_rsa.sandbox.pub: ~/.ssh/id_rsa
 	cp $<.pub $@
