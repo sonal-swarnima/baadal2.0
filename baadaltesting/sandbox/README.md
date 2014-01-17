@@ -6,9 +6,12 @@ Pre-requisites
 -----------------------------------------------
 * __make libvirt__ - for downloading libvirt source
 * __make ubuntu__ - for downloading ubuntu iso
+* __make configure__ - for configuring the sandbox system
 
 Setup Instructions
 -----------------------------------------------
+* __make configure__ - required to initialized some configurations required by the sandbox system, the IP address required is the starting address you would like to use for the internal sandbox network.
+
 * __make sandbox__ - should set up ovs switch on sandbox system, create virtual machines for NAT, Controller, Filer  
         
 * __make switch__ - set up ovs switches on sandbox system (installs ovs) (can be automatically done through make sandbox)
@@ -52,6 +55,7 @@ __Internal IPs__
 * NAT System - 10.0.0.3
 * Filer System - 10.0.0.4
 * Internal Gateway - NAT System (10.0.0.3)
+(These values could be changed using __make configure__.)
 
 __External IPs__
 * Sandbox System - baadal-br-ext (DHCP)
