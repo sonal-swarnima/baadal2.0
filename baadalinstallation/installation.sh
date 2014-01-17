@@ -446,7 +446,7 @@ echo "subnet mask is $subnet"
 
 #Assign IP to controller NIC
 echo -e "\nauto eth0\niface eth0 inet static\n\taddress 0.0.0.0\n\nauto br0\niface bro inet static\n\taddress $CONTROLLER_IP\n\tnetmask $subnet" >> /etc/network/interfaces
-sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ start/" /etc/network/interfaces
+sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ restart/" /etc/network/interfaces
 
 num_hosts=$NUMBER_OF_HOSTS
 #Calculation of subnet declaration for default VLAN in dhcp

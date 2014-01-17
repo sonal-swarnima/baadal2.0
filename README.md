@@ -1,6 +1,7 @@
 Prerequisites: nfs-server, firewall(including NAT/PAT), physical switch, authentication service(preferably ldap-kerberos)
 
 1. Checkout latest code from https://github.com/apoorvemohan/newbaadal.git
+2. Checkout ubuntu-12.04-server-amd64 from http://releases.ubuntu.com/precise/ubuntu-12.04.3-server-amd64.iso
 2. Edit /newbaadal/baadalinstallation/installation.cfg as per your requirements
 3. Edit /newbaadal/baadalinstallation/baadal/static/baadalapp.cfg
 4. Execute /newbaadal/baadalinstallation/installation.sh
