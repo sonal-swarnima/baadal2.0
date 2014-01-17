@@ -18,7 +18,8 @@ function run
     --os-type=Linux \
     --disk path=$HOST_DISK,format=qcow2,size=$HOST_SPACE \
     --pxe \
-    --network network=$OVS_NET \
+    --network network=$OVS_NET_INTERNAL,mac=$HOST_MAC \
+    --graphics vnc,listen=0.0.0.0 \
     1>$LOGS/log.out 2>/$LOGS/log.err
   status=$?
 

@@ -11,7 +11,7 @@ RUN_COMMAND = run
 
 DIR_BAADAL_INSTALLATION = ../../baadalinstallation
 
-HOST_ID = 0
+HOST_ID = 1
 
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
 UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-alternate-amd64.iso
