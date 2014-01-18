@@ -51,3 +51,4 @@ function run
   sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $CONTROLLER_KS
   sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_FILER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $FILER_KS
 }
+
