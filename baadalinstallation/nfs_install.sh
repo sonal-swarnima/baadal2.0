@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install NFS server
-apt-get install nfs-kernel-server portmap
+apt-get -y install nfs-kernel-server portmap
 # Add mode nfs
 modprobe nfs
 
