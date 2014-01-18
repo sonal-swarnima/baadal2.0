@@ -23,6 +23,7 @@ UBUNTU_SOURCE = $(UBUNTU_SERVER)
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
 
+BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
@@ -57,6 +58,11 @@ ubuntu: $(UBUNTU)
 
 libvirt: $(LIBVIRT)
 
+$(BIN_CONFIGURE): $(BIN_DIR)
+	cat $(SRC_DIR)/constants.sh $(SRC_DIR)/configure.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
 
 $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
@@ -135,7 +141,8 @@ fix-net: $(BIN_NET_FIX)
 
 sandbox: switch nat controller filer
 
-config: clean-config
+configure: clean-config $(BIN_CONFIGURE)
+	$(BIN_CONFIGURE)
 	mkdir -p $(CONFIG_DIR)
 	ln -s ../$(SRC_DIR)/constants.sh $(CONFIG_DIR)/constants.sh
 	ln -s ../$(SRC_DIR)/controller/ks.cfg $(CONFIG_DIR)/controller.ks.cfg
@@ -174,6 +181,7 @@ keygen-ssh-nat: $(BIN_DIR)/id_rsa.nat
 keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-filer keygen-ssh-nat
 
 clean-config:
+	rm -rf $(BIN_CONTROLLER)
 	rm -rf $(CONFIG_DIR)
 
 clean-controller:

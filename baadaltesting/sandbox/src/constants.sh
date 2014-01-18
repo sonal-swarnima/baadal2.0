@@ -5,6 +5,12 @@ UTILS=$ROOT/utils
 DISKS=$ROOT/disks
 LOGS=$ROOT/logs
 TEMP=$ROOT/temp
+SRC=$ROOT/src
+NAT=$SRC/nat
+CONTROLLER=$SRC/controller
+FILER=$SRC/filer
+
+CONFIGURE=$SRC/constants.sh
 
 UBUNTU=$UTILS/ubuntu.iso
 LIBVIRT=libvirt-1.2.1
@@ -31,6 +37,7 @@ OVS_NET_EXTERNAL=ovs-external
 OVS_NET_XML_EXTERNAL=$BIN/ovs-net-external.xml
 OVS_EXTERNEL_CUSTOM_IFS=$BIN/interfaces.sandbox
 
+#These values may be updated by configure.
 NETWORK_INTERNAL_IP_SANDBOX=10.0.0.1
 NETWORK_INTERNAL_IP_CONTROLLER=10.0.0.2
 NETWORK_INTERNAL_IP_NAT=10.0.0.3
@@ -46,6 +53,7 @@ NAT_VCPUS=1
 NAT_ISO=$UTILS/ubuntu.nat.iso
 NAT_KICKSTART=$BIN/ks.nat.cfg
 NAT_TRANSFER=$BIN/transfer.nat/
+NAT_KS=$NAT/ks.cfg
 
 CONTROLLER_DISK=$DISKS/controller.img
 CONTROLLER_SPACE=5
@@ -56,6 +64,7 @@ CONTROLLER_VCPUS=1
 CONTROLLER_ISO=$UTILS/ubuntu.controller.iso
 CONTROLLER_KICKSTART=$BIN/ks.controller.cfg
 CONTROLLER_TRANSFER=$BIN/transfer.controller/
+CONTROLLER_KS=$CONTROLLER/ks.cfg
 
 FILER_DISK=$DISKS/filer.img
 FILER_SPACE=50
@@ -66,6 +75,7 @@ FILER_VCPUS=1
 FILER_ISO=$UTILS/ubuntu.filer.iso
 FILER_KICKSTART=$BIN/ks.filer.cfg
 FILER_TRANSFER=$BIN/transfer.filer/
+FILER_KS=$FILER/ks.cfg
 
 HOST_ID=${HOST_ID:-0}
 HOST_DISK=$DISKS/host.$HOST_ID.img
