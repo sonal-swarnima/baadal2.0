@@ -1,4 +1,4 @@
-OOT=$PWD
+ROOT=$PWD
 
 BIN=$ROOT/bin
 UTILS=$ROOT/utils
