@@ -1,4 +1,4 @@
-#!/bin/bashi
+#!/bin/bash
 source config-nat.cfg 2>> /dev/null
 
 rmmod bridge
@@ -8,7 +8,7 @@ service openvswitch-switch start
 module-assistant --non-inter --quiet auto-install openvswitch-datapath
 
 ovs-vsctl add-br br0
-ovs-vsctl add-br br0 $INTERNAL_INTERFACE
+ovs-vsctl add-port br0 $INTERNAL_INTERFACE
 
 touch $BASE_PATH/ovs_postup.sh
 
@@ -40,8 +40,8 @@ else
 		trunk_str+="$i,"
 	done
 fi
-ovs_str+="ovs-vsct set port br0 tag=$NAT_VLAN\n"
-trunk_str=$(echo ${trunk_str:1:${#trunk_str}-2})
+ovs_str+="ovs-vsctl set port br0 tag=$NAT_VLAN\n"
+trunk_str=$(echo ${trunk_str:0:-1})
 
 echo -e "$ovs_str\novs-vsctl set port $INTERNAL_INTERFACE trunk=$trunk_str" > $BASE_PATH/ovs_postup.sh
 sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ restart/" /etc/network/interfaces
@@ -56,6 +56,7 @@ done < $VLAN_IP_CONFIG_FILE
 
 chmod u+x $BASE_PATH/ovs_postup.sh
 $BASE_PATH/ovs_postup.sh
+ifconfig $INTERNAL_INTERFACE 0.0.0.0 up
 /etc/init.d/networking restart
 
 apt-get install -y debconf-utils
