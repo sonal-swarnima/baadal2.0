@@ -5,7 +5,7 @@ rmmod bridge
 apt-get -y install openvswitch-controller openvswitch-brcompat openvswitch-switch openvswitch-datapath-source
 echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
 service openvswitch-switch start
-module-assistant --text-mode --force auto-install openvswitch-datapath
+module-assistant --non-inter --quiet auto-install openvswitch-datapath
 
 ovs-vsctl add-br br0
 ovs-vsctl add-br br0 $INTERNAL_INTERFACE
@@ -44,15 +44,18 @@ ovs_str+="ovs-vsct set port br0 tag=$NAT_VLAN\n"
 trunk_str=$(echo ${trunk_str:1:${#trunk_str}-2})
 
 echo -e "$ovs_str\novs-vsctl set port $INTERNAL_INTERFACE trunk=$trunk_str" > $BASE_PATH/ovs_postup.sh
-echo -e "\nauto eth0\niface $INTERNAL_INTERFACE inet static\n\taddress 0.0.0.0\n\nauto br0\niface br0 inet dhcp\n\tpost-up $BASE_PATH/ovs_postup.sh\n\tbridge_ports $INTERNAL_INTERFACE\n\tbridge_stp off" >> /etc/network/interfaces
+sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ restart/" /etc/network/interfaces
+echo -e "\nauto $INTERNAL_INTERFACE\niface $INTERNAL_INTERFACE inet static\n\taddress 0.0.0.0\n\nauto br0\niface br0 inet dhcp" >> /etc/network/interfaces
 
 while read line
 do
 	vlan_interface=$(echo "$line" | cut -d "|" -f 1)
 	vlan_ip=$(echo "$line" | cut -d "|" -f 2)
-	echo -e "\n\nauto $vlan_interface\niface $vlan_interface inet static\n\taddress $vlan_ip\n\tnetmask $NETMASK\n\tvlan_raw_device br0" >> /etc/network/interfaces
+	echo -e "\n\nauto $vlan_interface\niface $vlan_interface inet static\n\taddress $vlan_ip\n\tnetmask $NETMASK" >> /etc/network/interfaces
 done < $VLAN_IP_CONFIG_FILE
 
+chmod u+x $BASE_PATH/ovs_postup.sh
+$BASE_PATH/ovs_postup.sh
 /etc/init.d/networking restart
 
 apt-get install -y debconf-utils

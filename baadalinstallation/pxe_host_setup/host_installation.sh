@@ -1,4 +1,4 @@
-Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm libvirt-bin libvirt0 python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan munin-node munin-libvirt-plugins vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay cgroup-bin)
+Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm  python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay cgroup-bin libpciaccess-dev)
  
 Chk_Root_Login()
 {
@@ -32,10 +32,9 @@ Instl_Pkgs()
                                 echo "Installing Package: $pkg.................."
                                 DEBIAN_FRONTEND=noninteractive apt-get -y install $pkg --force-yes
 				if test $pkg == "debconf-utils"; then
-					echo "dhcp3-relay dhcp3-relay/servers string CONTROLLER_IP" | debconf-set-selections
 					echo "isc-dhcp-relay isc-dhcp-relay/servers string CONTROLLER_IP" | debconf-set-selections
-        				echo "dhcp3-relay dhcp3-relay/interfaces string \"\"" | debconf-set-selections
-				        echo "dhcp3-relay dhcp3-relay/options string \"\"" | debconf-set-selections
+        				echo "isc-dhcp-relay isc-dhcp-relay/interfaces string VLAN_INTERFACES" | debconf-set-selections
+				        echo "isc-dhcp-relay isc-dhcp-relay/options string \"\"" | debconf-set-selections
 				fi
 
                 done
@@ -56,10 +55,6 @@ Enbl_Modules()
 	modprobe kvm_intel
 	rmmod bridge
 
-	echo "Restarting libvirt"
-
-	invoke-rc.d libvirt-bin restart
-
 	echo "Installing OpenvSwitch"
 
 	aptitude -y purge ebtables
@@ -78,10 +73,7 @@ Enbl_Modules()
 
 	ovs-vsctl add-br br0
 	ovs-vsctl add-port br0 eth0
-#	ovs-vsctl add-br vlan10 br0 10
-#	ovs-vsctl add-br vlan20 br0 20
-#	ovs-vsctl set port eth0 tag=1
-#	ovs-vsctl set port eth0 trunk=10,20
+	/root/ovs-postup.sh
 
 	cd /etc/network
 	mv interfaces interfaces.bak
@@ -122,6 +114,8 @@ Enbl_Modules()
 	virsh net-start ovs-net
 	virsh net-autostart ovs-net
 
+	sed -i -e "s/#net.ipv4.ip_forward=/net.ipv4.ip_forward=/" /etc/sysctl.conf
+	sysctl -p
 
 	echo "If you have done all the steps correctly, Congo!!!"
 }

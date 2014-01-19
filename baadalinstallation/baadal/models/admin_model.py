@@ -6,6 +6,7 @@ if 0:
     from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from helper import IS_MAC_ADDRESS
 
 def get_manage_template_form():
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -100,10 +101,17 @@ def get_security_domain_form():
     fields = (db.security_domain.name, db.security_domain.vlan)
     default_sort_order=[db.security_domain.id]
 
-    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30)
     return form
 
-
+def check_delete_security_domain(sd_id):
+    if db((db.vm_data.security_domain == sd_id)).count() > 0:
+        return SECURITY_DOMAIN_DELETE_MESSAGE
+    elif db.security_domain[sd_id].name == 'Research':
+        return 'Security Domain ''Research'' can''t be deleted.'
+    elif db.security_domain[sd_id].name == 'Private':
+        return 'Security Domain ''Private'' can''t be deleted.'
+    
 def get_all_pending_requests():
 
     vms = db(db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED, REQ_STATUS_IN_QUEUE)).select()
@@ -321,11 +329,20 @@ def update_task_ignore(event_id):
 
 
 def get_search_host_form():
-    form = FORM('Host IP:',
+    form = FORM('Host IP :',
                 INPUT(_name = 'host_ip', _id='host_ip_id', requires = [
                                 IS_IPV4(error_message=IP_ERROR_MESSAGE),
                                 IS_NOT_IN_DB(db, 'host.host_ip', error_message='Host IP is already configured')]),
-                INPUT(_type = 'submit', _value = 'Get Details'))
+                INPUT(_type = 'button', _value = 'Get Details', _class = 'btn-submit'))
+    return form
+
+
+def get_configure_host_form():
+    form = FORM('Host MAC:',
+                INPUT(_name = 'host_mac_addr', _id='host_mac_id', requires = [
+                                IS_MAC_ADDRESS(),
+                                IS_NOT_IN_DB(db, 'host.mac_addr', error_message='Host MAC is already configured')]),
+                INPUT(_type = 'button', _value = 'Configure', _class = 'btn-submit'))
     return form
 
 
@@ -353,6 +370,21 @@ def get_host_form(host_ip):
     form.vars.HDD = '300'
     return form 
     
+
+def configure_host_by_mac(mac_addr):
+    
+    avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))&(db.private_ip_pool.vlan==1)).select(db.private_ip_pool.private_ip).first()['private_ip']
+    logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_ip))
+    host_name = 'host'+str(avl_ip.split('.')[3])
+    import os
+    command = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, avl_ip)
+    os.system(command)
+    command = '/etc/init.d/isc-dhcp-server restart'
+    os.system(command)
+    db.host[0] = dict(host_ip=avl_ip, 
+                      host_name=host_name, 
+                      mac_addr=mac_addr, 
+                      status=HOST_STATUS_DOWN)
 
 def is_host_available(host_ip):
     try:
