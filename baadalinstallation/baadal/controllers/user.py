@@ -75,7 +75,9 @@ def handle_vm_operation():
         session.flash = "Not authorized"
         redirect(URL(c='default', f='index'))
     else:
-        if is_request_in_queue(vm_id, task_type):
+        if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
+            session.flash = "Delete request is in queue. No operation can be performed"
+        elif is_request_in_queue(vm_id, task_type):
             session.flash = "%s request already in queue." %task_type
         else:
             add_vm_task_to_queue(vm_id,task_type)
