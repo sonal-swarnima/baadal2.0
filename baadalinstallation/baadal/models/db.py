@@ -190,11 +190,11 @@ db.define_table('request_queue',
     Field('vm_name', 'string', length = 30, notnull = True, label='VM Name'),
     Field('parent_id', 'reference vm_data'),
     Field('request_type', 'string', length = 20, notnull = True),
-    Field('RAM', 'integer', label='RAM'),
-    Field('HDD', 'integer'),
+    Field('RAM', 'integer', label='RAM(GB)'),
+    Field('HDD', 'integer', label='HDD(GB)'),
     Field('extra_HDD', 'integer', label='Extra HDD(GB)'),
     Field('attach_disk', 'integer', label='Disk Size(GB)'),
-    Field('vCPU', 'integer', label='vCPUs'),
+    Field('vCPU', 'integer', label='CPUs'),
     Field('template_id', db.template),
     Field('enable_service', 'list:string'),
     Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
@@ -207,12 +207,13 @@ db.define_table('request_queue',
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('start_time', 'datetime', default = get_datetime()))
 
-db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE)]
-db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(1,1025))
+db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE)]
+db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
 db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
+db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),

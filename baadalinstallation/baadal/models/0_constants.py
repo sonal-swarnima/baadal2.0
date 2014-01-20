@@ -108,7 +108,7 @@ VM_RAM_SET = (1024,2048,4096,8192)
 VM_vCPU_SET = (1,2,4,8)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
-VM_NAME_ERROR_MESSAGE = 'VM name should start with alphabet and can only contain letters, numbers, dash and underscore'
+VM_NAME_ERROR_MESSAGE = 'VM name should start with alphanumeric and can only contain letters, numbers, dash and underscore'
 SECURITY_DOMAIN_DELETE_MESSAGE = 'There are VMs assigned to this security domain. It can''t be deleted.'
 
 SECONDS = 1

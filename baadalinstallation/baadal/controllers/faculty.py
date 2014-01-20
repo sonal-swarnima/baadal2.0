@@ -54,7 +54,7 @@ def edit_pending_request():
         session.flash = "Request is successfully edited."
         session.back = None
         redirect(redirect_url)
-    else:
+    elif not form.errors:
         session.back = request.env.http_referer
 
     return dict(form=form)

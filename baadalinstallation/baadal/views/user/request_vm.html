@@ -85,7 +85,7 @@ function add_collaborator() {
         $('#collaborator').val('');
         return;
     }
-    if(user == '{{=auth.user.username}}')
+    if(user.toUpperCase() == '{{=auth.user.username}}'.toUpperCase())
     {
         $('.flash').html('Requester name need not be added as collaborator.').slideDown();
         $('#collaborator').val('');
@@ -94,7 +94,7 @@ function add_collaborator() {
 
     if($('#faculty_user').val() != undefined & $('[name="vm_owner"]').val() != '')
     {
-        if(user == $('[name="vm_owner"]').val())
+        if(user.toUpperCase() == $('[name="vm_owner"]').val().toUpperCase())
         {
             $('.flash').html('Faculty approver need not be added as collaborator.').slideDown();
             $('#collaborator').val('');

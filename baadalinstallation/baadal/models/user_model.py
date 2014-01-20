@@ -122,7 +122,6 @@ def request_vm_validation(form):
     else:
         validate_approver(form)
 
-    form.vars.security_domain = form.vars.sec_domain
     vm_users = request.post_vars.vm_users
     user_list = []
     if vm_users and len(vm_users) > 1:
