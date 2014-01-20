@@ -35,7 +35,7 @@ OVS_NET_XML_INTERNAL=$BIN/ovs-net-internal.xml
 OVS_BRIDGE_EXTERNAL=baadal-br-ext
 OVS_NET_EXTERNAL=ovs-external
 OVS_NET_XML_EXTERNAL=$BIN/ovs-net-external.xml
-OVS_EXTERNEL_CUSTOM_IFS=$BIN/interfaces.sandbox
+OVS_EXTERNAL_CUSTOM_IFS=$BIN/interfaces.sandbox
 
 #These values may be updated by configure.
 NETWORK_INTERNAL_IP_SANDBOX=10.0.0.1

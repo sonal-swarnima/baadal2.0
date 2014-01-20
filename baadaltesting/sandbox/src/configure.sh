@@ -1,5 +1,8 @@
 function run
 {
+  # TODO
+  # sed in sandbox's /etc/network/interfaces -> src/switch/interfaces
+
   maxValue=255
   count=4
   default=0.0.0.0
@@ -20,7 +23,7 @@ function run
 
   if [ $(($lastaddr+$count)) -ge $maxValue ] 
   then
-    echo "Your IP Address does not has the required $count addresses free."
+    echo "Your IP Address does not have the required $count addresses free."
     echo "The last value of IP Address must be less than 252"
     exit 1
   fi

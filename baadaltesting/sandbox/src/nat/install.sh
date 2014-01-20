@@ -3,8 +3,6 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
-  package_install virtinst
-  package_install virt-manager
   disk_create $NAT_DISK ${NAT_SPACE}G
   remaster_ubuntu $NAT_KICKSTART $NAT_TRANSFER $NAT_ISO
 

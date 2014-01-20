@@ -1,13 +1,39 @@
 function run
 {
   check_root
-  sandbox_setup 
+
+  libvirt_install
+
+  # TODO
+  # Compile and install libvirt-python bindings
+  # and virt-manager
+
+	ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
+
+	ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
+  ovsvsctl_add_br_force $OVS_BRIDGE_INTERNAL
+
+	mv /etc/network/interfaces /etc/network/interfaces.bak
+
+	cp $OVS_EXTERNAL_CUSTOM_IFS /etc/network/interfaces
+	#/etc/init.d/networking restart
+
+	virsh_force "net-define $OVS_NET_XML_INTERNAL"
+	virsh_force "net-start $OVS_NET_INTERNAL"
+	virsh_run "net-autostart $OVS_NET_INTERNAL"
+
+	virsh_force "net-define $OVS_NET_XML_EXTERNAL"
+	virsh_force "net-start $OVS_NET_EXTERNAL"
+	virsh_run "net-autostart $OVS_NET_EXTERNAL"
+
+  $ECHO_OK Switch Installation Complete
+
 }
 
 function libvirt_install
 {
   VERSION=$(virsh --version 2>/dev/null)
-  if [[ $VERSION != "1.0.0" ]]; then
+  if [[ $VERSION != "1.2.1" ]]; then
     package_install libxml2-dev
     package_install libgnutls-dev
     package_install libyajl-dev
@@ -22,7 +48,7 @@ function libvirt_install
     cd $TEMP
 
     $ECHO_PROGRESS "libvirt - extract"
-    tar -xvzf $LIBVIRT 1>>$LOGS/log.out 2>>$LOGS/log.err
+    tar -xvzf $LIBVIRT_TAR 1>>$LOGS/log.out 2>>$LOGS/log.err
     status=$?
 
     if [[ $status -ne 0 ]]; then
@@ -32,10 +58,10 @@ function libvirt_install
       $ECHO_OK libvirt - extract
     fi
 
-    cd libvirt-1.0.0
+    cd $LIBVIRT
     
     $ECHO_PROGRESS "libvirt - configure"
-    ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes 1>>$LOGS/log.out 2>>$LOGS/log.err
+    ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc 1>>$LOGS/log.out 2>>$LOGS/log.err
     status=$?
 
     if [[ $status -ne 0 ]]; then
@@ -67,7 +93,7 @@ function libvirt_install
       $ECHO_OK libvirt - make install
     fi
 
-    service_restart libvirt-bin
+    libvirtd -d
 
     cd $pwd
     rm -rf $TEMP
