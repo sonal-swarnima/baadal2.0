@@ -28,13 +28,13 @@ def get_my_hosted_vm():
 def get_configuration_elem(form):
     
     vm_configs = db().select(db.vm_config.ALL, orderby =db.vm_config.template_id)
-
+    _label = LABEL(SPAN('Configuration:', ' ', SPAN('*', _class='fld_required'), ' '))
     _id=0
     i=0
     select = SELECT(_name='configuration_'+str(_id))
     for config in vm_configs:
         if config.template_id != _id:
-            config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
+            config_elem = TR(_label, select, TD(), _id='config_row__'+str(_id))
             form[0].insert(2,config_elem)#insert tr element in the form
             _id = config.template_id
             select = SELECT(_name='configuration_'+str(_id))
@@ -46,7 +46,7 @@ def get_configuration_elem(form):
         i+=1
         
         #Create HTML tr, and insert label and select box
-    config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
+    config_elem = TR(_label,select,TD(),_id='config_row__'+str(_id))
     form[0].insert(2,config_elem)#insert tr element in the form
 
 # Gets CPU, RAM and HDD information on the basis of template selected.
@@ -173,7 +173,10 @@ def get_request_vm_form():
     _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
     db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
     db.request_queue.security_domain.default = 2
+    db.request_queue.security_domain.notnull = True
+    db.request_queue.template_id.notnull = True
 
+    mark_required(db.request_queue)
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
