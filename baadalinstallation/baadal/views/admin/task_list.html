@@ -116,3 +116,12 @@ function clicker(content){
 {{pass}}
 </div>
 </div>
+
+<script>
+$(document).keypress(function(e) {
+  if(e.which == 13) {
+    tab_refresh();
+    $(this).closest('form').submit()
+  }
+})
+</script>

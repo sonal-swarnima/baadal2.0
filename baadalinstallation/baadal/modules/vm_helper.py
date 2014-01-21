@@ -560,13 +560,6 @@ def clean_up_database_after_vm_deletion(vm_details):
     # deleting entry of extra disk of vm
     current.db(current.db.attached_disks.vm_id == vm_details.id).delete()
     
-    #Update reference tables
-    current.db(current.db.private_ip_pool.vm_id == vm_details.id).update(vm_id = None)
-    current.db(current.db.public_ip_pool.vm_id == vm_details.id).update(vm_id = None)
-    current.db(current.db.vm_data.parent_id == vm_details.id).update(parent_id = None)
-    current.db.commit()
-
-
 def vm_has_snapshots(vm_id):
     if (current.db(current.db.snapshot.vm_id == vm_id).select()):
         return True
@@ -654,7 +647,6 @@ def snapshot(parameters):
         xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."
-        current.logger.debug(message)
         if snapshot_type != current.SNAPSHOT_USER:
             snapshot_cron = current.db((current.db.snapshot.vm_id == vmid) & (current.db.snapshot.type == snapshot_type)).select().first()
             #Delete the existing Daily/Monthly/Yearly snapshot
@@ -662,6 +654,7 @@ def snapshot(parameters):
                 current.logger.debug(snapshot_cron)
                 delete_snapshot({'vm_id':vmid, 'snapshot_id':snapshot_cron.id})
         current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
+        current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()

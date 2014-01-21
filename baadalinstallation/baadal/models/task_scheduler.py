@@ -71,8 +71,7 @@ def processCloneTask(task_event_id, vm_id):
             task_event.update_record(attention_time=get_datetime())
         
         ret = task[TASK_TYPE_CLONE_VM](vm_id)
-        logger.debug('okkkkk')
-        logger.debug(ret)
+
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             vm_data = db.vm_data[vm_id]
             message = message + '\n' + vm_data.vm_name + ': ' + ret[1]

@@ -152,7 +152,8 @@ def add_faculty_approver(form):
 
     _input=INPUT(_name='faculty_user',_id='faculty_user') # create INPUT
     _link = TD(A('Verify', _href='#',_onclick='verify_faculty()'))
-    faculty_elem = TR(LABEL('Faculty Approver:'),_input,_link,_id='faculty_row')
+    _label = LABEL(SPAN('Faculty Approver:', ' ', SPAN('*', _class='fld_required'), ' '))
+    faculty_elem = TR(_label,_input,_link,_id='faculty_row')
     form[0].insert(-1,faculty_elem)#insert tr element in the form
 
 

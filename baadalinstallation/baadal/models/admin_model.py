@@ -187,7 +187,11 @@ def create_clone_task(req_data, params):
 
         vm_id_list.append(clone_vm_id)
         
-        add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id)
+        vm_users=[]
+        for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
+            vm_users.append(user['user_id'])
+
+        add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id, vm_users=vm_users)
         cnt = cnt+1
         
     params.update({'clone_vm_id':vm_id_list})
