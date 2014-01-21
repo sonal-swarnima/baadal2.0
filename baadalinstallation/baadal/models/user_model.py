@@ -222,6 +222,7 @@ def get_my_task_list(task_status, task_num):
 def get_vm_config(vm_id):
 
     vminfo = get_vm_info(vm_id)
+    if not vminfo : return
     
     vm_info_map = {'id'               : str(vminfo.id),
                    'name'             : str(vminfo.vm_name),

@@ -71,7 +71,7 @@ def update_clone_vm_request(vm_request, element):
 #Update the dictionary with values specific to pending Attach Disk request tab
 def update_attach_disk_request(vm_request, element):
     element['parent_vm_id'] = vm_request.parent_id
-    element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD !=0 else 'None'
+    element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD != None else '-'
     element['attach_disk'] = str(vm_request.attach_disk) + 'GB'
     
 
@@ -445,6 +445,11 @@ def mark_required(table):
     
     marker = SPAN('*', _class='fld_required')
     for field in table:
+        required = False
         if field.notnull:
+            required = True
+        elif field.requires:
+            required=isinstance(field.requires,(IS_IN_SET, IS_IPV4))
+        if required:
             _label = field.label
             field.label = SPAN(_label, ' ', marker, ' ')

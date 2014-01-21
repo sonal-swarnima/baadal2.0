@@ -107,18 +107,18 @@ db.define_table('host',
     Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=IS_MAC_ADDRESS()),
     Field('HDD', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
-    Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None)),
+    Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
     Field("category",'string', length = 50),
     Field('status', 'integer'),
     Field('vm_count', 'integer', default = 0))
 
 db.define_table('datastore',
-    Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
+    Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
     Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
-    Field('capacity', 'integer', label='Capacity(GB)'),
-    Field('username', 'string', length = 255, label='Username'),
+    Field('capacity', 'integer', notnull = True, label='Capacity(GB)'),
+    Field('username', 'string', notnull = True, length = 255, label='Username'),
     Field('password', 'password', label='Password', readable=False),
-    Field('path', 'string', label='Path'),
+    Field('path', 'string', notnull = True, label='Path'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
     format = '%(ds_name)s')
 db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
@@ -130,7 +130,7 @@ db.define_table('template',
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
     Field('hdfile', 'string', length = 255, notnull = True, label='HD File'),
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
-    Field('datastore_id', db.datastore, label='Datastore'),
+    Field('datastore_id', db.datastore, notnull = True, label='Datastore'),
     format = '%(name)s')
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 

@@ -48,7 +48,8 @@ def processTaskQueue(task_event_id):
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # For successful task, delete the task from queue 
-            del db.task_queue[task_process.id]
+            if db.task_queue[task_process.id]:
+                del db.task_queue[task_process.id]
             if 'request_id' in task_process.parameters:
                 del db.request_queue[task_process.parameters['request_id']]
         
@@ -70,7 +71,8 @@ def processCloneTask(task_event_id, vm_id):
             task_event.update_record(attention_time=get_datetime())
         
         ret = task[TASK_TYPE_CLONE_VM](vm_id)
-
+        logger.debug('okkkkk')
+        logger.debug(ret)
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             vm_data = db.vm_data[vm_id]
             message = message + '\n' + vm_data.vm_name + ': ' + ret[1]
@@ -87,7 +89,7 @@ def processCloneTask(task_event_id, vm_id):
         
         # Find the status of all clone tasks combined
         current_status = ret[0]
-        if task_event.status != None and task_event.status != current_status:
+        if task_event.status != TASK_QUEUE_STATUS_PENDING and task_event.status != current_status:
             current_status = TASK_QUEUE_STATUS_PARTIAL_SUCCESS
         
         if not clone_vm_list: #All Clones are processed

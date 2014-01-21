@@ -57,7 +57,8 @@ def settings():
     vm_id=request.args[0]
     vm_users = None
     vm_info = get_vm_config(vm_id)
-    
+    if not vm_info:
+        redirect(URL(f='list_my_vm'))
     if is_moderator() or is_faculty() or is_orgadmin():
         vm_users = get_vm_user_list(vm_id)
     

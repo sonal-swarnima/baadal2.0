@@ -33,7 +33,7 @@ def hosts_vms():
 @check_moderator
 @handle_exception
 def manage_template():
-    form = get_manage_template_form()
+    form = get_manage_template_form(request.args(0))
     return dict(form = form)
 
 @check_moderator
@@ -87,7 +87,7 @@ def add_host():
 @check_moderator
 @handle_exception
 def manage_datastore():
-    form = get_manage_datastore_form()
+    form = get_manage_datastore_form(request.args(0))
     return dict(form=form)
 
 @check_moderator

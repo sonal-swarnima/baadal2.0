@@ -8,21 +8,25 @@ if 0:
 ###################################################################################
 from helper import IS_MAC_ADDRESS
 
-def get_manage_template_form():
+def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
 
     default_sort_order=[db.template.id]
 
+    if req_type in ('new','edit'):
+        mark_required(db.template)
     #Creating the grid object
     form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
-def get_manage_datastore_form():
+def get_manage_datastore_form(req_type):
 
     db.datastore.id.readable=False # Since we do not want to expose the used field on the grid
 
     default_sort_order=[db.datastore.id]
 
+    if req_type in ('new','edit'):
+        mark_required(db.datastore)
     #Creating the grid object
     form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
