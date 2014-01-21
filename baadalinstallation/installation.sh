@@ -441,11 +441,11 @@ echo "subnet mask is $subnet"
 		exit 1
 	fi
 	
-	ovs-vsctl add-br bro
+	ovs-vsctl add-br br0
 	ovs-vsctl add-port br0 eth0
 
 #Assign IP to controller NIC
-echo -e "\nauto eth0\niface eth0 inet static\n\taddress 0.0.0.0\n\nauto br0\niface bro inet static\n\taddress $CONTROLLER_IP\n\tnetmask $subnet" >> /etc/network/interfaces
+echo -e "\nauto eth0\niface eth0 inet static\n\taddress 0.0.0.0\n\nauto br0\niface br0 inet static\n\taddress $CONTROLLER_IP\n\tnetmask $subnet" >> /etc/network/interfaces
 sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ restart/" /etc/network/interfaces
 
 num_hosts=$NUMBER_OF_HOSTS
@@ -467,7 +467,7 @@ final_interfaces_string=""
 final_ovs_string=""
 final_trunk_string=""
 PORTGROUP_STRING=""
-VALNS=""
+VLANS=""
 #Default VLAN configuration is already figured out, remaining (NUMBER_OF_VLANS -1) VLANs are configured here
 for (( i=1;i<$NUMBER_OF_VLANS;i++ )) 
 do
@@ -516,12 +516,12 @@ do
 		final_trunk_string+=","
 	fi
 	PORTGROUP_STRING+="<portgroup name=\'vlan$vlan_tag\'>\\\n\\\t<vlan><tag id=\'$vlan_tag\'\/><\/vlan>\\\n<\/portgroup>\\\n"
-	VLANS+="vlan$vlan_tag,"
+	VLANS+="vlan$vlan_tag "
 done
 
 touch /var/www/ovs-postup.sh
 echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
-chmod /var/www/ovs-postup.sh
+chmod u+x /var/www/ovs-postup.sh
 /var/www/ovs-postup.sh 
 
 echo -e "$final_interfaces_string" >> /etc/network/interfaces
@@ -532,7 +532,7 @@ VLANS=$(echo ${VLANS:0:-1})
 echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 sed -i -e 's/option\ domain-name\ /#\ option\ domain-name\ /g' /etc/dhcp/dhcpd.conf
 sed -i -e 's/ns1.example.org,\ ns2.example.org/'"$CONTROLLER_IP"'/g' /etc/dhcp/dhcpd.conf
-sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"br0,'"$VLANS"'\"/g' /etc/default/isc-dhcp-server
+sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"br0 '"$VLANS"'\"/g' /etc/default/isc-dhcp-server
 
 /etc/init.d/isc-dhcp-server restart
 

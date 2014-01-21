@@ -1,7 +1,10 @@
 {{extend 'layout.html'}}
 
 <h2 class="subtitle">Add New Host</h2>
-{{=form}}
+{{=form1}}
+<br>
+{{=form2}}
+<br>
 {{if not hosts:}}
 <center><h4>No Machines There Yet.</h4></center>
 {{else:}}
@@ -69,3 +72,15 @@
   </table>
 </div>
 {{pass}}
+
+<script>
+jQuery('form').submit(function(){
+
+});
+
+$(".btn-submit").click(function() {
+    $(this).prop("disabled", true); // dont allow more clicks 
+    $(this).closest('form').submit();
+});
+
+</script>

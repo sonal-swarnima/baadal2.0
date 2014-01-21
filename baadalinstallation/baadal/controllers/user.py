@@ -57,7 +57,8 @@ def settings():
     vm_id=request.args[0]
     vm_users = None
     vm_info = get_vm_config(vm_id)
-    
+    if not vm_info:
+        redirect(URL(f='list_my_vm'))
     if is_moderator() or is_faculty() or is_orgadmin():
         vm_users = get_vm_user_list(vm_id)
     
@@ -75,7 +76,9 @@ def handle_vm_operation():
         session.flash = "Not authorized"
         redirect(URL(c='default', f='index'))
     else:
-        if is_request_in_queue(vm_id, task_type):
+        if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
+            session.flash = "Delete request is in queue. No operation can be performed"
+        elif is_request_in_queue(vm_id, task_type):
             session.flash = "%s request already in queue." %task_type
         else:
             add_vm_task_to_queue(vm_id,task_type)

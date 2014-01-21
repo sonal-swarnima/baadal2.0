@@ -107,18 +107,18 @@ db.define_table('host',
     Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=IS_MAC_ADDRESS()),
     Field('HDD', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
-    Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None)),
+    Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
     Field("category",'string', length = 50),
     Field('status', 'integer'),
     Field('vm_count', 'integer', default = 0))
 
 db.define_table('datastore',
-    Field('ds_name', 'string', length = 30, unique = True, label='Name of Datastore'),
+    Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
     Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
-    Field('capacity', 'integer', label='Capacity(GB)'),
-    Field('username', 'string', length = 255, label='Username'),
+    Field('capacity', 'integer', notnull = True, label='Capacity(GB)'),
+    Field('username', 'string', notnull = True, length = 255, label='Username'),
     Field('password', 'password', label='Password', readable=False),
-    Field('path', 'string', label='Path'),
+    Field('path', 'string', notnull = True, label='Path'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
     format = '%(ds_name)s')
 db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
@@ -130,7 +130,7 @@ db.define_table('template',
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
     Field('hdfile', 'string', length = 255, notnull = True, label='HD File'),
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
-    Field('datastore_id', db.datastore, label='Datastore'),
+    Field('datastore_id', db.datastore, notnull = True, label='Datastore'),
     format = '%(name)s')
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
@@ -190,11 +190,11 @@ db.define_table('request_queue',
     Field('vm_name', 'string', length = 30, notnull = True, label='VM Name'),
     Field('parent_id', 'reference vm_data'),
     Field('request_type', 'string', length = 20, notnull = True),
-    Field('RAM', 'integer', label='RAM'),
-    Field('HDD', 'integer'),
+    Field('RAM', 'integer', label='RAM(GB)'),
+    Field('HDD', 'integer', label='HDD(GB)'),
     Field('extra_HDD', 'integer', label='Extra HDD(GB)'),
     Field('attach_disk', 'integer', label='Disk Size(GB)'),
-    Field('vCPU', 'integer', label='vCPUs'),
+    Field('vCPU', 'integer', label='CPUs'),
     Field('template_id', db.template),
     Field('enable_service', 'list:string'),
     Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
@@ -207,12 +207,13 @@ db.define_table('request_queue',
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('start_time', 'datetime', default = get_datetime()))
 
-db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE)]
-db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(1,1025))
+db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE)]
+db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
 db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
+db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),

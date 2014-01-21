@@ -72,7 +72,7 @@
             <td>
                 {{if pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
-                        _title="Installation in Progress", _alt="Installation in Progress")}}&nbsp;
+                        _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]),
@@ -81,6 +81,10 @@
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pend_request['id']]),
                         _title="Reject Request", _alt="Reject Request")}}
+                    &nbsp;&nbsp;
+                    {{=A(IMG(_src=URL('static','images/edit.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='faculty',f='edit_pending_request', args=[pend_request['id']]),
+                        _title="Edit Request", _alt="Edit Request")}}
                 {{pass}}
             </td>
           </tr>
@@ -141,7 +145,7 @@
             <td>
                 {{if pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
-                        _title="Installation in Progress", _alt="Installation in Progress")}}&nbsp;
+                        _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]),
@@ -150,6 +154,10 @@
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pend_request['id']]),
                         _title="Reject Request", _alt="Reject Request")}}
+                    &nbsp;&nbsp;
+                    {{=A(IMG(_src=URL('static','images/edit.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='faculty',f='edit_pending_request', args=[pend_request['id']]),
+                        _title="Edit Request", _alt="Edit Request")}}
                 {{pass}}
             </td>
           </tr>
@@ -212,7 +220,7 @@
             <td>
                 {{if pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
-                        _title="Installation in Progress", _alt="Installation in Progress")}}&nbsp;
+                        _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]),
@@ -221,6 +229,10 @@
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pend_request['id']]),
                         _title="Reject Request", _alt="Reject Request")}}
+                    &nbsp;&nbsp;
+                    {{=A(IMG(_src=URL('static','images/edit.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='faculty',f='edit_pending_request', args=[pend_request['id']]),
+                        _title="Edit Request", _alt="Edit Request")}}
                 {{pass}}
             </td>
           </tr>
@@ -306,7 +318,7 @@
             <td>
                 {{if pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
-                        _title="Installation in Progress", _alt="Installation in Progress")}}&nbsp;
+                        _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]),
@@ -315,6 +327,10 @@
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pend_request['id']]),
                         _title="Reject Request", _alt="Reject Request")}}
+                    &nbsp;&nbsp;
+                    {{=A(IMG(_src=URL('static','images/edit.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='faculty',f='edit_pending_request', args=[pend_request['id']]),
+                        _title="Edit Request", _alt="Edit Request")}}
                 {{pass}}
             </td>
           </tr>

@@ -28,13 +28,13 @@ def get_my_hosted_vm():
 def get_configuration_elem(form):
     
     vm_configs = db().select(db.vm_config.ALL, orderby =db.vm_config.template_id)
-
+    _label = LABEL(SPAN('Configuration:', ' ', SPAN('*', _class='fld_required'), ' '))
     _id=0
     i=0
     select = SELECT(_name='configuration_'+str(_id))
     for config in vm_configs:
         if config.template_id != _id:
-            config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
+            config_elem = TR(_label, select, TD(), _id='config_row__'+str(_id))
             form[0].insert(2,config_elem)#insert tr element in the form
             _id = config.template_id
             select = SELECT(_name='configuration_'+str(_id))
@@ -46,7 +46,7 @@ def get_configuration_elem(form):
         i+=1
         
         #Create HTML tr, and insert label and select box
-    config_elem = TR(LABEL('Configuration:'),select,TD(),_id='config_row__'+str(_id))
+    config_elem = TR(_label,select,TD(),_id='config_row__'+str(_id))
     form[0].insert(2,config_elem)#insert tr element in the form
 
 # Gets CPU, RAM and HDD information on the basis of template selected.
@@ -122,7 +122,6 @@ def request_vm_validation(form):
     else:
         validate_approver(form)
 
-    form.vars.security_domain = form.vars.sec_domain
     vm_users = request.post_vars.vm_users
     user_list = []
     if vm_users and len(vm_users) > 1:
@@ -165,37 +164,25 @@ def add_collaborators(form):
     form[0].insert(-1, collaborator_elem)#insert tr element in the form
 
 
-def get_security_domain():
-    sec_domains = db((db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))).select()
-    return sec_domains
-
-
-def add_security_domain(form):
-    
-    select=SELECT(_name='sec_domain') # create HTML select
-    i=0
-    for sec_domain in get_security_domain():
-        select.insert(i, OPTION(sec_domain['name'], _value = sec_domain['id']))
-        i = i+1
-
-    vlan_elem = TR(LABEL('Security Domain:'), select ,TD(), _id='security_domain_row')
-    form[0].insert(-1, vlan_elem)#insert tr element in the form
-
-
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'public_ip']
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'security_domain', 'public_ip']
 
     db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
     db.request_queue.requester_id.default = auth.user.id
+    _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
+    db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
+    db.request_queue.security_domain.default = 2
+    db.request_queue.security_domain.notnull = True
+    db.request_queue.template_id.notnull = True
 
+    mark_required(db.request_queue)
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
     if not(is_moderator() or is_orgadmin() or is_faculty()):
         add_faculty_approver(form)
     add_collaborators(form)
-    add_security_domain(form)
     return form
 
 
@@ -235,6 +222,7 @@ def get_my_task_list(task_status, task_num):
 def get_vm_config(vm_id):
 
     vminfo = get_vm_info(vm_id)
+    if not vminfo : return
     
     vm_info_map = {'id'               : str(vminfo.id),
                    'name'             : str(vminfo.vm_name),
@@ -343,11 +331,13 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
+    _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(vm_data.requester_id.organisation_id))
+    db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
     
-    form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain', 'purpose']
-#     form_fields = ['vm_name', 'RAM', 'vCPU', 'enable_service', 'public_ip', 'security_domain', 'purpose']
-    
-    return SQLFORM(db.request_queue, fields = form_fields)
+    form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain','purpose']
+    form = SQLFORM(db.request_queue, fields = form_fields)
+#     add_security_domain(form, vm_id=vm_id)
+    return form
 
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),

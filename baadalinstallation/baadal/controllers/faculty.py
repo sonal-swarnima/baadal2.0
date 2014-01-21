@@ -39,6 +39,26 @@ def reject_request():
     session.flash = 'Request Rejected'
     redirect(URL(c='faculty', f='pending_requests'))
 
+@handle_exception
+def edit_pending_request():
+    
+    if session.back:
+        redirect_url = session.back
+    else:
+        redirect_url = URL()
+    request_id=request.args[0]
+    verify_vm_owner(request_id)
+
+    form = get_edit_pending_request_form(request_id)
+    if form.accepts(request.vars, session):
+        session.flash = "Request is successfully edited."
+        session.back = None
+        redirect(redirect_url)
+    elif not form.errors:
+        session.back = request.env.http_referer
+
+    return dict(form=form)
+
 def verify_vm_owner(request_id):
     request_info = get_request_info(request_id)
     if request_info != None:

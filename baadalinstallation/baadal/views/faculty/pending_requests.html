@@ -50,6 +50,8 @@
 	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
 	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
 	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -92,6 +94,8 @@
 	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
 	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
 	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -136,6 +140,8 @@
 	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
 	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
 	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -203,6 +209,8 @@
 	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
 	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	             &nbsp;|&nbsp;
+	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
 	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
