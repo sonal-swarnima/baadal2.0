@@ -27,8 +27,6 @@ function run
 
   echo "Enter the subnet mask for the internal network"
   read subnet
-  echo "Enter the default gateway for the internal network"
-  read gateway
   echo "Enter the default nameserver for the internal network"
   read nameserver
 
@@ -46,6 +44,8 @@ function run
   lastaddr=$(( $lastaddr + 1 ))
   NETWORK_INTERNAL_IP_FILER=$baseaddr.$lastaddr
   sed -i "/NETWORK_INTERNAL_IP_FILER=/c\NETWORK_INTERNAL_IP_FILER=$baseaddr.$lastaddr" $CONFIGURE
+
+  gateway=$NETWORK_INTERNAL_IP_NAT
 
   sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_NAT --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth1" $NAT_KS
   sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $CONTROLLER_KS
