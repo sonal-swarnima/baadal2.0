@@ -93,14 +93,26 @@ def find_new_host(runlevel, RAM, vCPU):
     else:
         raise Exception("No active host is available for a new vm.")
 
-
+def set_portgroup_in_vm(domain,portgroup,host_ip):
+    conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
+    dom = conn.lookupByName(domain)
+    xml = etree.fromstring(dom.XMLDesc(0))
+    source_network_element = xml.find('.//interface/source')
+    current.logger.debug("source network is "+etree.tostring(source_network_element))
+    source_network_element.set('portgroup',portgroup)
+    current.logger.debug("source network is "+etree.tostring(source_network_element))
+    domain = conn.defineXML(etree.tostring(xml))
+    domain.destroy()
+    domain.create()
+    domain.isActive()
+    
 def get_private_ip_mac(security_domain_id):
     vlans = current.db(current.db.security_domain.id == security_domain_id)._select(current.db.security_domain.vlan)
     private_ip_pool = current.db((current.db.private_ip_pool.vm_id == None) & 
                          (current.db.private_ip_pool.vlan.belongs(vlans))).select(orderby='<random>').first()
 
     if private_ip_pool:
-        return(private_ip_pool.private_ip, private_ip_pool.mac_addr)
+        return(private_ip_pool.private_ip, private_ip_pool.mac_addr, private_ip_pool.vlan.name)
     else:
         sd = current.db.security_domain[security_domain_id]
         raise Exception(("Available MACs are exhausted for security domain '%s'." % sd.name))
@@ -111,6 +123,7 @@ def choose_mac_ip(vm_properties):
     private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
     vm_properties['private_ip'] = private_ip_info[0]
     vm_properties['mac_addr']   = private_ip_info[1]
+    vm_properties['vlan_name']  = private_ip_info[2]
 
     if vm_properties['public_ip_req']:
         public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
@@ -133,7 +146,7 @@ def choose_mac_ip_vncport(vm_properties):
 
 # Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
 def allocate_vm_properties(vm_details):
-
+    
     current.logger.debug("Inside allocate_vm_properties()...")
     vm_properties = {}
 
@@ -231,7 +244,7 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
                      --ram=' + str(vm_properties['ram']) + ' \
                      --vcpus=' + str(vm_properties['vcpus']) + optional + variant_command + ' \
                      --disk path=' + vm_image_location + format_command + bus + ' \
-                     --network bridge=br0,model=virtio,mac=' + vm_properties['mac_addr'] + ' \
+                     --network network='+current.LIBVIRT_NETWORK+',model=virtio,mac=' + vm_properties['mac_addr'] + ' \
                      --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
                      --noautoconsole \
                      --description \
@@ -317,6 +330,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     current.logger.debug("Host is "+ host_ip)
     current.logger.debug("Installation command : " + install_command)
     exec_command_on_host(host_ip, 'root', install_command)
+    set_portgroup_in_vm(vm_details['vm_identity'],vm_properties['vlan_name'],host_ip)
 
     # Serving HDD request
     if (int(vm_details.extra_HDD) != 0):
