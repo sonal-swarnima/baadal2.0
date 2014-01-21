@@ -88,17 +88,12 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	mkdir -p $(BIN_DIR)/transfer.filer/baadal
 	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all $(BIN_NAT_OVS)
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $@
+$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu nat-transfer
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
 	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
-	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
-	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
-	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
-	mkdir -p $(BIN_DIR)/transfer.nat/baadal
-	cp -R $(DIR_BAADAL_INSTALLATION)/nat_setup/* $(BIN_DIR)/transfer.nat/baadal
   
 $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
@@ -120,13 +115,6 @@ $(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-
-$(BIN_NAT_OVS): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat
-	mkdir -p $(BIN_DIR)/transfer.nat/baadal
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/ovs-setup.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
   
 controller: $(BIN_CONTROLLER)
 	sudo $<
@@ -145,7 +133,21 @@ switch: $(BIN_SWITCH)
   
 fix-net: $(BIN_NET_FIX)
 	sudo $<
-  
+
+nat-transfer: keygen-ssh-all $(BIN_NAT_OVS)
+	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
+	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
+	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
+	mkdir -p $(BIN_DIR)/transfer.nat/baadal
+	cp -R $(DIR_BAADAL_INSTALLATION)/nat_setup/* $(BIN_DIR)/transfer.nat/baadal
+
+$(BIN_NAT_OVS): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat
+	mkdir -p $(BIN_DIR)/transfer.nat/baadal
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/ovs-setup.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
+
 sandbox: switch nat controller filer
 
 configure: clean-config $(BIN_CONFIGURE)

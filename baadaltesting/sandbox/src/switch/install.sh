@@ -18,10 +18,14 @@ function run
 	cp $OVS_EXTERNAL_CUSTOM_IFS /etc/network/interfaces
 	#/etc/init.d/networking restart
 
+  virsh_force "net-destroy $OVS_NET_INTERNAL"
+  virsh_force "net-undefine $OVS_NET_INTERNAL"
 	virsh_force "net-define $OVS_NET_XML_INTERNAL"
 	virsh_force "net-start $OVS_NET_INTERNAL"
 	virsh_run "net-autostart $OVS_NET_INTERNAL"
 
+  virsh_force "net-destroy $OVS_NET_EXTERNAL"
+  virsh_force "net-undefine $OVS_NET_EXTERNAL"
 	virsh_force "net-define $OVS_NET_XML_EXTERNAL"
 	virsh_force "net-start $OVS_NET_EXTERNAL"
 	virsh_run "net-autostart $OVS_NET_EXTERNAL"
