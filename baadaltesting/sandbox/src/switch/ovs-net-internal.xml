@@ -3,7 +3,7 @@
     <forward mode="bridge" />
     <bridge name="baadal-br-int" />
     <virtualport type="openvswitch" />
-    <portgroup name="infrastructure">
+    <portgroup name="infrastructure" default="yes">
         <vlan trunk="yes">
             <tag id="1" nativeMode="untagged" />
             <tag id="2" />
