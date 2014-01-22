@@ -251,12 +251,18 @@ def get_vm_user_list(vm_id) :
         user_id_lst.append(vm_user)
     return user_id_lst
 
-def is_request_in_queue(vm_id, task_type):
+def is_request_in_queue(vm_id, task_type, snapshot_id=None):
 
-    if db((db.task_queue.vm_id == vm_id) 
-          & (db.task_queue.task_type == task_type) 
-          & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select():
-        return True
+    _data =  db((db.task_queue.vm_id == vm_id) & (db.task_queue.task_type == task_type) 
+                   & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select()
+    if _data:
+        if snapshot_id != None:
+            for req_data in _data:    
+                params = req_data.parameters
+                if params['snapshot_id'] == snapshot_id:
+                    return True
+        else:
+            return True
     else:
         return False
 
