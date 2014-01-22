@@ -58,8 +58,8 @@ ubuntu: $(UBUNTU)
   
 libvirt: $(LIBVIRT)
   
-$(BIN_CONFIGURE): $(BIN_DIR)
-	cat $(SRC_DIR)/constants.sh $(SRC_DIR)/configure.sh > $@
+$(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
@@ -138,10 +138,8 @@ nat-transfer: keygen-ssh-all $(BIN_NAT_OVS)
 	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
-	mkdir -p $(BIN_DIR)/transfer.nat/baadal
-	cp -R $(DIR_BAADAL_INSTALLATION)/nat_setup/* $(BIN_DIR)/transfer.nat/baadal
 
-$(BIN_NAT_OVS): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat
+$(BIN_NAT_OVS): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 	mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/ovs-setup.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@

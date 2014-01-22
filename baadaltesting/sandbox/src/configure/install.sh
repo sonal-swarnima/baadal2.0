@@ -50,9 +50,9 @@ function run
 
   gateway=$NETWORK_INTERNAL_IP_NAT
 
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_NAT --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth1" $NAT_KS
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $CONTROLLER_KS
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_FILER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $FILER_KS
+  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_NAT --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$NAT_HOSTNAME --device=eth1" $NAT_KS
+  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$CONTROLLER_HOSTNAME --device=eth0" $CONTROLLER_KS
+  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_FILER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$FILER_HOSTNAME --device=eth0" $FILER_KS
 }
 
 
