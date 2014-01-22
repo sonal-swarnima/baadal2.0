@@ -69,15 +69,8 @@ def set_configuration_elem(form):
 
 
 def validate_approver(form):
-    faculty_user = request.post_vars.vm_owner
+
     faculty_user_name = request.post_vars.faculty_user
-    
-    if(faculty_user != ''):
-        faculty_info = get_user_info(faculty_user, [FACULTY])
-        if faculty_info[1] == faculty_user_name:
-            form.vars.owner_id = faculty_info[0]
-            form.vars.status = REQ_STATUS_REQUESTED
-            return
     
     faculty_info = get_user_info(faculty_user_name, [FACULTY])
     if faculty_info != None:
@@ -160,7 +153,7 @@ def add_faculty_approver(form):
 def add_collaborators(form):
 
     _input=INPUT(_name='collaborator',_id='collaborator') # create INPUT
-    _link = TD(A('Add', _href='#',_onclick='add_collaborator()'))
+    _link = TD(A('Add', _href='#',_onclick='check_collaborator()'))
     collaborator_elem = TR(LABEL('Collaborators:'),_input,_link,_id='collaborator_row')
     form[0].insert(-1, collaborator_elem)#insert tr element in the form
 
@@ -178,7 +171,7 @@ def get_request_vm_form():
     db.request_queue.template_id.notnull = True
 
     mark_required(db.request_queue)
-    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
+    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
     if not(is_moderator() or is_orgadmin() or is_faculty()):
