@@ -18,7 +18,7 @@ def request_vm():
     # After validation, read selected configuration and set RAM, CPU and HDD accordingly
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         
-        send_email_to_user(form.vars.vm_name)
+        send_email_to_requester(form.vars.vm_name)
         if not(is_moderator() or is_orgadmin() or is_faculty()):
             send_remind_faculty_email(form.vars.id)
 
@@ -57,7 +57,8 @@ def settings():
     vm_id=request.args[0]
     vm_users = None
     vm_info = get_vm_config(vm_id)
-    
+    if not vm_info:
+        redirect(URL(f='list_my_vm'))
     if is_moderator() or is_faculty() or is_orgadmin():
         vm_users = get_vm_user_list(vm_id)
     
@@ -75,7 +76,9 @@ def handle_vm_operation():
         session.flash = "Not authorized"
         redirect(URL(c='default', f='index'))
     else:
-        if is_request_in_queue(vm_id, task_type):
+        if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
+            session.flash = "Delete request is in queue. No operation can be performed"
+        elif is_request_in_queue(vm_id, task_type):
             session.flash = "%s request already in queue." %task_type
         else:
             add_vm_task_to_queue(vm_id,task_type)
@@ -100,8 +103,11 @@ def snapshot():
 def delete_snapshot():
     vm_id = int(request.args[0])
     snapshot_id = int(request.args[1])
-    add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, {'snapshot_id':snapshot_id})
-    session.flash = "Your delete snapshot request has been queued"
+    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, snapshot_id=snapshot_id):
+        session.flash = "Delete Snapshot request already in queue."
+    else:
+        add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, {'snapshot_id':snapshot_id})
+        session.flash = "Your delete snapshot request has been queued"
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()
@@ -109,8 +115,13 @@ def delete_snapshot():
 def revert_to_snapshot():
     vm_id = int(request.args[0])
     snapshot_id = int(request.args[1])
-    add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, {'snapshot_id':snapshot_id})
-    session.flash = "Your revert to snapshot request has been queued"
+    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, snapshot_id=snapshot_id):
+        session.flash = "Delete Snapshot request in queue. Revert operation aborted."
+    elif is_request_in_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, snapshot_id=snapshot_id):
+        session.flash = "Revert to Snapshot request already in queue."
+    else:
+        add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, {'snapshot_id':snapshot_id})
+        session.flash = "Your revert to snapshot request has been queued"
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @auth.requires_login()

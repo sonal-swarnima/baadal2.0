@@ -4,7 +4,8 @@
 if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
-    from gluon import db,URL,session,redirect,HTTP,FORM,INPUT,IS_INT_IN_RANGE,A,SPAN,IMG,request
+    from gluon import db, request, session
+    from gluon import *  # @UnusedWildImport
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
@@ -40,8 +41,8 @@ def get_hosted_vm_list(vms):
                    'private_ip' : vm.private_ip, 
                    'public_ip' : vm.public_ip, 
                    'hostip' : vm.host_id.host_ip,
-                   'RAM' : vm.RAM,
-                   'vcpus' : vm.vCPU,
+                   'RAM' : str(int(round(vm.RAM/1024))) + 'GB',
+                   'vcpus' : str(vm.vCPU) + ' CPU',
                    'status' : get_vm_status(vm.status)}
         vmlist.append(element)
     return vmlist
@@ -70,7 +71,7 @@ def update_clone_vm_request(vm_request, element):
 #Update the dictionary with values specific to pending Attach Disk request tab
 def update_attach_disk_request(vm_request, element):
     element['parent_vm_id'] = vm_request.parent_id
-    element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD !=0 else 'None'
+    element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD != None else '-'
     element['attach_disk'] = str(vm_request.attach_disk) + 'GB'
     
 
@@ -89,8 +90,6 @@ def update_edit_config_request(vm_request, element):
 
     element['old_public_ip'] = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     element['public_ip'] = vm_request.public_ip
-#     element['old_services_enabled'] = ', '.join(ser for ser in vm_data.enable_service) if vm_data.enable_service != None else '-';
-#     element['services_enabled'] = ', '.join(ser for ser in vm_request.enable_service) if vm_request.enable_service != vm_data.enable_service else 'Same'
 
     element['old_security_domain'] = vm_data.security_domain.name if vm_data.security_domain != None else '-';
     if vm_request.security_domain == vm_data.security_domain: element['security_domain'] = 'Same'
@@ -221,7 +220,7 @@ def get_task_list(events):
         element = {'event_id'  :event.id,
                    'task_type' :event.task_type,
                    'task_id'   :event.task_id,
-                   'vm_name'   :event.vm_id.vm_name,
+                   'vm_name'   :event.vm_name,
                    'user_name' :get_full_name(event.requester_id),
                    'start_time':event.start_time,
                    'att_time'  :event.attention_time,
@@ -321,82 +320,87 @@ def get_vm_operations(vm_id):
 
     valid_operations_list = []
     vmstatus = int(db(db.vm_data.id == vm_id).select(db.vm_data.status).first()['status'])
-   
+    all_disabled = False
+    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):   
+        all_disabled = True
     if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
 
         valid_operations_list.append(A(IMG(_src=URL('static','images/snapshot.png'), _height=20, _width=20),
-                    _href=URL(r=request, c='user' ,f='snapshot', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='snapshot', args=[vm_id]), _disabled=all_disabled,
                     _title="Take VM snapshot", _alt="Take VM snapshot"))
 
         valid_operations_list.append(A(IMG(_src=URL('static','images/performance.jpg'), _height=20, _width=20),
-                    _href=URL(r=request, c='user' ,f='show_vm_performance', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='show_vm_performance', args=[vm_id]), _disabled=all_disabled, 
                     _title="Check VM performance", _alt="Check VM Performance"))
 
         if is_moderator() or is_orgadmin() or is_faculty():
-            valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20),
-                        _onclick="confirm_vm_deletion()",    _title="Delete this virtual machine",    _alt="Delete this virtual machine"))
+            valid_operations_list.append(A(IMG(_src=URL('static','images/delete.png'), _height=20, _width=20), _disabled=all_disabled,
+                        _onclick="confirm_vm_deletion()",    
+                        _title="Delete this virtual machine",    
+                        _alt="Delete this virtual machine"))
   
         if vmstatus == VM_STATUS_SUSPENDED:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/play2.png'), _height=20, _width=20),
-                _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_RESUME_VM, vm_id]), 
+                _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_RESUME_VM, vm_id]), _disabled=all_disabled, 
                 _title="Unpause this virtual machine", _alt="Unpause on this virtual machine"))
                 
         elif vmstatus == VM_STATUS_SHUTDOWN:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-                        _href=URL(r=request, f='handle_vm_operation', args=[TASK_TYPE_START_VM, vm_id]), 
+                        _href=URL(r=request, f='handle_vm_operation', args=[TASK_TYPE_START_VM, vm_id]), _disabled=all_disabled, 
                     _title="Turn on this virtual machine", _alt="Turn on this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/clonevm.png'), _height=20, _width=20),
-                _href=URL(r=request,c='user', f='clone_vm', args=vm_id), _title="Request Clone vm", _alt="Request Clone vm"))
+                _href=URL(r=request,c='user', f='clone_vm', args=vm_id), _disabled=all_disabled, 
+                _title="Request Clone vm", _alt="Request Clone vm"))
                                
             valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
-                    _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), _disabled=all_disabled, 
                     _title="Attach Extra Disk", _alt="Attach Extra Disk"))
                     
             valid_operations_list.append(A(IMG(_src=URL('static','images/editme.png'), _height=20, _width=20),
-                _href=URL(r = request, c = 'user', f = 'edit_vm_config', args = vm_id), _title="Edit VM Config", 
-                _alt="Edit VM Config"))
+                _href=URL(r = request, c = 'user', f = 'edit_vm_config', args = vm_id), _disabled=all_disabled, 
+                _title="Edit VM Config", _alt="Edit VM Config"))
                 
             if is_moderator():
             
                 valid_operations_list.append(A(IMG(_src=URL('static','images/vnc.jpg'), _height=20, _width=20),
-                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), 
+                    _href=URL(r=request, c='default' ,f='page_under_construction', args=[vm_id]), _disabled=all_disabled,  
                     _title="Assign VNC", _alt="Assign VNC"))
                     
         elif vmstatus == VM_STATUS_RUNNING:
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/pause2.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_SUSPEND_VM, vm_id]), 
+                    _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_SUSPEND_VM, vm_id]), _disabled=all_disabled, 
                     _title="Pause this virtual machine", _alt="Pause this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/shutdown2.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='handle_vm_operation', args=[TASK_TYPE_STOP_VM, vm_id]), _title="Gracefully shut down this virtual machine",
-                    _alt="Gracefully shut down this virtual machine"))
+                    _href=URL(r=request, f='handle_vm_operation', args=[TASK_TYPE_STOP_VM, vm_id]), _disabled=all_disabled, 
+                    _title="Gracefully shut down this virtual machine", _alt="Gracefully shut down this virtual machine"))
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/disk.jpg'), _height=20, _width=20),
-                    _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), 
+                    _href=URL(r=request, c='user' ,f='attach_extra_disk', args=[vm_id]), _disabled=all_disabled,  
                     _title="Attach Extra Disk", _alt="Attach Extra Disk"))
                                       
                     
         if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED):
             
             valid_operations_list.append(A(IMG(_src=URL('static','images/on-off.png'), _height=20, _width=20),
-                    _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_DESTROY_VM, vm_id]), 
+                    _href=URL(r=request, f='handle_vm_operation', args= [TASK_TYPE_DESTROY_VM, vm_id]), _disabled=all_disabled,  
                     _title="Forcefully power off this virtual machine",
                     _alt="Forcefully power off this virtual machine"))
 
         if is_moderator():
 
             valid_operations_list.append(A(IMG(_src=URL('static','images/user_add.png'), _height=20, _width=20),
-                        _href=URL(r = request, c = 'admin', f = 'user_details', args = vm_id), _title="Add User to VM", 
-                        _alt="Add User to VM"))
+                        _href=URL(r = request, c = 'admin', f = 'user_details', args = vm_id), _disabled=all_disabled, 
+                        _title="Add User to VM", _alt="Add User to VM"))
 
             if (db(db.host.id > 0).count() >= 2):
 
                 valid_operations_list.append(A(IMG(_src=URL('static','images/migrate.png'), _height=20, _width=20),
-                        _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), 
+                        _href=URL(r=request, c = 'admin' , f='migrate_vm', args=[vm_id]), _disabled=all_disabled,  
                      _title="Migrate this virtual machine", _alt="Migrate this virtual machine"))
 
    
@@ -435,3 +439,17 @@ def get_faculty_info(faculty_id):
     if not faculty_info:
         return None
     return faculty_info.first()
+
+
+def mark_required(table):
+    
+    marker = SPAN('*', _class='fld_required')
+    for field in table:
+        required = False
+        if field.notnull:
+            required = True
+        elif field.requires:
+            required=isinstance(field.requires,(IS_IN_SET, IS_IPV4))
+        if required:
+            _label = field.label
+            field.label = SPAN(_label, ' ', marker, ' ')

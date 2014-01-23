@@ -8,7 +8,7 @@ if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
-from helper import is_moderator
+from helper import is_moderator, is_orgadmin
 
 @check_faculty
 @handle_exception
@@ -39,6 +39,7 @@ def reject_request():
     session.flash = 'Request Rejected'
     redirect(URL(c='faculty', f='pending_requests'))
 
+@check_faculty
 @handle_exception
 def edit_pending_request():
     
@@ -54,7 +55,7 @@ def edit_pending_request():
         session.flash = "Request is successfully edited."
         session.back = None
         redirect(redirect_url)
-    else:
+    elif not form.errors:
         session.back = request.env.http_referer
 
     return dict(form=form)
@@ -62,7 +63,9 @@ def edit_pending_request():
 def verify_vm_owner(request_id):
     request_info = get_request_info(request_id)
     if request_info != None:
-        if is_moderator() or (request_info.owner_id == auth.user.id):
+        if is_moderator() or (
+            is_orgadmin() and request_info.owner_id.organisation_id == auth.user.organisation_id) or (
+            request_info.owner_id == auth.user.id):
             return
         
     session.flash="Not authorized"
