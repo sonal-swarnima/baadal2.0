@@ -153,6 +153,7 @@ db.define_table('security_domain',
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
 
+db.security_domain.name.requires = [IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
 vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
 db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
 # db.security_domain.vlan.widget=SQLFORM.widgets.options.widget

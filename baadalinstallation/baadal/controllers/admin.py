@@ -40,13 +40,14 @@ def manage_template():
 @handle_exception
 def manage_security_domain():
 
-    if request.args(0) == 'delete' or request.vars['delete_this_record'] == 'on':
+    req_type = request.args(0)
+    if req_type == 'delete' or request.vars['delete_this_record'] == 'on':
         error_message = check_delete_security_domain(request.args(2))
         if error_message != None:
             session.flash = error_message
             redirect(URL(c='admin', f='manage_security_domain'))
 
-    form = get_security_domain_form()
+    form = get_security_domain_form(req_type)
     return dict(form = form)
 
 @check_moderator
