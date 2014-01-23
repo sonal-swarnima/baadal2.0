@@ -21,9 +21,6 @@ ECHO_OK="echo -e \"\r\033[K[\e[0;32mOK\e[0m]\t"
 ECHO_ER="echo -e \"\r\033[K[\e[0;31mER\e[0m]\t"
 LOG_CLEAN="rm -f $LOGS/*"
 
-BRCOMPAT_SRC=$BIN/openvswitch-switch
-BRCOMPAT_DST=/etc/default/openvswitch-switch
-
 OVS_ETHERNET=eth0
 
 #Update this in OVS_NET_XML too

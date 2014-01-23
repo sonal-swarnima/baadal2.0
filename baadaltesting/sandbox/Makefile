@@ -26,6 +26,7 @@ BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
+BIN_NAT_OVS = $(BIN_DIR)/transfer.nat/baadal/ovs-setup.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_NET_FIX = $(BIN_DIR)/fix_net.sh
@@ -87,7 +88,7 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	mkdir -p $(BIN_DIR)/transfer.filer/baadal
 	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all
+$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all $(BIN_NAT_OVS)
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
@@ -105,7 +106,7 @@ $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ub
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
   
- $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
@@ -119,6 +120,13 @@ $(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
+
+$(BIN_NAT_OVS): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat
+	mkdir -p $(BIN_DIR)/transfer.nat/baadal
+	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/ovs-setup.sh > $@
+	sed -i '1i#!/bin/$(SHELL)' $@
+	sed -i '$$a$(RUN_COMMAND)' $@
+	chmod +x $@
   
 controller: $(BIN_CONTROLLER)
 	sudo $<
@@ -128,7 +136,7 @@ filer: $(BIN_FILER)
   
 nat: $(BIN_NAT)
 	sudo $<
-  
+
 host: $(BIN_HOST)
 	sudo HOST_ID=$(HOST_ID) $<
   

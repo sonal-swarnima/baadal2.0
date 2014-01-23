@@ -23,8 +23,8 @@ function run
 
   if [ $(($lastaddr+$count)) -ge $maxValue ] 
   then
-    echo "Your IP Address does not have the required $count addresses free."
-    echo "The last value of IP Address must be less than 252"
+    $ECHO_ER Your IP Address does not have the required $count addresses free.
+    $ECHO_ER The last value of IP Address must be less than 252
     exit 1
   fi
 
