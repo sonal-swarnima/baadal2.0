@@ -11,7 +11,10 @@
 <script>
 jQuery(document).ready(function(){
     template_check();
-    verify_faculty();
+    if($('#faculty_user').val() != undefined)
+    {
+    	verify_faculty();
+    }
     var vm_users = jQuery('#collaborator').val();
     users = vm_users.split('|');
     for (i = 0; i < users.length; i++) {
@@ -86,7 +89,6 @@ function check_collaborator(){
         $('#collaborator').val('');
         return;
     }
-
     if($('#faculty_user').val() != undefined)
     {
         if(vm_username.toUpperCase() == $('#faculty_user').val().toUpperCase())

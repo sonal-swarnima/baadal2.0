@@ -159,7 +159,7 @@ db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s
 # db.security_domain.vlan.requires=[IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None), IS_NOT_IN_DB(db,'security_domain.vlan')]
 
 db.define_table('vm_data',
-    Field('vm_name', 'string', length = 30, notnull = True, label='Name'),
+    Field('vm_name', 'string', length = 40, notnull = True, label='Name'),
     Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
     Field('host_id', db.host),
     Field('RAM', 'integer', label='RAM'),
@@ -187,7 +187,7 @@ db.define_table('vm_data',
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
 db.define_table('request_queue',
-    Field('vm_name', 'string', length = 30, notnull = True, label='VM Name'),
+    Field('vm_name', 'string', length = 40, notnull = True, label='VM Name'),
     Field('parent_id', 'reference vm_data'),
     Field('request_type', 'string', length = 20, notnull = True),
     Field('RAM', 'integer', label='RAM(GB)'),

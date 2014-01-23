@@ -51,7 +51,7 @@
 	             &nbsp;|&nbsp;
 	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
 	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -91,13 +91,13 @@
             <td>{{=pend_request['vCPUs']}}</td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	               {{=A('Remind Faculty', _onclick="tab_refresh();", _href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
             </td>
           </tr>
@@ -137,13 +137,13 @@
             <td><b>{{=pend_request['attach_disk']}}</b></td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	               {{=A('Remind Faculty', _onclick="tab_refresh();", _href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
             </td>
           </tr>
@@ -206,13 +206,13 @@
             <td><b>{{=pend_request['security_domain']}}</b></td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit',_href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
 	           {{else:}}
-	               {{=A('Remind Faculty',_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
+	               {{=A('Remind Faculty', _onclick="tab_refresh();", _href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
             </td>
           </tr>
