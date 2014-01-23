@@ -1,0 +1,13 @@
+bin/*
+disks/*
+utils/*
+ubuntu*
+logs/*
+temp/*
+config.ln/*
+*~
+wget*
+logs*
+*.swp
+*.swo
+libvirt*
