@@ -98,14 +98,18 @@ def get_org_visibility(row):
     return '-'
 
 
-def get_security_domain_form():
+def get_security_domain_form(req_type):
     
     db.security_domain.id.readable=False 
 
     fields = (db.security_domain.name, db.security_domain.vlan)
     default_sort_order=[db.security_domain.id]
+    
+    create = True
+    avl_vlan = db(~db.vlan.id.belongs(db()._select(db.security_domain.vlan))).count()
+    if avl_vlan == 0: create = False
 
-    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30)
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30, create=create)
     return form
 
 def check_delete_security_domain(sd_id):
@@ -187,7 +191,11 @@ def create_clone_task(req_data, params):
 
         vm_id_list.append(clone_vm_id)
         
-        add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id)
+        vm_users=[]
+        for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
+            vm_users.append(user['user_id'])
+
+        add_vm_users(clone_vm_id, vm_data.requester_id, vm_data.owner_id, vm_users=vm_users)
         cnt = cnt+1
         
     params.update({'clone_vm_id':vm_id_list})

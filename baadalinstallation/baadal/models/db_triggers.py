@@ -5,18 +5,22 @@ if 0:
     from gluon import *  # @UnusedWildImport
     from gluon import request,db
     from task_scheduler import vm_scheduler
+    from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
 def schedule_task(fields, _id):
+    #Add entry into task_queue_event
+    vm_data = db.vm_data[fields['vm_id']]
     task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             vm_id = fields['vm_id'],
+                            vm_name = vm_data.vm_name,
                             requester_id = fields['requester_id'],
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 
     if fields['task_type'] == TASK_TYPE_CLONE_VM:
-        
+        # In case of clone vm, Schedule as many task as the number of clones
         for clone_vm_id in fields['parameters']['clone_vm_id']:
             vm_scheduler.queue_task('clone_task', pvars = dict(task_event_id = task_event_id, vm_id = clone_vm_id),start_time = request.now, timeout = 30 * MINUTES)
     else:
@@ -44,26 +48,21 @@ def task_queue_insert_callback(fields, _id):
 db.task_queue._after_insert = [task_queue_insert_callback]
 
 def task_queue_update_callback(dbset, new_fields):
+#   If task queue status is set to retry, re-schedule the task
     if 'status' in new_fields and new_fields['status'] == TASK_QUEUE_STATUS_RETRY:
         fields = dbset.select().first()
         schedule_task(fields,fields['id'])
 
 db.task_queue._after_update = [task_queue_update_callback]
 
-def update_vm_data_event(fields, _id):
-    db(db.vm_data_event.id == _id).update(host_id = fields['host_id'], 
-                                          datastore_id = fields['datastore_id'], 
-                                          private_ip = fields['private_ip'], 
-                                          vnc_port = fields['vnc_port'], 
-                                          mac_addr = fields['mac_addr'], 
-                                          start_time = fields['start_time'], 
-                                          current_run_level = fields['current_run_level'],
-                                          last_run_level = fields['last_run_level'],
-                                          status = fields['status'] )
+def vm_data_delete_callback(dbset):
 
-def vm_data_update_callback(dbset, new_fields):
-        fields = dbset.select().first()
-        update_vm_data_event(fields,fields['id'])
+    for vm_data in dbset.select():
+        logger.debug('Deleting references for ' + vm_data.vm_identity)
+        
+        db(db.private_ip_pool.vm_id == vm_data.id).update(vm_id = None)
+        db(db.public_ip_pool.vm_id == vm_data.id).update(vm_id = None)
+        db(db.vm_data.parent_id == vm_data.id).update(parent_id = None)
+        db(db.task_queue_event.vm_id == vm_data.id).update(vm_id = None)
 
-db.vm_data._after_update = [vm_data_update_callback]
-
+db.vm_data._before_delete = [vm_data_delete_callback]

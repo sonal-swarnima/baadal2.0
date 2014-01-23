@@ -12,24 +12,43 @@ from helper import get_fullname, get_config_file, get_email
 
 config = get_config_file()
 
-def send_email_for_vm_creation(requester_id, vm_name, vm_request_time):
-    user_email = get_email(requester_id)
-    context = dict(vmName=vm_name, vmRequestTime=vm_request_time)
-    send_mail(user_email, VM_CREATION_SUBJECT, VM_CREATION_TEMPLATE, context, None)
+#Email templates and subject constants
+VM_REQUEST_SUBJECT = "VM request successful"
+
+VM_REQUEST_BODY="Dear {0[userName]},\n\nYour request for VM({0[vmName]}) creation has been successfully registered. "\
+                    "Please note that you will be getting a separate email on successful VM creation.\n\nRegards,\nBaadal Admin"
+                    
+APPROVAL_REMINDER_SUBJECT = "Request waiting for your approval"
+
+APPROVAL_REMINDER_BODY ="Dear {0[approverName]},\n\n{0[userName]} has made a '{0[requestType]}' request on {0[requestTime]}. "\
+                            "It is waiting for your approval.\n\nRegards,\nBaadal Admin"
+                    
+VM_CREATION_SUBJECT = "VM created successfully"
+
+VM_CREATION_BODY="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[requestTime]} is "\
+                    "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
+                    "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nRegards,\nBaadal Admin"
+
+TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
+
+TASK_COMPLETE_BODY="Dear {0[userName]},\n\nThe '{0[taskType]}' task for VM({0[vmName]}) requested on {0[requestTime]} is complete."\
+                    "\n\nRegards,\nBaadal Admin "
 
 
-def send_mail(to_address, email_subject, email_template, context, reply_to_address):
-    
-    email_message = email_template.format(context)
-    push_email(to_address, email_subject, email_message, reply_to_address)
-
-    
 def push_email(to_address, email_subject, email_message, reply_to_address):
     if config.getboolean("MAIL_CONF","mail_active"):
         if not reply_to_address:
             mail.send(to=to_address, subject=email_subject, message = email_message)
         else:
             mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
+
+
+def send_email(to_address, email_subject, email_template, context):
+    
+    email_message = email_template.format(context)
+    reply_to_address = config.get("MAIL_CONF","mail_noreply")
+
+    push_email(to_address, email_subject, email_message, reply_to_address)
 
 
 def send_email_to_approver(approver_id, requester_id, request_type, request_time):
@@ -42,18 +61,31 @@ def send_email_to_approver(approver_id, requester_id, request_type, request_time
                        userName = requester_name, 
                        requestType = request_type, 
                        requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
-        noreply_email = config.get("MAIL_CONF","mail_noreply")
-        send_mail(approver_email, REQ_APPROVAL_REMINDER_SUBJECT, REQ_APPROVAL_REMINDER_TEMPLATE, context, noreply_email)
+        send_email(approver_email, APPROVAL_REMINDER_SUBJECT, APPROVAL_REMINDER_BODY, context)
 
 
-def send_email_to_user(vm_name):
+def send_email_to_requester(vm_name):
 
     email_address = get_email(auth.user.id)
     context = dict(vmName = vm_name, 
                    userName = (auth.user.first_name + ' ' + auth.user.last_name))
-    noreply_email = config.get("MAIL_CONF","mail_noreply")
-    send_mail(email_address, VM_REQUEST_SUBJECT_FOR_USER, VM_REQUEST_TEMPLATE_FOR_USER, context, noreply_email)
+
+    send_email(email_address, VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
     
+def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
+
+    for vm_user in vm_users:
+        email_address = get_email(vm_user)
+        context = dict(vmName = vm_name, 
+                       userName = get_fullname(vm_user),
+                       taskType = task_type,
+                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+        if task_type == TASK_TYPE_CREATE_VM:
+            send_email(email_address, VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
+        else:
+            subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
+            send_email(email_address, subject, TASK_COMPLETE_BODY, context)
+        
 
 def send_email_to_admin(email_subject, email_message, email_type):
     if email_type == 'request':

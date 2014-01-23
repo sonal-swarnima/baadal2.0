@@ -69,15 +69,8 @@ def set_configuration_elem(form):
 
 
 def validate_approver(form):
-    faculty_user = request.post_vars.vm_owner
+
     faculty_user_name = request.post_vars.faculty_user
-    
-    if(faculty_user != ''):
-        faculty_info = get_user_info(faculty_user, [FACULTY])
-        if faculty_info[1] == faculty_user_name:
-            form.vars.owner_id = faculty_info[0]
-            form.vars.status = REQ_STATUS_REQUESTED
-            return
     
     faculty_info = get_user_info(faculty_user_name, [FACULTY])
     if faculty_info != None:
@@ -152,14 +145,15 @@ def add_faculty_approver(form):
 
     _input=INPUT(_name='faculty_user',_id='faculty_user') # create INPUT
     _link = TD(A('Verify', _href='#',_onclick='verify_faculty()'))
-    faculty_elem = TR(LABEL('Faculty Approver:'),_input,_link,_id='faculty_row')
+    _label = LABEL(SPAN('Faculty Approver:', ' ', SPAN('*', _class='fld_required'), ' '))
+    faculty_elem = TR(_label,_input,_link,_id='faculty_row')
     form[0].insert(-1,faculty_elem)#insert tr element in the form
 
 
 def add_collaborators(form):
 
     _input=INPUT(_name='collaborator',_id='collaborator') # create INPUT
-    _link = TD(A('Add', _href='#',_onclick='add_collaborator()'))
+    _link = TD(A('Add', _href='#',_onclick='check_collaborator()'))
     collaborator_elem = TR(LABEL('Collaborators:'),_input,_link,_id='collaborator_row')
     form[0].insert(-1, collaborator_elem)#insert tr element in the form
 
@@ -177,7 +171,7 @@ def get_request_vm_form():
     db.request_queue.template_id.notnull = True
 
     mark_required(db.request_queue)
-    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_owner='',vm_users='|'))
+    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
     if not(is_moderator() or is_orgadmin() or is_faculty()):
@@ -250,12 +244,18 @@ def get_vm_user_list(vm_id) :
         user_id_lst.append(vm_user)
     return user_id_lst
 
-def is_request_in_queue(vm_id, task_type):
+def is_request_in_queue(vm_id, task_type, snapshot_id=None):
 
-    if db((db.task_queue.vm_id == vm_id) 
-          & (db.task_queue.task_type == task_type) 
-          & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select():
-        return True
+    _data =  db((db.task_queue.vm_id == vm_id) & (db.task_queue.task_type == task_type) 
+                   & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select()
+    if _data:
+        if snapshot_id != None:
+            for req_data in _data:    
+                params = req_data.parameters
+                if params['snapshot_id'] == snapshot_id:
+                    return True
+        else:
+            return True
     else:
         return False
 
@@ -285,7 +285,7 @@ def get_clone_vm_form(vm_id):
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
     db.request_queue.clone_count.requires = IS_INT_IN_RANGE(1,101)
-    
+    db.request_queue.vm_name.writable = False
     form_fields = ['vm_name', 'clone_count', 'purpose']
     
     form =SQLFORM(db.request_queue, fields = form_fields)

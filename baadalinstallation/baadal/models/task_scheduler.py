@@ -25,7 +25,17 @@ task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_ATTACH_DISK             :    attach_extra_disk
        }
 
-
+def send_task_complete_mail(task_event):
+    
+    vm_users = []
+    if task_event.vm_id != None:
+        for user in db(db.user_vm_map.vm_id == task_event.vm_id).select(db.user_vm_map.user_id):
+            vm_users.append(user['user_id'])
+    else:
+        vm_users.append(task_event.requester_id)
+    send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
+    
+    
 def processTaskQueue(task_event_id):
 
     task_event = db.task_queue_event[task_event_id]
@@ -52,6 +62,7 @@ def processTaskQueue(task_event_id):
                 del db.task_queue[task_process.id]
             if 'request_id' in task_process.parameters:
                 del db.request_queue[task_process.parameters['request_id']]
+            send_task_complete_mail(task_event)
         
         db.commit()
     except:
@@ -71,8 +82,7 @@ def processCloneTask(task_event_id, vm_id):
             task_event.update_record(attention_time=get_datetime())
         
         ret = task[TASK_TYPE_CLONE_VM](vm_id)
-        logger.debug('okkkkk')
-        logger.debug(ret)
+
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             vm_data = db.vm_data[vm_id]
             message = message + '\n' + vm_data.vm_name + ': ' + ret[1]

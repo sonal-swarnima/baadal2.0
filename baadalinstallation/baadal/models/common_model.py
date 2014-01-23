@@ -220,7 +220,7 @@ def get_task_list(events):
         element = {'event_id'  :event.id,
                    'task_type' :event.task_type,
                    'task_id'   :event.task_id,
-                   'vm_name'   :event.vm_id.vm_name,
+                   'vm_name'   :event.vm_name,
                    'user_name' :get_full_name(event.requester_id),
                    'start_time':event.start_time,
                    'att_time'  :event.attention_time,

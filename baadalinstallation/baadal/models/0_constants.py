@@ -67,6 +67,10 @@ current.VM_STATUS_RUNNING = VM_STATUS_RUNNING
 current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
 
+#NETWORK
+LIBVIRT_NETWORK='ovs-net'
+current.LIBVIRT_NETWORK=LIBVIRT_NETWORK
+
 #SNAPSHOTTING LIMIT
 SNAPSHOTTING_LIMIT = 3
 SNAPSHOT_DAILY=1
@@ -90,19 +94,6 @@ PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
-
-#Email templates and subject constants
-VM_CREATION_TEMPLATE="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[vmRequestTime]} is successfully created and is now available for use. The following operations are allowed on the VM:\n1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nRegards,\nBaadal Admin"
-
-VM_CREATION_SUBJECT = "VM created successfully"
-
-VM_REQUEST_TEMPLATE_FOR_USER="Dear {0[userName]},\n\nYour request for VM({0[vmName]}) creation has been successfully registered. Please note that you will be getting a separate email on successful VM creation.\n\nRegards,\nBaadal Admin"
-                    
-VM_REQUEST_SUBJECT_FOR_USER = "VM request successful"
-                    
-REQ_APPROVAL_REMINDER_TEMPLATE ="Dear {0[approverName]},\n\n{0[userName]} has made a {0[requestType]} request on {0[requestTime]}. It is waiting for your approval.\n\nRegards,\nBaadal Admin"
-                    
-REQ_APPROVAL_REMINDER_SUBJECT = "Request waiting for your approval"
 
 VM_RAM_SET = (1024,2048,4096,8192)
 VM_vCPU_SET = (1,2,4,8)
