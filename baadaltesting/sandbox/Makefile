@@ -34,7 +34,6 @@ BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_NAT_SETUP = $(BIN_DIR)/nat-setup.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
-BIN_NET_FIX = $(BIN_DIR)/fix_net.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
   
 $(BIN_DIR):
@@ -71,7 +70,7 @@ libvirt: $(LIBVIRT)
 
 utils-get: ubuntu libvirt
 
-$(BAADAL_TRANSFER_TAR): utils-get
+$(BAADAL_TRANSFER_TAR):
 	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
 	cd $(BIN_DIR) ;	tar -chvf $@ baadal 1>/dev/null
 	@ rm $(BIN_DIR)/baadal
@@ -81,7 +80,7 @@ baadal-transfer-tar: $(BAADAL_TRANSFER_TAR)
 # TODO
 # There may be more ways of doing this.
 # Is one way necessarily better than the other? Yes, obviously.
-# Is this the better way? No. But this is much better than how I started.
+# Is this the better way? No.
 openvswitch:
 	apt-get update || true
 	apt-get -y install python-software-properties
@@ -100,17 +99,12 @@ $(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
-	cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
-	cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
-	mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
-	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
-	cp -R $(DIR_BAADAL_INSTALLATION) $(BIN_DIR)/transfer.controller/baadal
-	cp $(UBUNTU) $(BIN_DIR)/transfer.controller/baadal
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all controller-transfer
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
+	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
   
 $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
@@ -124,7 +118,7 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	mkdir -p $(BIN_DIR)/transfer.filer/baadal
 	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu nat-transfer
+$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all nat-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
@@ -146,14 +140,8 @@ $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	@ cp $(SRC_DIR)/switch/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
 	@ cp $(SRC_DIR)/switch/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
   
-$(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-fix/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
-  
 controller: $(BIN_CONTROLLER)
-	sudo $<
+	@ sudo $<
   
 filer: $(BIN_FILER)
 	sudo $<
@@ -170,15 +158,19 @@ host: $(BIN_HOST)
 switch: $(BIN_SWITCH)
 	@ sudo $<
   
-fix-net: $(BIN_NET_FIX)
-	sudo $<
-
-nat-transfer: keygen-ssh-all baadal-transfer-tar
+nat-transfer: $(BAADAL_TRANSFER_TAR)
 	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.nat/baadal/baadal.tar
+
+controller-transfer: $(BAADAL_TRANSFER_TAR)
+	@ cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
+	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
+	@ mkdir -p $(BIN_DIR)/transfer.controller/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.controller/baadal/baadal.tar
 
 $(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
