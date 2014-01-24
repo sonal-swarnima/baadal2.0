@@ -29,7 +29,7 @@
       });        
 	
       tab_index = 0;
-      if($.cookie('tab_index') != 'undefined'){
+      if($.cookie('tab_index') != undefined){
       	tab_index = $.cookie('tab_index');
       	$.removeCookie('tab_index')
       }
@@ -38,6 +38,9 @@
       jQuery("#sortTable").tablesorter(); 
     });
 
+	jQuery('#sidebar').on('click', '*', function(){
+	    alert('ic');
+	});
   </script>
 
   <title>
