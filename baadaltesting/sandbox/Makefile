@@ -83,14 +83,16 @@ baadal-transfer-tar: $(BAADAL_TRANSFER_TAR)
 # Is one way necessarily better than the other? Yes, obviously.
 # Is this the better way? No. But this is much better than how I started.
 openvswitch:
+	apt-get update || true
+	apt-get -y install python-software-properties
 	add-apt-repository ppa:ivoks/ovs-saucy
 	apt-get update || true
-	apt-get install openvswitch-common=1.10.2-0ubuntu2~cloud0
-	apt-get install openvswitch-pki=1.10.2-0ubuntu2~cloud0
-	apt-get install openvswitch-controller=1.10.2-0ubuntu2~cloud0
-	apt-get install openvswitch-datapath-dkms=1.10.2-0ubuntu2~cloud0
-	apt-get install openvswitch-switch=1.10.2-0ubuntu2~cloud0
-	apt-get install python-openvswitch=1.10.2-0ubuntu2~cloud0
+	apt-get -y install openvswitch-common=1.10.2-0ubuntu2~cloud0
+	apt-get -y install openvswitch-pki=1.10.2-0ubuntu2~cloud0
+	apt-get -y install openvswitch-controller=1.10.2-0ubuntu2~cloud0
+	apt-get -y install openvswitch-datapath-dkms=1.10.2-0ubuntu2~cloud0
+	apt-get -y install openvswitch-switch=1.10.2-0ubuntu2~cloud0
+	apt-get -y install python-openvswitch=1.10.2-0ubuntu2~cloud0
 
 $(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@

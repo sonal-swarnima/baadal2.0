@@ -17,6 +17,17 @@ function run
     $ECHO_ER Please correct the hostname or check the underlying system before running.
     exit 1
   fi
+
+  $ECHO_PROGRESS "Checking iptables-persistent"
+  /etc/init.d/iptables-persistent save 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER Install iptables-persistent or check logs.
+    exit 1
+  else
+    $ECHO_OK iptables-persistent found
+  fi
  
   service_restart openvswitch-switch
   
@@ -65,6 +76,7 @@ function run
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
     do
       ovsvsctl_add_fake_br_force vlan$i $OVS_NAT_BRIDGE $i
+      ifconfig_ip vlan$i $baseaddr.$i.0 $VLAN_NETMASK
       iptables_run "--table nat --append POSTROUTING --out-interface vlan$i -j MASQUERADE"
       interfaces_str+="\n
       auto vlan$i\n
@@ -72,7 +84,6 @@ function run
       address $baseaddr.$i.0\n
       netmask $VLAN_NETMASK\n
       "
-      ifconfig_ip vlan$i $baseaddr.$i.0 $VLAN_NETMASK
       trunk_str+="$i,"
   done
 
@@ -83,6 +94,14 @@ function run
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
 
-  package_install iptables-persistent
-  /etc/init.d/iptables-persistent save
+  $ECHO_PROGRESS "Saving iptables"
+  /etc/init.d/iptables-persistent save 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER iptables-persistent save failed. Check logs.
+    exit 1
+  else
+    $ECHO_OK iptables-persistent save
+  fi
 }
