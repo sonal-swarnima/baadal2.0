@@ -215,6 +215,7 @@ db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],mu
 db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
+db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
 db.define_table('user_vm_map',
     Field('user_id', db.user),

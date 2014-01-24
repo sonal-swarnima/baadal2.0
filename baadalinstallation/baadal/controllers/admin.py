@@ -317,6 +317,20 @@ def validate_public_ip_range():
 
 @check_moderator
 @handle_exception
+def validate_private_ip_range():
+    rangeFrom = request.vars['rangeFrom']
+    rangeTo = request.vars['rangeTo']
+    vlan = request.vars['vlan']
+    
+    from helper import validate_ip_range
+    if validate_ip_range(rangeFrom, rangeTo):
+        failed = add_private_ip_range(rangeFrom, rangeTo, vlan)
+        return str(failed)
+    else:
+        return '-1'
+
+@check_moderator
+@handle_exception
 def manage_private_ip_pool():
     form = get_manage_private_ip_pool_form()
     return dict(form=form)

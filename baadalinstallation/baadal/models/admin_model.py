@@ -6,7 +6,7 @@ if 0:
     from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import IS_MAC_ADDRESS
+from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac, execute_remote_cmd
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -71,23 +71,48 @@ def get_manage_private_ip_pool_form():
     #Creating the grid object
     grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Assigned to', body=get_vm_link)], csv=False, searchable=False, details=False, showbuttontext=False)
 
+    if grid.create_form:
+        grid.create_form[0].insert(-1, TR(SPAN(
+                                        LABEL('Range:'),
+                                        INPUT(_name='range',value=False,_type='checkbox', _id='private_ip_pool_range')), SPAN(
+                                        'From: ',
+                                        INPUT(_name='rangeFrom', _id='private_ip_pool_rangeFrom'),
+                                        'To: ', 
+                                        INPUT(_name='rangeTo', _id='private_ip_pool_rangeTo')),TD()))
+        
+        grid.create_form.process()
+
     return grid
 
-#Validated IP addresses that are in range
+#Add Validated IP addresses that are in range
 def add_public_ip_range(rangeFrom, rangeTo):
-    ip1 = rangeFrom.split('.')
-    ip2 = rangeTo.split('.')
-    idx =  - (len(ip1[3]))
-    subnet = str(rangeFrom[:idx])
+
     failed = 0
-    for x in range(int(ip1[3]), int(ip2[3])+1):
-        ip_addr = subnet + str(x)
+    for ip_addr in get_ips_in_range(rangeFrom, rangeTo):
         if(db.public_ip_pool(public_ip=ip_addr)):
             failed += 1
         else:
             db.public_ip_pool.insert(public_ip=ip_addr)
     return failed
     
+#Generate mac address and add them with IPs
+def add_private_ip_range(rangeFrom, rangeTo, vlan):
+
+    failed = 0
+    for ip_addr in get_ips_in_range(rangeFrom, rangeTo):
+        mac_address = None
+        while True:
+            mac_address = generate_random_mac()
+            if not (db.private_ip_pool(mac_addr=mac_address)):break
+        
+        if(db.private_ip_pool(private_ip=ip_addr)):
+            failed += 1
+        else:
+            idx = db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
+            create_dhcp_entry('baadal_vm'+str(idx), mac_address, ip_addr)
+    return failed
+
+
 def get_org_visibility(row):
     sec_domain = db.security_domain[row.id]
     if sec_domain.visible_to_all:
@@ -388,11 +413,7 @@ def configure_host_by_mac(mac_addr):
     avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))&(db.private_ip_pool.vlan==1)).select(db.private_ip_pool.private_ip).first()['private_ip']
     logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_ip))
     host_name = 'host'+str(avl_ip.split('.')[3])
-    import os
-    command = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, avl_ip)
-    os.system(command)
-    command = '/etc/init.d/isc-dhcp-server restart'
-    os.system(command)
+    create_dhcp_entry(host_name, mac_addr, avl_ip)
     db.host[0] = dict(host_ip=avl_ip, 
                       host_name=host_name, 
                       mac_addr=mac_addr, 
@@ -400,7 +421,7 @@ def configure_host_by_mac(mac_addr):
 
 def is_host_available(host_ip):
     try:
-        execute_command(host_ip,'root','pwd')
+        execute_remote_cmd(host_ip,'root','pwd')
         return True
     except:
         return False
@@ -408,7 +429,7 @@ def is_host_available(host_ip):
 
 def get_mac_address(host_ip):
     command = "ifconfig -a | grep eth0 | head -n 1"
-    ret = execute_command(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
+    ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
     ret=ret.strip()
     mac_addr = ret[ret.rindex(' '):].lstrip()
     return mac_addr
@@ -416,33 +437,17 @@ def get_mac_address(host_ip):
 
 def get_cpu_num(host_ip):
     command = "cat /proc/cpuinfo | grep processor | wc -l"
-    ret = execute_command(host_ip, 'root',command)
+    ret = execute_remote_cmd(host_ip, 'root',command)
     return int(ret)/2
     
 
 def get_ram(host_ip):
     command = "cat /proc/meminfo | grep MemTotal"
-    ret = execute_command(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
+    ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
     ram_in_kb = ret[ret.index(' '):-3].strip()
     ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
     return ram_in_gb
 
-
-def execute_command(machine_ip, user_name, command):
-
-    logger.debug("Starting to establish SSH connection with host" + str(machine_ip))
-    import paramiko
-
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(machine_ip, username = user_name)
-    stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
-    output = stdout.readlines()
-    logger.debug(output)
-    if stderr.readlines():
-        logger.error(stderr.readlines())
-        raise
-    return output[0]
 
 def add_live_migration_option(form):
     live_migration_element = TR('Live Migration:' , INPUT(_type = 'checkbox', _name = 'live_migration')) 
