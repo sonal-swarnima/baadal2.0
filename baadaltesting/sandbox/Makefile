@@ -1,15 +1,20 @@
-BIN_DIR = bin
+BAADAL_LOCAL_DIR = ~/.baadal
+BIN_DIR = $(BAADAL_LOCAL_DIR)/bin
 SRC_DIR = src
 UTILS_DIR = utils
-LOGS_DIR = logs
-DISKS_DIR = disks
-TEMP_DIR = temp
-CONFIG_DIR = config.ln
-  
+LOGS_DIR = $(BAADAL_LOCAL_DIR)/logs
+DISKS_DIR = $(BAADAL_LOCAL_DIR)/disks
+TEMP_DIR = $(BAADAL_LOCAL_DIR)/temp
+UTILS_LOCAL_DIR = $(BAADAL_LOCAL_DIR)/utils
+
 SHELL = bash
 RUN_COMMAND = run
-  
-DIR_BAADAL_INSTALLATION = ../../baadalinstallation
+
+DIR_BAADAL_CURRENT = $(shell pwd)
+DIR_BAADAL_ROOT = $(shell pwd)/../..
+DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
+
+BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
   
 HOST_ID = 1
   
@@ -21,48 +26,125 @@ UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-serve
 UBUNTU_SOURCE = $(UBUNTU_SERVER)
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
+
+OPENVSWITCH_SOURCE=http://launchpad.net/ubuntu/+archive/primary/+files
+OPENVSWITCH_COMMON=openvswitch-common_1.10.2-0ubuntu2_amd64
+OPENVSWITCH_COMMON_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_COMMON).deb
+OPENVSWITCH_COMMON_DEB=$(UTILS_DIR)/$(OPENVSWITCH_COMMON).deb
+OPENVSWITCH_PKI=openvswitch-pki_1.10.2-0ubuntu2_all
+OPENVSWITCH_PKI_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_PKI).deb
+OPENVSWITCH_PKI_DEB=$(UTILS_DIR)/$(OPENVSWITCH_PKI).deb
+OPENVSWITCH_CONTROLLER=openvswitch-controller_1.10.2-0ubuntu2_amd64
+OPENVSWITCH_CONTROLLER_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_CONTROLLER).deb
+OPENVSWITCH_CONTROLLER_DEB=$(UTILS_DIR)/$(OPENVSWITCH_CONTROLLER).deb
+OPENVSWITCH_DATAPATH_DKMS=openvswitch-datapath-dkms_1.10.2-0ubuntu2_all
+OPENVSWITCH_DATAPATH_DKMS_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_DATAPATH_DKMS).deb
+OPENVSWITCH_DATAPATH_DKMS_DEB=$(UTILS_DIR)/$(OPENVSWITCH_DATAPATH_DKMS).deb
+OPENVSWITCH_SWITCH=openvswitch-switch_1.10.2-0ubuntu2_amd64
+OPENVSWITCH_SWITCH_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_SWITCH).deb
+OPENVSWITCH_SWITCH_DEB=$(UTILS_DIR)/$(OPENVSWITCH_SWITCH).deb
+OPENVSWITCH_PYTHON=python-openvswitch_1.10.2-0ubuntu2_all
+OPENVSWITCH_PYTHON_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_PYTHON).deb
+OPENVSWITCH_PYTHON_DEB=$(UTILS_DIR)/$(OPENVSWITCH_PYTHON).deb
   
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
-BIN_NAT_OVS = $(BIN_DIR)/transfer.nat/baadal/ovs-setup.sh
+BIN_NAT_SETUP = $(BIN_DIR)/nat-setup.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_NET_FIX = $(BIN_DIR)/fix_net.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
   
 $(BIN_DIR):
-	mkdir -p $@
-  
+	@ mkdir -p $@
+
+$(BAADAL_LOCAL_DIR):
+	@ mkdir -p $@
+
 $(UTILS_DIR):
-	mkdir -p $@
+	@ mkdir -p $@
+
+$(UTILS_LOCAL_DIR):
+	@ mkdir -p $@
   
 $(LOGS_DIR):
-	mkdir -p $@
+	@ mkdir -p $@
   
 $(DISKS_DIR):
-	mkdir -p $@
+	@ mkdir -p $@
   
-$(DIRECTORIES): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR)
+directories: $(BIN_DIR) $(BAADAL_LOCAL_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR)
   
 $(UBUNTU):
-	mkdir -p $(UTILS_DIR)
-	wget -c $(UBUNTU_SOURCE) -O $@
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(UBUNTU_SOURCE) -O $@ || (rm $@ && false)
   
 $(LIBVIRT):
-	mkdir -p $(UTILS_DIR)
-	wget -c $(LIBVIRT_SOURCE) -O $@
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(LIBVIRT_SOURCE) -O $@ || (rm $@ && false)
+
+$(OPENVSWITCH_COMMON_DEB):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(OPENVSWITCH_COMMON_SOURCE) -O $@ || (rm $@ && false)
+
+$(OPENVSWITCH_PKI_DEB):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(OPENVSWITCH_PKI_SOURCE) -O $@ || (rm $@ && false)
+
+$(OPENVSWITCH_CONTROLLER_DEB):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(OPENVSWITCH_CONTROLLER_SOURCE) -O $@ || (rm $@ && false)
+
+$(OPENVSWITCH_DATAPATH_DKMS_DEB):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(OPENVSWITCH_DATAPATH_DKMS_SOURCE) -O $@ || (rm $@ && false)
+
+$(OPENVSWITCH_SWITCH_DEB):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(OPENVSWITCH_SWITCH_SOURCE) -O $@ || (rm $@ && false)
+
+$(OPENVSWITCH_PYTHON_DEB):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(OPENVSWITCH_PYTHON_SOURCE) -O $@ || (rm $@ && false)
   
 ubuntu: $(UBUNTU)
   
 libvirt: $(LIBVIRT)
-  
+
+openvswitch-get: $(OPENVSWITCH_COMMON_DEB) $(OPENVSWITCH_PKI_DEB) $(OPENVSWITCH_CONTROLLER_DEB) $(OPENVSWITCH_DATAPATH_DKMS_DEB) $(OPENVSWITCH_SWITCH_DEB) $(OPENVSWITCH_PYTHON_DEB) 
+
+utils-get: ubuntu libvirt openvswitch-get
+
+$(BAADAL_TRANSFER_TAR): utils-get
+	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
+	cd $(BIN_DIR) ;	tar -chvf $@ baadal 1>/dev/null
+	@ rm $(BIN_DIR)/baadal
+
+baadal-transfer-tar: $(BAADAL_TRANSFER_TAR)
+
+# TODO
+# There may be more ways of doing this.
+# Is one way necessarily better than the other? Yes, obviously.
+# Is this the better way? No.
+openvswitch: openvswitch-get
+	sudo apt-get install libc6-dev
+	sudo apt-get install dkms
+	sudo apt-get install python
+	sudo dpkg -i --ignore-depends=libc6 $(OPENVSWITCH_COMMON_DEB)
+	sudo dpkg -i $(OPENVSWITCH_PKI_DEB)
+	sudo dpkg -i $(OPENVSWITCH_CONTROLLER_DEB)
+	sudo dpkg -i $(OPENVSWITCH_DATAPATH_DKMS_DEB)
+	sudo dpkg -i --ignore-depends=sysv-rc  $(OPENVSWITCH_SWITCH_DEB)
+	sudo dpkg -i $(OPENVSWITCH_PYTHON_DEB)
+	sudo service openvswitch-switch start
+
 $(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
   
 $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
@@ -89,11 +171,11 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
   
 $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu nat-transfer
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
-	cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
+	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
   
 $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
@@ -102,13 +184,13 @@ $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ub
 	chmod +x $@
   
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
-	cp $(SRC_DIR)/switch/interfaces $(BIN_DIR)/interfaces.sandbox
-	cp $(SRC_DIR)/switch/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
-	cp $(SRC_DIR)/switch/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
+	@ cp $(SRC_DIR)/switch/interfaces $(BIN_DIR)/interfaces.sandbox
+	@ cp $(SRC_DIR)/switch/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
+	@ cp $(SRC_DIR)/switch/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
   
 $(BIN_NET_FIX): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/net-fix
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/net-fix/*.sh > $@
@@ -123,59 +205,64 @@ filer: $(BIN_FILER)
 	sudo $<
   
 nat: $(BIN_NAT)
-	sudo $<
+	@ sudo $<
+
+nat-setup: $(BIN_NAT_SETUP)
+	@ sudo $<
 
 host: $(BIN_HOST)
 	sudo HOST_ID=$(HOST_ID) $<
   
 switch: $(BIN_SWITCH)
-	sudo $<
+	@ sudo $<
   
 fix-net: $(BIN_NET_FIX)
 	sudo $<
 
-nat-transfer: keygen-ssh-all $(BIN_NAT_OVS)
-	cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
-	mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
-	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
+nat-transfer: keygen-ssh-all baadal-transfer-tar
+	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
+	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
+	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.nat/baadal/baadal.tar
 
-$(BIN_NAT_OVS): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
-	mkdir -p $(BIN_DIR)/transfer.nat/baadal
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/ovs-setup.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
+$(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
+	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/nat-setup.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
 
 sandbox: switch nat controller filer
 
 configure: clean-config $(BIN_CONFIGURE)
-	$(BIN_CONFIGURE)
-	mkdir -p $(CONFIG_DIR)
-	ln -s ../$(SRC_DIR)/constants.sh $(CONFIG_DIR)/constants.sh
-	ln -s ../$(SRC_DIR)/controller/ks.cfg $(CONFIG_DIR)/controller.ks.cfg
-	ln -s ../$(SRC_DIR)/filer/ks.cfg $(CONFIG_DIR)/filer.ks.cfg
-	ln -s ../$(SRC_DIR)/nat/ks.cfg $(CONFIG_DIR)/nat.ks.cfg
-	ln -s ../$(SRC_DIR)/switch/ovs-net.xml $(CONFIG_DIR)/ovs-net-internal.xml
-	ln -s ../$(SRC_DIR)/switch-external/ovs-net-external.xml $(CONFIG_DIR)/ovs-net-external.xml
+	@ $(BIN_CONFIGURE)
+	@ mkdir -p $(CONFIG_DIR)
+	@ ln -s ../$(SRC_DIR)/constants.sh $(CONFIG_DIR)/constants.sh
+	@ ln -s ../$(SRC_DIR)/controller/ks.cfg $(CONFIG_DIR)/controller.ks.cfg
+	@ ln -s ../$(SRC_DIR)/filer/ks.cfg $(CONFIG_DIR)/filer.ks.cfg
+	@ ln -s ../$(SRC_DIR)/nat/ks.cfg $(CONFIG_DIR)/nat.ks.cfg
+	@ ln -s ../$(SRC_DIR)/switch/ovs-net.xml $(CONFIG_DIR)/ovs-net-internal.xml
+	@ ln -s ../$(SRC_DIR)/switch-external/ovs-net-external.xml $(CONFIG_DIR)/ovs-net-external.xml
   
 $(BIN_DIR)/id_rsa.sandbox.pub: ~/.ssh/id_rsa
-	cp $<.pub $@
-	cat $<.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+	@ cp $<.pub $@
+	@ cat $<.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
 $(BIN_DIR)/id_rsa.controller:
-	ssh-keygen -q -f $@ -N '' -C 'baadal-controller'
-	cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-controller'
+	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
 $(BIN_DIR)/id_rsa.filer:
-	ssh-keygen -q -f $@ -N '' -C 'baadal-filer'
-	cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-filer'
+	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
 $(BIN_DIR)/id_rsa.nat:
-	ssh-keygen -q -f $@ -N '' -C 'baadal-nat'
-	cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-nat'
+	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
 ~/.ssh/id_rsa:
-	ssh-keygen -q -f $@ -N ''
+	@ ssh-keygen -q -f $@ -N ''
   
 keygen-ssh-sandbox: $(BIN_DIR)/id_rsa.sandbox.pub
   
@@ -197,7 +284,7 @@ clean-controller:
 	sudo rm -f $(BIN_CONTROLLER)
 	sudo rm -f $(BIN_DIR)/ks.controller.cfg
 	sudo rm -rf $(BIN_DIR)/transfer.controller
-	sudo rm -f $(UTILS_DIR)/ubuntu.controller.iso
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.controller.iso
 	sudo rm -f $(DISKS_DIR)/controller.img
   
 clean-filer:
@@ -206,7 +293,7 @@ clean-filer:
 	sudo rm -f $(BIN_FILER)
 	sudo rm -f $(BIN_DIR)/ks.filer.cfg
 	sudo rm -rf $(BIN_DIR)/transfer.filer
-	sudo rm -f $(UTILS_DIR)/ubunt.filer.iso
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubunt.filer.iso
 	sudo rm -f $(DISKS_DIR)/filer.img
   
 clean-nat:
@@ -215,7 +302,7 @@ clean-nat:
 	sudo rm -f $(BIN_NAT)
 	sudo rm -f $(BIN_DIR)/ks.nat.cfg
 	sudo rm -rf $(BIN_DIR)/transfer.nat
-	sudo rm -f $(UTILS_DIR)/ubunt.nat.iso
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubunt.nat.iso
 	sudo rm -f $(DISKS_DIR)/nat.img
   
 clean-host:

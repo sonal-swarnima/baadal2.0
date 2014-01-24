@@ -1,7 +1,6 @@
 OVS_NAT_BRIDGE=nat-br-int
 NAT_EXTERNAL_INTERFACE=eth0
 NAT_INTERNAL_INTERFACE=eth1
-OVS_POSTUP=/tmp/ovs_postup.sh
 VLAN_START=1
 VLAN_END=255
 VLAN_NETMASK=255.255.255.0
@@ -11,7 +10,6 @@ function run
   
   check_root
   
-  #TODO: check for hostname to be NAT.
   hostname="$(uname -n)"
   if [ "$hostname" != "$NAT_HOSTNAME" ]
   then
@@ -19,28 +17,21 @@ function run
     $ECHO_ER Please correct the hostname or check the underlying system before running.
     exit 1
   fi
+ 
+  service_restart openvswitch-switch
   
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_NAT_BRIDGE
-  
-  #~ package_install openvswitch-datapath-dkms
-  #~ package_install openvswitch-datapath-source
-  
-  echo "BRCOMPAT=yes" > /etc/default/openvswitch-switch
-  kernelmod_remove bridge
-  
-  #~ package_install openvswitch-controller
-  #~ package_install openvswitch-switch
-  #~ package_install openvswitch-brcompat
-  
-  service_start openvswitch-switch
     
-  ovsvsctl_add_br_force $OVS_NAT_BRIDGE
+  ovsvsctl_add_br $OVS_NAT_BRIDGE
   
-  ovsvsctl_add_port_force $OVS_NAT_BRIDGE $NAT_INTERNAL_INTERFACE
-  
+  ovsvsctl_add_port $OVS_NAT_BRIDGE $NAT_INTERNAL_INTERFACE
+  ovsvsctl_set_port $NAT_INTERNAL_INTERFACE "vlan_mode=native-untagged"
+   
   #Get the IP Address of NAT from ifconfig.
   nat_ip="$(/sbin/ifconfig $NAT_INTERNAL_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+  ifconfig_noip $NAT_INTERNAL_INTERFACE
+  ifconfig_ip $OVS_NAT_BRIDGE $nat_ip $VLAN_NETMASK
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
   baseaddr="$(echo $nat_ip | cut -d. -f1-2)"
@@ -57,6 +48,15 @@ function run
   interfaces_str="auto lo\n
   iface lo inet loopback\n
   up service openvswitch-switch restart\n
+  \n
+  auto $NAT_INTERNAL_INTERFACE\n
+  iface $NAT_INTERNAL_INTERFACE inet static\n
+  address 0.0.0.0\n
+  \n
+  auto $OVS_NAT_BRIDGE\n
+  iface $OVS_NAT_BRIDGE inet static\n
+  address $nat_ip\n
+  netmask $VLAN_NETMASK\n
   "
   
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
