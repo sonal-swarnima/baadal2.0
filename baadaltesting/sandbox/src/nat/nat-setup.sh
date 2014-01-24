@@ -49,6 +49,9 @@ function run
   iface lo inet loopback\n
   up service openvswitch-switch restart\n
   \n
+  auto $NAT_EXTERNAL_INTERFACE\n
+  iface $NAT_EXTERNAL_INTERFACE inet dhcp\n
+  \n
   auto $NAT_INTERNAL_INTERFACE\n
   iface $NAT_INTERNAL_INTERFACE inet static\n
   address 0.0.0.0\n
