@@ -357,3 +357,11 @@ def remind_orgadmin():
     send_remind_orgadmin_email(vm_id)
     session.flash = 'Organisation Admin Reminded'
     redirect(URL(c='orgadmin', f='pending_approvals'))
+
+@check_moderator
+@handle_exception
+def verify_vm_resource():
+
+    request_id = request.vars['request_id']
+    return check_vm_resource(request_id)
+
