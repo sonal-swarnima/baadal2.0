@@ -27,26 +27,6 @@ UBUNTU_SOURCE = $(UBUNTU_SERVER)
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
 
-OPENVSWITCH_SOURCE=http://launchpad.net/ubuntu/+archive/primary/+files
-OPENVSWITCH_COMMON=openvswitch-common_1.10.2-0ubuntu2_amd64
-OPENVSWITCH_COMMON_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_COMMON).deb
-OPENVSWITCH_COMMON_DEB=$(UTILS_DIR)/$(OPENVSWITCH_COMMON).deb
-OPENVSWITCH_PKI=openvswitch-pki_1.10.2-0ubuntu2_all
-OPENVSWITCH_PKI_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_PKI).deb
-OPENVSWITCH_PKI_DEB=$(UTILS_DIR)/$(OPENVSWITCH_PKI).deb
-OPENVSWITCH_CONTROLLER=openvswitch-controller_1.10.2-0ubuntu2_amd64
-OPENVSWITCH_CONTROLLER_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_CONTROLLER).deb
-OPENVSWITCH_CONTROLLER_DEB=$(UTILS_DIR)/$(OPENVSWITCH_CONTROLLER).deb
-OPENVSWITCH_DATAPATH_DKMS=openvswitch-datapath-dkms_1.10.2-0ubuntu2_all
-OPENVSWITCH_DATAPATH_DKMS_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_DATAPATH_DKMS).deb
-OPENVSWITCH_DATAPATH_DKMS_DEB=$(UTILS_DIR)/$(OPENVSWITCH_DATAPATH_DKMS).deb
-OPENVSWITCH_SWITCH=openvswitch-switch_1.10.2-0ubuntu2_amd64
-OPENVSWITCH_SWITCH_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_SWITCH).deb
-OPENVSWITCH_SWITCH_DEB=$(UTILS_DIR)/$(OPENVSWITCH_SWITCH).deb
-OPENVSWITCH_PYTHON=python-openvswitch_1.10.2-0ubuntu2_all
-OPENVSWITCH_PYTHON_SOURCE=$(OPENVSWITCH_SOURCE)/$(OPENVSWITCH_PYTHON).deb
-OPENVSWITCH_PYTHON_DEB=$(UTILS_DIR)/$(OPENVSWITCH_PYTHON).deb
-  
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
@@ -85,37 +65,11 @@ $(LIBVIRT):
 	@ mkdir -p $(UTILS_DIR)
 	@ wget -c $(LIBVIRT_SOURCE) -O $@ || (rm $@ && false)
 
-$(OPENVSWITCH_COMMON_DEB):
-	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(OPENVSWITCH_COMMON_SOURCE) -O $@ || (rm $@ && false)
-
-$(OPENVSWITCH_PKI_DEB):
-	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(OPENVSWITCH_PKI_SOURCE) -O $@ || (rm $@ && false)
-
-$(OPENVSWITCH_CONTROLLER_DEB):
-	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(OPENVSWITCH_CONTROLLER_SOURCE) -O $@ || (rm $@ && false)
-
-$(OPENVSWITCH_DATAPATH_DKMS_DEB):
-	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(OPENVSWITCH_DATAPATH_DKMS_SOURCE) -O $@ || (rm $@ && false)
-
-$(OPENVSWITCH_SWITCH_DEB):
-	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(OPENVSWITCH_SWITCH_SOURCE) -O $@ || (rm $@ && false)
-
-$(OPENVSWITCH_PYTHON_DEB):
-	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(OPENVSWITCH_PYTHON_SOURCE) -O $@ || (rm $@ && false)
-  
 ubuntu: $(UBUNTU)
   
 libvirt: $(LIBVIRT)
 
-openvswitch-get: $(OPENVSWITCH_COMMON_DEB) $(OPENVSWITCH_PKI_DEB) $(OPENVSWITCH_CONTROLLER_DEB) $(OPENVSWITCH_DATAPATH_DKMS_DEB) $(OPENVSWITCH_SWITCH_DEB) $(OPENVSWITCH_PYTHON_DEB) 
-
-utils-get: ubuntu libvirt openvswitch-get
+utils-get: ubuntu libvirt
 
 $(BAADAL_TRANSFER_TAR): utils-get
 	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
@@ -127,18 +81,16 @@ baadal-transfer-tar: $(BAADAL_TRANSFER_TAR)
 # TODO
 # There may be more ways of doing this.
 # Is one way necessarily better than the other? Yes, obviously.
-# Is this the better way? No.
-openvswitch: openvswitch-get
-	sudo apt-get install libc6-dev
-	sudo apt-get install dkms
-	sudo apt-get install python
-	sudo dpkg -i --ignore-depends=libc6 $(OPENVSWITCH_COMMON_DEB)
-	sudo dpkg -i $(OPENVSWITCH_PKI_DEB)
-	sudo dpkg -i $(OPENVSWITCH_CONTROLLER_DEB)
-	sudo dpkg -i $(OPENVSWITCH_DATAPATH_DKMS_DEB)
-	sudo dpkg -i --ignore-depends=sysv-rc  $(OPENVSWITCH_SWITCH_DEB)
-	sudo dpkg -i $(OPENVSWITCH_PYTHON_DEB)
-	sudo service openvswitch-switch start
+# Is this the better way? No. But this is much better than how I started.
+openvswitch:
+	add-apt-repository ppa:ivoks/ovs-saucy
+	apt-get update || true
+	apt-get install openvswitch-common=1.10.2-0ubuntu2~cloud0
+	apt-get install openvswitch-pki=1.10.2-0ubuntu2~cloud0
+	apt-get install openvswitch-controller=1.10.2-0ubuntu2~cloud0
+	apt-get install openvswitch-datapath-dkms=1.10.2-0ubuntu2~cloud0
+	apt-get install openvswitch-switch=1.10.2-0ubuntu2~cloud0
+	apt-get install python-openvswitch=1.10.2-0ubuntu2~cloud0
 
 $(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@

@@ -13,10 +13,12 @@ function run
 	ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
   ovsvsctl_add_br_force $OVS_BRIDGE_INTERNAL
 
-  ovsvsctl_set_port $NAT_INTERNAL_INTERFACE "tag=1"
+  ovsvsctl_set_port $OVS_BRIDGE_INTERNAL "tag=1"
 
   ifconfig $OVS_ETHERNET 0
   dhclient $OVS_BRIDGE_EXTERNAL 2>/dev/null
+
+  ifconfig_ip $OVS_BRIDGE_INTERNAL $NETWORK_INTERNAL_IP_SANDBOX 255.255.0.0 
 
 	mv /etc/network/interfaces /etc/network/interfaces.bak
 
