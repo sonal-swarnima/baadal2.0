@@ -628,7 +628,6 @@ Enbl_Modules()
 	
 	Configure_Tftp
 	Configure_Dhcp_Pxe
-	Configure_Local_Ubuntu_Repo
 
 }
 
@@ -753,6 +752,8 @@ Start_Web2py()
 . ./installation.cfg 2>> /dev/null
 
 Chk_Root_Login
+
+Configure_Local_Ubuntu_Repo
 
 apt-get update
 apt-get -y upgrade

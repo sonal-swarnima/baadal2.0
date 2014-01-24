@@ -1,0 +1,23 @@
+<network>
+    <name>ovs-internal</name>
+    <forward mode="bridge" />
+    <bridge name="baadal-br-int" />
+    <virtualport type="openvswitch" />
+    <portgroup name="vlan101">
+        <vlan trunk="yes">
+            <tag id="101" nativeMode="tagged" />
+            <tag id="102" />
+            <tag id="103" />
+            <tag id="104" />
+
+        </vlan>
+    </portgroup>
+    <portgroup name="vlan102">
+        <vlan trunk="yes">
+            <tag id="101" />
+            <tag id="102" nativeMode="tagged" />
+            <tag id="103" />
+            <tag id="104" />
+        </vlan>
+    </portgroup>
+</network>
