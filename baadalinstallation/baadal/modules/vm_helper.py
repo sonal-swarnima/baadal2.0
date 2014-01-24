@@ -450,8 +450,6 @@ def install(parameters):
 
             message = "VM is installed successfully." + attach_disk_status_message
 
-            #send email to requesting user on successful VM creation
-            #send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_identity, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:            
@@ -569,7 +567,7 @@ def vm_has_snapshots(vm_id):
 # Deletes all vm snapshots
 def delete_vm_snapshots(vmid, domain):
 
-    try:    
+    try:
         for row in current.db(current.db.snapshot.vm_id == vmid).select(current.db.snapshot.snapshot_name) :
             current.logger.debug(row.snapshot_name)
             snapshot = domain.snapshotLookupByName(row.snapshot_name, 0)
