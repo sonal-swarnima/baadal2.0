@@ -82,4 +82,7 @@ function run
 
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
+
+  package_install iptables-persistent
+  /etc/init.d/iptables-persistent save
 }
