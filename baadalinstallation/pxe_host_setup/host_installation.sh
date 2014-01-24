@@ -53,37 +53,7 @@ Enbl_Modules()
 
 	modprobe kvm
 	modprobe kvm_intel
-	rmmod bridge
 
-	echo "Installing OpenvSwitch"
-
-	aptitude -y purge ebtables
-	apt-get -y install openvswitch-controller openvswitch-brcompat openvswitch-switch openvswitch-datapath-source
-	echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
-	service openvswitch-switch start
-	module-assistant --non-inter --quiet auto-install openvswitch-datapath
-
-	brcompat_exist=`lsmod | grep brcompat`
-	if test -z "$brcompat_exist" ; then
-		echo "brcompat module is not configured properly. Please retry with \" rmmod bridge \" followed by \"service openvswitch-switch restart\" "
-		exit 1
-	fi
-
-	echo "Configuring OpenvSwitch"
-
-	ovs-vsctl add-br br0
-	ovs-vsctl add-port br0 eth0
-	/root/ovs-postup.sh
-
-	cd /etc/network
-	mv interfaces interfaces.bak
-	cp /root/interfaces_file interfaces
-
-	echo "eth0 on 0.0.0.0"
-	ifconfig eth0 0.0.0.0 up
-	echo "restarting networking"
-	/etc/init.d/networking restart
-	
 	cd /root
 	libvirt_output=`ls | grep "libvirt"`
 
@@ -100,23 +70,9 @@ Enbl_Modules()
 	make
 	make install
 	/etc/init.d/libvirt-bin restart
-
-	virsh net-destroy default
-	virsh net-autostart --disable default
-
-	cd -
-	touch ovs-net.xml
 	
-        ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='br0'/>\n<virtualport type='openvswitch'/>\nPORTGROUPS</network>"
-	echo -e $ovs_net_config > ovs-net.xml
-
-	virsh net-define ovs-net.xml
-	virsh net-start ovs-net
-	virsh net-autostart ovs-net
-
-	sed -i -e "s/#net.ipv4.ip_forward=/net.ipv4.ip_forward=/" /etc/sysctl.conf
-	sysctl -p
-
+	mkdir -p NFS_MOUNT_POINT
+	mount FILER_IP:FILER_DIRECTORY NFS_MOUNT_POINT
 	echo "If you have done all the steps correctly, Congo!!!"
 }
 
