@@ -114,7 +114,7 @@ Configure_Dhcp_Pxe()
         do
 		j=$(($i + 1))
                 if test $i -eq 0;then
-	final_subnet_string+="subnet $STARTING_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_RANGE.$i.2 $STARTING_RANGE.$i.$end_range;\n\toption routers $STARTING_RANGE.$i.1;\n\toption broadcast-address $STARTING_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
+	final_subnet_string+="subnet $STARTING_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_RANGE.$i.2 $STARTING_RANGE.$i.$end_range;\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
                 fi
                 final_subnet_string+="subnet $STARTING_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_RANGE.$i.2 $STARTING_RANGE.$i.$end_range\n\toption routers $STARTING_RANGE.$i.1\n\toption broadcast-address $STARTING_RANGE.$i.255\n\toption subnet-mask $subnet\n}\n\n"
 		if test $j -ge 2; then
