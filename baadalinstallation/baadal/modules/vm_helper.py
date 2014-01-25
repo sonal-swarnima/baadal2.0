@@ -141,7 +141,7 @@ def choose_mac_ip_vncport(vm_properties):
 
     count = int(get_constant('vmcount')) 
     vm_properties['vnc_port'] = str(int(get_constant('vncport_range')) + count)
-    update_value('vmcount', count + 1)
+    update_constant('vmcount', count + 1)
     
 
 # Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
