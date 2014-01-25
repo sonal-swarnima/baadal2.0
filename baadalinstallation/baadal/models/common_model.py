@@ -190,18 +190,19 @@ def add_to_cost(vm_id):
     return totalcost
 
 # Get user name and email
-def get_user_info(user_id):
-    user = db.user[user_id]
-    if user :
-        return ((user.first_name + ' ' + user.last_name), user.email)
-    elif user_id < 0:
+def get_user_details(user_id):
+    if user_id < 0:
         return ('System User',None)
     else:
-        return (None, None)
+        user = db.user[user_id]
+        if user :
+            return ((user.first_name + ' ' + user.last_name), user.email)
+        else:
+            return (None, None)
 
 
 def get_full_name(user_id):
-    return get_user_info(user_id)[0]
+    return get_user_details(user_id)[0]
     
     
 # Returns VM info, if VM exist

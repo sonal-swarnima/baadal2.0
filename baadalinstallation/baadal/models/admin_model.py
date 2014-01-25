@@ -211,7 +211,7 @@ def create_clone_task(req_data, params):
                           parent_id = req_data.parent_id,
                           public_ip = PUBLIC_IP_NOT_ASSIGNED,
                           security_domain = vm_data.security_domain,
-                          purpose = TASK_TYPE_CLONE_VM,
+                          purpose = req_data.purpose,
                           status = VM_STATUS_IN_QUEUE)
 
         vm_id_list.append(clone_vm_id)
@@ -560,4 +560,28 @@ def get_vm_util_data(util_period):
                    'nww' : round(util_result[5], 2)}
         vmlist.append(element)
     return vmlist
-        
+
+
+def check_vm_resource(request_id):
+    
+    req_data = db.request_queue[request_id]
+    security_domain_id = req_data.security_domain
+    
+    vlans = db(db.security_domain.id == security_domain_id)._select(db.security_domain.vlan)
+    avl_ip = db((db.private_ip_pool.vm_id == None) & (db.private_ip_pool.vlan.belongs(vlans))).count()
+    
+    message = None
+    if req_data.request_type == TASK_TYPE_CREATE_VM:
+        if avl_ip == 0:
+            message = "No private IPs available for security domain '%s" % req_data.security_domain.name
+        if req_data.public_ip:
+            
+            if db(db.public_ip_pool.vm_id == None).count() == 0:
+                message = "" if message == None else message + ", "
+                message += "No public IP available"
+            
+    elif req_data.request_type == TASK_TYPE_CLONE_VM:
+        if avl_ip < req_data.clone_count:
+            message = "%s private IP(s) available for security domain '%s" % (str(avl_ip), req_data.security_domain.name)
+
+    return message if message != None else 'Success'

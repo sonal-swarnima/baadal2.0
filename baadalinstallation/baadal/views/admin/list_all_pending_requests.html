@@ -75,8 +75,8 @@
                         _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
-                        _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]),
-                        _title="Approve Request", _alt="Approve Request", _onclick="tab_refresh();")}}
+                        _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]), _id="approve_"+str(pend_request['id']),
+                        _title="Approve Request", _alt="Approve Request", _onclick="tab_refresh();return check_resource("+str(pend_request['id'])+");")}}
                     &nbsp;&nbsp;
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pend_request['id']]),
@@ -148,8 +148,8 @@
                         _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
                 {{else:}}
                     {{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
-                        _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]),
-                        _title="Approve Request", _alt="Approve Request", _onclick="tab_refresh();")}}
+                        _href=URL(r=request, c='admin',f='approve_request', args=[pend_request['id']]), _id="approve_"+str(pend_request['id']),
+                        _title="Approve Request", _alt="Approve Request", _onclick="tab_refresh();return check_resource("+str(pend_request['id'])+");")}}
                     &nbsp;&nbsp;
                     {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
                         _href=URL(r=request, c='admin',f='reject_request', args=[pend_request['id']]),
@@ -350,6 +350,23 @@ jQuery(document).ready(function(){
       jQuery("#sortTable3").tablesorter(); 
       jQuery("#sortTable4").tablesorter(); 
 });
+
+function check_resource(request_id){
+
+    var verify_url = "{{=URL('verify_vm_resource')}}";
+    jQuery.post(verify_url, {request_id:request_id},
+        function(result){
+            if(result != 'Success'){
+				$('.flash').html(result).slideDown();
+            }else
+            {
+            	var link = $("#approve_"+request_id);
+				window.location.href = link.attr("href");            
+			}
+        }
+    );
+	return false;
+}
 </script>
 
 

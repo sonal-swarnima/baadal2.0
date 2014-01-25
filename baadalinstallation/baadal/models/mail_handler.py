@@ -54,7 +54,7 @@ def send_email(to_address, email_subject, email_template, context):
 
 def send_email_to_approver(approver_id, requester_id, request_type, request_time):
 
-    approver_info = get_user_info(approver_id)
+    approver_info = get_user_details(approver_id)
     requester_name = get_full_name(requester_id)
     context = dict(approverName = approver_info[0], 
                    userName = requester_name, 
@@ -65,7 +65,7 @@ def send_email_to_approver(approver_id, requester_id, request_type, request_time
 
 def send_email_to_requester(vm_name):
 
-    user_info = get_user_info(auth.user.id)
+    user_info = get_user_details(auth.user.id)
     context = dict(vmName = vm_name, 
                    userName = user_info[0])
 
@@ -74,7 +74,7 @@ def send_email_to_requester(vm_name):
 def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
 
     for vm_user in vm_users:
-        user_info = get_user_info(vm_user)
+        user_info = get_user_details(vm_user)
         context = dict(vmName = vm_name, 
                        userName = user_info[0],
                        taskType = task_type,

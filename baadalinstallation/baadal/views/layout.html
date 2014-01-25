@@ -38,9 +38,11 @@
       jQuery("#sortTable").tablesorter(); 
     });
 
-	jQuery('#sidebar').on('click', '*', function(){
-	    alert('ic');
-	});
+	$(function() {
+	    $('#sidebar').click(function() {
+	    	set_tab_cookie(0);
+	    });
+	});	
   </script>
 
   <title>
