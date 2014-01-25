@@ -7,7 +7,7 @@ if 0:
 ###################################################################################
 from simplejson import loads, dumps
 from helper import get_config_file,get_datetime, IS_MAC_ADDRESS
-from auth_user import login_callback,login_ldap_callback
+from auth_user import login_callback,login_ldap_callback,register_callback
 
 #### Connection Pooling of Db is also possible
 
@@ -67,7 +67,7 @@ db.define_table(
     Field('registration_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('reset_password_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('registration_id', length = 512, writable = False, readable = False, default = ''),
-    format = '%(username)s') # required
+    format = '%(first_name)s %(last_name)s') # required
 
 custom_auth_table = db[auth.settings.table_user_name] # get the custom_auth_table
 custom_auth_table.first_name.requires =   IS_NOT_EMPTY(error_message = auth.messages.is_empty)
@@ -82,7 +82,8 @@ auth.settings.table_user = custom_auth_table # tell auth to use custom_auth_tabl
 auth.settings.table_group = db.define_table(
     auth.settings.table_group_name,
     Field('role', 'string', length = 100, notnull = True, unique = True),
-    Field('description', length = 255, default = ''))
+    Field('description', length = 255, default = ''),
+    format = '%(role)s')
 
 auth.settings.table_membership = db.define_table(
     auth.settings.table_membership_name,
@@ -98,7 +99,8 @@ if current.auth_type == 'ldap':
     auth.settings.login_methods = [pam_auth()]
     auth.settings.login_onaccept = [login_ldap_callback]  
 else:
-    auth.settings.login_onaccept = [login_callback]  
+    auth.settings.login_onaccept = [login_callback]
+    auth.settings.register_onaccept = [register_callback]
 ###############################################################################
 
 db.define_table('host',
@@ -168,8 +170,8 @@ db.define_table('vm_data',
     Field('extra_HDD', 'integer'),
     Field('vCPU', 'integer', label='vCPUs'),
     Field('template_id', db.template),
-    Field('requester_id',db.user, represent=lambda x, row: get_full_name(x), label='Requester'),
-    Field('owner_id', db.user, represent=lambda x, row: get_full_name(x), label='Owner'),
+    Field('requester_id',db.user, label='Requester'),
+    Field('owner_id', db.user, label='Owner'),
     Field('mac_addr', 'string',length = 20 , requires=IS_MAC_ADDRESS()),
     Field('private_ip', 'string',length = 15, label='Private IP'),
     Field('public_ip', 'string',length = 15, label='Public IP', default=PUBLIC_IP_NOT_ASSIGNED),
@@ -200,8 +202,8 @@ db.define_table('request_queue',
     Field('enable_service', 'list:string'),
     Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
     Field('security_domain', db.security_domain, label='Security Domain'),
-    Field('requester_id',db.user, represent=lambda x, row: get_full_name(x), label='Requester'),
-    Field('owner_id', db.user, represent=lambda x, row: get_full_name(x), label='Owner'),
+    Field('requester_id',db.user, label='Requester'),
+    Field('owner_id', db.user, label='Owner'),
     Field('collaborators', 'list:reference user'),
     Field('clone_count', 'integer', label='No. of Clones'),
     Field('purpose', 'string', length = 512),
