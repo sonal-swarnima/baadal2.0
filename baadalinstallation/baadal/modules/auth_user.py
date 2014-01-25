@@ -5,6 +5,10 @@ from helper import get_config_file
 
 config = get_config_file()
 
+def register_callback(form):
+    add_membership_db(current.auth.user.id, current.USER, True)
+    
+    
 def login_callback(form):
     if current.auth.is_logged_in():
         member = current.db(current.db.user_membership.user_id == current.auth.user.id).select().first()
