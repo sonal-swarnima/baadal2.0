@@ -1,10 +1,20 @@
-################################ FILE CONSTANTS USED ###########################
+#!/bin/bash
 
-Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls  libvirt-bin apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml)
+. ./installation.cfg 2>> /dev/null
+
+NUMBER_OF_HOSTS=254
+
+NUMBER_OF_VLANS=255
+
+CONTROLLER_IP=ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1
+
+Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
 Mysql_pkg_lst=(mysql-server-5.5:mysql-server-5.1 libapache2-mod-auth-mysql php5-mysql)
+
+###################################################################################################################################
 
 #Funtion to check root login
 Chk_Root_Login()
@@ -20,6 +30,17 @@ Chk_Root_Login()
 	echo "User Logged in as Root............................................"
 }
 
+#Function to check whther the network gateway is pingable or not
+Chk_Gateway()
+{
+	ping -q -c5 $NETWORK_GATEWAY_IP > /dev/null 
+	
+	if test $? -ne 0;then
+		echo "NETWORK GATEWAY IS NOT REACHABLE!!!"
+		exit 1
+	fi
+
+}
 
 Configure_Ldap_Kerberos()
 {
@@ -115,11 +136,11 @@ Populate_Pkg_Lst()
 
 	Pkg_lst=${Normal_pkg_lst[@]}
 
-	if [[ $database_type == "mysql" ]]; then
+	if [[ $DB_TYPE == "mysql" ]]; then
 
 		Pkg_lst=("${Pkg_lst[@]}" "${Mysql_pkg_lst[@]}")
 	
-	elif [[ $database_type == "sqlite" ]]; then
+	elif [[ $DB_TYPE == "sqlite" ]]; then
 
 		echo "Do nothing as of now"
 	else
@@ -130,14 +151,15 @@ Populate_Pkg_Lst()
 
 	fi			
 			
-	if [[ $authentication_type == "ldap" ]]; then
+	if [[ $AUTH_TYPE == "ldap" ]]; then
 	
 		Pkg_lst=("${Pkg_lst[@]}" "${Ldap_pkg_lst[@]}")
 		Configure_Ldap_Kerberos
 
-	elif [[ $authentication_type == "localdb" ]]; then
+	elif [[ $AUTH_TYPE == "db" ]]; then
 
 		echo "Do nothing as of now"
+
 	else
 		
 		echo "Invalid Authentication Type!!!"
@@ -151,6 +173,7 @@ Populate_Pkg_Lst()
 #Function that install all the packages packages
 Instl_Pkgs()
 {	
+	apt-get update &&	apt-get -y upgrade
 
 	echo "Updating System............."	
 
@@ -175,12 +198,12 @@ Instl_Pkgs()
 
 				if test $status -eq 1;  then 
 
-					echo "mysql-server-5.5 mysql-server/root_password password $mysql_password" | debconf-set-selections
-					echo "mysql-server-5.5 mysql-server/root_password_again password $mysql_password" | debconf-set-selections
+					echo "mysql-server-5.5 mysql-server/root_password password $MYSQL_ROOT_PASSWD" | debconf-set-selections
+					echo "mysql-server-5.5 mysql-server/root_password_again password $MYSQL_ROOT_PASSWD" | debconf-set-selections
 
 				else 
 				
-					if test $reinstall_mysql == 'y' -o 'Y' ; then
+					if test $REINSTALL_MYSQL == 'y' -o 'Y' ; then
 
 						sudo apt-get remove --purge $pkg
 						sudo apt-get autoremove
@@ -238,8 +261,44 @@ Instl_Pkgs()
 	done
 	# end of FOR loop / package installation from pkg_lst
 
+	cp libvirt-1.0.0.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.0.0.tar.gz
+	tar -xvzf libvirt-1.0.0.tar.gz
+	cd libvirt-1.0.0
+	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
+	make
+	make install
+	/etc/init.d/libvirt-bin restart
+
 	echo "Packages Installed Successfully..................................."
 }
+
+
+Setup_Baadalapp()
+{
+	baadalapp_config_path=/home/www-data/web2py/applications/baadal/static/baadalapp.cfg
+
+	sed -i -e 's/nat_ip=/'"nat_ip=$NETWORK_GATEWAY_IP"'/g' $baadalapp_config_path
+
+	sed -i -e 's/storage_type=/'"storage_type=$STORAGE_TYPE"'/g' $baadalapp_config_path
+
+	sed -i -e 's/nat_script_path=/'"nat_script_path=$MAPPER_FILE_PATH"'/g' $baadalapp_config_path
+
+	sed -i -e 's/$DB_TYPE_db=/'"$DB_TYPE_db=$DB_NAME"'/g' $baadalapp_config_path
+
+	sed -i -e 's/mysql_password=/'"mysql_password=$MYSQL_ROOT_PASSWD"'/g' $baadalapp_config_path
+
+	sed -i -e 's/auth_type=/'"auth_type=$AUTH_TYPE"'/g' $baadalapp_config_path
+
+	sed -i -e 's/mysql_ip=/'"mysql_ip=localhost"'/g' $baadalapp_config_path
+
+	sed -i -e 's/dhcp_ip=/'"dhcp_ip=localhost"'/g' $baadalapp_config_path
+	
+	sed -i -e 's/mysql_user=/'"mysql_user=$MYSQL_USR_NAME"'/g' $baadalapp_config_path
+	
+	#mailing feature to be appended
+
+}
+
 
 
 Setup_Web2py()
@@ -251,13 +310,11 @@ if test -d "/home/www-data/web2py/"; then
 
 	echo "Web2py Already Exists!!!"
 
-	if test $reinstall_web2py == 'n' -o 'N';then
+	if test $REINSTALL_WEB2PY == 'n' -o 'N';then
 		install_web2py=0
 	fi
 	
 fi
-
-
 
 if test $install_web2py -eq 1; then
 		
@@ -289,7 +346,6 @@ fi
 echo "Initializing Baadal WebApp Deployment"
 
 rm -rf /home/www-data/web2py/applications/baadal/
-cp logging.conf /home/www-data/web2py/
 cp -r baadal/ /home/www-data/web2py/applications/baadal/
 
 if test $? -ne '0'; then
@@ -305,270 +361,23 @@ echo "Web2py Setup Successful.........................................."
 
 }
 
-#Helper functions for calculating subnet IP network addresses
-function full_subnet_octet(){
-        octet_limit=$(( $(( $1 >> $2)) & 255 ))
-        return $octet_limit
-}
-
-function adjusted_subnet_octet(){
-        if test $1 -eq 8; then
-                return $(full_subnet_octet $2 0)
-        fi
-        adjusted_num=$(($2 << $(( 8 - $1 )) ))
-        octet_limit=$(($adjusted_num & 255))
-        return $octet_limit
-}
-
-
-Configure_Tftp()
-{
-
-
-mkdir -p $TFTP_DIR
-sed -i -e 's/^/^#/g' /etc/default/tftpd-hpa
-echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" >> /etc/default/tftpd-hpa
-/etc/init.d/tftpd-hpa restart
-
-# tftpd-hpa is called from inetd. The options passed to tftpd-hpa when it starts are thus found in /etc/inetd.conf
-echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-s\t$TFTP_DIR" >> /etc/inetd.conf
-/etc/init.d/inetutils-inetd restart
-
-
-#configure tftp server for pxe boot
-if test $TFTP_MOUNT_FLAG -eq 1; then
-	mkdir $TFTP_DIR/ubuntu
-	mount $ISO_LOCATION $TFTP_DIR/ubuntu
-	cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
-	cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
-#	cd $TFTP_DIR
-	mkdir $TFTP_DIR/pxelinux.cfg
-#	cd pxelinux.cfg
-	touch $TFTP_DIR/pxelinux.cfg/default
-	echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
-#	cd ..
-	touch $TFTP_DIR/mybootmenu.cfg
-	echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> $TFTP_DIR/mybootmenu.cfg
-
-	cp $BASE_PATH/libvirt-1.0.0.tar.gz $TFTP_DIR/libvirt-1.0.0.tar.gz
-	ln -s $TFTP_DIR/libvirt-1.0.0.tar.gz /var/www/libvirt-1.0.0.tar.gz
-fi
-
-/etc/init.d/tftpd-hpa restart
-/etc/init.d/inetutils-inetd restart
-
-echo "tftp is configured."
-
-}
-
-Configure_Dhcp_Pxe()
-{
-
-# Get the number of bits for the host IPs
-vlan_loop_iterator=$NUMBER_OF_VLANS
-#subnet bits are initialized to 0, considering number of bits from second octet
-subnet_bits=0
-while [ $vlan_loop_iterator -gt 0 ]
-do
-	subnet_bits=$(( $subnet_bits + 1 ))
-	vlan_loop_iterator=$(( $vlan_loop_iterator / 2 ))
-done
-echo "number of subnet bits are $subnet_bits"
-
-#maximum number of subnet bits can be 12 as maximum number of vlans possible are 4096
-if test $subnet_bits -gt 12; then
-	echo "Number of VLANs can not exceed 4096. Fix the number in config file and retry."
-	exit 1
-fi
-
-#Hosts are to be accomodated in the remaining bits after the subnet so maximum hosts can be 2^(24-<number_of_subnet_bits>)
-host_bits=$((24 - $subnet_bits))
-max_hosts=$((2**$host_bits))
-if test $NUMBER_OF_HOSTS -gt $max_hosts; then
-	echo "Number of hosts specified exceeds the maximum possible. Maximum number of hosts per VLAN can be $max_hosts."
-	echo "You can either reduce the number of VLANs or number of hosts. Fix and retry."
-	exit 1
-fi
-
-#calculating subnet mask corresponding to the subnet bits and the subnet declarations for the VLANs
-subnet_block="subnet 10."
-helper_numbers[1]=1
-helper_numbers[2]=3
-helper_numbers[3]=7
-helper_numbers[4]=15
-helper_numbers[5]=31
-helper_numbers[6]=63
-helper_numbers[7]=127
-declare -a subnet_helpers=('128' '192' '224' '240' '248' '252' '254');
-
-
-
-#calculate subnet mask
-subnet="255"
-test_subnet_bits=$subnet_bits
-octet_count=0
-while [ $test_subnet_bits -gt 0 ] 
-do
-	if test $test_subnet_bits -gt 8; then
-		subnet+=".255"
-	else
-		rest=$(echo ${subnet_helpers[$test_subnet_bits-1]})
-		subnet="$subnet.$rest"
-	fi
-	test_subnet_bits=$(( $test_subnet_bits - 8 ))
-	octet_count=$(($octet_count + 1))
-done
-
-if test $octet_count -eq 1; then
-	subnet+=".0.0"
-elif test $octet_count -eq 2; then
-	subnet+=".0"
-fi
-
-echo "subnet mask is $subnet"
-#Subnet mask calculated
-
-#Setup openvswitch
-	rmmod bridge
-	apt-get -y purge ebtables
-	apt-get -y install openvswitch-switch openvswitch-brcompat openvswitch-controller openvswitch-datapath-source
-	echo "BRCOMPAT=yes" >> /etc/default/openvswitch-switch
-	module-assistant --non-inter --quiet auto-install openvswitch-datapath
-
-	brcompat_exist=`lsmod | grep brcompat`
-	if test -z "$brcompat_exist" ; then
-		echo "brcompat module is not configured properly. Please retry with \" rmmod bridge \" followed by \"service openvswitch-switch restart\" "
-		exit 1
-	fi
-	
-	ovs-vsctl add-br br0
-	ovs-vsctl add-port br0 eth0
-
-#Assign IP to controller NIC
-echo -e "\nauto eth0\niface eth0 inet static\n\taddress 0.0.0.0\n\nauto br0\niface br0 inet static\n\taddress $CONTROLLER_IP\n\tnetmask $subnet" >> /etc/network/interfaces
-sed -i -e "s/iface\ lo\ inet\ loopback/iface\ lo\ inet\ loopback\nup\ service\ openvswitch-switch\ restart/" /etc/network/interfaces
-
-num_hosts=$NUMBER_OF_HOSTS
-#Calculation of subnet declaration for default VLAN in dhcp
-forth_range_octet=$(( ($num_hosts & 255) + 1  ))
-third_range_octet=$(( ($num_hosts >> 8) & 255 ))
-second_range_octet=$(( ($num_hosts >> 16) & 255 ))
-second_broadcast_octet=0
-if test $subnet_bits -lt 8; then
-	second_broadcast_octet=$(( 255 >> $subnet_bits ))
-	third_broadcast_octet=255
-else 
-	third_broadcast_octet=$(( 255 >> ($subnet_bits - 8) ))
-fi 
-final_subnet_string="subnet 10.0.0.0 netmask $subnet {\n\trange 10.0.0.2 10.$second_range_octet.$third_range_octet.$forth_range_octet;\n\toption routers 10.0.0.1;\n\toption broadcast-address 10.$second_broadcast_octet.$third_broadcast_octet.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
-
-#Calculatings subnet IP network address, forming ovs declaration string and network interfaces settings for internal VLAN gateways.
-final_interfaces_string=""
-final_ovs_string=""
-final_trunk_string=""
-PORTGROUP_STRING=""
-VLANS=""
-#Default VLAN configuration is already figured out, remaining (NUMBER_OF_VLANS -1) VLANs are configured here
-for (( i=1;i<$NUMBER_OF_VLANS;i++ )) 
-do
-	second_octet=0
-	third_octet=0
-	forth_octet=0
-	#VLAN tags start from 2 as 1 is default VLAN
-	vlan_tag=$(($i + 1))
-	if test $subnet_bits -gt 8; then
-		#calculating the octets for subnet IP addresses
-		remaining_bits=$(( $subnet_bits - 8 )) 
-		full_subnet_octet $i $remaining_bits
-		second_octet=$?
-		adjusted_subnet_octet $remaining_bits $i
-		third_octet=$?
-		#calculating broadcast address
-		host_bits=$(( 8 - $remaining_bits ))
-	        helper_number=helper_numbers[$host_bits]
-        	range_octet=$(( $third_octet | $helper_number))
-		broadcast_str="10.$second_octet.$range_octet.255"
-		# calculating range for defining subnets
-		third_range_octet=$(($third_octet | $(( ($num_hosts >> 8) & helper_number )) ))
-		end_range_str="$second_octet.$third_range_octet"
-	else
-		#calculating the octets for subnet IP addresses
-		remaining_bits=$subnet_bits
-		adjusted_subnet_octet $subnet_bits $i
-		second_octet=$?
-		#calculating the broadcast address
-		host_bits=$(( 8 - $subnet_bits ))
-	        helper_number=helper_numbers[$host_bits]
-        	range_octet=$(( $second_octet | helper_number))
-		broadcast_str="10.$range_octet.255.255"
-		#calculating range for defining subnets
-		third_range_octet=$(( ($num_hosts >> 8) & 255 ))
-		second_range_octet=$(( $second_octet | ( ($num_hosts >> 16) & helper_number) ))
-		end_range_str="$second_range_octet.$third_range_octet"
-	fi
-	forth_range_octet=$(( ($num_hosts & 255) + 1))
-	range_str="10.$second_octet.$third_octet.2 10.$end_range_str.$forth_range_octet"
-	final_subnet_string+=$(echo "$subnet_block$second_octet.$third_octet.$forth_octet netmask $subnet {\n\trange $range_str;\n\toption routers 10.$second_octet.$third_octet.1;\n\toption broadcast-address $broadcast_str;\n\toption subnet-mask $subnet;\n}\n\n")
-	final_interfaces_string+="auto vlan$vlan_tag\niface vlan$vlan_tag inet static\n\taddress 10.$second_octet.$third_octet.1\n\tnetmask $subnet\n\n"
-	final_ovs_string+="ovs-vsctl add-br vlan$vlan_tag br0 $vlan_tag\n"
-	final_trunk_string+=$(echo "$vlan_tag")
-	if test $i -ne $(($NUMBER_OF_VLANS-1)); then
-		final_trunk_string+=","
-	fi
-	PORTGROUP_STRING+="<portgroup name=\'vlan$vlan_tag\'>\\\n\\\t<vlan><tag id=\'$vlan_tag\'\/><\/vlan>\\\n<\/portgroup>\\\n"
-	VLANS+="vlan$vlan_tag "
-done
-
-touch /var/www/ovs-postup.sh
-echo -e "$final_ovs_string\novs-vsctl set port eth0 trunk=$final_trunk_string" > /var/www/ovs-postup.sh
-chmod u+x /var/www/ovs-postup.sh
-/var/www/ovs-postup.sh 
-
-echo -e "$final_interfaces_string" >> /etc/network/interfaces
-/etc/init.d/networking restart
-
-VLANS=$(echo ${VLANS:0:-1})
-
-echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
-sed -i -e 's/option\ domain-name\ /#\ option\ domain-name\ /g' /etc/dhcp/dhcpd.conf
-sed -i -e 's/ns1.example.org,\ ns2.example.org/'"$CONTROLLER_IP"'/g' /etc/dhcp/dhcpd.conf
-sed -i -e 's/INTERFACES=\"\"/INTERFACES=\"br0 '"$VLANS"'\"/g' /etc/default/isc-dhcp-server
-
-/etc/init.d/isc-dhcp-server restart
-
-
-# Host ubuntu ISO, local repository and other files in www directory for host PXE boot and installation
-#create link for ubuntu iso in www for PXE boot
-ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
-
-echo "portgroups $PORTGROUP_STRING"
-cp $BASE_PATH/ks.cfg  /var/www/ks.cfg
-sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/ks.cfg
-cp $BASE_PATH/interfaces_file /var/www/interfaces_file
-echo -e $final_interfaces_string >> /var/www/interfaces_file
-cp $BASE_PATH/sources.list /var/www/sources.list
-sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/sources.list
-
-cp $BASE_PATH/host_installation.sh /var/www/.
-sed -i -e 's/PORTGROUPS/'"$PORTGROUP_STRING"'/g' /var/www/host_installation.sh
-sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/host_installation.sh
-sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' /var/www/host_installation.sh
-}
 
 #creating local ubuntu repo for precise(12.04)
 Configure_Local_Ubuntu_Repo()
 {
 
-if test $LOCAL_REPO_FLAG -eq 1; then
+if test $INSTALL_LOCAL_UBUNTU_REPO -eq 1; then
 	mkdir -p /var/local_rep/var
-	cp postmirror.sh /var/local_rep/var/.
-	sed -i -e 's/^/#/g' /etc/apt/mirror.list
-	echo -e "set base_path\t/var/local_rep\nset nthreads\t5\nset _tilde 0\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-proposed main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-updates main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-security main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse\ndeb-amd64 http://repo.iitd.ernet.in/ubuntu precise-backports main restricted universe multiverse\ndeb-i386 http://repo.iitd.ernet.in/ubuntupartner precise partner\ndeb-amd64 http://repo.iitd.ernet.in/ubuntupartner precise partner" >> /etc/apt/mirror.list
+	cp /var/local_rep/var/postmirror.sh /var/local_rep/var/postmirror.sh.bak
+	cp $LOCAL_REPO_SETUP_FILES_PATH/postmirror.sh /var/local_rep/var/.
+	cp /etc/apt/mirror.list /etc/apt/mirror.list.bak
+	cp $LOCAL_REPO_SETUP_FILES_PATH/mirror.list /etc/apt/mirror.list
+	sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $LOCAL_REPO_SETUP_FILES_PATH/mirror.list
 	apt-mirror
 
 	#create link for local repositories in www for making them accessible
-	ln -s ../local_rep/mirror/repo.iitd.ernet.in/ubuntu/ /var/www/ubuntu
-	ln -s ../local_rep/mirror/repo.iitd.ernet.in/ubuntupartner/ /var/www/ubuntupartner
+	ln -s ../local_rep/mirror/$EXTERNAL_REPO_IP/ubuntu/ /var/www/ubuntu
+	ln -s ../local_rep/mirror/$EXTERNAL_REPO_IP/ubuntupartner/ /var/www/ubuntupartner
 
 fi
 
@@ -587,7 +396,7 @@ Enbl_Modules()
 	a2enmod expires
 
 	shopt -s nocasematch
-	case $database_type in
+	case $DB_TYPE in
 		
 		mysql) /etc/init.d/mysql restart
 
@@ -597,17 +406,17 @@ Enbl_Modules()
 					exit 1
 			    fi
 
-			    if [ -d /var/lib/mysql/$mysql_database_name ] ; then
-			    	echo "$mysql_database_name already exists!!!"
-			    	echo "Please remove the $mysql_database_name database and restart the installation process..."
+			    if [ -d /var/lib/mysql/DB_NAME ] ; then
+			    	echo "$DB_NAME already exists!!!"
+			    	echo "Please remove the $DB_NAME database and restart the installation process..."
 			  		echo "EXITING INSTALLATION......................................"
 					exit 1
 			    fi
 
-			    echo "Creating Database $mysql_database_name......................"
+			    echo "Creating Database $DB_NAME......................"
 
 
-				mysql -uroot -p$mysql_password -e "create database $mysql_database_name" 2> temp
+				mysql -uroot -p$MYSQL_ROOT_PASSWD -e "create database $DB_NAME" 2> temp
 
 				if test $? -ne 0;then
 					cat temp					
@@ -615,7 +424,7 @@ Enbl_Modules()
 					rm -rf temp	
 
 					if test $is_valid_paswd -ne 0; then
-						echo "INVALID MYSQL PASSWORD!!!!"				    
+						echo "INVALID MYSQL ROOT PASSWORD!!!!"				    
 					else
 						break
 					fi
@@ -625,9 +434,9 @@ Enbl_Modules()
 					exit 1						
 				fi					
 	esac
+
 	
-	Configure_Tftp
-	Configure_Dhcp_Pxe
+	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
 
 }
 
@@ -664,7 +473,7 @@ Rewrite_Apache_Conf()
 
 		<VirtualHost *:80>
 		  DocumentRoot /var/www
-                  Redirect permanent /(baadal|admin).* https://10.208.21.111%{REQUEST_URI}   
+                  Redirect permanent /(baadal|admin).* https://$CONTROLLER_IP%{REQUEST_URI}   
 		</VirtualHost>
 
 		<VirtualHost *:443>
@@ -702,6 +511,11 @@ Rewrite_Apache_Conf()
 		' > /etc/apache2/sites-available/default
 
 	echo "Restarting Apache................................................"
+
+
+	mkdir /var/www/baadal/
+	touch /var/www/baadal/index.html
+	echo "<meta http-equiv='Refresh' content='0;URL=https://$CONTROLLER_IP/baadal/' />" > /var/www/baadal/index.html
 	
 	/etc/init.d/apache2 restart
 	if test $? -ne 0; then
@@ -711,6 +525,83 @@ Rewrite_Apache_Conf()
 		exit 1
 	fi
 	
+}
+
+Configure_Tftp()
+{
+
+
+mkdir -p $TFTP_DIR
+sed -i -e 's/^/^#/g' /etc/default/tftpd-hpa
+echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" >> /etc/default/tftpd-hpa
+/etc/init.d/tftpd-hpa restart
+
+# tftpd-hpa is called from inetd. The options passed to tftpd-hpa when it starts are thus found in /etc/inetd.conf
+echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-s\t$TFTP_DIR" >> /etc/inetd.conf
+/etc/init.d/inetutils-inetd restart
+
+
+#configure tftp server for pxe boot
+if test $TFTP_MOUNT_FLAG -eq 1; then
+        mkdir $TFTP_DIR/ubuntu
+        mount $ISO_LOCATION $TFTP_DIR/ubuntu
+        cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
+        cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
+        mkdir $TFTP_DIR/pxelinux.cfg
+        touch $TFTP_DIR/pxelinux.cfg/default
+        echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
+        touch $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> $TFTP_DIR/mybootmenu.cfg
+
+        cp $PXE_SETUP_FILES_PATH/libvirt-1.0.0.tar.gz $TFTP_DIR/libvirt-1.0.0.tar.gz
+        ln -s $TFTP_DIR/libvirt-1.0.0.tar.gz /var/www/libvirt-1.0.0.tar.gz
+fi
+
+/etc/init.d/tftpd-hpa restart
+/etc/init.d/inetutils-inetd restart
+
+echo "tftp is configured."
+
+}
+
+Configure_Dhcp_Pxe()
+{
+
+        subnet="255.255.255.0"
+        num_hosts=$NUMBER_OF_HOSTS
+        end_range=$(( $num_hosts + 1 ))
+        final_subnet_string=""
+				VLANS=""
+        for ((i=0;i<$NUMBER_OF_VLANS;i++))
+        do
+		j=$(($i + 1))
+                if test $i -eq 0;then
+			final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range;\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
+                fi
+
+                final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range\n\toption routers $STARTING_IP_RANGE.$i.1\n\toption broadcast-address $STARTING_IP_RANGE.$i.255\n\toption subnet-mask $subnet\n}\n\n"
+		if test $j -ge 2; then
+			VLANS+="vlan$j,"
+		fi
+        done
+        echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
+
+
+	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
+	cp $PXE_SETUP_FILES_PATH/sources.list /var/www/sources.list
+	sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' /var/www/sources.list
+
+	cp $PXE_SETUP_FILES_PATH/ks.cfg  /var/www/ks.cfg
+	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/ks.cfg
+
+	VLANS=$(echo ${VLANS:0:-1})
+	cp $PXE_SETUP_FILES_PATH/host_installation.sh /var/www/.
+	sed -i -e 's/NETWORK_GATEWAY_IP/'"$NETWORK_GATEWAY_IP"'/g' /var/www/host_installation.sh
+	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/host_installation.sh
+	sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' /var/www/host_installation.sh
+	sed -i -e 's/NFS_MOUNT_POINT/'"$LOCAL_MOUNT_POINT"'/g' /var/www/host_installation.sh
+	sed -i -e 's/FILER_IP/'"$STORAGE_SERVER_IP"'/g' /var/www/host_installation.sh
+	sed -i -e 's/FILER_DIRECTORY/'"$STORAGE_DIRECTORY"'/g' /var/www/host_installation.sh
 }
 
 
@@ -737,33 +628,29 @@ Start_Web2py()
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
 	sudo -u www-data python -c "from gluon.widget import console; console();"
-	sudo -u www-data python -c "from gluon.main import save_password; save_password(\"$web2py_password\",443)"
+	sudo -u www-data python -c "from gluon.main import save_password; save_password(\"$WEB2PY_PASSWD\",443)"
+	cd -
 
-	python /home/www-data/web2py/web2py.py -K  baadal &
+	su - www-data -c 'python /home/www-data/web2py/web2py.py -K  baadal &'
 
 }
 
 
-
-
-################################ SCRIPT ########################################
+##############################################################################################################################
 
 #Including Config File to the current script
-. ./installation.cfg 2>> /dev/null
 
 Chk_Root_Login
-
-Configure_Local_Ubuntu_Repo
-
-apt-get update
-apt-get -y upgrade
-
+Chk_Gateway
 Instl_Pkgs
 Setup_Web2py
+Setup_Baadalapp
+Configure_Local_Ubuntu_Repo
 Enbl_Modules
 Create_SSL_Certi
 Rewrite_Apache_Conf
+Configure_Tftp
+Configure_Dhcp_Pxe
 Start_Web2py
 
-#####################################################################################
-#####################################################################################
+

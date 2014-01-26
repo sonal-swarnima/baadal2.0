@@ -1,4 +1,8 @@
+#!/bin/bash
+
 Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm  python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay cgroup-bin libpciaccess-dev)
+
+############################################################################################################################
  
 Chk_Root_Login()
 {
@@ -10,6 +14,18 @@ Chk_Root_Login()
 	fi
 
 	echo "User Logged in as Root............................................"
+}
+
+#Function to check whther the network gateway is pingable or not
+Chk_Gateway()
+{
+        ping -q -c5 NETWORK_GATEWAY_IP > /dev/null
+
+        if test $? -ne 0;then
+                echo "NETWORK GATEWAY IS NOT REACHABLE!!!"
+                exit 1
+        fi
+
 }
 
 
@@ -72,9 +88,11 @@ Enbl_Modules()
 	/etc/init.d/libvirt-bin restart
 	
 	mkdir -p NFS_MOUNT_POINT
-	mount FILER_IP:FILER_DIRECTORY NFS_MOUNT_POINT
+	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
 	echo "If you have done all the steps correctly, Congo!!!"
 }
+
+############################################################################################################################
 
 #MAIN SCRIPT 
 
@@ -82,6 +100,8 @@ FLAG="/var/log/firstboot.log"
 if [ ! -f $FLAG ]; then
 	echo "this is our first boot script"
 	apt-get update && apt-get -y upgrade
+	Chk_Root_Login	
+	Chk_Gateway
 	Instl_Pkgs
 	Enbl_Modules
 	touch $FLAG
