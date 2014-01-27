@@ -24,13 +24,13 @@ function remaster_ubuntu
   echo en >isolinux/lang
 
   cp $kickstart ks.cfg
-  #cp ../ks.preseed .
  
   cp -R $transfer transfer
 
   sed -i 's:--:ks=cdrom\:/ks.cfg --:g' isolinux/txt.cfg
   sed -i 's:^.*timeout.*$:timeout 10:g' isolinux/isolinux.cfg
-  sed -i '1id-i netcfg/disable_autoconfig boolean true' preseed/ubuntu-server.seed
+  sed -i '1id-i netcfg/dhcp_failed note' preseed/ubuntu-server.seed
+  sed -i '1id-i netcfg/dhcp_options select Configure network manually' preseed/ubuntu-server.seed
 
   cd ..
   rm -f $iso_out

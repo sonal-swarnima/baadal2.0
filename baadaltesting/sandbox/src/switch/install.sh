@@ -13,15 +13,25 @@ function run
 	ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
   ovsvsctl_add_br_force $OVS_BRIDGE_INTERNAL
 
+  ovsvsctl_set_port $OVS_BRIDGE_INTERNAL "tag=1"
+
+  ifconfig $OVS_ETHERNET 0
+  dhclient $OVS_BRIDGE_EXTERNAL 2>/dev/null
+
+  ifconfig_ip $OVS_BRIDGE_INTERNAL $NETWORK_INTERNAL_IP_SANDBOX 255.255.0.0 
+
 	mv /etc/network/interfaces /etc/network/interfaces.bak
 
 	cp $OVS_EXTERNAL_CUSTOM_IFS /etc/network/interfaces
-	#/etc/init.d/networking restart
 
+  virsh_force "net-destroy $OVS_NET_INTERNAL"
+  virsh_force "net-undefine $OVS_NET_INTERNAL"
 	virsh_force "net-define $OVS_NET_XML_INTERNAL"
 	virsh_force "net-start $OVS_NET_INTERNAL"
 	virsh_run "net-autostart $OVS_NET_INTERNAL"
 
+  virsh_force "net-destroy $OVS_NET_EXTERNAL"
+  virsh_force "net-undefine $OVS_NET_EXTERNAL"
 	virsh_force "net-define $OVS_NET_XML_EXTERNAL"
 	virsh_force "net-start $OVS_NET_EXTERNAL"
 	virsh_run "net-autostart $OVS_NET_EXTERNAL"
