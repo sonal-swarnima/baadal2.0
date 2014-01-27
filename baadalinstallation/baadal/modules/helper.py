@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 
-import os
-import re
+import os, re, random
 from gluon import current
 from gluon.validators import Validator
 
@@ -42,20 +41,24 @@ def get_constant(constant_name):
     constant = current.db(current.db.constants.name == constant_name).select().first()['value']
     return constant
 
-def update_value(constant_name, constant_value):
+def update_constant(constant_name, constant_value):
     current.db(current.db.constants.name == constant_name).update(value = constant_value)
     return 
 
-def get_fullname(user_id):
-    user = current.db.user[user_id]
-    if user :
-        return user.first_name + ' ' + user.last_name
-        
-def get_email(user_id):
-    user = current.db.user[user_id]
-    if user:
-        return user.email
-    
+def execute_remote_cmd(machine_ip, user_name, command):
+
+    import paramiko
+
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(machine_ip, username = user_name)
+    stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
+    output = stdout.readlines()
+    if stderr.readlines():
+        raise
+    return output[0]
+
+
 def is_valid_ipv4(value):
     regex = re.compile(
         '^(([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])\.){3}([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])$')
@@ -68,9 +71,50 @@ def validate_ip_range(ipFrom, ipTo):
         ip2 = ipTo.split('.')
         if ip1[0] == ip2[0] and ip1[1] == ip2[1] and ip1[2] == ip2[2] and int(ip1[3]) < int(ip2[3]):
             return True
-
     return False
+
+#Get List of IPs in a validated IP range
+def get_ips_in_range(ipFrom, ipTo):
     
+    ip_addr_lst = []
+    ip1 = ipFrom.split('.')
+    ip2 = ipTo.split('.')
+    idx =  - (len(ip1[3]))
+    subnet = str(ipFrom[:idx])
+    for x in range(int(ip1[3]), int(ip2[3])+1):
+        ip_addr_lst.append(subnet + str(x))
+    return ip_addr_lst
+
+
+# Generates MAC address
+def generate_random_mac():
+    MAC_GEN_FIRST_BIT=0xa2
+    MAC_GEN_FIXED_BITS=3
+    
+    mac = [MAC_GEN_FIRST_BIT]
+    i = 1
+    while i <  MAC_GEN_FIXED_BITS:
+        mac.append(0x00)
+        i += 1
+    while i <  6:    
+        mac.append(random.randint(0x00, 0xff))
+        i += 1
+    return (':'.join(map(lambda x: "%02x" % x, mac))).upper()
+    
+def create_dhcp_entry(host_name, mac_addr, ip_addr):
+
+    config = get_config_file()
+    dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
+    entry_cmd = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
+    restart_cmd = '/etc/init.d/isc-dhcp-server restart'
+    
+    if dhcp_ip == 'localhost':
+        os.system(entry_cmd)
+        os.system(restart_cmd)
+    else:
+        execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
+        execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
+
 class IS_MAC_ADDRESS(Validator):
     
     regex = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')

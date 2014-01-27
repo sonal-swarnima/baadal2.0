@@ -141,7 +141,7 @@ def choose_mac_ip_vncport(vm_properties):
 
     count = int(get_constant('vmcount')) 
     vm_properties['vnc_port'] = str(int(get_constant('vncport_range')) + count)
-    update_value('vmcount', count + 1)
+    update_constant('vmcount', count + 1)
     
 
 # Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
@@ -205,31 +205,37 @@ def create_vm_image(vm_details, datastore):
     # Finds the location of template image that the user has requested for its vm.               
     template = current.db(current.db.template.id == vm_details.template_id).select()[0]
     template_location = get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + template.hdfile
+    vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity + '/' + \
+                        vm_details.vm_identity + '.qcow2'
             
     # Copies the template image from its location to new vm directory
-    """
-    command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + \ 
-                          datastore.path + '/' + get_constant("templates_dir") + '/tmp'
-    """
-    vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
-
-    current.logger.debug("Copy in progress...")
-    rcode = os.system('cp %s %s' % (template_location, vm_image_location))
-    if rcode != 0:
-        current.logger.error("Unsuccessful in copying image...")
-        raise Exception("Unsuccessful in copying image...")
+    if get_constant('storage_type') == STORAGE_NETAPP_NFS:
+        command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + \ 
+                              datastore.path + '/' + get_constant('vms') + '/' + vm_details.vm_identity + '/' + \  
+                              vm_details.vm_identity + '.qcow2'
+        current.logger.debug("Copy in progress (storage type =  netapp_nfs)...")
+        exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+        current.logger.debug("Copied successfully.")
+    else:
+        current.logger.debug("Copy in progress (storage_type = linux_nfs)...")
+        rcode = os.system('cp %s %s' % (template_location, vm_image_location))
+        if rcode != 0:
+            current.logger.error("Unsuccessful in copying image...")
+            raise Exception("Unsuccessful in copying image...")
+	else:
+            current.logger.debug("Copied successfully.")
 
     return (template, vm_image_location)
 
 # Determines an install command for vm
 def get_install_command(vm_details, vm_image_location, vm_properties):
 
-    bus = ''    
     template = vm_properties['template']
+    bus = ',bus=virtio'     
     optional = ' --import --os-type=' + template.os_type
     if (template.arch != 'amd64' and template.os_type == 'Linux'):
         optional = optional + ' --arch=' + template.arch + ' '
-        bus = ',bus=virtio'
+        
     
     format_command = ''
     if (template.type == 'QCOW2'):
@@ -238,6 +244,7 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
     variant_command = ''
     if (template.os_type == 'Windows'):
         variant_command = ' --os-variant=' + template.arch 
+        bus = ''
     
     install_command = 'virt-install \
                      --name=' + vm_details.vm_identity + ' \
@@ -411,12 +418,11 @@ def create_NAT_IP_mapping(action, public_ip, private_ip):
     config = get_config_file()
     nat_ip = config.get("GENERAL_CONF","nat_ip")
     nat_user = config.get("GENERAL_CONF","nat_user")
-    nat_password = config.get("GENERAL_CONF","nat_password")
     nat_script = config.get("GENERAL_CONF","nat_script_path")
     
     command = "sh %s %s %s %s"%(nat_script, action, public_ip, private_ip)
     
-    exec_command_on_host(nat_ip, nat_user, command, nat_password)
+    exec_command_on_host(nat_ip, nat_user, command)
     
     
 # Installs a vm
@@ -450,8 +456,6 @@ def install(parameters):
 
             message = "VM is installed successfully." + attach_disk_status_message
 
-            #send email to requesting user on successful VM creation
-            #send_email_for_vm_creation(vm_details.requester_id, vm_details.vm_identity, vm_details.start_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:            
@@ -569,7 +573,7 @@ def vm_has_snapshots(vm_id):
 # Deletes all vm snapshots
 def delete_vm_snapshots(vmid, domain):
 
-    try:    
+    try:
         for row in current.db(current.db.snapshot.vm_id == vmid).select(current.db.snapshot.snapshot_name) :
             current.logger.debug(row.snapshot_name)
             snapshot = domain.snapshotLookupByName(row.snapshot_name, 0)

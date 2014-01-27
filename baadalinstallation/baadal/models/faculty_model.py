@@ -43,6 +43,7 @@ def get_edit_pending_request_form(request_id):
         db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
         _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(edit_req.requester_id.organisation_id))
         db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
+        db.request_queue.HDD.writable=False
 
         if edit_req.request_type == TASK_TYPE_EDITCONFIG_VM:
             form_fields.extend(['RAM', 'vCPU', 'security_domain', 'public_ip'])

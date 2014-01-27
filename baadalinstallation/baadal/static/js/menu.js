@@ -68,5 +68,9 @@
     }
     
     function tab_refresh(){
-    	$.cookie('tab_index',$("#tabs-task").tabs('option', 'active'));
+    	set_tab_cookie($("#tabs-task").tabs('option', 'active'));
+    }
+
+    function set_tab_cookie(tab_idx){
+    	$.cookie('tab_index', tab_idx);
     }

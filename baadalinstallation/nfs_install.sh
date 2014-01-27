@@ -12,7 +12,7 @@ mkdir /var/nfs/
 chown nobody:nogroup /var/nfs
 
 # Configuration of exporting directory
-echo -e "/var/nfs 10.0.0.0/13(rw,fsid=0,no_subtree_check,sync)" >> /etc/exports
+echo -e "/var/nfs 10.0.0.0/13(rw,no_subtree_check,sync,no_root_squash)" >> /etc/exports
 exportfs -a
 
 # Restart services
