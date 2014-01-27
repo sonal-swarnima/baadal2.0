@@ -13,7 +13,7 @@ function run
   hostname="$(uname -n)"
   if [ "$hostname" != "$NAT_HOSTNAME" ]
   then
-    $ECHO_ER Hostname not found equal to $NAT_NAME. This script should be run on NAT.
+    $ECHO_ER Hostname not found equal to $NAT_HOSTNAME. This script should be run on NAT.
     $ECHO_ER Please correct the hostname or check the underlying system before running.
     exit 1
   fi

@@ -3,8 +3,6 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
-  package_install virtinst
-  package_install virt-manager
   disk_create $HOST_DISK ${HOST_SPACE}G
 
   $ECHO_PROGRESS Installing OS

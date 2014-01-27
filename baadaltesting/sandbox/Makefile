@@ -33,6 +33,7 @@ BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_NAT_SETUP = $(BIN_DIR)/nat-setup.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
+BIN_HOST_SETUP = $(BIN_DIR)/host-setup.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
   
@@ -126,10 +127,10 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
   
 $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
   
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
@@ -154,6 +155,9 @@ nat-setup: $(BIN_NAT_SETUP)
 
 host: $(BIN_HOST)
 	sudo HOST_ID=$(HOST_ID) $<
+
+host-setup: $(BIN_HOST_SETUP)
+	@ sudo $<
   
 switch: $(BIN_SWITCH)
 	@ sudo $<
@@ -175,6 +179,12 @@ controller-transfer: $(BAADAL_TRANSFER_TAR)
 $(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/nat-setup.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
+
+$(BIN_HOST_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/host $(SRC_DIR)/host/*
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/host-setup.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
