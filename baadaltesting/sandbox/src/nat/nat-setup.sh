@@ -52,7 +52,21 @@ function run
   iptables_run "-t nat --flush"
   iptables_run "--delete-chain"
   iptables_run "-t nat --delete-chain"
-  iptables_run "--append FORWARD --in-interface $NAT_EXTERNAL_INTERFACE -j ACCEPT"
+  iptables_run "-t nat -A POSTROUTING -o $NAT_EXTERNAL_INTERFACE -j MASQUERADE"
+
+  echo "net.ipv4.ip_forward = 1" > /etc/sysctl.conf
+  echo 1 > /proc/sys/net/ipv4/ip_forward
+
+  $ECHO_PROGRESS "Saving iptables"
+  /etc/init.d/iptables-persistent save 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER iptables-persistent save failed. Check logs.
+    exit 1
+  else
+    $ECHO_OK iptables-persistent save
+  fi
 
   trunk_str=""
   ovs_str=""
@@ -77,7 +91,6 @@ function run
     do
       ovsvsctl_add_fake_br_force vlan$i $OVS_NAT_BRIDGE $i
       ifconfig_ip vlan$i $baseaddr.$i.0 $VLAN_NETMASK
-      iptables_run "--table nat --append POSTROUTING --out-interface vlan$i -j MASQUERADE"
       interfaces_str+="\n
       auto vlan$i\n
       iface vlan$i inet static\n
@@ -93,15 +106,4 @@ function run
 
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
-
-  $ECHO_PROGRESS "Saving iptables"
-  /etc/init.d/iptables-persistent save 1>>$LOGS/log.out 2>>$LOGS/log.err
-  status=$?
-
-  if [[ $status -ne 0 ]]; then
-    $ECHO_ER iptables-persistent save failed. Check logs.
-    exit 1
-  else
-    $ECHO_OK iptables-persistent save
-  fi
 }
