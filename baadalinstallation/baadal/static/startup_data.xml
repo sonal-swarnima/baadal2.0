@@ -7,8 +7,7 @@
 	</table>
 	
 	<table name="organisation">
-		<row id="1" name="IITD" details="Indian Institude of Technology, Delhi"/>
-		<row id="2" name="IITB" details="Indian Institude of Technology, Mumbai"/>
+		<row id="1" name="Admin" details="Dummy Organisation for Admin"/>
 	</table>
 	
 	<table name="vm_config">
@@ -30,107 +29,14 @@
 		<row name="archives_dir" value="vm_archives"/>
 		<row name="vmcount" value="1"/>
 		<row name="vm_rrds_dir" value="vm_rrds"/>
-		<row name="graph_file_dir" value="/home/www-data/web2py/applications/baadal/static/images/vm_graphs/"/>
+		<row name="graph_file_dir" value="/images/vm_graphs/"/>
 		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
 		<row name="vms" value="/vms"/>
-	</table>
-
-	<table name="public_ip_pool">
-		<row public_ip="10.208.21.74"/>
-		<row public_ip="10.208.21.75"/>
-		<row public_ip="10.208.21.76"/>
-		<row public_ip="10.208.21.77"/>
-		<row public_ip="10.208.21.78"/>
-		<row public_ip="10.208.21.79"/>
-		<row public_ip="10.208.21.80"/>
-		<row public_ip="10.208.21.81"/>
-		<row public_ip="10.208.21.82"/>
-		<row public_ip="10.208.21.83"/>
-		<row public_ip="10.208.21.84"/>
-		<row public_ip="10.208.21.85"/>
-		<row public_ip="10.208.21.86"/>
-		<row public_ip="10.208.21.87"/>
-		<row public_ip="10.208.21.88"/>
-		<row public_ip="10.208.21.89"/>
-		<row public_ip="10.208.23.61"/>
-		<row public_ip="10.208.23.62"/>
-		<row public_ip="10.208.23.63"/>
-		<row public_ip="10.208.23.64"/>
-		<row public_ip="10.208.23.65"/>
-		<row public_ip="10.208.23.66"/>
-		<row public_ip="10.208.23.67"/>
-		<row public_ip="10.208.23.68"/>
-		<row public_ip="10.208.23.69"/>
-		<row public_ip="10.208.23.70"/>
-	</table>
-
-	<table name="vlan">
-		<row id="1" name="VLAN10" vlan_tag="vlan10" vlan_addr="10.20.10.0" />
-		<row id="2" name="VLAN20" vlan_tag="vlan20" vlan_addr="10.20.20.0" />
-		<row id="3" name="VLAN30" vlan_tag="vlan30" vlan_addr="10.20.30.0" />
-		<row id="4" name="VLAN40" vlan_tag="vlan40" vlan_addr="10.20.40.0" />
-	</table>
-
-	<table name="private_ip_pool">
-		<row private_ip="10.20.10.11" mac_addr="54:52:00:01:17:01" vlan="1"/>
-		<row private_ip="10.20.10.12" mac_addr="54:52:00:01:17:02" vlan="1"/>
-		<row private_ip="10.20.10.13" mac_addr="54:52:00:01:17:03" vlan="1"/>
-		<row private_ip="10.20.10.14" mac_addr="54:52:00:01:17:04" vlan="1"/>
-		<row private_ip="10.20.10.15" mac_addr="54:52:00:01:17:05" vlan="1"/>
-		<row private_ip="10.20.10.16" mac_addr="54:52:00:01:17:06" vlan="1"/>
-		<row private_ip="10.20.10.17" mac_addr="54:52:00:01:17:07" vlan="1"/>
-		<row private_ip="10.20.10.18" mac_addr="54:52:00:01:17:08" vlan="1"/>
-		<row private_ip="10.20.10.19" mac_addr="54:52:00:01:17:09" vlan="1"/>
-		<row private_ip="10.20.10.20" mac_addr="54:52:00:01:17:10" vlan="1"/>
-		<row private_ip="10.20.20.11" mac_addr="54:52:00:01:17:11" vlan="2"/>
-		<row private_ip="10.20.20.12" mac_addr="54:52:00:01:17:12" vlan="2"/>
-		<row private_ip="10.20.20.13" mac_addr="54:52:00:01:17:13" vlan="2"/>
-		<row private_ip="10.20.20.14" mac_addr="54:52:00:01:17:14" vlan="2"/>
-		<row private_ip="10.20.20.15" mac_addr="54:52:00:01:17:15" vlan="2"/>
-		<row private_ip="10.20.20.16" mac_addr="54:52:00:01:17:16" vlan="2"/>
-		<row private_ip="10.20.20.17" mac_addr="54:52:00:01:17:17" vlan="2"/>
-		<row private_ip="10.20.20.18" mac_addr="54:52:00:01:17:18" vlan="2"/>
-		<row private_ip="10.20.20.19" mac_addr="54:52:00:01:17:19" vlan="2"/>
-		<row private_ip="10.20.20.20" mac_addr="54:52:00:01:17:20" vlan="2"/>
-		<row private_ip="10.20.30.11" mac_addr="54:52:00:01:17:21" vlan="3"/>
-		<row private_ip="10.20.30.12" mac_addr="54:52:00:01:17:22" vlan="3"/>
-		<row private_ip="10.20.30.13" mac_addr="54:52:00:01:17:23" vlan="3"/>
-		<row private_ip="10.20.30.14" mac_addr="54:52:00:01:17:24" vlan="3"/>
-		<row private_ip="10.20.30.15" mac_addr="54:52:00:01:17:25" vlan="3"/>
-		<row private_ip="10.20.30.16" mac_addr="54:52:00:01:17:26" vlan="3"/>
-		<row private_ip="10.20.30.17" mac_addr="54:52:00:01:17:27" vlan="3"/>
-		<row private_ip="10.20.30.18" mac_addr="54:52:00:01:17:28" vlan="3"/>
-		<row private_ip="10.20.30.19" mac_addr="54:52:00:01:17:29" vlan="3"/>
-		<row private_ip="10.20.30.20" mac_addr="54:52:00:01:17:30" vlan="3"/>
-		<row private_ip="10.20.40.11" mac_addr="54:52:00:01:17:31" vlan="4"/>
-		<row private_ip="10.20.40.12" mac_addr="54:52:00:01:17:32" vlan="4"/>
-		<row private_ip="10.20.40.13" mac_addr="54:52:00:01:17:33" vlan="4"/>
-		<row private_ip="10.20.40.14" mac_addr="54:52:00:01:17:34" vlan="4"/>
-		<row private_ip="10.20.40.15" mac_addr="54:52:00:01:17:35" vlan="4"/>
-		<row private_ip="10.20.40.16" mac_addr="54:52:00:01:17:36" vlan="4"/>
-		<row private_ip="10.20.40.17" mac_addr="54:52:00:01:17:37" vlan="4"/>
-		<row private_ip="10.20.40.18" mac_addr="54:52:00:01:17:38" vlan="4"/>
-		<row private_ip="10.20.40.19" mac_addr="54:52:00:01:17:39" vlan="4"/>
-		<row private_ip="10.20.40.20" mac_addr="54:52:00:01:17:40" vlan="4"/>
 	</table>
 
 	<table name="security_domain">
 		<row id="1" name="Private" vlan="1" visible_to_all="False" />
 		<row id="2" name="Research" vlan="2" visible_to_all="True" />
-		<row id="3" name="IITD_SD" vlan="3" visible_to_all="False" org_visibility="1" />
-		<row id="4" name="IITB_SD" vlan="4" visible_to_all="False" org_visibility="2" />
-	</table>
-
-	<table name="datastore">
-		<row id="1" ds_name="filer" ds_ip="10.208.21.111" path="/vol/baadalcse_test" username="root" password="dummy" used="1" capacity="1024"/>
-	</table>
-
-	<table name="template">
-		<row name="ubuntu-1204-desktop-amd64" os_type="Linux" arch="amd64" hdd="25" hdfile="ubuntu-1204-desktop-amd64.qcow2" type="QCOW2" datastore_id="1"/>
-	</table>
-
-	<table name="user">
-		<row id="-1" first_name="System" last_name="User" email="systemsupport@tmp.edu" username="system" registration_id="system"/>
 	</table>
 
 </dataset>

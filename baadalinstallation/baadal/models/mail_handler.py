@@ -8,7 +8,7 @@ if 0:
     global mail; auth = gluon.tools.Mail()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_fullname, get_config_file, get_email
+from helper import get_config_file
 
 config = get_config_file()
 
@@ -45,46 +45,45 @@ def push_email(to_address, email_subject, email_message, reply_to_address):
 
 def send_email(to_address, email_subject, email_template, context):
     
-    email_message = email_template.format(context)
-    reply_to_address = config.get("MAIL_CONF","mail_noreply")
-
-    push_email(to_address, email_subject, email_message, reply_to_address)
+    if to_address != None:
+        email_message = email_template.format(context)
+        reply_to_address = config.get("MAIL_CONF","mail_noreply")
+    
+        push_email(to_address, email_subject, email_message, reply_to_address)
 
 
 def send_email_to_approver(approver_id, requester_id, request_type, request_time):
 
-    approver_email = get_email(approver_id)
-    if approver_email:
-        approver_name = get_fullname(approver_id)
-        requester_name = get_fullname(requester_id)
-        context = dict(approverName = approver_name, 
-                       userName = requester_name, 
-                       requestType = request_type, 
-                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
-        send_email(approver_email, APPROVAL_REMINDER_SUBJECT, APPROVAL_REMINDER_BODY, context)
+    approver_info = get_user_details(approver_id)
+    requester_name = get_full_name(requester_id)
+    context = dict(approverName = approver_info[0], 
+                   userName = requester_name, 
+                   requestType = request_type, 
+                   requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+    send_email(approver_info[1], APPROVAL_REMINDER_SUBJECT, APPROVAL_REMINDER_BODY, context)
 
 
 def send_email_to_requester(vm_name):
 
-    email_address = get_email(auth.user.id)
+    user_info = get_user_details(auth.user.id)
     context = dict(vmName = vm_name, 
-                   userName = (auth.user.first_name + ' ' + auth.user.last_name))
+                   userName = user_info[0])
 
-    send_email(email_address, VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
+    send_email(user_info[1], VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
     
 def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
 
     for vm_user in vm_users:
-        email_address = get_email(vm_user)
+        user_info = get_user_details(vm_user)
         context = dict(vmName = vm_name, 
-                       userName = get_fullname(vm_user),
+                       userName = user_info[0],
                        taskType = task_type,
                        requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
         if task_type == TASK_TYPE_CREATE_VM:
-            send_email(email_address, VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
+            send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
         else:
             subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
-            send_email(email_address, subject, TASK_COMPLETE_BODY, context)
+            send_email(user_info[1], subject, TASK_COMPLETE_BODY, context)
         
 
 def send_email_to_admin(email_subject, email_message, email_type):
@@ -94,7 +93,7 @@ def send_email_to_admin(email_subject, email_message, email_type):
         email_address = config.get("MAIL_CONF","mail_admin_request")
     if email_type == 'complaint':
         email_address = config.get("MAIL_CONF","mail_admin_complaint")
-    user_email_address = get_email(auth.user.id)
+    user_email_address = auth.user.email
     logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
-    push_email(email_address, email_subject, email_message,user_email_address)
+    push_email(email_address, email_subject, email_message, user_email_address)
 

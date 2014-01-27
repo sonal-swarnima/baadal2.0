@@ -85,6 +85,9 @@ def handle_vm_operation():
             session.flash = '%s request added to queue.' %task_type
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
+def delete_vm():
+    redirect(URL(r = request, f = 'handle_vm_operation', args = [TASK_TYPE_DELETE_VM, request.args(0)]))
+    
 @auth.requires_login()
 @handle_exception       
 def snapshot():

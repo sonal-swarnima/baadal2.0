@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import get_fullname, get_datetime, is_moderator, is_orgadmin, is_faculty
+from helper import get_datetime, is_moderator, is_orgadmin, is_faculty
 
 def get_vm_status(iStatus):
     vm_status_map = {
@@ -189,9 +189,22 @@ def add_to_cost(vm_id):
     db(db.vm_data.id == vm_id).update(start_time=get_datetime(),total_cost=totalcost)
     return totalcost
 
-def get_full_name(user_id):
-    return get_fullname(user_id) if user_id > 0 else 'System User'
+# Get user name and email
+def get_user_details(user_id):
+    if user_id < 0:
+        return ('System User',None)
+    else:
+        user = db.user[user_id]
+        if user :
+            return ((user.first_name + ' ' + user.last_name), user.email)
+        else:
+            return (None, None)
 
+
+def get_full_name(user_id):
+    return get_user_details(user_id)[0]
+    
+    
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked

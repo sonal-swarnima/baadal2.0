@@ -1,0 +1,15 @@
+set base_path	/var/local_rep
+set nthreads	5
+set _tilde 0
+deb-i386 http://EXTERNAL_REPO_IP/ubuntu precise main restricted universe multiverse
+deb-amd64 http://EXTERNAL_REPO_IP/ubuntu precise main restricted universe multiverse
+deb-i386 http://EXTERNAL_REPO_IP/ubuntu precise-proposed main restricted universe multiverse
+deb-amd64 http://EXTERNAL_REPO_IP/ubuntu precise-proposed main restricted universe multiverse
+deb-i386 http://EXTERNAL_REPO_IP/ubuntu precise-updates main restricted universe multiverse
+deb-amd64 http://EXTERNAL_REPO_IP/ubuntu precise-updates main restricted universe multiverse
+deb-i386 http://EXTERNAL_REPO_IP/ubuntu precise-security main restricted universe multiverse
+deb-amd64 http://EXTERNAL_REPO_IP/ubuntu precise-security main restricted universe multiverse
+deb-i386 http://EXTERNAL_REPO_IP/ubuntu precise-backports main restricted universe multiverse
+deb-amd64 http://EXTERNAL_REPO_IP/ubuntu precise-backports main restricted universe multiverse
+deb-i386 http://EXTERNAL_REPO_IP/ubuntupartner precise partner
+deb-amd64 http://EXTERNAL_REPO_IP/ubuntupartner precise partner

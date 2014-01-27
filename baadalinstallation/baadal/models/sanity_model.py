@@ -8,6 +8,7 @@ if 0:
 import libvirt
 from libvirt import *  # @UnusedWildImport
 from lxml import etree
+from helper import execute_remote_cmd
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,
@@ -39,7 +40,6 @@ def check_sanity():
         try:
             #Establish a read only remote connection to libvirtd
             #find out all domains running and not running
-            #Since it might result in an error add an exception handler
             conn = libvirt.openReadOnly('qemu+ssh://root@'+host.host_ip+'/system')
             domains=[]
             ids = conn.listDomainsID()
@@ -129,10 +129,11 @@ def delete_orhan_vm(vm_name, host_id):
 def add_orhan_vm(vm_name, host_id):
 
     host_details = db.host[host_id]
-    connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip + "/system")
+    connection_object = libvirt.openReadOnly("qemu+ssh://root@" + host_details.host_ip + "/system")
     domain = connection_object.lookupByName(vm_name)
     vm_state = domain.info()[0]
     vm_status = vm_state_map[vm_state]    
+    # Parse domain XML to get information about VM
     root = etree.fromstring(domain.XMLDesc(0))
 
     ram_elem = root.xpath('memory')[0]
@@ -157,12 +158,12 @@ def add_orhan_vm(vm_name, host_id):
     template_file = template_elem.attrib['file']
     
     command = "qemu-img info " + template_file + " | grep 'virtual size'"
-    ret = execute_command(host_details.host_ip, 'root',command) # Returns e.g. virtual size: 40G (42949672960 bytes)
+    ret = execute_remote_cmd(host_details.host_ip, 'root', command) # Returns e.g. virtual size: 40G (42949672960 bytes)
     hdd = int(ret[ret.index(':')+1:ret.index('G ')].strip())
 
     vm_id = db.vm_data.insert(
         vm_name = vm_name, 
-        vm_identity = ('system_'+ vm_name), 
+        vm_identity = (vm_name), 
         RAM = ram_in_gb,
         HDD = hdd,
         extra_HDD = 0,

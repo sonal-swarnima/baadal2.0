@@ -1,10 +1,10 @@
 {{extend 'layout.html'}}
 <div id="tabs-task">
 <ul>
-    <li><a href="#installTab">Install VM ({{=len(install_requests)}})</a></li>
-    <li><a href="#cloneTab">Clone VM ({{=len(clone_requests)}})</a></li>
-    <li><a href="#diskTab">Attach Disk ({{=len(disk_requests)}})</a></li>
-    <li><a href="#editTab">Edit Configuration ({{=len(edit_requests)}})</a></li>
+    <li><a href="#installTab", onclick="set_tab_cookie(0);">Install VM ({{=len(install_requests)}})</a></li>
+    <li><a href="#cloneTab", onclick="set_tab_cookie(1);">Clone VM ({{=len(clone_requests)}})</a></li>
+    <li><a href="#diskTab", onclick="set_tab_cookie(2);">Attach Disk ({{=len(disk_requests)}})</a></li>
+    <li><a href="#editTab", onclick="set_tab_cookie(3);">Edit Configuration ({{=len(edit_requests)}})</a></li>
 </ul>
 
 

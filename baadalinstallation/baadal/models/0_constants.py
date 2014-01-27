@@ -68,8 +68,15 @@ current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
 
 #NETWORK
-LIBVIRT_NETWORK='ovs-net'
-current.LIBVIRT_NETWORK=LIBVIRT_NETWORK
+LIBVIRT_NETWORK ='ovs-net'
+current.LIBVIRT_NETWORK = LIBVIRT_NETWORK
+
+#STORAGE
+STORAGE_NETAPP_NFS = 'netapp_nfs'
+STORAGE_LINUX_NFS = 'linux_nfs'
+
+current.STORAGE_NETAPP_NFS = STORAGE_NETAPP_NFS
+current.STORAGE_LINUX_NFS = STORAGE_LINUX_NFS
 
 #SNAPSHOTTING LIMIT
 SNAPSHOTTING_LIMIT = 3
@@ -111,5 +118,6 @@ VM_UTIL_24_HOURS = 1
 VM_UTIL_ONE_WEEK = 2
 VM_UTIL_ONE_MNTH = 3
 VM_UTIL_ONE_YEAR = 4
+
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

@@ -6,10 +6,53 @@
 <script>
 jQuery(document).ready(function(){
 	$('<span>Add New Private IP</span>').insertAfter($('.icon-plus'));
+    range_check();
+});
+
+jQuery('#private_ip_pool_range').click(function(){
     range_check()
 });
 
+function range_check() {
+	var _value=$('#private_ip_pool_range').is(':checked');
+	if (_value != undefined){
+		$('#private_ip_pool_rangeFrom').prop('disabled', !_value);
+		$('#private_ip_pool_rangeTo').prop('disabled', !_value);
+		$('#private_ip_pool_private_ip').prop('disabled', _value);
+		$('#private_ip_pool_mac_addr').prop('disabled', _value);
+	}
+}
+
 jQuery('form').submit(function(){
+	var _value=$('#private_ip_pool_range').is(':checked');
+	if (_value){
+		$('#private_ip_pool_private_ip').val('');
+		$('#private_ip_pool_mac_addr').val('');
+
+	    var add_ip_url = "{{=URL('validate_private_ip_range')}}";
+	    var rangeFrom = $('#private_ip_pool_rangeFrom').val();
+	    var rangeTo = $('#private_ip_pool_rangeTo').val();
+	    var vlan = $('#private_ip_pool_vlan').val();
+
+	    jQuery.post(add_ip_url, {rangeFrom:rangeFrom,rangeTo:rangeTo,vlan:vlan},
+	        function(result){
+	            if(result == '-1'){
+	                jQuery('.flash').html('Enter valid IP range!').slideDown();
+	            }else
+	            {
+					$('#private_ip_pool_rangeFrom').val('');
+					$('#private_ip_pool_rangeTo').val('');
+					if(result == '0'){
+		                jQuery('.flash').html('Success!').slideDown();
+					}else{
+		                jQuery('.flash').html(result + ' IP(s) from the range already present. Rest added successfully!').slideDown();
+					}
+	            }
+	        }
+	    );
+		return false;
+	}
 });
+
 
 </script>

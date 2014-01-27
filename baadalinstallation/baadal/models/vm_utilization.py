@@ -13,7 +13,7 @@ import time
 
 import rrdtool
 
-from helper import is_moderator, get_constant
+from helper import is_moderator, get_constant, get_context_path
 
 def get_rrd_file(vm_name):
 
@@ -78,9 +78,10 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
         rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2)
 
-    shutil.copy2(graph_file, get_constant('graph_file_dir'))
+    graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
+    shutil.copy2(graph_file, graph_file_dir)
 
-    if os.path.exists(get_constant('graph_file_dir') + os.sep + graph_file):
+    if os.path.exists(graph_file_dir + os.sep + graph_file):
         return True
     else:
         return False
