@@ -24,7 +24,9 @@ UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-al
 UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-server-amd64.iso
 UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-server-amd64.iso
 UBUNTU_SOURCE = $(UBUNTU_SERVER)
+
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
+LIBVIRT_FORCE = 
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
 
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
@@ -69,7 +71,7 @@ ubuntu: $(UBUNTU)
   
 libvirt: $(LIBVIRT)
 
-utils-get: ubuntu libvirt
+utils: ubuntu libvirt
 
 $(BAADAL_TRANSFER_TAR):
 	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
@@ -160,7 +162,7 @@ host-setup: $(BIN_HOST_SETUP)
 	@ sudo $<
   
 switch: $(BIN_SWITCH)
-	@ sudo $<
+	@ sudo LIBVIRT_FORCE=$$LIBVIRT_FORCE $<
   
 nat-transfer: $(BAADAL_TRANSFER_TAR)
 	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat

@@ -25,6 +25,7 @@ function run
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Controller vm creation error. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
   else
     $ECHO_OK Controller vm created
   fi

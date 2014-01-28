@@ -22,8 +22,9 @@ ECHO_PROGRESS="echo -e -n"
 ECHO_OK="echo -e \"\r\033[K[\e[0;32mOK\e[0m]\t"
 ECHO_ER="echo -e \"\r\033[K[\e[0;31mER\e[0m]\t"
 LOG_CLEAN="rm -f $LOGS/*"
+LOG_SIZE=10
 
-OVS_ETHERNET=eth0
+OVS_ETHERNET=wlan0
 
 #Update this in OVS_NET_XML too
 OVS_BRIDGE_INTERNAL=baadal-br-int

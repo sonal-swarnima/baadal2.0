@@ -43,8 +43,8 @@ function run
 function libvirt_install
 {
   VERSION=$(virsh --version 2>/dev/null)
-  if [[ $VERSION != "1.2.1" ]]; then
-    package_install libpciaccess-dev
+  echo LIBVIRT_FORCE ${LIBVIRT_FORCE}
+  if [[ $VERSION != "1.2.1" || ${LIBVIRT_FORCE} == "yes" ]]; then
     package_install libxml2-dev
     package_install libgnutls-dev
     package_install libyajl-dev
@@ -52,6 +52,7 @@ function libvirt_install
     package_install libcurl4-gnutls-dev
     package_install python-dev
     package_install libnl-dev
+    package_install libpciaccess-dev
 
     dir=$pwd
 
@@ -64,6 +65,7 @@ function libvirt_install
 
     if [[ $status -ne 0 ]]; then
       $ECHO_ER libvirt - extract \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
       exit 1
     else
       $ECHO_OK libvirt - extract
@@ -77,6 +79,7 @@ function libvirt_install
 
     if [[ $status -ne 0 ]]; then
       $ECHO_ER libvirt - configure \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
       exit 1
     else
       $ECHO_OK libvirt - configure
@@ -88,6 +91,7 @@ function libvirt_install
 
     if [[ $status -ne 0 ]]; then
       $ECHO_ER libvirt - make \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
       exit 1
     else
       $ECHO_OK libvirt - make
@@ -99,12 +103,13 @@ function libvirt_install
 
     if [[ $status -ne 0 ]]; then
       $ECHO_ER libvirt - make install \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
       exit 1
     else
       $ECHO_OK libvirt - make install
     fi
 
-    libvirtd -d
+    libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
 
     cd $pwd
     rm -rf $TEMP
