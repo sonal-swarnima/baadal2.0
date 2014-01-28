@@ -209,10 +209,14 @@ def create_vm_image(vm_details, datastore):
                         vm_details.vm_identity + '.qcow2'
             
     # Copies the template image from its location to new vm directory
-    if get_constant('storage_type') == STORAGE_NETAPP_NFS:
-        command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  template.hdfile + ' ' + \ 
-                              datastore.path + '/' + get_constant('vms') + '/' + vm_details.vm_identity + '/' + \  
-                              vm_details.vm_identity + '.qcow2'
+    config = get_config_file()
+    storage_type = config.get("GENERAL_CONF","storage_type")
+    current.logger.debug("conf storage type is " + str(storage_type))
+    current.logger.debug(current.STORAGE_NETAPP_NFS)
+    if storage_type == current.STORAGE_NETAPP_NFS:
+        command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
+                             template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
+                             vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
         current.logger.debug("Copy in progress (storage type =  netapp_nfs)...")
         exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
         current.logger.debug("Copied successfully.")
