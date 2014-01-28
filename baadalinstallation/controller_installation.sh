@@ -42,6 +42,87 @@ Chk_Gateway()
 
 }
 
+Chk_installation_config()
+{
+
+	if test "$NETWORK_GATEWAY_IP" == ""; then
+		echo "Network Gateway not specified!!!"
+		exit 1
+	fi
+
+	network_gateway_ip=(`echo "$NETWORK_GATEWAY_IP" | tr "." " "`)
+
+	if test ${network_gateway_ip[0]} -ne 0 && test ${network_gateway_ip[0]} -le 255 && test ${network_gateway_ip[1]} -le 255 && test ${network_gateway_ip[2]} -le 255 && test ${network_gateway_ip[3]} -le 255; then
+		echo "Valid Network Gateway IP!!!"
+	else
+		echo "Invalid Network Gateway IP!!!"
+		exit 1
+	fi
+
+	if test "$MAPPER_FILE_PATH" == ""; then
+		echo "Public-Private mapper file path not specified!!!"
+		exit 1
+	fi
+
+	if test "$AUTH_TYPE" == "ldap"; then
+		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || "$LDAP_URL" == "" || "$LDAP_DN" == ""; then
+			echo "Ldap setup config missing/incomplete!!!"
+			exit 1
+		fi
+	fi
+
+	if test "$DB_NAME" == ""; then
+		echo "Please specify a name for the orchestrator database!!!"
+		exit 1
+	fi
+
+	if test "$DB_TYPE" == "mysql" && test "$MYSQL_ROOT_PASSWD" == ""; then
+		echo "Please speficy mysql root password!!!"
+		exit 1
+	fi
+
+	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_BAADALREPO" == ""; then
+		echo "TFTP Setup config missing/incomplete!!!"
+		exit 1
+	fi	
+
+	if test "$STORAGE_TYPE" == "" || test "$STORAGE_SERVER_IP" == "" || test "$STORAGE_DIRECTORY" == "" || test "$LOCAL_MOUNT_POINT" == ""; then
+		echo "Storage server details missing!!!"
+		exit 1
+	fi
+
+	if test "$PRIMARY_NETWORK_INTERFACE" == ""; then
+		echo "Primary Interface info missing!!!"
+		exit 1
+	fi
+
+	if test "$STARTING_IP_RANGE" == ""; then
+		echo "Starting IP range missing!!!"
+		exit 1
+	fi
+
+	if test "$INSTALL_LOCAL_UBUNTU_REPO" == "y"; then
+		if test "$EXTERNAL_REPO_IP" == "" || test "$LOCAL_REPO_SETUP_FILES_PATH" == ""; then
+			echo "local ubuntu repo setup config missing!!!"
+			exit 1
+		fi
+	fi
+
+	if test "$WEB2PY_PASSWD" == ""; then
+		echo "Web2py root pasword missing!!!"
+		exit 1
+	fi
+
+	if test "$DISABLE_MAIL_SENDING" != "y"; then
+		if test "$MAIL_SERVER_URL" == "" || test "$MAIL_SERVER_PORT" == "" || test "$SUPPORT_MAIL_ID" == "" || test "$LOGIN_USERNAME" == "" || test "$LOGIN_PASSWORD" == ""; then
+			echo "mailing client setup details missing!!!"
+			exit 1
+		fi
+	fi
+
+	echo "config verification complete!!!"
+}
+
 Configure_Ldap_Kerberos()
 {
 
@@ -262,7 +343,8 @@ Instl_Pkgs()
 
 	cp libvirt-1.0.0.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.0.0.tar.gz
 	tar -xvzf libvirt-1.0.0.tar.gz
-	cd libvirt-1.0.0
+	mv libvirt-1.0.0 /tmp/libvirt-1.0.0
+	cd /tmp/libvirt-1.0.0
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
@@ -283,7 +365,7 @@ Setup_Baadalapp()
 
         sed -i -e 's@nat_script_path=@'"nat_script_path=$MAPPER_FILE_PATH"'@g' $baadalapp_config_path
 
-        sed -i -e 's/'"$DB_TYPE"'_db=/'"$DB_TYPE_db=$DB_NAME"'/g' $baadalapp_config_path
+        sed -i -e 's/'"$DB_TYPE"'_db=/'"$DB_TYPE"'_db='"$DB_NAME"'/g' $baadalapp_config_path
 
         sed -i -e 's/mysql_password=/'"mysql_password=$MYSQL_ROOT_PASSWD"'/g' $baadalapp_config_path
 
@@ -370,7 +452,7 @@ fi
 echo "Initializing Baadal WebApp Deployment"
 
 rm -rf /home/www-data/web2py/applications/baadal/
-cp -r baadal/ /home/www-data/web2py/applications/baadal/
+cp -r $BAADAL_APP_DIR_PATH/baadal/ /home/www-data/web2py/applications/baadal/
 
 if test $? -ne '0'; then
 	echo "UNABLE TO SETUP BAADAL!!!"
@@ -390,7 +472,7 @@ echo "Web2py Setup Successful.........................................."
 Configure_Local_Ubuntu_Repo()
 {
 
-if test $INSTALL_LOCAL_UBUNTU_REPO -eq 1; then
+if test $INSTALL_LOCAL_UBUNTU_REPO == 'y'; then
 	mkdir -p /var/local_rep/var
 	cp /var/local_rep/var/postmirror.sh /var/local_rep/var/postmirror.sh.bak
 	cp $LOCAL_REPO_SETUP_FILES_PATH/postmirror.sh /var/local_rep/var/.
@@ -432,7 +514,13 @@ Enbl_Modules()
 					exit 1
 			    fi
 
-			    if [ -d /var/lib/mysql/DB_NAME ] ; then
+			    if test $REINSTALL_MYSQL == 'y'; then
+
+				echo "trying to remove baadal database(if exists)"
+				mysql -uroot -pbaadal -e "drop database baadal"
+
+			    elif test -d /var/lib/mysql/$DB_NAME; then
+
 			    	echo "$DB_NAME already exists!!!"
 			    	echo "Please remove the $DB_NAME database and restart the installation process..."
 			  		echo "EXITING INSTALLATION......................................"
@@ -440,7 +528,6 @@ Enbl_Modules()
 			    fi
 
 			    echo "Creating Database $DB_NAME......................"
-
 
 				mysql -uroot -p$MYSQL_ROOT_PASSWD -e "create database $DB_NAME" 2> temp
 
@@ -474,7 +561,7 @@ Create_SSL_Certi()
 	echo "creating Self Signed Certificate................................."
 	openssl genrsa 1024 > /etc/apache2/ssl/self_signed.key
 	chmod 400 /etc/apache2/ssl/self_signed.key
-	openssl req -new -x509 -nodes -sha1 -days 365 -key /etc/apache2/ssl/self_signed.key -config installation.cfg > /etc/apache2/ssl/self_signed.cert
+	openssl req -new -x509 -nodes -sha1 -days 365 -key /etc/apache2/ssl/self_signed.key -config controller_installation.cfg > /etc/apache2/ssl/self_signed.cert
 	openssl x509 -noout -fingerprint -text < /etc/apache2/ssl/self_signed.cert > /etc/apache2/ssl/self_signed.info
 }
 
@@ -577,8 +664,6 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         touch $TFTP_DIR/mybootmenu.cfg
         echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> $TFTP_DIR/mybootmenu.cfg
 
-        cp $PXE_SETUP_FILES_PATH/libvirt-1.0.0.tar.gz $TFTP_DIR/libvirt-1.0.0.tar.gz
-        ln -s $TFTP_DIR/libvirt-1.0.0.tar.gz /var/www/libvirt-1.0.0.tar.gz
 fi
 
 /etc/init.d/tftpd-hpa restart
@@ -619,7 +704,6 @@ Configure_Dhcp_Pxe()
 		sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
 	fi
 
-	#cp $PXE_SETUP_FILES_PATH/ks.cfg  /var/www/ks.cfg
 	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	VLANS=$(echo ${VLANS:0:-1})
@@ -630,13 +714,13 @@ Configure_Dhcp_Pxe()
 	
 	sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	sed -i -e "s@NFS_MNT_POINT@$LOCAL_MOUNT_POINT@g" $PXE_SETUP_FILES_PATH/host_installation.sh
+	sed -i -e "s@LOCAL_MOUNT_POINT@$LOCAL_MOUNT_POINT@g" $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	sed -i -e 's/FILER_IP/'"$STORAGE_SERVER_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
+	sed -i -e 's/STORAGE_SERVER_IP/'"$STORAGE_SERVER_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	sed -i -e 's@FILER_DIRECTORY@'"$STORAGE_DIRECTORY"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
+	sed -i -e 's@STORAGE_DIRECTORY@'"$STORAGE_DIRECTORY"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	tar -cvf /var/www/baadal.tar /baadal/baadal
+	tar -cvf /var/www/baadal.tar $ABSOLUTE_PATH_OF_BAADALREPO/
 
 }
 
@@ -677,15 +761,16 @@ Start_Web2py()
 #Including Config File to the current script
 
 Chk_Root_Login
-Chk_Gateway
-Instl_Pkgs
-Setup_Web2py
-Configure_Local_Ubuntu_Repo
-Enbl_Modules
-Create_SSL_Certi
-Rewrite_Apache_Conf
-Configure_Tftp
-Configure_Dhcp_Pxe
-Setup_Baadalapp
-Start_Web2py
+Chk_installation_config
+#Chk_Gateway
+#Instl_Pkgs
+#Setup_Web2py
+#Configure_Local_Ubuntu_Repo
+#Enbl_Modules
+#Create_SSL_Certi
+#Rewrite_Apache_Conf
+#Configure_Tftp
+#Configure_Dhcp_Pxe
+#Setup_Baadalapp
+#Start_Web2py
 

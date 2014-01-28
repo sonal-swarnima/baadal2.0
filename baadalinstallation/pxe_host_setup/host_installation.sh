@@ -74,27 +74,19 @@ Enbl_Modules()
 	make install
 	/etc/init.d/libvirt-bin restart
 	
-	mkdir -p NFS_MOUNT_POINT
-	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
+	mkdir -p LOCAL_MOUNT_POINT
+	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
 	echo "If you have done all the steps correctly, Congo!!!"
 }
 
 ############################################################################################################################
 
-#MAIN SCRIPT 
-
-#FLAG="/var/log/firstboot.log"
-#if [ ! -f $FLAG ]; then
-#	echo "this is our first boot script"
-	apt-get update && apt-get -y upgrade
-	Chk_Gateway
-	Instl_Pkgs
-	Enbl_Modules
-	touch $FLAG
-	#fetch hostname using host command
-	hostname baadalhost
-	echo "baadalhost" > /etc/hostname
-	reboot
-#fi
+apt-get update && apt-get -y upgrade
+Chk_Gateway
+Instl_Pkgs
+Enbl_Modules
+hostname baadalhost
+echo "baadalhost" > /etc/hostname
+reboot
 
 
