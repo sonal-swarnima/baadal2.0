@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./installation.cfg 2>> /dev/null
+source ./controller_installation.cfg 2>> /dev/null
 
 NUMBER_OF_HOSTS=254
 
