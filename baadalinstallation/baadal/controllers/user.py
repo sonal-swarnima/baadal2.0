@@ -67,12 +67,9 @@ def settings():
     
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
 
-@check_vm_owner
-@handle_exception
-def handle_vm_operation():
 
-    vm_id=request.args[0]    
-    task_type=request.args[1]    
+def handle_vm_operation(vm_id, task_type):
+
     if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
         session.flash = "Delete request is in queue. No operation can be performed"
     elif is_request_in_queue(vm_id, task_type):
@@ -82,8 +79,35 @@ def handle_vm_operation():
         session.flash = '%s request added to queue.' %task_type
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
+@check_vm_owner
+@handle_exception
+def start_vm():
+    handle_vm_operation(request.args[0], TASK_TYPE_START_VM)
+
+@check_vm_owner
+@handle_exception
+def stop_vm():
+    handle_vm_operation(request.args[0], TASK_TYPE_STOP_VM)
+
+@check_vm_owner
+@handle_exception
+def resume_vm():
+    handle_vm_operation(request.args[0], TASK_TYPE_RESUME_VM)
+
+@check_vm_owner
+@handle_exception
+def suspend_vm():
+    handle_vm_operation(request.args[0], TASK_TYPE_SUSPEND_VM)
+
+@check_vm_owner
+@handle_exception
+def destroy_vm():
+    handle_vm_operation(request.args[0], TASK_TYPE_DESTROY_VM)
+
+@check_vm_owner
+@handle_exception
 def delete_vm():
-    redirect(URL(r = request, f = 'handle_vm_operation', args = [request.args(0), TASK_TYPE_DELETE_VM]))
+    handle_vm_operation(request.args[0], TASK_TYPE_DELETE_VM)
 
 @check_vm_owner
 @handle_exception       
