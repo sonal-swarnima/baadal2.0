@@ -34,6 +34,11 @@
 		<row name="vms" value="/vms"/>
 	</table>
 
+	<table name="vlan">
+		<row id="1" name="VLAN10" vlan_tag="vlan10" vlan_addr="10.20.10.0" />
+		<row id="2" name="VLAN20" vlan_tag="vlan20" vlan_addr="10.20.20.0" />
+	</table>
+
 	<table name="security_domain">
 		<row id="1" name="Private" vlan="1" visible_to_all="False" />
 		<row id="2" name="Research" vlan="2" visible_to_all="True" />
