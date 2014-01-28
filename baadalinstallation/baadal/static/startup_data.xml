@@ -22,8 +22,9 @@
 	</table>
 	
 	<table name="constants">
-		<row name="vmfiles_path" value="/mnt/testdatastore"/>
+		<row name="vmfiles_path" value="/mnt/datastore"/>
 		<row name="datastore_int" value="ds_"/>
+		<row name="storage_type" value="linux_nfs"/>
 		<row name="vncport_range" value="20000"/>
 		<row name="templates_dir" value="vm_templates"/>
 		<row name="archives_dir" value="vm_archives"/>
@@ -35,8 +36,10 @@
 	</table>
 
 	<table name="vlan">
-		<row id="1" name="VLAN10" vlan_tag="vlan10" vlan_addr="10.20.10.0" />
-		<row id="2" name="VLAN20" vlan_tag="vlan20" vlan_addr="10.20.20.0" />
+		<row id="1" name="vlan1" vlan_tag="1" vlan_addr="10.0.0.0" />
+		<row id="2" name="vlan2" vlan_tag="2" vlan_addr="10.2.0.0" />
+		<row name="vlan3" vlan_tag="3" vlan_addr="10.4.0.0" />
+		<row name="vlan4" vlan_tag="4" vlan_addr="10.6.0.0" />
 	</table>
 
 	<table name="security_domain">
