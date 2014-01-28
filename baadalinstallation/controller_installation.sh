@@ -1,12 +1,12 @@
 #!/bin/bash
 
-. ./installation.cfg 2>> /dev/null
+source ./installation.cfg 2>> /dev/null
 
 NUMBER_OF_HOSTS=254
 
 NUMBER_OF_VLANS=255
 
-CONTROLLER_IP=ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1
+CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
 Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev)
 
@@ -48,7 +48,7 @@ Configure_Ldap_Kerberos()
 if test -f "/etc/krb5.conf";then
 		if test -f "ldap_krb/krb5.conf";then
 			mv /etc/{krb5.conf,krb5.conf.bkp}
-			cp -f ldap_krb/krb5.conf /etc/
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/krb5.conf /etc/
 		else
 			echo "ERROR: ldap_krb/krb5.conf"	
 	  		echo "EXITING INSTALLATION......................................"
@@ -60,7 +60,7 @@ fi
 if test -f "/etc/ldap.conf";then
 		if test -f "ldap_krb/ldap.conf";then
 			mv /etc/{ldap.conf,ldap.conf.bkp}
-			cp -f ldap_krb/ldap.conf /etc/
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/ldap.conf /etc/
 		else
 			echo "ERROR: ldap_krb/ldap.conf"
 	  		echo "EXITING INSTALLATION......................................"
@@ -72,7 +72,7 @@ fi
 if test -f "/etc/nsswitch.conf";then
 		if test -f "ldap_krb/nsswitch.conf";then
 			mv /etc/{nsswitch.conf,nsswitch.conf.bkp}
-			cp -f ldap_krb/nsswitch.conf /etc/
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/nsswitch.conf /etc/
 		else
 			echo "ERROR: ldap_krb/nsswitch.conf"
 	  		echo "EXITING INSTALLATION......................................"
@@ -84,7 +84,7 @@ fi
 if test -f "/etc/pam.d/common-account";then
 		if test -f "ldap_krb/common-account";then
 			mv /etc/pam.d/{common-account,common-account.bkp}
-			cp -f ldap_krb/common-account /etc/pam.d/
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-account /etc/pam.d/
 		else
 			echo "ERROR: ldap_krb/common-account"
   			echo "EXITING INSTALLATION......................................"
@@ -96,7 +96,7 @@ fi
 if test -f "/etc/pam.d/common-auth";then
 		if test -f "ldap_krb/common-auth";then
 			mv /etc/pam.d/{common-auth,common-auth.bkp}
-			cp -f ldap_krb/common-auth /etc/pam.d/	
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-auth /etc/pam.d/	
 		else
 			echo "ERROR: ldap_krb/common-auth"
 	  		echo "EXITING INSTALLATION......................................"
@@ -108,7 +108,7 @@ fi
 if test -f "/etc/pam.d/common-password";then
 		if test -f "ldap_krb/common-password";then
 			mv /etc/pam.d/{common-password,common-password.bkp}
-			cp -f ldap_krb/common-password /etc/pam.d/	
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-password /etc/pam.d/	
 		else
 			echo "ERROR: ldap_krb/common-password"
 	  		echo "EXITING INSTALLATION......................................"
@@ -120,7 +120,7 @@ fi
 if test -f "/etc/pam.d/common-session";then
 		if test -f "ldap_krb/common-session";then
 			mv /etc/pam.d/{common-session,common-session.bkp}
-			cp -f ldap_krb/common-session /etc/pam.d/		
+			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-session /etc/pam.d/		
 		else
 			echo "ERROR: ldap_krb/common-session"
 	  		echo "EXITING INSTALLATION......................................"
@@ -205,16 +205,15 @@ Instl_Pkgs()
 				
 					if test $REINSTALL_MYSQL == 'y' -o 'Y' ; then
 
-						sudo apt-get remove --purge $pkg
-						sudo apt-get autoremove
-						sudo apt-get autoclean
+						sudo apt-get -y remove --purge $pkg
+						sudo apt-get -y autoremove
+						sudo apt-get -y autoclean
 						
 						status=$?
 						
 						if test $status -eq 0 ; then 
 		      
 							echo "$pkg Package Removed Successfully" 
-							break
 						
 					 	else
 
@@ -269,36 +268,61 @@ Instl_Pkgs()
 	make install
 	/etc/init.d/libvirt-bin restart
 
+	cd -
 	echo "Packages Installed Successfully..................................."
 }
 
 
 Setup_Baadalapp()
 {
-	baadalapp_config_path=/home/www-data/web2py/applications/baadal/static/baadalapp.cfg
+        baadalapp_config_path=/home/www-data/web2py/applications/baadal/static/baadalapp.cfg
 
-	sed -i -e 's/nat_ip=/'"nat_ip=$NETWORK_GATEWAY_IP"'/g' $baadalapp_config_path
+        sed -i -e 's/nat_ip=/'"nat_ip=$NETWORK_GATEWAY_IP"'/g' $baadalapp_config_path
 
-	sed -i -e 's/storage_type=/'"storage_type=$STORAGE_TYPE"'/g' $baadalapp_config_path
+        sed -i -e 's/storage_type=/'"storage_type=$STORAGE_TYPE"'/g' $baadalapp_config_path
 
-	sed -i -e 's/nat_script_path=/'"nat_script_path=$MAPPER_FILE_PATH"'/g' $baadalapp_config_path
+        sed -i -e 's@nat_script_path=@'"nat_script_path=$MAPPER_FILE_PATH"'@g' $baadalapp_config_path
 
-	sed -i -e 's/$DB_TYPE_db=/'"$DB_TYPE_db=$DB_NAME"'/g' $baadalapp_config_path
+        sed -i -e 's/'"$DB_TYPE"'_db=/'"$DB_TYPE_db=$DB_NAME"'/g' $baadalapp_config_path
 
-	sed -i -e 's/mysql_password=/'"mysql_password=$MYSQL_ROOT_PASSWD"'/g' $baadalapp_config_path
+        sed -i -e 's/mysql_password=/'"mysql_password=$MYSQL_ROOT_PASSWD"'/g' $baadalapp_config_path
 
-	sed -i -e 's/auth_type=/'"auth_type=$AUTH_TYPE"'/g' $baadalapp_config_path
+        sed -i -e 's/auth_type=/'"auth_type=$AUTH_TYPE"'/g' $baadalapp_config_path
 
-	sed -i -e 's/mysql_ip=/'"mysql_ip=localhost"'/g' $baadalapp_config_path
+        sed -i -e 's/mysql_ip=/'"mysql_ip=localhost"'/g' $baadalapp_config_path
 
-	sed -i -e 's/dhcp_ip=/'"dhcp_ip=localhost"'/g' $baadalapp_config_path
-	
-	sed -i -e 's/mysql_user=/'"mysql_user=$MYSQL_USR_NAME"'/g' $baadalapp_config_path
-	
-	#mailing feature to be appended
+        sed -i -e 's/dhcp_ip=/'"dhcp_ip=localhost"'/g' $baadalapp_config_path
 
+        sed -i -e 's/mysql_user=/'"mysql_user=root"'/g' $baadalapp_config_path
+
+        sed -i -e 's/ldap_url=/'"ldap_url=$LDAP_URL"'/g' $baadalapp_config_path
+
+        sed -i -e 's/ldap_dn=/'"ldap_url=$LDAP_DN"'/g' $baadalapp_config_path
+
+        if test $DISABLE_MAIL_SENDING != 'y'; then
+
+                sed -i -e 's/mail_active=/'"mail_active=True"'/g' $baadalapp_config_path
+
+                sed -i -e 's/mail_server=/'"mail_server=$MAIL_SERVER_URL:$MAIL_SERVER_PORT"'/g' $baadalapp_config_path
+
+                sed -i -e 's/mail_sender=/'"mail_sender=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
+
+                sed -i -e 's/mail_noreply=/'"mail_noreply=noreply@baadal"'/g' $baadalapp_config_path
+
+                sed -i -e 's/mail_admin_bug_report=/'"mail_admin_bug_report=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
+
+                sed -i -e 's/mail_admin_request=/'"mail_admin_request=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
+
+                sed -i -e 's/mail_admin_complaint=/'"mail_admin_complaint=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
+                
+                sed -i -e 's/mail_login=/'"mail_login=$LOGIN_USERNAME:$LOGIN_PASSWORD"'/g' $baadalapp_config_path
+
+        else
+
+                sed -i -e 's/mail_active=/'"mail_active=False"'/g' $baadalapp_config_path
+
+        fi
 }
-
 
 
 Setup_Web2py()
@@ -319,7 +343,7 @@ fi
 if test $install_web2py -eq 1; then
 		
 	echo "Initializing Web2py Setup"	
-	
+	pwd	
 	rm -rf web2py/
 	unzip web2py_src.zip
 		
@@ -386,7 +410,9 @@ fi
 
 Enbl_Modules()
 {
-	/etc/init.d/nscd restart
+	if test $AUTH_TYPE == "ldap"; then
+		/etc/init.d/nscd restart
+	fi
 	echo "Enabling Apache Modules.........................................."
 	a2enmod ssl
 	a2enmod proxy
@@ -425,8 +451,6 @@ Enbl_Modules()
 
 					if test $is_valid_paswd -ne 0; then
 						echo "INVALID MYSQL ROOT PASSWORD!!!!"				    
-					else
-						break
 					fi
 
 					echo "UNABLE TO CREATE DATABASE!!!"
@@ -542,7 +566,7 @@ echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-
 
 
 #configure tftp server for pxe boot
-if test $TFTP_MOUNT_FLAG -eq 1; then
+if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         mkdir $TFTP_DIR/ubuntu
         mount $ISO_LOCATION $TFTP_DIR/ubuntu
         cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
@@ -588,20 +612,32 @@ Configure_Dhcp_Pxe()
 
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
-	cp $PXE_SETUP_FILES_PATH/sources.list /var/www/sources.list
-	sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' /var/www/sources.list
+	
 
-	cp $PXE_SETUP_FILES_PATH/ks.cfg  /var/www/ks.cfg
-	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/ks.cfg
+	if test $INSTALL_LOCAL_UBUNTU_REPO == 'y'; then
+		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
+		sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+	fi
+
+	#cp $PXE_SETUP_FILES_PATH/ks.cfg  /var/www/ks.cfg
+	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	VLANS=$(echo ${VLANS:0:-1})
-	cp $PXE_SETUP_FILES_PATH/host_installation.sh /var/www/.
-	sed -i -e 's/NETWORK_GATEWAY_IP/'"$NETWORK_GATEWAY_IP"'/g' /var/www/host_installation.sh
-	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' /var/www/host_installation.sh
-	sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' /var/www/host_installation.sh
-	sed -i -e 's/NFS_MOUNT_POINT/'"$LOCAL_MOUNT_POINT"'/g' /var/www/host_installation.sh
-	sed -i -e 's/FILER_IP/'"$STORAGE_SERVER_IP"'/g' /var/www/host_installation.sh
-	sed -i -e 's/FILER_DIRECTORY/'"$STORAGE_DIRECTORY"'/g' /var/www/host_installation.sh
+
+	sed -i -e 's/NETWORK_GATEWAY_IP/'"$NETWORK_GATEWAY_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
+	
+	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
+	
+	sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
+
+	sed -i -e "s@NFS_MNT_POINT@$LOCAL_MOUNT_POINT@g" $PXE_SETUP_FILES_PATH/host_installation.sh
+
+	sed -i -e 's/FILER_IP/'"$STORAGE_SERVER_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
+
+	sed -i -e 's@FILER_DIRECTORY@'"$STORAGE_DIRECTORY"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
+
+	tar -cvf /var/www/baadal.tar /baadal/baadal
+
 }
 
 
@@ -644,13 +680,12 @@ Chk_Root_Login
 Chk_Gateway
 Instl_Pkgs
 Setup_Web2py
-Setup_Baadalapp
 Configure_Local_Ubuntu_Repo
 Enbl_Modules
 Create_SSL_Certi
 Rewrite_Apache_Conf
 Configure_Tftp
 Configure_Dhcp_Pxe
+Setup_Baadalapp
 Start_Web2py
-
 

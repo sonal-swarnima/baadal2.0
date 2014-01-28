@@ -23,16 +23,13 @@
 	
 	<table name="constants">
 		<row name="vmfiles_path" value="/mnt/datastore"/>
-		<row name="datastore_int" value="ds_"/>
-		<row name="storage_type" value="linux_nfs"/>
-		<row name="vncport_range" value="20000"/>
+		<row name="datastore_int" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
-		<row name="archives_dir" value="vm_archives"/>
-		<row name="vmcount" value="1"/>
+		<row name="archives_dir" value="vm_deleted"/>
 		<row name="vm_rrds_dir" value="vm_rrds"/>
 		<row name="graph_file_dir" value="/images/vm_graphs/"/>
 		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
-		<row name="vms" value="/vms"/>
+		<row name="vms" value="/vm_images"/>
 	</table>
 
 	<table name="vlan">
