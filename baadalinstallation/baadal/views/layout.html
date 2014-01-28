@@ -31,7 +31,6 @@
       tab_index = 0;
       if($.cookie('tab_index') != undefined){
       	tab_index = $.cookie('tab_index');
-      	$.removeCookie('tab_index')
       }
       jQuery('#tabs-task').tabs({active: tab_index});
 
