@@ -50,7 +50,7 @@ def list_my_vm():
     hosted_vm = get_my_hosted_vm()        
     return dict(hosted_vm = hosted_vm)
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception
 def settings():
 
@@ -67,28 +67,25 @@ def settings():
     
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception
 def handle_vm_operation():
-    task_type=request.args[0]    
-    vm_id=request.args[1]    
-    if not is_vm_owner(vm_id):
-        session.flash = "Not authorized"
-        redirect(URL(c='default', f='index'))
+
+    vm_id=request.args[0]    
+    task_type=request.args[1]    
+    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
+        session.flash = "Delete request is in queue. No operation can be performed"
+    elif is_request_in_queue(vm_id, task_type):
+        session.flash = "%s request already in queue." %task_type
     else:
-        if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
-            session.flash = "Delete request is in queue. No operation can be performed"
-        elif is_request_in_queue(vm_id, task_type):
-            session.flash = "%s request already in queue." %task_type
-        else:
-            add_vm_task_to_queue(vm_id,task_type)
-            session.flash = '%s request added to queue.' %task_type
-        redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+        add_vm_task_to_queue(vm_id,task_type)
+        session.flash = '%s request added to queue.' %task_type
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 def delete_vm():
-    redirect(URL(r = request, f = 'handle_vm_operation', args = [TASK_TYPE_DELETE_VM, request.args(0)]))
-    
-@auth.requires_login()
+    redirect(URL(r = request, f = 'handle_vm_operation', args = [request.args(0), TASK_TYPE_DELETE_VM]))
+
+@check_vm_owner
 @handle_exception       
 def snapshot():
     vm_id = int(request.args[0])
@@ -101,7 +98,7 @@ def snapshot():
         session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception
 def delete_snapshot():
     vm_id = int(request.args[0])
@@ -113,7 +110,7 @@ def delete_snapshot():
         session.flash = "Your delete snapshot request has been queued"
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception
 def revert_to_snapshot():
     vm_id = int(request.args[0])
@@ -143,7 +140,7 @@ def list_my_task():
 
     return dict(pending=pending, success=success, failed=failed, form=form)  
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception       
 def show_vm_performance():
     vm_id = int(request.args[0])
@@ -159,7 +156,7 @@ def get_updated_graph():
         logger.debug(request.vars['graphPeriod'])
         return get_performance_graph(request.vars['graphType'], request.vars['vmName'], request.vars['graphPeriod'])
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception       
 def clone_vm():
 
@@ -173,7 +170,7 @@ def clone_vm():
 
     return dict(form=form)
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception       
 def attach_extra_disk():
 
@@ -187,7 +184,7 @@ def attach_extra_disk():
 
     return dict(form=form)
 
-@auth.requires_login()
+@check_vm_owner
 @handle_exception       
 def edit_vm_config():
 
