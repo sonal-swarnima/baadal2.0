@@ -10,6 +10,7 @@ function ifconfig_ip
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER ifconfig $iface $ip netmask $netmask failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK ifconfig $iface $ip netmask $netmask
@@ -27,6 +28,7 @@ function ifconfig_noip
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER ifconfig $iface 0 failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK ifconfig $iface 0
@@ -43,6 +45,7 @@ function ifconfig_up
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER ifconfig $iface up failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK ifconfig $iface up
@@ -59,6 +62,7 @@ function ifconfig_down
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER ifconfig $iface down failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK ifconfig $iface down
@@ -75,6 +79,7 @@ function ifconfig_null
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER ifconfig $iface 0.0.0.0 up failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK ifconfig $iface 0.0.0.0 up

@@ -26,6 +26,7 @@ function run
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER NAT vm creation error. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
   else
     $ECHO_OK NAT vm created
   fi

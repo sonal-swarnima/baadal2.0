@@ -9,6 +9,7 @@ function file_copy
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Copying $source to $destination failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK $source -\> $destination

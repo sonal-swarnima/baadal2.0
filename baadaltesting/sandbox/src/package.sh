@@ -11,6 +11,7 @@ function package_update_db
     exit 1
   else
     $ECHO_OK apt-get update
+    tail -$LOG_SIZE $LOGS/log.err 
   fi
 }
 
@@ -28,6 +29,7 @@ function package_install
     install_status=$?
     if [[ $install_status -ne 0 ]]; then
       $ECHO_ER Installation failed. Check logs.
+      tail -$LOG_SIZE $LOGS/log.err 
       exit 1
     else
       $ECHO_OK Installed $package

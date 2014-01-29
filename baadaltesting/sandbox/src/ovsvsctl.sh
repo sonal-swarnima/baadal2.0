@@ -10,6 +10,7 @@ function ovsvsctl_add_br
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Adding bridge $bridge failed. Please check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK Bridge added $bridge
@@ -55,6 +56,7 @@ function ovsvsctl_add_port
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Adding port $port to bridge $bridge failed. Please check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK Port $port added to bridge $bridge
@@ -74,6 +76,7 @@ function ovsvsctl_set_port
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Setting port $port parameter failed. Please check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK Port $port parameter set.
