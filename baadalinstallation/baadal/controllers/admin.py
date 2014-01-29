@@ -224,15 +224,6 @@ def delete_machine():
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_moderator
-def mailToGUI():
-    session.flash="Has to be implemented"
-
-
-@check_moderator
-def add_disk():
-    session.flash="Has to be implemented"
-
-@check_moderator
 def sanity_check():
     output = check_sanity()
     return dict(vms=output)
