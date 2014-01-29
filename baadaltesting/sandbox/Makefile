@@ -112,7 +112,7 @@ openvswitch:
 	apt-get -y install openvswitch-switch=1.10.2-0ubuntu2~cloud0
 	apt-get -y install python-openvswitch=1.10.2-0ubuntu2~cloud0
 
-$(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
+$(BIN_CONFIGURE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
 	@ cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
@@ -121,13 +121,13 @@ $(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all controller-transfer
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all controller-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
+$(BIN_FILER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
@@ -138,19 +138,19 @@ $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer 
 	mkdir -p $(BIN_DIR)/transfer.filer/baadal
 	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all nat-transfer
+$(BIN_NAT): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all nat-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
+$(BIN_HOST): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
