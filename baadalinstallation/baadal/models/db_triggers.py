@@ -26,7 +26,6 @@ def schedule_task(fields, _id):
     else:
         vm_scheduler.queue_task('vm_task', pvars = dict(task_event_id = task_event_id),start_time = request.now, timeout = 30 * MINUTES)
 
-
 def vm_data_insert_callback(fields, _id):
     db.vm_data_event.insert(vm_id        = _id,
                             vm_name      = fields['vm_name'],

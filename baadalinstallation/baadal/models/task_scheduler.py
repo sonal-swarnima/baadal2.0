@@ -38,6 +38,7 @@ def send_task_complete_mail(task_event):
     
 def processTaskQueue(task_event_id):
 
+    logger.debug("Processing task: " + task_event_id)
     task_event = db.task_queue_event[task_event_id]
     task_process = db.task_queue[task_event.task_id] 
     try:
@@ -73,6 +74,7 @@ def processTaskQueue(task_event_id):
         
 def processCloneTask(task_event_id, vm_id):
 
+    logger.debug("Processing clone task: " + task_event_id)
     task_event = db.task_queue_event[task_event_id]
     task_queue = db.task_queue[task_event.task_id]
     message = task_event.message if task_event.message != None else ''
@@ -127,13 +129,15 @@ def processCloneTask(task_event_id, vm_id):
 
 # Handles periodic snapshot task
 def processSnapshotVM(snapshot_type):
+
+    logger.debug("Processing snapshot task: " + snapshot_type)
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     for vm in vms:
         params={'snapshot_type':snapshot_type}
         add_vm_task_to_queue(vm.id,TASK_TYPE_SNAPSHOT_VM, params)
         db.commit()
         
-
+# Defining scheduler tasks
 from gluon.scheduler import Scheduler
 vm_scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue, 
                                         clone_task=processCloneTask,

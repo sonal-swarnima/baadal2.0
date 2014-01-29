@@ -301,13 +301,16 @@ def get_attach_extra_disk_form(vm_id):
     db.request_queue.RAM.default = vm_data.RAM
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.HDD.default = vm_data.HDD
-    db.request_queue.extra_HDD.default = vm_data.extra_HDD if vm_data.extra_HDD != 0 else ''
+    db.request_queue.extra_HDD.default = vm_data.extra_HDD
     db.request_queue.request_type.default = TASK_TYPE_ATTACH_DISK
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
     db.request_queue.attach_disk.requires = IS_INT_IN_RANGE(1,101)
-    
+    db.request_queue.vm_name.writable = False
+    db.request_queue.HDD.writable = False
+    db.request_queue.extra_HDD.writable = False
+
     form_fields = ['vm_name', 'HDD', 'extra_HDD', 'attach_disk', 'purpose']
     
     form =SQLFORM(db.request_queue, fields = form_fields)
