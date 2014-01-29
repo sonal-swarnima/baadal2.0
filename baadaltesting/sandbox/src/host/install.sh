@@ -23,6 +23,7 @@ function run
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Host vm creation error. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
   else
     $ECHO_OK Host vm created
   fi

@@ -9,6 +9,7 @@ function virsh_run
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER virsh $run_command failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK virsh $run_command

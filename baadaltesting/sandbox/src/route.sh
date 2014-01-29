@@ -11,6 +11,7 @@ function route_add_net
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Route add failed \(route add -net 0.0.0.0 gw $gateway netmask $netmask $device\). Check logs
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK route add -net 0.0.0.0 gw $gateway netmask $netmask $device 

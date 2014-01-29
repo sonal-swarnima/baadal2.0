@@ -17,11 +17,16 @@ CONFIGURE=$SRC/constants.sh
 UBUNTU=$UTILS/ubuntu.iso
 LIBVIRT=libvirt-1.2.1
 LIBVIRT_TAR=$UTILS/$LIBVIRT.tar.gz
+LIBVIRTPYTHON=libvirt-python
+LIBVIRTPYTHON_DIR=$UTILS/$LIBVIRTPYTHON
+VIRTMANAGER=virt-manager-0.10.0
+VIRTMANAGER_TAR=$UTILS/$VIRTMANAGER.tar.gz
 
 ECHO_PROGRESS="echo -e -n"
 ECHO_OK="echo -e \"\r\033[K[\e[0;32mOK\e[0m]\t"
 ECHO_ER="echo -e \"\r\033[K[\e[0;31mER\e[0m]\t"
 LOG_CLEAN="rm -f $LOGS/*"
+LOG_SIZE=10
 
 OVS_ETHERNET=eth0
 
