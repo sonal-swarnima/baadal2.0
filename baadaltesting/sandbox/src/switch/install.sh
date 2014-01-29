@@ -34,7 +34,7 @@ function run
 	virsh_run "net-autostart $OVS_NET_EXTERNAL"
 
   $ECHO_OK Switch Installation Complete
-
+  
 }
 
 function libvirt_install
@@ -161,6 +161,8 @@ function virtmanager_install
     package_install python-gtk2
     package_install python-urlgrabber
     package_install python-vte
+    package_install intltool
+    package_install libvirt-glib-1.0-dev
 
     dir=$pwd
 

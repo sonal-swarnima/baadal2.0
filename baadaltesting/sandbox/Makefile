@@ -113,6 +113,9 @@ openvswitch:
 	apt-get -y install python-openvswitch=1.10.2-0ubuntu2~cloud0
 
 $(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
+	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
+	@ cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
+	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
@@ -123,14 +126,12 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/c
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
-	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
   
 $(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
 	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
 	sed -i '1i#!/bin/$(SHELL)' $@
 	sed -i '$$a$(RUN_COMMAND)' $@
 	chmod +x $@
-	cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
 	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
 	mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
 	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
@@ -142,7 +143,6 @@ $(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubun
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
-	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
   
 $(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
@@ -211,13 +211,6 @@ sandbox: switch nat controller filer
 
 configure: clean-config $(BIN_CONFIGURE)
 	@ $(BIN_CONFIGURE)
-	@ mkdir -p $(CONFIG_DIR)
-	@ ln -s ../$(SRC_DIR)/constants.sh $(CONFIG_DIR)/constants.sh
-	@ ln -s ../$(SRC_DIR)/controller/ks.cfg $(CONFIG_DIR)/controller.ks.cfg
-	@ ln -s ../$(SRC_DIR)/filer/ks.cfg $(CONFIG_DIR)/filer.ks.cfg
-	@ ln -s ../$(SRC_DIR)/nat/ks.cfg $(CONFIG_DIR)/nat.ks.cfg
-	@ ln -s ../$(SRC_DIR)/switch/ovs-net.xml $(CONFIG_DIR)/ovs-net-internal.xml
-	@ ln -s ../$(SRC_DIR)/switch-external/ovs-net-external.xml $(CONFIG_DIR)/ovs-net-external.xml
   
 $(BIN_DIR)/id_rsa.sandbox.pub: ~/.ssh/id_rsa
 	@ cp $<.pub $@
@@ -250,7 +243,6 @@ keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-filer keygen
   
 clean-config:
 	rm -rf $(BIN_CONTROLLER)
-	rm -rf $(CONFIG_DIR)
   
 clean-controller:
 	sudo virsh destroy baadal_controller || true

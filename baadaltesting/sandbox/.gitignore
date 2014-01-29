@@ -1,3 +1,4 @@
+build/*
 bin/*
 disks/*
 utils/*
@@ -11,3 +12,4 @@ logs*
 *.swp
 *.swo
 libvirt*
+.gitignore
