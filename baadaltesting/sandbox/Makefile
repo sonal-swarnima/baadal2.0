@@ -26,8 +26,14 @@ UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-serve
 UBUNTU_SOURCE = $(UBUNTU_SERVER)
 
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
-LIBVIRT_FORCE = 
+LIBVIRT_INSTALL = 
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
+LIBVIRTPYTHON = $(UTILS_DIR)/libvirt-python
+LIBVIRTPYTHON_SOURCE = https://github.com/utkarshsins/baadal-libvirt-python.git
+
+VIRTMANAGER = $(UTILS_DIR)/virt-manager-0.10.0.tar.gz
+VIRTMANAGER_INSTALL = 
+VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot/virt-manager-0.10.0.tar.gz
 
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
@@ -66,12 +72,22 @@ $(UBUNTU):
 $(LIBVIRT):
 	@ mkdir -p $(UTILS_DIR)
 	@ wget -c $(LIBVIRT_SOURCE) -O $@ || (rm $@ && false)
+  
+$(LIBVIRTPYTHON):
+	@ mkdir -p $(UTILS_DIR)
+	@ git clone $(LIBVIRTPYTHON_SOURCE) $@ || (rm $@ && false)
+
+$(VIRTMANAGER):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(VIRTMANAGER_SOURCE) -O $@ || (rm $@ && false)
 
 ubuntu: $(UBUNTU)
   
-libvirt: $(LIBVIRT)
+libvirt: $(LIBVIRT) $(LIBVIRTPYTHON)
 
-utils: ubuntu libvirt
+virtmanager: $(VIRTMANAGER)
+
+utils: ubuntu libvirt virtmanager
 
 $(BAADAL_TRANSFER_TAR):
 	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
@@ -162,7 +178,7 @@ host-setup: $(BIN_HOST_SETUP)
 	@ sudo $<
   
 switch: $(BIN_SWITCH)
-	@ sudo LIBVIRT_FORCE=$$LIBVIRT_FORCE $<
+	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL $<
   
 nat-transfer: $(BAADAL_TRANSFER_TAR)
 	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat

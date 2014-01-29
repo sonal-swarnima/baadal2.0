@@ -3,10 +3,7 @@ function run
   check_root
 
   libvirt_install
-
-  # TODO
-  # Compile and install libvirt-python bindings
-  # and virt-manager
+  virtmanager_install
 
 	ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
 
@@ -20,7 +17,7 @@ function run
 
   ifconfig_ip $OVS_BRIDGE_INTERNAL $NETWORK_INTERNAL_IP_SANDBOX 255.255.0.0 
 
-	mv /etc/network/interfaces /etc/network/interfaces.bak
+	cp /etc/network/interfaces /etc/network/interfaces.bak
 
 	cp $OVS_EXTERNAL_CUSTOM_IFS /etc/network/interfaces
 
@@ -43,8 +40,7 @@ function run
 function libvirt_install
 {
   VERSION=$(virsh --version 2>/dev/null)
-  echo LIBVIRT_FORCE ${LIBVIRT_FORCE}
-  if [[ $VERSION != "1.2.1" || ${LIBVIRT_FORCE} == "yes" ]]; then
+  if [[ $VERSION != "1.2.1" || ${LIBVIRT_INSTALL} == "yes" ]]; then
     package_install libxml2-dev
     package_install libgnutls-dev
     package_install libyajl-dev
@@ -53,6 +49,7 @@ function libvirt_install
     package_install python-dev
     package_install libnl-dev
     package_install libpciaccess-dev
+    package_install python
 
     dir=$pwd
 
@@ -110,6 +107,91 @@ function libvirt_install
     fi
 
     libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
+
+    cd $pwd
+    rm -rf $TEMP
+
+
+    # Python-Bindings
+    dir=$pwd
+
+    cd $LIBVIRTPYTHON_DIR
+
+    $ECHO_PROGRESS "libvirt-python - build"
+    python setup.py build 1>>$LOGS/log.out 2>>$LOGS/log.err
+    status=$?
+
+    if [[ $status -ne 0 ]]; then
+      $ECHO_ER libvirt-python - build \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
+      exit 1
+    else
+      $ECHO_OK libvirt-python - build
+    fi
+
+    $ECHO_PROGRESS "libvirt-python - install"
+    python setup.py install 1>>$LOGS/log.out 2>>$LOGS/log.err
+    status=$?
+
+    if [[ $status -ne 0 ]]; then
+      $ECHO_ER libvirt-python - install \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
+      exit 1
+    else
+      $ECHO_OK libvirt-python - install
+    fi
+
+    cd $pwd
+
+   fi
+}
+
+function virtmanager_install
+{
+  VERSION=$(virt-install --version 2>&1)
+  if [[ $VERSION != "0.10.0" || ${VIRTMANAGER_INSTALL} == "yes" ]]; then
+    package_install gconf2
+    package_install librsvg2-common
+    package_install python
+    package_install python-appindicator
+    package_install python-dbus
+    package_install python-glade2
+    package_install python-gnome2
+    package_install python-gtk-vnc
+    package_install python-gtk2
+    package_install python-urlgrabber
+    package_install python-vte
+
+    dir=$pwd
+
+    mkdir -p $TEMP
+    cd $TEMP
+
+    $ECHO_PROGRESS "virt-manager - extract"
+    tar -xvzf $VIRTMANAGER_TAR 1>>$LOGS/log.out 2>>$LOGS/log.err
+    status=$?
+
+    if [[ $status -ne 0 ]]; then
+      $ECHO_ER virt-manager - extract \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
+      exit 1
+    else
+      $ECHO_OK virt-manager - extract
+    fi
+
+    cd $VIRTMANAGER
+    
+    $ECHO_PROGRESS "virt-manager - install"
+    python setup.py install --prefix=/usr 1>>$LOGS/log.out 2>>$LOGS/log.err
+    status=$?
+
+    if [[ $status -ne 0 ]]; then
+      $ECHO_ER virt-manager - install \(check logs\)
+      tail -$LOG_SIZE $LOGS/log.err 
+      exit 1
+    else
+      $ECHO_OK virt-manager - install
+    fi
 
     cd $pwd
     rm -rf $TEMP
