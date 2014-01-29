@@ -44,6 +44,7 @@ function libvirt_install
 {
   VERSION=$(virsh --version 2>/dev/null)
   if [[ $VERSION != "1.2.1" ]]; then
+    package_install libpciaccess-dev
     package_install libxml2-dev
     package_install libgnutls-dev
     package_install libyajl-dev
