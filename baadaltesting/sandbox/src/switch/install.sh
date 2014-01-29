@@ -161,6 +161,8 @@ function virtmanager_install
     package_install python-gtk2
     package_install python-urlgrabber
     package_install python-vte
+    package_install intltool
+    package_install libvirt-glib-1.0-dev
 
     dir=$pwd
 
