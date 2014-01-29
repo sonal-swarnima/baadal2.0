@@ -759,7 +759,6 @@ def edit_vm_config(parameters):
         if 'public_ip' in parameters:
             enable_public_ip = parameters['public_ip']
             if enable_public_ip:
-                current.db(current.db.vm_data.id == vmid).update(public_ip = '127.0.0.1')
                 public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
                 if public_ip_pool:
                     create_NAT_IP_mapping('add', public_ip_pool.public_ip, vm_details.private_ip)
