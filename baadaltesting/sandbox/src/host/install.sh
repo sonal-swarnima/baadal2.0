@@ -3,8 +3,6 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
-  package_install virtinst
-  package_install virt-manager
   disk_create $HOST_DISK ${HOST_SPACE}G
 
   $ECHO_PROGRESS Installing OS
@@ -25,6 +23,7 @@ function run
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Host vm creation error. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
   else
     $ECHO_OK Host vm created
   fi

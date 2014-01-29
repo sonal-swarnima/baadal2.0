@@ -4,18 +4,6 @@ Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm  python-libvirt gett
 
 ############################################################################################################################
  
-Chk_Root_Login()
-{
-	username=`whoami`
-	if test $username != "root"; then
-
-  		echo "LOGIN AS SUPER USER(root) TO INSTALL BAADAL!!!"
-  		exit 1
-	fi
-
-	echo "User Logged in as Root............................................"
-}
-
 #Function to check whther the network gateway is pingable or not
 Chk_Gateway()
 {
@@ -25,7 +13,6 @@ Chk_Gateway()
                 echo "NETWORK GATEWAY IS NOT REACHABLE!!!"
                 exit 1
         fi
-
 }
 
 
@@ -78,7 +65,7 @@ Enbl_Modules()
         	exit 1
 	fi
 
-	echo "Installing libvirt-1.0"
+	echo "Installing libvirt-1.0.0"
 
 	tar -xvzf libvirt-1.0.0.tar.gz
 	cd libvirt-1.0.0
@@ -87,25 +74,19 @@ Enbl_Modules()
 	make install
 	/etc/init.d/libvirt-bin restart
 	
-	mkdir -p NFS_MOUNT_POINT
-	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
+	mkdir -p LOCAL_MOUNT_POINT
+	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
 	echo "If you have done all the steps correctly, Congo!!!"
 }
 
 ############################################################################################################################
 
-#MAIN SCRIPT 
+apt-get update && apt-get -y upgrade
+Chk_Gateway
+Instl_Pkgs
+Enbl_Modules
+hostname baadalhost
+echo "baadalhost" > /etc/hostname
+reboot
 
-FLAG="/var/log/firstboot.log"
-if [ ! -f $FLAG ]; then
-	echo "this is our first boot script"
-	apt-get update && apt-get -y upgrade
-	Chk_Root_Login	
-	Chk_Gateway
-	Instl_Pkgs
-	Enbl_Modules
-	touch $FLAG
-	hostname baadalhost
-	echo "baadalhost" > /etc/hostname
-	reboot
-fi
+

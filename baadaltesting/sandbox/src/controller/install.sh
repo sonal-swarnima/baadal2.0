@@ -3,8 +3,6 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
-  package_install virtinst
-  package_install virt-manager
   disk_create $CONTROLLER_DISK ${CONTROLLER_SPACE}G
   remaster_ubuntu $CONTROLLER_KICKSTART $CONTROLLER_TRANSFER $CONTROLLER_ISO
 
@@ -27,6 +25,7 @@ function run
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Controller vm creation error. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
   else
     $ECHO_OK Controller vm created
   fi

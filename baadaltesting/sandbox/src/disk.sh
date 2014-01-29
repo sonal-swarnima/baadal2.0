@@ -9,6 +9,7 @@ function disk_create
   status=$?
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Disk creation failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
   else
     $ECHO_OK Virtual disk created.
   fi

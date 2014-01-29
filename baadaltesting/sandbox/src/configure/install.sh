@@ -23,8 +23,8 @@ function run
 
   if [ $(($lastaddr+$count)) -ge $maxValue ] 
   then
-    echo "Your IP Address does not have the required $count addresses free."
-    echo "The last value of IP Address must be less than 252"
+    $ECHO_ER Your IP Address does not have the required $count addresses free.
+    $ECHO_ER The last value of IP Address must be less than 252
     exit 1
   fi
 
@@ -50,9 +50,9 @@ function run
 
   gateway=$NETWORK_INTERNAL_IP_NAT
 
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_NAT --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth1" $NAT_KS
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $CONTROLLER_KS
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_FILER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --device=eth0" $FILER_KS
+  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_NAT --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$NAT_HOSTNAME --device=eth1" $NAT_KICKSTART
+  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$CONTROLLER_HOSTNAME --device=eth0" $CONTROLLER_KICKSTART
+  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_FILER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$FILER_HOSTNAME --device=eth0" $FILER_KICKSTART
 }
 
 

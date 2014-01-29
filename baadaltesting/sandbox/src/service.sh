@@ -10,6 +10,7 @@ function service_start
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Failed to start service $service. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK Service started $service
@@ -28,6 +29,7 @@ function service_restart
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Failed to restart service $service. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK Service restarted $service
@@ -56,6 +58,7 @@ function network_restart
 
   if [[ $status -ne 0 ]]; then
     $ECHO_ER Failed to restart service $service. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
     $ECHO_OK Service restarted $service
