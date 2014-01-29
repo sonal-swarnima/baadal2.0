@@ -284,12 +284,15 @@ clean-host:
 	sudo virsh undefine baadal_host_$(HOST_ID) || true
 	sudo rm -f $(BIN_HOST)
 	sudo rm -f $(DISKS_DIR)/host.$(HOST_ID).img
-  
+
+clean-transfer-tar:
+	sudo rm -f $(BAADAL_TRANSFER_TAR)
+
 clean-switch:
   
 clean-switch-external:
   
-clean: clean-controller clean-filer clean-nat
+clean: clean-controller clean-filer clean-nat clean-transfer-tar
 	sudo umount $(UTILS_DIR)/iso || true
 	sudo rm -rf $(UTILS_DIR)/iso
 	sudo rm -rf $(UTILS_DIR)/ubuntuiso
