@@ -1,13 +1,5 @@
-OVS_NAT_BRIDGE=nat-br-int
-NAT_EXTERNAL_INTERFACE=eth0
-NAT_INTERNAL_INTERFACE=eth1
-VLAN_START=1
-VLAN_END=255
-VLAN_NETMASK=255.255.255.0
-
 function run
 {
-  
   check_root
   
   hostname="$(uname -n)"
@@ -28,9 +20,7 @@ function run
   else
     $ECHO_OK iptables-persistent found
   fi
- 
-  service_restart openvswitch-switch
-  
+   
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_NAT_BRIDGE
     

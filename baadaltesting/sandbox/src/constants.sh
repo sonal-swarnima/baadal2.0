@@ -29,6 +29,8 @@ LOG_CLEAN="rm -f $LOGS/*"
 LOG_SIZE=10
 
 OVS_ETHERNET=eth0
+OVS_NAT_BRIDGE=nat-br-int
+OVS_HOST_BRIDGE=host-br-int
 
 #Update this in OVS_NET_XML too
 OVS_BRIDGE_INTERNAL=baadal-br-int
@@ -40,6 +42,13 @@ OVS_BRIDGE_EXTERNAL=baadal-br-ext
 OVS_NET_EXTERNAL=ovs-external
 OVS_NET_XML_EXTERNAL=$BIN/ovs-net-external.xml
 OVS_EXTERNAL_CUSTOM_IFS=$BIN/interfaces.sandbox
+
+#Because we use a mask of 255.255.0.0
+NETWORK_BITS=16
+VLAN_START=1
+VLAN_END=255
+VLAN_NETMASK=255.255.255.0
+
 
 #These values may be updated by configure.
 NETWORK_INTERNAL_IP_SANDBOX=10.0.0.1
@@ -59,6 +68,8 @@ NAT_ISO=$UTILS_LOCAL/ubuntu.nat.iso
 NAT_KICKSTART=$BIN/ks.nat.cfg
 NAT_TRANSFER=$BIN/transfer.nat/
 NAT_KS=$NAT/ks.cfg
+NAT_EXTERNAL_INTERFACE=eth0
+NAT_INTERNAL_INTERFACE=eth1
 
 CONTROLLER_DISK=$DISKS/controller.img
 CONTROLLER_SPACE=5
@@ -92,6 +103,7 @@ HOST_NAME=baadal_host_$HOST_ID
 HOST_HOSTNAME=baadal-host # Should match in ks.cfg
 HOST_RAM=8192
 HOST_VCPUS=4
+HOST_INTERFACE=eth0
 
 HOST_MAC_1=52:52:00:01:15:01
 HOST_MAC_2=52:52:00:01:15:02
