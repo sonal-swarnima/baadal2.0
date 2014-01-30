@@ -7,7 +7,7 @@ if 0:
     global db; db = gluon.sql.DAL()
 ###################################################################################
 
-import sys, math, shutil, paramiko, traceback, libvirt
+import sys, math, shutil, paramiko, traceback, libvirt, random
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
@@ -116,9 +116,14 @@ def choose_mac_ip_vncport(vm_properties):
     
     choose_mac_ip(vm_properties)
 
-    count = int(get_constant('vmcount')) 
-    vm_properties['vnc_port'] = str(int(get_constant('vncport_range')) + count)
-    update_constant('vmcount', count + 1)
+    start_range = int(get_constant('vncport_start_range')) 
+    end_range = int(get_constant('vncport_end_range'))
+    vnc_ports_taken = current.db().select(current.db.vm_data.vnc_port)
+    while True:
+        random_vnc_port = random.randrange(start_range, end_range, 1)
+        if not random_vnc_port in vnc_ports_taken:
+            break;
+    vm_properties['vnc_port'] = str(random_vnc_port)
     
 
 # Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
