@@ -6,6 +6,8 @@ function run
 
   libvirt_install
   virtmanager_install
+    
+  libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
 
   ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
@@ -146,9 +148,7 @@ function libvirt_install
     else
       $ECHO_OK libvirt - make install
     fi
-
-    libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
-
+    
     cd $pwd
     rm -rf $TEMP
 

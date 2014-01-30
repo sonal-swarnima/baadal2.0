@@ -18,7 +18,7 @@ DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
 
 PROFILE = iitd
-PROFILE_PPA = http://10.208.23.202/openvswitch
+PROFILE_PPA = http://10.208.26.104/openvswitch
   
 HOST_ID = 1
   
@@ -97,6 +97,9 @@ virtmanager: $(VIRTMANAGER)
 utils: ubuntu libvirt virtmanager
 
 $(BAADAL_TRANSFER_TAR):
+	@ sudo umount $(UTILS_DIR)/iso 1>/dev/null 2>/dev/null || true
+	@ sudo rm -rf $(UTILS_DIR)/iso 1>/dev/null 2>/dev/null || true
+	@ sudo rm -rf $(UTILS_DIR)/ubuntuiso 1>/dev/null 2>/dev/null || true
 	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
 	cd $(BIN_DIR) ;	tar -chvf $@ baadal 1>/dev/null
 	@ rm $(BIN_DIR)/baadal
