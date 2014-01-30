@@ -5,6 +5,7 @@ UTILS_DIR = utils
 LOGS_DIR = $(BAADAL_LOCAL_DIR)/logs
 DISKS_DIR = $(BAADAL_LOCAL_DIR)/disks
 TEMP_DIR = $(BAADAL_LOCAL_DIR)/temp
+CONFIG_DIR = $(BAADAL_LOCAL_DIR)/config
 UTILS_LOCAL_DIR = $(BAADAL_LOCAL_DIR)/utils
 
 SHELL = bash
@@ -17,6 +18,7 @@ DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
 
 PROFILE = iitd
+PROFILE_PPA = http://10.208.23.202/openvswitch
   
 HOST_ID = 1
   
@@ -38,7 +40,6 @@ VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
-BIN_FILER_SETUP = $(BIN_DIR)/filer-setup.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
 BIN_NAT_SETUP = $(BIN_DIR)/nat-setup.sh
 BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
@@ -66,7 +67,10 @@ $(LOGS_DIR):
 $(DISKS_DIR):
 	@ mkdir -p $@
   
-directories: $(BIN_DIR) $(BAADAL_LOCAL_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR)
+$(CONFIG_DIR):
+	@ mkdir -p $@
+  
+directories: $(BIN_DIR) $(BAADAL_LOCAL_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(CONFIG_DIR)
   
 $(UBUNTU):
 	@ mkdir -p $(UTILS_DIR)
@@ -109,7 +113,11 @@ $(CONFIGURE):
 openvswitch: sources-list-setup
 	apt-get update || true
 	apt-get -y install python-software-properties
-	add-apt-repository ppa:ivoks/ovs-saucy
+	if [[ "$(PROFILE)" == "iitd" ]]; then \
+		add-apt-repository -y 'deb [arch=amd64] $(PROFILE_PPA) precise main';\
+		else \
+			add-apt-repository -y ppa:ivoks/ovs-saucy ;\
+		fi
 	apt-get update || true
 	apt-get -y install openvswitch-common=1.10.2-0ubuntu2~cloud0
 	apt-get -y install openvswitch-pki=1.10.2-0ubuntu2~cloud0
@@ -164,46 +172,49 @@ controller: $(BIN_CONTROLLER)
 	@ sudo $<
   
 filer: $(BIN_FILER)
-	sudo $<
+	@ sudo $<
   
-filer-setup: $(BIN_FILER_SETUP)
-	sudo $<
-
 nat: $(BIN_NAT)
 	@ sudo $<
 
-nat-setup: $(BIN_NAT_SETUP) openvswitch
+nat-setup: $(BIN_NAT_SETUP)
 	@ sudo $<
 
 host: $(BIN_HOST)
 	sudo HOST_ID=$(HOST_ID) $<
 
-host-setup: $(BIN_HOST_SETUP) openvswitch
+host-setup: $(BIN_HOST_SETUP)
 	@ sudo $<
   
-switch: $(BIN_SWITCH) openvswitch
+switch: $(BIN_SWITCH)
 	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL INTERFACE=$$INTERFACE $<
   
-nat-transfer: $(BAADAL_TRANSFER_TAR)
+nat-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR)
 	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.nat/baadal/baadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.nat/root/.baadal
 
-controller-transfer: $(BAADAL_TRANSFER_TAR)
+controller-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR)
 	@ cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
 	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
 	@ mkdir -p $(BIN_DIR)/transfer.controller/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.controller/baadal/baadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.controller/root/.baadal
 
-filer-transfer:
+filer-transfer: $(CONFIG_DIR)
 	@ cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
 	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
 	@ mkdir -p $(BIN_DIR)/transfer.filer/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.filer/baadal/baadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.filer/root/.baadal
 
 $(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
@@ -214,13 +225,6 @@ $(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 
 $(BIN_HOST_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/host $(SRC_DIR)/host/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/host-setup.sh > $@
-	@ sed -i '1i#!/bin/$(SHELL)' $@
-	@ sed -i '$$a$(RUN_COMMAND)' $@
-	@ chmod +x $@
-
-$(BIN_FILER_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
-	@ mkdir -p $(BIN_DIR)/transfer.filer/baadal
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/filer-setup.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
@@ -301,10 +305,6 @@ clean-host:
 clean-transfer-tar:
 	sudo rm -f $(BAADAL_TRANSFER_TAR)
 
-clean-switch:
-  
-clean-switch-external:
-  
 clean: clean-config clean-controller clean-filer clean-nat clean-transfer-tar
 	sudo umount $(UTILS_DIR)/iso || true
 	sudo rm -rf $(UTILS_DIR)/iso
@@ -313,5 +313,5 @@ clean: clean-config clean-controller clean-filer clean-nat clean-transfer-tar
 	sudo rm -rf $(LOGS_DIR)
 	sudo rm -rf $(DISKS_DIR)
   
-cleanall: clean clean-config
+clean-all: clean clean-config
 	sudo rm -rf $(UTILS_DIR)
