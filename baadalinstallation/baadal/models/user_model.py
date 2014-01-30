@@ -284,6 +284,7 @@ def get_clone_vm_form(vm_id):
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
+    db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.clone_count.requires = IS_INT_IN_RANGE(1,101)
     db.request_queue.vm_name.writable = False
     form_fields = ['vm_name', 'clone_count', 'purpose']

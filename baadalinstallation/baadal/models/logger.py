@@ -39,8 +39,8 @@ def exception(message=None):
     etype, value, tb = sys.exc_info()
     trace = ''.join(traceback.format_exception(etype, value, tb, 10))
     if message:
-        trace += message
-    logger.error(trace)
+        trace = message + trace
+    logger.log(trace, level='ERROR')
     return trace
 
 logger = get_configured_logger(request.application)
