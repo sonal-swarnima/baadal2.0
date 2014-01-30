@@ -105,7 +105,7 @@ def check_db_storage_type():
     config = get_config_file()
     storage_type = config.get("GENERAL_CONF","storage_type")
     if storage_type == current.AUTH_TYPE_DB:
-         return True
+        return True
     return False
     
 def create_dhcp_entry(host_name, mac_addr, ip_addr):
