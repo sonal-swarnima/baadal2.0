@@ -1,0 +1,67 @@
+{{extend 'layout.html'}}
+<script>
+    function add_user_role(user_id){
+    	var checkedValues = $('#user_roles_'+user_id+' input:checkbox:checked').map(function() {
+    		return $(this).val();
+		}).get();
+        console.log(checkedValues.toString());
+        if (checkedValues.toString() == ""){
+        	checkedValues=['empty']
+        }
+        var add_user_url = '{{=URL("modify_roles")}}';
+        add_user_url =add_user_url.concat('/'+user_id+'/'+checkedValues.join('_'));                                                                                             
+        window.location.href = add_user_url;
+    }
+</script>
+
+{{
+  if not users:
+}}
+<center><h3>No users in the database</h3></center>
+
+{{else:}}
+<h2 class="subtitle">{{=T('Modify User roles')}}</h2>
+<div class="TABLE">
+	<table id="active_users">
+        <tr>
+                <td>First Name</td>
+                <td>Last Name</td>
+                <td>Email</td>
+                <td>User Name</td>
+                <td>Organisation</td>
+                <td>Type</td>
+                <td>Action</td>
+            </tr>
+        	{{for user in users:}}
+        		<tr>
+                    <td>{{=user.first_name}}</td>
+        			<td>{{=user.last_name}}</td>
+        			<td>{{=user.email}}</td>
+        			<td>{{=user.username}}</td>
+                    <td>{{=user.organisation}}</td>
+                    <td>
+                        <div id="user_roles_{{=str(user['id'])}}">
+                        	{{for type in type_options:}}  
+                            {{print user['roles']}}
+                            {{if type['id'] in set(x for x in user['roles']):}}
+                            {{print("here")}}
+                            {{=INPUT(_type='checkbox', _name='roleType', _class='roleType', _value=""+str(type['id']), value=True)}} {{=type['role']}} <br/>
+                            	{{else:}}
+                        			{{=INPUT(_type='checkbox', _name='roleType', _class='roleType', _value=""+str(type['id']), value=False)}} {{=type['role']}} <br/>
+                            	{{pass}}
+                        	{{pass}}
+                        </div>
+                        <!--<div id=""+{{=user.id}}>
+                            {{for type in type_options:}}
+                            <input type="checkbox" name="roleType" class="roleType" value=""+{{= type.id}}>{{=type.role}}<br/>
+                            {{pass}}
+                    	</div>-->
+                    </td>
+                    <td>{{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
+                         _href="javascript:void(0);", _class="add_user_request", _id="approve_"+str(user['id']), _title="Add user with role", 
+                         _alt="Add user with role", _onclick="add_user_role("+str(user['id'])+");")}}
+            </tr>
+            {{pass}}
+    </table>
+</div>
+{{pass}}

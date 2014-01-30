@@ -106,13 +106,8 @@ def get_performance_graph(graph_type, vm, graph_period):
             logger.warn("VMs RRD File Unavailable!!!")
             error = "VMs RRD File Unavailable!!!"
     except: 
-
-        import sys, traceback
-        etype, value, tb = sys.exc_info()
         logger.warn("Error occured while creating graph.")
-        msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
-        logger.error(msg)           
-        error = msg
+        error = logger.exception()
 
     finally:
         if (is_moderator() and (error != None)):

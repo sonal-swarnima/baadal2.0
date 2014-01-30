@@ -1,0 +1,65 @@
+{{extend 'layout.html'}}
+<script>
+    function add_user(user_id){
+    	var checkedValues = $('#user_roles_'+user_id+' input:checkbox:checked').map(function() {
+    		return $(this).val();
+		}).get();
+        console.log(checkedValues.toString());
+        if (checkedValues.toString() == ""){
+        	checkedValues=['empty']
+        }
+        var add_user_url = '{{=URL("add_user_with_role")}}';
+        add_user_url =add_user_url.concat('/'+user_id+'/'+checkedValues.join('_'));                                                                                             
+        window.location.href = add_user_url;
+    }
+</script>
+
+{{
+  if not users:
+}}
+<center><h3>No users pending Approval</h3></center>
+
+{{else:}}
+<h2 class="subtitle">{{=T('All Users pending approval')}}</h2>
+<div class="TABLE">
+	<table id="pending_users">
+        	<tr>
+                <td>First Name</td>
+                <td>Last Name</td>
+                <td>Email</td>
+                <td>User Name</td>
+                <td>Organisation</td>
+                <td>Type</td>
+                <td>Action</td>
+            </tr>
+        	{{for user in users:}}
+        		<tr>
+                    <td>{{=user.first_name}}</td>
+        			<td>{{=user.last_name}}</td>
+        			<td>{{=user.email}}</td>
+        			<td>{{=user.username}}</td>
+                    <td>{{=user.organisation}}</td>
+                    <td>
+                        <div id="user_roles_{{=str(user['id'])}}">
+                        	{{for type in type_options:}}  
+                        	{{=INPUT(_type='checkbox', _name='roleType', _class='roleType', _value=""+str(type['id']))}} {{=type['role']}}<br/>
+                        	{{pass}}
+                        </div>
+                        <!--<div id=""+{{=user.id}}>
+                            {{for type in type_options:}}
+                            <input type="checkbox" name="roleType" class="roleType" value=""+{{= type.id}}>{{=type.role}}<br/>
+                            {{pass}}
+                    	</div>-->
+                    </td>
+                    <td>{{=A(IMG(_src=URL('static','images/accept.png'), _height=18, _width=18), 
+                         _href="javascript:void(0);", _class="add_user_request", _id="approve_"+str(user['id']), _title="Add user with role", 
+                         _alt="Add user with role", _onclick="add_user("+str(user['id'])+");")}}
+                    &nbsp;&nbsp;
+                    {{=A(IMG(_src=URL('static','images/reject.png'), _height=18, _width=18), 
+                        _href=URL(r=request, c='admin',f='remove_user', args=[user['id']]),
+                        _title="Remove User", _alt="Remove User", _onclick="tab_refresh();")}}</td>
+            </tr>
+            {{pass}}
+    </table>
+</div>
+{{pass}}

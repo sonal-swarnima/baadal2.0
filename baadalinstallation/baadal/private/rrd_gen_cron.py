@@ -196,19 +196,13 @@ def update_rrd():
                     else:
                         logger.info("rrd updated successfully.")
                 except:
-                    import sys, traceback
-                    etype, value, tb = sys.exc_info()
                     logger.warn("Error occured while creating/updating rrd.")
-                    msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-                    logger.error(msg)
+                    logger.exception()
                     pass
             
         except:
-            import sys, traceback
-            etype, value, tb = sys.exc_info()
             logger.warn("Error occured while creating/updating rrd or host.")
-            msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
-            logger.error(msg)           
+            logger.exception()           
             pass
         finally: 
             if conn:

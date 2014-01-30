@@ -7,7 +7,7 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin
+from helper import is_moderator, is_faculty, is_orgadmin, check_db_storage_type
 
 response.title = request.application
 response.google_analytics_id = None
@@ -56,13 +56,15 @@ if auth.is_logged_in():
             (T('VM Utilization'), False, URL('admin','vm_utilization')),
             (T('Host and VMs'), False, URL('admin','hosts_vms')),
             (T('Tasks'), False, URL('admin','task_list')),
-            (T('Sanity Check'), False, URL('admin','sanity_check')),
-            (T('Configure System'), False,dict(_href='#', _id='configure'),[
+            (T('Sanity Check'), False, URL('admin','sanity_check'))]
+        if check_db_storage_type():
+                response.admin_menu.extend([(T('Approve Users'), False, URL('admin','approve_users')),
+                                            (T('Modify User Role'), False, URL('admin','modify_user_role'))])
+        response.admin_menu.extend([(T('Configure System'), False,dict(_href='#', _id='configure'),[
                 (T('Configure Host'), False, URL('admin','host_details')),
                 (T('Configure Template'), False, URL('admin','manage_template')),
                 (T('Configure Datastore'), False, URL('admin','manage_datastore')),
                 (T('Configure Security Domain'), False, URL('admin','manage_security_domain')),
                 (T('Configure Private IP Pool'), False, URL('admin','manage_private_ip_pool')),
                 (T('Configure Public IP Pool'), False, URL('admin','manage_public_ip_pool'))
-                ])
-            ]
+                ])])

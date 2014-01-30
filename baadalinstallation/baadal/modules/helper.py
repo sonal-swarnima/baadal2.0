@@ -45,13 +45,13 @@ def update_constant(constant_name, constant_value):
     current.db(current.db.constants.name == constant_name).update(value = constant_value)
     return 
 
-def execute_remote_cmd(machine_ip, user_name, command):
+def execute_remote_cmd(machine_ip, user_name, command, password=None):
 
     import paramiko
 
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(machine_ip, username = user_name)
+    ssh.connect(machine_ip, username = user_name, password = password)
     stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
     output = stdout.readlines()
     if stderr.readlines():
@@ -100,6 +100,13 @@ def generate_random_mac():
         mac.append(random.randint(0x00, 0xff))
         i += 1
     return (':'.join(map(lambda x: "%02x" % x, mac))).upper()
+    
+def check_db_storage_type():
+    config = get_config_file()
+    storage_type = config.get("GENERAL_CONF","storage_type")
+    if storage_type == current.AUTH_TYPE_DB:
+        return True
+    return False
     
 def create_dhcp_entry(host_name, mac_addr, ip_addr):
 

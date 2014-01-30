@@ -87,6 +87,9 @@ SNAPSHOT_YEARLY=4
 SNAPSHOT_USER=5
 current.SNAPSHOT_USER=SNAPSHOT_USER
 
+#User status
+USER_PENDING_APPROVAL='pending'
+
 ADMIN = 'admin'
 ORGADMIN = 'orgadmin'
 FACULTY = 'faculty'
@@ -96,6 +99,13 @@ current.ADMIN = ADMIN
 current.ORGADMIN = ORGADMIN
 current.FACULTY = FACULTY
 current.USER = USER
+
+#Auth types
+AUTH_TYPE_LDAP = 'ldap'
+AUTH_TYPE_DB = 'db'
+
+current.AUTH_TYPE_LDAP = AUTH_TYPE_LDAP
+current.AUTH_TYPE_DB = AUTH_TYPE_DB
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED

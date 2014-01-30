@@ -191,7 +191,7 @@ def get_user_info(username, roles):
     
     # If user not present in DB
     if not user:
-        if current.auth_type == 'ldap':
+        if current.auth_type == AUTH_TYPE_LDAP :
             user_info = fetch_ldap_user(username)
             if user_info:
                 if [obj for obj in roles if obj in user_info['roles']]:

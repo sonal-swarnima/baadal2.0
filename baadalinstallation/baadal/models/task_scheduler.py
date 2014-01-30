@@ -5,9 +5,15 @@ if 0:
     from gluon import db,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import sys, traceback
 from helper import get_datetime
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
+from host_helper import host_status_sanity_check
+
+UUID_SNAPSHOT_DAILY = 'scheduler-uuid-snapshot-daily'
+UUID_SNAPSHOT_WEEKLY = 'scheduler-uuid-snapshot-weekly'
+UUID_SNAPSHOT_MONTHLY = 'scheduler-uuid-snapshot-monthly'
+UUID_VM_SANITY_CHECK = 'scheduler-uuid-vm-sanity-check'
+UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
 
 task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_START_VM                :    start,
@@ -36,9 +42,9 @@ def send_task_complete_mail(task_event):
     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
     
     
-def processTaskQueue(task_event_id):
+def process_task_queue(task_event_id):
 
-    logger.debug("Processing task: " + task_event_id)
+    logger.debug("Processing task: " + str(task_event_id))
     task_event = db.task_queue_event[task_event_id]
     task_process = db.task_queue[task_event.task_id] 
     try:
@@ -67,14 +73,12 @@ def processTaskQueue(task_event_id):
         
         db.commit()
     except:
-        etype, value, tb = sys.exc_info()
-        msg=''.join(traceback.format_exception(etype, value, tb, 10))
-        logger.error(msg)
+        msg = logger.exception()
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
         
-def processCloneTask(task_event_id, vm_id):
+def process_clone_task(task_event_id, vm_id):
 
-    logger.debug("Processing clone task: " + task_event_id)
+    logger.debug("Processing clone task: " + str(task_event_id))
     task_event = db.task_queue_event[task_event_id]
     task_queue = db.task_queue[task_event.task_id]
     message = task_event.message if task_event.message != None else ''
@@ -119,52 +123,81 @@ def processCloneTask(task_event_id, vm_id):
         db.commit()
 
     except:
-        etype, value, tb = sys.exc_info()
-        msg=''.join(traceback.format_exception(etype, value, tb, 10))
-        logger.error(msg)
+        msg = logger.exception()
         vm_data = db.vm_data[vm_id]
         message = message + '\n' + vm_data.vm_name + ': ' + msg
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=message)
 
 
 # Handles periodic snapshot task
-def processSnapshotVM(snapshot_type):
+def process_snapshot_vm(snapshot_type):
 
-    logger.debug("Processing snapshot task: " + snapshot_type)
+    logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     for vm in vms:
         params={'snapshot_type':snapshot_type}
         add_vm_task_to_queue(vm.id,TASK_TYPE_SNAPSHOT_VM, params)
         db.commit()
         
+# Handles periodic VM sanity check
+def vm_sanity_check():
+
+    logger.debug("Starting VM Sanity Check")
+    vmcheck = check_vm_sanity()
+    logger.debug(vmcheck) 
+
+
+# Handles periodic Host sanity check
+def host_sanity_check():
+
+    logger.debug("Starting Host Sanity Check")
+    host_status_sanity_check
+
+
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler
-vm_scheduler = Scheduler(db, tasks=dict(vm_task=processTaskQueue, 
-                                        clone_task=processCloneTask,
-                                        snapshot_vm=processSnapshotVM))
+vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue, 
+                                        clone_task=process_clone_task,
+                                        snapshot_vm=process_snapshot_vm,
+                                        vm_sanity=vm_sanity_check,
+                                        host_sanity=host_sanity_check))
 
-ss_query = (db.scheduler_task.task_name == 'snapshot_vm') & (db.scheduler_task.status=='QUEUED')
-res = vm_scheduler.task_status(ref=ss_query)
-# If snapshot task is not queued already, create task. This is a one-time job.
-if not res:
-    vm_scheduler.queue_task('snapshot_vm', 
-                        pvars = dict(snapshot_type = SNAPSHOT_DAILY),
-                        repeats = 0, # run indefinitely
-                        start_time = request.now, 
-                        period = 24 * HOURS, # every 24h
-                        timeout = 5 * MINUTES)
-    
-    vm_scheduler.queue_task('snapshot_vm', 
-                        pvars = dict(snapshot_type = SNAPSHOT_WEEKLY),
-                        repeats = 0, # run indefinitely
-                        start_time = request.now, 
-                        period = 7 * DAYS, # every 7 days
-                        timeout = 5 * MINUTES)
-    
-    vm_scheduler.queue_task('snapshot_vm', 
-                        pvars = dict(snapshot_type = SNAPSHOT_MONTHLY),
-                        repeats = 0, # run indefinitely
-                        start_time = request.now, 
-                        period = 30 * DAYS, # every 30 days
-                        timeout = 5 * MINUTES)
-    
+midnight_time = request.now.replace(hour=23, minute=59, second=59)
+
+vm_scheduler.queue_task('snapshot_vm', 
+                    pvars = dict(snapshot_type = SNAPSHOT_DAILY),
+                    repeats = 0, # run indefinitely
+                    start_time = midnight_time, 
+                    period = 24 * HOURS, # every 24h
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_SNAPSHOT_DAILY)
+
+vm_scheduler.queue_task('snapshot_vm', 
+                    pvars = dict(snapshot_type = SNAPSHOT_WEEKLY),
+                    repeats = 0, # run indefinitely
+                    start_time = midnight_time, 
+                    period = 7 * DAYS, # every 7 days
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_SNAPSHOT_WEEKLY)
+
+vm_scheduler.queue_task('snapshot_vm', 
+                    pvars = dict(snapshot_type = SNAPSHOT_MONTHLY),
+                    repeats = 0, # run indefinitely
+                    start_time = midnight_time, 
+                    period = 30 * DAYS, # every 30 days
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_SNAPSHOT_MONTHLY)
+
+vm_scheduler.queue_task('vm_sanity', 
+                    repeats = 0, # run indefinitely
+                    start_time = request.now, 
+                    period = 30 * MINUTES, # every 30 minutes
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_VM_SANITY_CHECK)
+
+vm_scheduler.queue_task('host_sanity', 
+                    repeats = 0, # run indefinitely
+                    start_time = request.now, 
+                    period = 10 * MINUTES, # every 10 minutes
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_HOST_SANITY_CHECK)
