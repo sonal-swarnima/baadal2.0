@@ -3,8 +3,6 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
-  package_install virtinst
-  package_install virt-manager
   disk_create $FILER_DISK ${FILER_SPACE}G
   remaster_ubuntu $FILER_KICKSTART $FILER_TRANSFER $FILER_ISO
 
@@ -19,7 +17,7 @@ function run
     --os-type=Linux \
     --disk path=$FILER_DISK,format=qcow2,size=$FILER_SPACE \
     --cdrom $FILER_ISO \
-    --network network=$OVS_NET_INTERNAL \
+    --network network=$OVS_NET_INTERNAL,mac=$MAC_FILER \
     --noautoconsole \
     --graphics vnc,listen=0.0.0.0 \
     1>$LOGS/log.out 2>/$LOGS/log.err

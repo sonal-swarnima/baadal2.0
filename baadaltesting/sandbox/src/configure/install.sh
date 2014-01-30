@@ -1,58 +1,41 @@
 function run
 {
-  # TODO
+  # FIXME
   # sed in sandbox's /etc/network/interfaces -> src/switch/interfaces
 
-  maxValue=255
-  count=4
-  default=0.0.0.0
+  config_get NETWORK_INTERNAL 
         
   echo -e "\n\nWelcome to Baadal Sandbox Setup\n"
-  echo "Enter the starting IP Address(Internal) for the management systems "
-  echo "(If you want to use previously defined/default values enter 0.0.0.0)"
+  echo "Enter the Network Address (Internal) for the management systems in form x.y.0.0 (default $NETWORK_INTERNAL) : "
   read start_ip
+
+  if [ "$start_ip" == "" ]
+  then
+    start_ip=$NETWORK_INTERNAL
+  fi
 
   baseaddr="$(echo $start_ip | cut -d. -f1-3)"
   lastaddr="$(echo $start_ip | cut -d. -f4)"
+  qualifier="$(echo $start_ip | cut -d. -f3-4)"
 
-  if [ "$start_ip" == "$default" ]
+  if [ "$qualifier" != "0.0" ] 
   then
-    echo "Using previously defined/default IP Addresses"
-    return 0
-  fi
-
-  if [ $(($lastaddr+$count)) -ge $maxValue ] 
-  then
-    $ECHO_ER Your IP Address does not have the required $count addresses free.
-    $ECHO_ER The last value of IP Address must be less than 252
+    $ECHO_ER Your IP Address is not of form x.y.0.0
     exit 1
   fi
 
-  echo "Enter the subnet mask for the internal network"
-  read subnet
-  echo "Enter the default nameserver for the internal network"
-  read nameserver
-
+  lastaddr=$(( $lastaddr + 1 ))
   NETWORK_INTERNAL_IP_SANDBOX=$baseaddr.$lastaddr
-  sed -i "/NETWORK_INTERNAL_IP_SANDBOX=/c\NETWORK_INTERNAL_IP_SANDBOX=$baseaddr.$lastaddr" $CONFIGURE
-
   lastaddr=$(( $lastaddr + 1 ))
   NETWORK_INTERNAL_IP_CONTROLLER=$baseaddr.$lastaddr
-  sed -i "/NETWORK_INTERNAL_IP_CONTROLLER=/c\NETWORK_INTERNAL_IP_CONTROLLER=$baseaddr.$lastaddr" $CONFIGURE
-
   lastaddr=$(( $lastaddr + 1 ))
   NETWORK_INTERNAL_IP_NAT=$baseaddr.$lastaddr
-  sed -i "/NETWORK_INTERNAL_IP_NAT=/c\NETWORK_INTERNAL_IP_NAT=$baseaddr.$lastaddr" $CONFIGURE
-
   lastaddr=$(( $lastaddr + 1 ))
   NETWORK_INTERNAL_IP_FILER=$baseaddr.$lastaddr
-  sed -i "/NETWORK_INTERNAL_IP_FILER=/c\NETWORK_INTERNAL_IP_FILER=$baseaddr.$lastaddr" $CONFIGURE
 
-  gateway=$NETWORK_INTERNAL_IP_NAT
-
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_NAT --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$NAT_HOSTNAME --device=eth1" $NAT_KICKSTART
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_CONTROLLER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$CONTROLLER_HOSTNAME --device=eth0" $CONTROLLER_KICKSTART
-  sed -i "/network --bootproto=static/c\network --bootproto=static --ip=$NETWORK_INTERNAL_IP_FILER --netmask=$subnet --gateway=$gateway --nameserver=$nameserver --hostname=$FILER_HOSTNAME --device=eth0" $FILER_KICKSTART
+  config_set NETWORK_INTERNAL
+  config_set NETWORK_INTERNAL_IP_SANDBOX
+  config_set NETWORK_INTERNAL_IP_CONTROLLER
+  config_set NETWORK_INTERNAL_IP_NAT
+  config_set NETWORK_INTERNAL_IP_FILER
 }
-
-

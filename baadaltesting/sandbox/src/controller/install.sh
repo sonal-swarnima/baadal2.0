@@ -17,7 +17,7 @@ function run
     --os-type=Linux \
     --disk path=$CONTROLLER_DISK,format=qcow2,size=$CONTROLLER_SPACE \
     --cdrom $CONTROLLER_ISO \
-    --network network=$OVS_NET_INTERNAL \
+    --network network=$OVS_NET_INTERNAL,mac=$MAC_CONTROLLER \
     --noautoconsole \
     --graphics vnc,listen=0.0.0.0 \
     1>$LOGS/log.out 2>/$LOGS/log.err

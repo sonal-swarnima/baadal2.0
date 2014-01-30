@@ -18,7 +18,7 @@ function run
     --disk path=$NAT_DISK,format=qcow2,size=$NAT_SPACE \
     --cdrom $NAT_ISO \
     --network network=$OVS_NET_EXTERNAL \
-    --network network=$OVS_NET_INTERNAL \
+    --network network=$OVS_NET_INTERNAL,mac=$MAC_NAT \
     --noautoconsole \
     --graphics vnc,listen=0.0.0.0 \
     1>$LOGS/log.out 2>/$LOGS/log.err

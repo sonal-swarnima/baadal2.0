@@ -1,12 +1,5 @@
-OVS_HOST_BRIDGE=host-br-int
-HOST_INTERFACE=eth0
-VLAN_START=1
-VLAN_END=255
-VLAN_NETMASK=255.255.255.0
-
 function run
-{
-  
+{  
   check_root
   
   hostname="$(uname -n)"
@@ -16,8 +9,6 @@ function run
     $ECHO_ER Please correct the hostname or check the underlying system before running.
     exit 1
   fi
-
-  service_restart openvswitch-switch
   
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_HOST_BRIDGE

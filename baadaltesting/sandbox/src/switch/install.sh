@@ -2,39 +2,82 @@ function run
 {
   check_root
 
+  package_install dnsmasq
+
   libvirt_install
   virtmanager_install
+    
+  libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
 
-	ovsvsctl_add_br_force $OVS_BRIDGE_EXTERNAL
+  ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
+  ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
 
-	ovsvsctl_add_port_force $OVS_BRIDGE_EXTERNAL $OVS_ETHERNET
-  ovsvsctl_add_br_force $OVS_BRIDGE_INTERNAL
+	ovsvsctl_add_br $OVS_BRIDGE_EXTERNAL
+
+  config_get INTERFACE
+	ovsvsctl_add_port $OVS_BRIDGE_EXTERNAL $INTERFACE
+  ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
 
   ovsvsctl_set_port $OVS_BRIDGE_INTERNAL "tag=1"
 
-  ifconfig $OVS_ETHERNET 0
-  dhclient $OVS_BRIDGE_EXTERNAL 2>/dev/null
+  ifconfig $INTERFACE 0
+  ifconfig_dhcp $OVS_BRIDGE_EXTERNAL
 
+  config_get NETWORK_INTERNAL_IP_SANDBOX
   ifconfig_ip $OVS_BRIDGE_INTERNAL $NETWORK_INTERNAL_IP_SANDBOX 255.255.0.0 
 
-	cp /etc/network/interfaces /etc/network/interfaces.bak
+  file_backup /etc/network/interfaces
 
+  # FIXME
+  # does not use values from our settings in $CONFIG
+  # one step sed solution right now
+  # which would always give right result
 	cp $OVS_EXTERNAL_CUSTOM_IFS /etc/network/interfaces
 
   virsh_force "net-destroy $OVS_NET_INTERNAL"
   virsh_force "net-undefine $OVS_NET_INTERNAL"
-	virsh_force "net-define $OVS_NET_XML_INTERNAL"
-	virsh_force "net-start $OVS_NET_INTERNAL"
+	virsh_run "net-define $OVS_NET_XML_INTERNAL"
+	virsh_run "net-start $OVS_NET_INTERNAL"
 	virsh_run "net-autostart $OVS_NET_INTERNAL"
 
   virsh_force "net-destroy $OVS_NET_EXTERNAL"
   virsh_force "net-undefine $OVS_NET_EXTERNAL"
-	virsh_force "net-define $OVS_NET_XML_EXTERNAL"
-	virsh_force "net-start $OVS_NET_EXTERNAL"
+	virsh_run "net-define $OVS_NET_XML_EXTERNAL"
+	virsh_run "net-start $OVS_NET_EXTERNAL"
 	virsh_run "net-autostart $OVS_NET_EXTERNAL"
 
-  $ECHO_OK Switch Installation Complete
+  config_get NETWORK_INTERNAL
+  config_get NETWORK_INTERNAL_IP_SANDBOX
+  config_get NETWORK_INTERNAL_IP_CONTROLLER
+  config_get NETWORK_INTERNAL_IP_NAT
+  config_get NETWORK_INTERNAL_IP_FILER
+
+  $ECHO_PROGRESS "dnsmasq"
   
+  # Not really a good idea
+  killall dnsmasq 2>/dev/null
+
+  dnsmasq \
+    --listen-address=$NETWORK_INTERNAL_IP_SANDBOX \
+    --bind-interfaces \
+    --dhcp-mac=nat,$MAC_NAT \
+    --dhcp-host=$MAC_CONTROLLER,$NETWORK_INTERNAL_IP_CONTROLLER \
+    --dhcp-host=$MAC_NAT,$NETWORK_INTERNAL_IP_NAT \
+    --dhcp-host=$MAC_FILER,$NETWORK_INTERNAL_IP_FILER \
+    --dhcp-option=nat,option:router,0.0.0.0 \
+    --dhcp-option=3,$NETWORK_INTERNAL_IP_GATEWAY \
+    --dhcp-range=$NETWORK_INTERNAL,static
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER dnsmasq \(check logs\)
+    tail -$LOG_SIZE $LOGS/log.err 
+    exit 1
+  else
+      $ECHO_OK dnsmasq
+  fi
+
+  $ECHO_OK Switch Installation Complete
 }
 
 function libvirt_install
@@ -105,9 +148,7 @@ function libvirt_install
     else
       $ECHO_OK libvirt - make install
     fi
-
-    libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
-
+    
     cd $pwd
     rm -rf $TEMP
 

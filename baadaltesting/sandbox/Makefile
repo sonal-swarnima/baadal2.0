@@ -5,6 +5,7 @@ UTILS_DIR = utils
 LOGS_DIR = $(BAADAL_LOCAL_DIR)/logs
 DISKS_DIR = $(BAADAL_LOCAL_DIR)/disks
 TEMP_DIR = $(BAADAL_LOCAL_DIR)/temp
+CONFIG_DIR = $(BAADAL_LOCAL_DIR)/config
 UTILS_LOCAL_DIR = $(BAADAL_LOCAL_DIR)/utils
 
 SHELL = bash
@@ -15,6 +16,9 @@ DIR_BAADAL_ROOT = $(shell pwd)/../..
 DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 
 BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
+
+PROFILE = iitd
+PROFILE_PPA = http://10.208.26.104/openvswitch
   
 HOST_ID = 1
   
@@ -26,13 +30,11 @@ UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-serve
 UBUNTU_SOURCE = $(UBUNTU_SERVER)
 
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
-LIBVIRT_INSTALL = 
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
 LIBVIRTPYTHON = $(UTILS_DIR)/libvirt-python
 LIBVIRTPYTHON_SOURCE = https://github.com/utkarshsins/baadal-libvirt-python.git
 
 VIRTMANAGER = $(UTILS_DIR)/virt-manager-0.10.0.tar.gz
-VIRTMANAGER_INSTALL = 
 VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot/virt-manager-0.10.0.tar.gz
 
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
@@ -44,7 +46,9 @@ BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
 BIN_HOST_SETUP = $(BIN_DIR)/host-setup.sh
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
-  
+
+CONFIGURE = $(BAADAL_LOCAL_DIR)/configure
+
 $(BIN_DIR):
 	@ mkdir -p $@
 
@@ -63,7 +67,10 @@ $(LOGS_DIR):
 $(DISKS_DIR):
 	@ mkdir -p $@
   
-directories: $(BIN_DIR) $(BAADAL_LOCAL_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR)
+$(CONFIG_DIR):
+	@ mkdir -p $@
+  
+directories: $(BIN_DIR) $(BAADAL_LOCAL_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(CONFIG_DIR)
   
 $(UBUNTU):
 	@ mkdir -p $(UTILS_DIR)
@@ -90,20 +97,33 @@ virtmanager: $(VIRTMANAGER)
 utils: ubuntu libvirt virtmanager
 
 $(BAADAL_TRANSFER_TAR):
+	@ sudo umount $(UTILS_DIR)/iso 1>/dev/null 2>/dev/null || true
+	@ sudo rm -rf $(UTILS_DIR)/iso 1>/dev/null 2>/dev/null || true
+	@ sudo rm -rf $(UTILS_DIR)/ubuntuiso 1>/dev/null 2>/dev/null || true
 	@ ln -s $(DIR_BAADAL_ROOT) $(BIN_DIR)/baadal || true
 	cd $(BIN_DIR) ;	tar -chvf $@ baadal 1>/dev/null
 	@ rm $(BIN_DIR)/baadal
 
 baadal-transfer-tar: $(BAADAL_TRANSFER_TAR)
 
+$(CONFIGURE):
+	@ mkdir -p $@
+
 # TODO
 # There may be more ways of doing this.
 # Is one way necessarily better than the other? Yes, obviously.
 # Is this the better way? No.
-openvswitch:
+openvswitch: sources-list-setup
 	apt-get update || true
 	apt-get -y install python-software-properties
-	add-apt-repository ppa:ivoks/ovs-saucy
+	if [[ "$(PROFILE)" == "iitd" ]]; then \
+		add-apt-repository -y 'deb [arch=amd64] $(PROFILE_PPA) precise main';\
+		wget $(PROFILE_PPA)/key.gpg; \
+		cat key.gpg | apt-key add - ;\
+		rm key.gpg ;\
+		else \
+			add-apt-repository -y ppa:ivoks/ovs-saucy ;\
+		fi
 	apt-get update || true
 	apt-get -y install openvswitch-common=1.10.2-0ubuntu2~cloud0
 	apt-get -y install openvswitch-pki=1.10.2-0ubuntu2~cloud0
@@ -112,45 +132,40 @@ openvswitch:
 	apt-get -y install openvswitch-switch=1.10.2-0ubuntu2~cloud0
 	apt-get -y install python-openvswitch=1.10.2-0ubuntu2~cloud0
 
-$(BIN_CONFIGURE): $(BIN_DIR) $(SRC_DIR)/configure/*
-	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
-	@ cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
-	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
+$(BIN_CONFIGURE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all controller-transfer
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all controller-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
+	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
   
-$(BIN_FILER): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all
-	cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
-	sed -i '1i#!/bin/$(SHELL)' $@
-	sed -i '$$a$(RUN_COMMAND)' $@
-	chmod +x $@
-	cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
-	mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
-	cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
-	mkdir -p $(BIN_DIR)/transfer.filer/baadal
-	cp -R $(DIR_BAADAL_INSTALLATION)/nfs_install.sh $(BIN_DIR)/transfer.filer/baadal
+$(BIN_FILER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all filer-transfer
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
+	@ cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all nat-transfer
+$(BIN_NAT): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all nat-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
+	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
   
-$(BIN_HOST): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
+$(BIN_HOST): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_SWITCH): $(BIN_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
@@ -163,7 +178,7 @@ controller: $(BIN_CONTROLLER)
 	@ sudo $<
   
 filer: $(BIN_FILER)
-	sudo $<
+	@ sudo $<
   
 nat: $(BIN_NAT)
 	@ sudo $<
@@ -178,21 +193,34 @@ host-setup: $(BIN_HOST_SETUP)
 	@ sudo $<
   
 switch: $(BIN_SWITCH)
-	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL $<
+	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL INTERFACE=$$INTERFACE $<
   
-nat-transfer: $(BAADAL_TRANSFER_TAR)
+nat-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR)
 	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.nat/baadal/baadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.nat/root/.baadal
 
-controller-transfer: $(BAADAL_TRANSFER_TAR)
+controller-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR)
 	@ cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
 	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
 	@ mkdir -p $(BIN_DIR)/transfer.controller/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.controller/baadal/baadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.controller/root/.baadal
+
+filer-transfer: $(CONFIG_DIR)
+	@ cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
+	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
+	@ mkdir -p $(BIN_DIR)/transfer.filer/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.filer/baadal/baadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.filer/root/.baadal
 
 $(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
@@ -207,9 +235,12 @@ $(BIN_HOST_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/host $(SRC_DIR)/host/*
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 
+sources-list-setup:
+	@ sudo cp $(SRC_DIR)/common/sources.$(PROFILE) /etc/apt/sources.list 2>/dev/null || true
+
 sandbox: switch nat controller filer
 
-configure: clean-config $(BIN_CONFIGURE)
+configure: $(BIN_CONFIGURE)
 	@ $(BIN_CONFIGURE)
   
 $(BIN_DIR)/id_rsa.sandbox.pub: ~/.ssh/id_rsa
@@ -242,7 +273,7 @@ keygen-ssh-nat: $(BIN_DIR)/id_rsa.nat
 keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-filer keygen-ssh-nat
   
 clean-config:
-	rm -rf $(BIN_CONTROLLER)
+	rm -rf $(CONFIGURE)
   
 clean-controller:
 	sudo virsh destroy baadal_controller || true
@@ -259,7 +290,7 @@ clean-filer:
 	sudo rm -f $(BIN_FILER)
 	sudo rm -f $(BIN_DIR)/ks.filer.cfg
 	sudo rm -rf $(BIN_DIR)/transfer.filer
-	sudo rm -f $(UTILS_LOCAL_DIR)/ubunt.filer.iso
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.filer.iso
 	sudo rm -f $(DISKS_DIR)/filer.img
   
 clean-nat:
@@ -268,7 +299,7 @@ clean-nat:
 	sudo rm -f $(BIN_NAT)
 	sudo rm -f $(BIN_DIR)/ks.nat.cfg
 	sudo rm -rf $(BIN_DIR)/transfer.nat
-	sudo rm -f $(UTILS_LOCAL_DIR)/ubunt.nat.iso
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.nat.iso
 	sudo rm -f $(DISKS_DIR)/nat.img
   
 clean-host:
@@ -280,11 +311,7 @@ clean-host:
 clean-transfer-tar:
 	sudo rm -f $(BAADAL_TRANSFER_TAR)
 
-clean-switch:
-  
-clean-switch-external:
-  
-clean: clean-controller clean-filer clean-nat clean-transfer-tar
+clean: clean-config clean-controller clean-filer clean-nat clean-transfer-tar
 	sudo umount $(UTILS_DIR)/iso || true
 	sudo rm -rf $(UTILS_DIR)/iso
 	sudo rm -rf $(UTILS_DIR)/ubuntuiso
@@ -292,5 +319,5 @@ clean: clean-controller clean-filer clean-nat clean-transfer-tar
 	sudo rm -rf $(LOGS_DIR)
 	sudo rm -rf $(DISKS_DIR)
   
-cleanall: clean clean-config
+clean-all: clean clean-config
 	sudo rm -rf $(UTILS_DIR)

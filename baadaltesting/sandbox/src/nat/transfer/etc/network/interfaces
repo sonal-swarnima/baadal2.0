@@ -3,8 +3,5 @@ iface lo inet loopback
 
 auto eth0
 iface eth0 inet dhcp
-
-auto eth1
-iface eth1 inet static
-address 10.0.0.3
-netmask 255.255.0.0
+post-up dhclient eth1
+post-up route del -net 0.0.0.0 eth1
