@@ -50,25 +50,16 @@ def compute_effective_ram_vcpu(RAM, vCPU, runlevel):
 
     return (effective_ram, effective_cpu)
 
-# Finds the used host resources
-def host_resources_used(hostid):
-
+#Returns resources utilization of a host in MB,Count
+def host_resources_used(host_id):
     RAM = 0.0
     CPU = 0.0
-
-    vms = current.db(current.db.vm_data.host_id == hostid).select(current.db.vm_data.RAM,  current.db.vm_data.vCPU, 
-                     current.db.vm_data.current_run_level)
-
-    for vm in vms:
-        (effective_ram, effective_cpu) = compute_effective_ram_vcpu(vm.RAM, vm.vCPU, vm.current_run_level)
-        RAM = RAM + effective_ram
-        CPU = CPU + effective_cpu
-
-    host_ram = current.db(current.db.host.id == hostid).select(current.db.host.RAM)[0].RAM
-    host_cpu = current.db(current.db.host.id == hostid).select(current.db.host.CPUs)[0].CPUs
-
-    return (math.ceil(RAM), math.ceil(CPU), host_ram, host_cpu)
-
+    vms = current.db(current.db.vm_data.host_id == host_id).select()
+    for vm_data in vms:
+        RAM += vm_data.RAM
+        CPU += vm_data.vCPU
+    
+    return (math.ceil(RAM),math.ceil(CPU))
 
 def set_portgroup_in_vm(domain,portgroup,host_ip):
     conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
@@ -126,6 +117,20 @@ def choose_mac_ip_vncport(vm_properties):
     vm_properties['vnc_port'] = str(random_vnc_port)
     
 
+#Returns all the host running vms of particular run level
+def find_new_host(RAM, vCPU):
+    hosts = current.db(current.db.host.status == current.HOST_STATUS_UP).select() 
+    for host in hosts:
+        current.logger.debug("checking host="+host.host_name)
+        (uram, ucpu)=host_resources_used(host.id)
+        current.logger.debug("uram "+str(uram)+" ucpu "+str(ucpu)+" hram "+ str(host.RAM)+" hcpu "+ str(host.CPUs))
+        if(uram <= host.RAM*1024 and ucpu <= host.CPUs):
+            return host.id
+
+    #If no suitable host found
+    raise Exception("No active host is available for a new vm.")
+    
+
 # Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
 def allocate_vm_properties(vm_details):
     
@@ -135,7 +140,7 @@ def allocate_vm_properties(vm_details):
     vm_properties['datastore'] = choose_datastore()
     current.logger.debug("Datastore selected is: " + str(vm_properties['datastore']))
 
-    vm_properties['host'] = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
+    vm_properties['host'] = find_new_host(vm_details.RAM, vm_details.vCPU)
     current.logger.debug("Host selected is: " + str(vm_properties['host']))
 
     vm_properties['public_ip_req'] = False if (vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED) else True
@@ -353,7 +358,7 @@ def free_vm_properties(vm_details):
 # Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None):
 
-    hostid = vm_properties['host'].id
+    hostid = vm_properties['host']
     datastore = vm_properties['datastore']
     template_hdd = vm_properties['template'].hdd
     current.logger.debug("Inside update db after installation")

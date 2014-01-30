@@ -67,11 +67,11 @@ def check_host_service_status(host_ip):
     return True
     
 def host_status_sanity_check():
-    for host in current.db.host():
+    for host in current.db().select(db.host.ALL):
         if host.status != HOST_STATUS_MAINTENANCE:
             status=check_host_status(host.ip)
         if(status!=host.status):
-            current.logger.debug("Changing status of " + host.name +" to " + str(status))
+            current.logger.debug("Changing status of " + host.host_name +" to " + str(status))
             host.update_record(status=status)
 
 def has_running_vm(host_ip):
@@ -112,16 +112,16 @@ def move_all_dead_vms(host_ip):
     try:
         conn = libvirt.openReadOnly('qemu+ssh://root@'+host_ip+'/system')
         domains=[]
-        host1 = current.db.host(status=HOST_STATUS_UP)[0]
+        host1 = current.db.host(status=HOST_STATUS_UP)
         for domain_id in conn.listDomainsID():
             domains.append(conn.lookupByID(domain_id))
         names = conn.listDefinedDomains()
         for name in names:
             domains.append(conn.lookupByName(name))
         for dom in domains:
-            current.logger.debug("Moving "+str(dom.name())+" to "+host1.name)
-            vm_details = current.db.vm_data(vm_identity=dom.name())[0]
-            migrate_domain(vm_details.id, host1.id)
+            current.logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
+            vm_details = current.db.vm_data(vm_identity=dom.name())
+            migrate_domain(vm_details['id'], host1['id'])
         current.logger.debug("All the vms moved Successfully. Host is empty")
         current.logger.debug(commands.getstatusoutput("ssh root@"+host_ip+" virsh list --all"))
         domains=None
@@ -134,7 +134,7 @@ def move_all_dead_vms(host_ip):
 #Save Power, turn off extra hosts and turn on if required
 def host_power_operation():
     current.logger.debug("\nIn host power operation function\n-----------------------------------\n")
-    livehosts = current.db.host(status=HOST_STATUS_UP)
+    livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
     masterhost = livehosts[0].ip
     freehosts=[]
     try:
@@ -146,9 +146,9 @@ def host_power_operation():
             current.logger.debug("Everything is Balanced. Green Cloud :)")
         elif(freehostscount < 2):
             current.logger.debug("Urgently needed "+str(2-freehostscount)+" more live hosts.")
-            newhosts=current.db.host(status=HOST_STATUS_DOWN)[0:(2-freehostscount)] #Select only Shutoff hosts
+            newhosts = current.db(current.db.host.status==0).select()[0:(2-freehostscount)] #Select only Shutoff hosts
             for host in newhosts:
-                current.logger.debug("Sending magic packet to "+host.name)
+                current.logger.debug("Sending magic packet to "+host.host_name)
                 commands.getstatusoutput("ssh root@"+masterhost+" wakeonlan "+str(host.mac))
         elif(freehosts > 2):
             current.logger.debug("Sending shutdown signal to total "+str(freehostscount-2)+" no. of host(s)")
@@ -163,30 +163,6 @@ def host_power_operation():
         current.logger.exception()
     return
 
-#Returns resources utilization of a host in MB,Count
-def host_resources_used(host_id):
-    RAM = 0.0
-    CPU = 0.0
-    vms = current.db.vm_data(host_id = host_id)
-    for vm_data in vms:
-        RAM += vm_data.RAM
-        CPU += vm_data.vCPU
-    
-    return (math.ceil(RAM),math.ceil(CPU))
-
-#Returns all the host running vms of particular run level
-def find_new_host(RAM, vCPU):
-    hosts=current.db.host(status=HOST_STATUS_UP)
-    for host in hosts:
-        current.logger.debug("checking host="+host.name)
-        (uram, ucpu)=host_resources_used(host.id)
-        current.logger.debug("uram "+str(uram)+" ucpu "+str(ucpu)+" hram "+ str(host.RAM)+" hcpu "+ str(host.CPUs))
-        if(uram <= host.RAM*1024 and ucpu <= host.CPUs):
-            return host.id
-
-    #If no suitable host found
-    raise Exception("No active host is available for a new vm.")
-    
 #Put the host in maintenance mode, migrate all running vms and redefine dead ones
 def put_host_in_maint_mode(host_id):
 
@@ -196,7 +172,7 @@ def put_host_in_maint_mode(host_id):
     try:
         conn = libvirt.openReadOnly('qemu+ssh://root@'+host_data.host_ip+'/system')
         domains=[]
-        host1 = current.db.host(status=HOST_STATUS_UP)[0]
+        host1 = current.db.host(status=HOST_STATUS_UP)
         for domain_id in conn.listDomainsID():
             domains.append(conn.lookupByID(domain_id))
 
@@ -204,13 +180,13 @@ def put_host_in_maint_mode(host_id):
             domains.append(conn.lookupByName(name))
         
         for dom in domains:
-            vm_details = current.db.vm_data(vm_identity=dom.name())[0]
+            vm_details = current.db.vm_data(vm_identity=dom.name())
             if dom.info()[0] == VIR_DOMAIN_SHUTOFF:    #If the vm is in Off state, move it to host1
-                current.logger.debug("Moving "+str(dom.name())+" to "+host1.name)
-                add_migrate_task_to_queue(vm_details.id)
+                current.logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
+                add_migrate_task_to_queue(vm_details['id'])
             elif dom.info()[0] == VIR_DOMAIN_RUNNING:
                 current.logger.debug("Inserting migrate request for running vm "+str(dom.name())+" to appropriate host in queue")
-                add_migrate_task_to_queue(vm_details.id, live_migration=True)
+                add_migrate_task_to_queue(vm_details['id'], live_migration=True)
         
         move_all_dead_vms(host_data.host_ip)
         conn.close()
