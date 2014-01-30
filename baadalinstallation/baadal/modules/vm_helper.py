@@ -11,7 +11,7 @@ import sys, math, shutil, paramiko, traceback, libvirt, random
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
-from host_helper import find_new_host
+from host_helper import *  # @UnusedWildImport
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():
@@ -165,9 +165,7 @@ def exec_command_on_host(machine_ip, user_name, command, password=None):
             current.logger.error(install_error_message)
             raise Exception(install_error_message)
     except paramiko.SSHException:
-        etype, value, tb = sys.exc_info()
-        message = ''.join(traceback.format_exception(etype, value, tb, 10))
-        current.logger.error("Exception " + message)
+        message = current.logger.exception()
         raise Exception(message)
     finally:
         if ssh:
@@ -291,10 +289,7 @@ def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_dis
         connection_object.close()
         return True
     except:
-        etype, value, tb = sys.exc_info()
-        trace = ''.join(traceback.format_exception(etype, value, tb, 10))
-        message = "Check logs for error: " + trace
-        current.logger.error(message) 
+        current.logger.exception() 
         return False
 
 # Serves extra disk request and updates db
@@ -923,8 +918,6 @@ def attach_extra_disk(parameters):
             current.logger.debug(message)
             return (current.TASK_QUEUE_STATUS_FAILED, message) 
     except:
-        etype, value, tb = sys.exc_info()
-        message = ''.join(traceback.format_exception(etype, value, tb, 10))
-        current.logger.error("Exception " + message)
+        message = current.logger.exception("Exception ")
         return (current.TASK_QUEUE_STATUS_FAILED, message)            
 

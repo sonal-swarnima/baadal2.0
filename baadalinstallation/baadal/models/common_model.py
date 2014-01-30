@@ -298,13 +298,9 @@ def handle_exception(fn):
 
 
 def exception_handler():
-    import sys, traceback
-    etype, value, tb = sys.exc_info()
-    error = ''
-    msg = ''.join(traceback.format_exception(etype, value, tb, 10))           
+    msg = logger.exception()           
     if is_moderator():
         error = msg
-    logger.error(msg)                 
     redirect(URL(c='default', f='error',vars={'error':error}))    
     
     
