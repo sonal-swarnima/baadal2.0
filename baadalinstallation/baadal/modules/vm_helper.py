@@ -9,9 +9,9 @@ if 0:
 
 import sys, math, shutil, paramiko, traceback, libvirt
 import xml.etree.ElementTree as etree
-#from mail_handler import send_email_for_vm_creation
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
+from host_helper import find_new_host
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():
@@ -69,29 +69,6 @@ def host_resources_used(hostid):
 
     return (math.ceil(RAM), math.ceil(CPU), host_ram, host_cpu)
 
-# Finds new host for a vm to be installed
-def find_new_host(runlevel, RAM, vCPU):
-
-    hosts = current.db(current.db.host.status == current.HOST_STATUS_UP).select() 
-
-    if (len(hosts) == 0):
-        raise Exception("No host found.")
-    else:
-        runlevel = int(runlevel)
-        host_selected = None
-        for host in hosts:
-            current.logger.debug("Checking host = " + host.host_name)
-            (used_ram,used_cpu,host_ram,host_cpu) = host_resources_used(host.id)
-            current.logger.debug("used ram:" + str(used_ram) + " used cpu:" + str(used_cpu) + " host ram:" + str(host_ram) +  \
-                                 " host cpu" + str(host_cpu))
-            (effective_ram,effective_vcpu) = compute_effective_ram_vcpu(RAM,vCPU,runlevel)
-            if(host_selected == None and ((used_ram + effective_ram) <= ((host_ram * 1024)))):
-                host_selected = host
-
-    if host_selected != None:
-        return host_selected
-    else:
-        raise Exception("No active host is available for a new vm.")
 
 def set_portgroup_in_vm(domain,portgroup,host_ip):
     conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
@@ -225,7 +202,7 @@ def create_vm_image(vm_details, datastore):
         if rcode != 0:
             current.logger.error("Unsuccessful in copying image...")
             raise Exception("Unsuccessful in copying image...")
-	else:
+        else:
             current.logger.debug("Copied successfully.")
 
     return (template, vm_image_location)
@@ -614,7 +591,6 @@ def delete(parameters):
 # Migrate domain with snapshots
 def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshot_list, current_snapshot_name, flags):
 
-    
     # XML dump of snapshot(s) of the vm
     current.logger.debug("Starting to take xml dump of the snapshot(s) of the vm... ")
     if not os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
@@ -656,13 +632,13 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
 # Migrate domain
 def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
+    vm_details = current.db.vm_data[vm_id]
     if destination_host_id == None:
-        new_destination_host = find_new_host(vm_details.current_run_level, vm_details.RAM, vm_details.vCPU)
+        new_destination_host = find_new_host(vm_details.RAM, vm_details.vCPU)
         destination_host_ip = new_destination_host.host_ip
     else:
         destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
 
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST
     if live_migration:
         flags |= VIR_MIGRATE_LIVE    
@@ -672,23 +648,29 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
     domain = current_host_connection_object.lookupByName(vm_details.vm_identity)
     domain_snapshots_list = domain.snapshotListNames(0)
     
-    if domain_snapshot_list:
+    if domain_snapshots_list:
         current_snapshot = domain.snapshotCurrent(0)
         current_snapshot_name = current_snapshot.getName()
-        migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshot_list, current_snapshot_name, flags)
+        migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags)
     else:
         domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
-    current.db(current.db.vm_data.id == vmid).update(host_id = destination_host_id)
-    vm_count_on_old_host = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
-    current.db(current.db.host.id == vm_details.host_id).update(vm_count = vm_count_on_old_host - 1)
-    vm_count_on_new_host = current.db(current.db.host.id == destination_host_id).select().first()['vm_count']
-    current.db(current.db.host.id == destination_host_id).update(vm_count = vm_count_on_new_host + 1) 
+    vm_details.update_record(host_id = destination_host_id)
+    
+    old_host = current.db.host[vm_details.host_id]
+    old_host.update_record(vm_count = old_host.vm_count - 1)
+
+    new_host = current.db.host[destination_host_id]
+    new_host.update_record(vm_count = new_host.vm_count + 1)
     message = vm_details.vm_identity + " is migrated successfully."
     
     return message
         
  
+def clean_up_migration_data():
+    pass
+
+
 # Migrates a vm to a new host
 def migrate(parameters):
 
@@ -715,7 +697,6 @@ def snapshot(parameters):
         snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
-        datetime = get_datetime()
         xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
         message = "Snapshotted successfully."

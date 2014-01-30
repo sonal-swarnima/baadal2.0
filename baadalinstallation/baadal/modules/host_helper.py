@@ -194,7 +194,9 @@ def find_new_host(RAM, vCPU):
         current.logger.debug("uram "+str(uram)+" ucpu "+str(ucpu)+" hram "+ str(host.RAM)+" hcpu "+ str(host.CPUs))
         if(uram <= host.RAM*1024 and ucpu <= host.CPUs):
             return host.id
-    return None
+
+    #If no suitable host found
+    raise Exception("No active host is available for a new vm.")
     
 #Put the host in maintenance mode, migrate all running vms and redefine dead ones
 def put_host_in_maint_mode(host_id):

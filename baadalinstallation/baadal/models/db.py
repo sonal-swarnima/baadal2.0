@@ -7,7 +7,7 @@ if 0:
 ###################################################################################
 from simplejson import loads, dumps
 from helper import get_config_file,get_datetime, IS_MAC_ADDRESS
-from auth_user import login_callback,login_ldap_callback,register_callback
+from auth_user import login_callback,login_ldap_callback
 
 #### Connection Pooling of Db is also possible
 

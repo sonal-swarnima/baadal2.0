@@ -588,7 +588,7 @@ def specify_user_roles(user_id, user_roles):
                 role_type_user = row.id
         db.user_membership.insert(user_id=user_id, group_id=role_type_user)
     except Exception:
-         logger.debug("Ignoring duplicate role entry")
+        logger.debug("Ignoring duplicate role entry")
     return message
     
 def disable_user(user_id):
