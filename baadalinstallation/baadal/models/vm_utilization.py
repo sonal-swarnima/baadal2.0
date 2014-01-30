@@ -13,7 +13,7 @@ import time
 
 import rrdtool
 
-from helper import is_moderator, get_constant, get_context_path
+from helper import is_moderator, get_constant, get_context_path, log_exception
 
 def get_rrd_file(vm_name):
 
@@ -107,7 +107,7 @@ def get_performance_graph(graph_type, vm, graph_period):
             error = "VMs RRD File Unavailable!!!"
     except: 
         logger.warn("Error occured while creating graph.")
-        error = logger.exception()
+        error = log_exception()
 
     finally:
         if (is_moderator() and (error != None)):

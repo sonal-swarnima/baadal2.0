@@ -122,6 +122,15 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
         execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
         execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
+def log_exception(message=None):
+    import sys, traceback
+    etype, value, tb = sys.exc_info()
+    trace = ''.join(traceback.format_exception(etype, value, tb, 10))
+    if message:
+        trace = message + trace
+    current.logger.error(trace)
+    return trace
+
 class IS_MAC_ADDRESS(Validator):
     
     regex = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')

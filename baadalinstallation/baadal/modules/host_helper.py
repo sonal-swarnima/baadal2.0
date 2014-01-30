@@ -96,7 +96,7 @@ def has_running_vm(host_ip):
         domains=None
         conn.close()
     except:
-        current.logger.exception()
+        current.logger.exception('Exception: ')
     return found
 
 #Move all dead vms of this host to the host first in list of hosts
@@ -128,7 +128,7 @@ def move_all_dead_vms(host_ip):
         names=None
         conn.close()
     except:
-        current.logger.exception()
+        current.logger.exception('Exception: ')
     return
 
 #Save Power, turn off extra hosts and turn on if required
@@ -160,7 +160,7 @@ def host_power_operation():
                 commands.getstatusoutput("ssh root@"+host+" shutdown -h now")
                 host.update_record(status=HOST_STATUS_DOWN)
     except:
-        current.logger.exception()
+        current.logger.exception('Exception: ')
     return
 
 #Put the host in maintenance mode, migrate all running vms and redefine dead ones
@@ -181,17 +181,18 @@ def put_host_in_maint_mode(host_id):
         
         for dom in domains:
             vm_details = current.db.vm_data(vm_identity=dom.name())
-            if dom.info()[0] == VIR_DOMAIN_SHUTOFF:    #If the vm is in Off state, move it to host1
-                current.logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
-                add_migrate_task_to_queue(vm_details['id'])
-            elif dom.info()[0] == VIR_DOMAIN_RUNNING:
-                current.logger.debug("Inserting migrate request for running vm "+str(dom.name())+" to appropriate host in queue")
-                add_migrate_task_to_queue(vm_details['id'], live_migration=True)
+            if vm_details:
+                if dom.info()[0] == VIR_DOMAIN_SHUTOFF:    #If the vm is in Off state, move it to host1
+                    current.logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
+                    add_migrate_task_to_queue(vm_details['id'])
+                elif dom.info()[0] == VIR_DOMAIN_RUNNING:
+                    current.logger.debug("Inserting migrate request for running vm "+str(dom.name())+" to appropriate host in queue")
+                    add_migrate_task_to_queue(vm_details['id'], live_migration=True)
         
         move_all_dead_vms(host_data.host_ip)
         conn.close()
     except:
-        current.logger.exception()
+        current.logger.exception('Exception: ')
     return
 
 #Add migrate task to task_queue

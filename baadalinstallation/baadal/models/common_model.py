@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import get_datetime, is_moderator, is_orgadmin, is_faculty
+from helper import get_datetime, is_moderator, is_orgadmin, is_faculty, log_exception
 
 def get_vm_status(iStatus):
     vm_status_map = {
@@ -298,7 +298,7 @@ def handle_exception(fn):
 
 
 def exception_handler():
-    msg = logger.exception()           
+    msg = log_exception('Exception: ') 
     if is_moderator():
         error = msg
     redirect(URL(c='default', f='error',vars={'error':error}))    

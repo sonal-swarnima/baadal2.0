@@ -170,7 +170,7 @@ def exec_command_on_host(machine_ip, user_name, command, password=None):
             current.logger.error(install_error_message)
             raise Exception(install_error_message)
     except paramiko.SSHException:
-        message = current.logger.exception()
+        message = log_exception('Exception: ')
         raise Exception(message)
     finally:
         if ssh:
@@ -294,7 +294,7 @@ def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_dis
         connection_object.close()
         return True
     except:
-        current.logger.exception() 
+        current.logger.exception('Exception: ') 
         return False
 
 # Serves extra disk request and updates db
@@ -923,6 +923,6 @@ def attach_extra_disk(parameters):
             current.logger.debug(message)
             return (current.TASK_QUEUE_STATUS_FAILED, message) 
     except:
-        message = current.logger.exception("Exception ")
+        message = log_exception()
         return (current.TASK_QUEUE_STATUS_FAILED, message)            
 
