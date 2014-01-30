@@ -5,7 +5,6 @@ if 0:
     from gluon import db,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import sys, traceback
 from helper import get_datetime
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
@@ -45,7 +44,7 @@ def send_task_complete_mail(task_event):
     
 def process_task_queue(task_event_id):
 
-    logger.debug("Processing task: " + task_event_id)
+    logger.debug("Processing task: " + str(task_event_id))
     task_event = db.task_queue_event[task_event_id]
     task_process = db.task_queue[task_event.task_id] 
     try:
@@ -74,14 +73,12 @@ def process_task_queue(task_event_id):
         
         db.commit()
     except:
-        etype, value, tb = sys.exc_info()
-        msg=''.join(traceback.format_exception(etype, value, tb, 10))
-        logger.error(msg)
+        msg = logger.exception()
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
         
 def process_clone_task(task_event_id, vm_id):
 
-    logger.debug("Processing clone task: " + task_event_id)
+    logger.debug("Processing clone task: " + str(task_event_id))
     task_event = db.task_queue_event[task_event_id]
     task_queue = db.task_queue[task_event.task_id]
     message = task_event.message if task_event.message != None else ''
@@ -126,9 +123,7 @@ def process_clone_task(task_event_id, vm_id):
         db.commit()
 
     except:
-        etype, value, tb = sys.exc_info()
-        msg=''.join(traceback.format_exception(etype, value, tb, 10))
-        logger.error(msg)
+        msg = logger.exception()
         vm_data = db.vm_data[vm_id]
         message = message + '\n' + vm_data.vm_name + ': ' + msg
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=message)
@@ -137,7 +132,7 @@ def process_clone_task(task_event_id, vm_id):
 # Handles periodic snapshot task
 def process_snapshot_vm(snapshot_type):
 
-    logger.debug("Processing rolling snapshot task: " + snapshot_type)
+    logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     for vm in vms:
         params={'snapshot_type':snapshot_type}

@@ -4,10 +4,10 @@
 if 0:
     from gluon import *  # @UnusedWildImport
 ###################################################################################
-import libvirt,commands
+import libvirt,commands  # @UnusedImport
 from libvirt import *  # @UnusedWildImport
-from vm_helper import migrate_domain
-from helper import execute_remote_cmd
+from vm_helper import *  # @UnusedWildImport
+from helper import *  # @UnusedWildImport
 
 HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
@@ -96,11 +96,7 @@ def has_running_vm(host_ip):
         domains=None
         conn.close()
     except:
-        import sys, traceback
-        found=True
-        etype, value, tb = sys.exc_info()
-        msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-        current.logger.debug("Some Error Occured\n"+msg)
+        current.logger.exception()
     return found
 
 #Move all dead vms of this host to the host first in list of hosts
@@ -132,10 +128,7 @@ def move_all_dead_vms(host_ip):
         names=None
         conn.close()
     except:
-        import sys, traceback
-        etype, value, tb = sys.exc_info()
-        msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-        current.logger.debug("Some Error Occured\n"+msg)
+        current.logger.exception()
     return
 
 #Save Power, turn off extra hosts and turn on if required
@@ -167,15 +160,11 @@ def host_power_operation():
                 commands.getstatusoutput("ssh root@"+host+" shutdown -h now")
                 host.update_record(status=HOST_STATUS_DOWN)
     except:
-        import sys, traceback
-        etype, value, tb = sys.exc_info()
-        msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-        current.logger.debug("Some Error Occured\n"+msg)
+        current.logger.exception()
     return
 
 #Returns resources utilization of a host in MB,Count
 def host_resources_used(host_id):
-    import math
     RAM = 0.0
     CPU = 0.0
     vms = current.db.vm_data(host_id = host_id)
@@ -226,10 +215,7 @@ def put_host_in_maint_mode(host_id):
         move_all_dead_vms(host_data.host_ip)
         conn.close()
     except:
-        import sys, traceback
-        etype, value, tb = sys.exc_info()
-        msg = ''.join(traceback.format_exception(etype, value, tb, 10))
-        current.logger.debug("Some Error Occured\n"+msg)
+        current.logger.exception()
     return
 
 #Add migrate task to task_queue
