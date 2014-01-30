@@ -387,9 +387,7 @@ Setup_Baadalapp()
 
                 sed -i -e 's/mail_server=/'"mail_server=$MAIL_SERVER_URL:$MAIL_SERVER_PORT"'/g' $baadalapp_config_path
 
-                sed -i -e 's/mail_sender=/'"mail_sender=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
-
-                sed -i -e 's/mail_noreply=/'"mail_noreply=noreply@baadal"'/g' $baadalapp_config_path
+                sed -i -e 's/mail_sender=/'"mail_sender=noreply@baadal"'/g' $baadalapp_config_path
 
                 sed -i -e 's/mail_admin_bug_report=/'"mail_admin_bug_report=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
 

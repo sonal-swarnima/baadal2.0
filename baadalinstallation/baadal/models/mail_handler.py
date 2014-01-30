@@ -61,9 +61,8 @@ def send_email(to_address, email_subject, email_template, context):
     context['adminEmail'] = config.get("MAIL_CONF","mail_admin_request")
     if to_address != None:
         email_message = email_template.format(context)
-        reply_to_address = config.get("MAIL_CONF","mail_noreply")
     
-        push_email(to_address, email_subject, email_message, reply_to_address)
+        push_email(to_address, email_subject, email_message, None)
 
 
 def send_email_to_approver(approver_id, requester_id, request_type, request_time):
