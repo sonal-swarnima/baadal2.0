@@ -26,6 +26,7 @@
 		<row name="datastore_int" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
 		<row name="archives_dir" value="vm_deleted"/>
+                <row name="migration_data" value="vm_migration_data"/>
 		<row name="vm_rrds_dir" value="vm_rrds"/>
 		<row name="graph_file_dir" value="/images/vm_graphs/"/>
 		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
