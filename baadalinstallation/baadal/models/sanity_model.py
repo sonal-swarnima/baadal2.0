@@ -31,8 +31,9 @@ def vminfo_to_state(vm_state):
 
     return status
 
+# def check_host_sanity():
 
-def check_sanity():
+def check_vm_sanity():
     vmcheck=[]
     vm_list = []
     hosts=db(db.host.status == HOST_STATUS_UP).select()
@@ -110,20 +111,6 @@ def check_sanity():
                             'operation':'Undefined'})
             
     return vmcheck
-
-
-def delete_orhan_vm(vm_name, host_id):
-    
-    host_details = db.host[host_id]
-    connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip + "/system")
-    domain = connection_object.lookupByName(vm_name)
-    vm_state = domain.info()[0]
-    if (vm_state == VIR_DOMAIN_RUNNING or vm_state == VIR_DOMAIN_PAUSED):
-        logger.debug("VM is not shutoff. Shutting it off first.")
-        domain.destroy()
-
-    domain.undefine()
-    logger.debug(vm_name + " is deleted successfully.")
 
 
 def add_orhan_vm(vm_name, host_id):

@@ -6,6 +6,7 @@ if 0:
     from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from host_helper import delete_orhan_vm
 
 @check_moderator
 @handle_exception
@@ -225,7 +226,7 @@ def delete_machine():
 
 @check_moderator
 def sanity_check():
-    output = check_sanity()
+    output = check_vm_sanity()
     return dict(vms=output)
     
 @check_moderator

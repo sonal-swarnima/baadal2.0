@@ -6,7 +6,9 @@ if 0:
     from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac, execute_remote_cmd
+from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac
+from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
+    get_host_cpu, get_host_ram
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -397,9 +399,9 @@ def get_host_form(host_ip):
     form.vars.host_name = 'host'+str(host_ip.split('.')[3])
     form.vars.host_ip = host_ip
     if is_host_available(host_ip):
-        form.vars.mac_addr = get_mac_address(host_ip)
-        form.vars.CPUs = get_cpu_num(host_ip)
-        form.vars.RAM  = get_ram(host_ip)
+        form.vars.mac_addr = get_host_mac_address(host_ip)
+        form.vars.CPUs = get_host_cpu(host_ip)
+        form.vars.RAM  = get_host_ram(host_ip)
         form.vars.status = HOST_STATUS_UP
     else:
         form.vars.status = HOST_STATUS_DOWN
@@ -418,36 +420,6 @@ def configure_host_by_mac(mac_addr):
                       host_name=host_name, 
                       mac_addr=mac_addr, 
                       status=HOST_STATUS_DOWN)
-
-def is_host_available(host_ip):
-    try:
-        execute_remote_cmd(host_ip,'root','pwd')
-        return True
-    except:
-        return False
-
-
-def get_mac_address(host_ip):
-    command = "ifconfig -a | grep eth0 | head -n 1"
-    ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
-    ret=ret.strip()
-    mac_addr = ret[ret.rindex(' '):].lstrip()
-    return mac_addr
-
-
-def get_cpu_num(host_ip):
-    command = "cat /proc/cpuinfo | grep processor | wc -l"
-    ret = execute_remote_cmd(host_ip, 'root',command)
-    return int(ret)/2
-    
-
-def get_ram(host_ip):
-    command = "cat /proc/meminfo | grep MemTotal"
-    ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
-    ram_in_kb = ret[ret.index(' '):-3].strip()
-    ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
-    return ram_in_gb
-
 
 def add_live_migration_option(form):
     live_migration_element = TR('Live Migration:' , INPUT(_type = 'checkbox', _name = 'live_migration')) 
@@ -528,7 +500,9 @@ def vm_has_snapshots(vm_id):
     
 def updte_host_status(host_id, status):
     db(db.host.id == host_id).update(status = status)
-    
+    if status == HOST_STATUS_MAINTENANCE:
+        put_host_in_maint_mode(host_id)
+        
 def delete_host_from_db(host_id):
     del db.host[host_id]
     

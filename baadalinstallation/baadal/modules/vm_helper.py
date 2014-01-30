@@ -612,34 +612,44 @@ def delete(parameters):
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
+def migrate_domain(vm_id, destination_host_id, live_migration=False):
+
+    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
+    live_migration = False
+    if live_migration:
+        flags |= VIR_MIGRATE_LIVE
+
+    current.logger.debug("Flags: " + str(flags))       
+    vm_details = current.db(current.db.vm_data.id == vm_id).select().first()
+    destination_host_ip = current.db.host[destination_host_id].host_ip
+    current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+    domain = current_host_connection_object.lookupByName(vm_details.vm_identity)            
+    domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
+    current.logger.debug("Migrated successfully..")
+    current.db(current.db.vm_data.id == vm_id).update(host_id = destination_host_id)
+    vm_count_on_old_host = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
+    current.db(current.db.host.id == vm_details.host_id).update(vm_count = vm_count_on_old_host - 1)
+    vm_count_on_new_host = current.db(current.db.host.id == destination_host_id).select().first()['vm_count']
+    current.db(current.db.host.id == destination_host_id).update(vm_count = vm_count_on_new_host + 1) 
+    message = vm_details.vm_identity + " is migrated successfully."
+    return message
+
 # Migrates a vm to a new host
 def migrate(parameters):
 
     vmid = parameters['vm_id']
     destination_host_id = parameters['destination_host']
-    destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
-    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
-
+    live_migration = False
     if 'live_migration' in parameters:
-        flags |= VIR_MIGRATE_LIVE
+        live_migration = True
   
-    current.logger.debug("Flags: " + str(flags))       
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
-        current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = current_host_connection_object.lookupByName(vm_details.vm_identity)            
-        domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
-        current.logger.debug("Migrated successfully..")
-        current.db(current.db.vm_data.id == vmid).update(host_id = destination_host_id)
-        vm_count_on_old_host = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
-        current.db(current.db.host.id == vm_details.host_id).update(vm_count = vm_count_on_old_host - 1)
-        vm_count_on_new_host = current.db(current.db.host.id == destination_host_id).select().first()['vm_count']
-        current.db(current.db.host.id == destination_host_id).update(vm_count = vm_count_on_new_host + 1) 
-        message = vm_details.vm_identity + " is migrated successfully."
+        message = migrate_domain(vmid, destination_host_id, live_migration)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message) 
+
 
 # Snapshots a vm
 def snapshot(parameters):
