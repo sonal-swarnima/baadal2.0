@@ -17,6 +17,24 @@ function ifconfig_ip
   fi
 }
 
+function ifconfig_dhcp
+{
+  iface=$1
+
+  $ECHO_PROGRESS "dhclient $iface"
+  dhclient -v $iface 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER dhclient $iface failed. Check logs.
+    tail -$LOG_SIZE $LOGS/log.err 
+    exit 1
+  else
+    $ECHO_OK dhclient $iface
+  fi
+
+}
+
 #function for 'ifconfig dev 0'
 function ifconfig_noip
 {

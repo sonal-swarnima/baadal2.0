@@ -22,7 +22,7 @@ function file_backup
 
   $ECHO_PROGRESS "$file -\> $file.bak"
 
-  mv $file $file.bak 1>>$LOGS/log.out 2>>$LOGS.log.err
+  cp $file $file.bak 1>>$LOGS/log.out 2>>$LOGS.log.err
 
   $ECHO_OK $file -\> $file.bak
 }

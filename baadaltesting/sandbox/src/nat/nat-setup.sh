@@ -10,6 +10,11 @@ function run
     exit 1
   fi
 
+  echo iptables-persistent iptables-persistent/autosave_v4 boolean true | debconf-set-selections
+  echo iptables-persistent iptables-persistent/autosave_v6 boolean true | debconf-set-selections
+
+  package_install iptables-persistent
+
   $ECHO_PROGRESS "Checking iptables-persistent"
   /etc/init.d/iptables-persistent save 1>>$LOGS/log.out 2>>$LOGS/log.err
   status=$?
