@@ -166,7 +166,21 @@ def get_all_pending_requests():
             vm_request['requested_by'] = USER
 
     return requests
+    
+def get_all_unregistered_users():
+    unregistered_users=db(db.user.registration_key == USER_PENDING_APPROVAL).select()
+    return unregistered_users
 
+def get_users_with_roles():
+    all_users = db((db.user.registration_key == "") & (db.user.block_user == False)).select()
+    for user in all_users:
+        user['organisation'] = user.organisation_id.name
+        roles=[]
+        for membership in db(db.user_membership.user_id == user.id).select(db.user_membership.group_id):
+            roles.extend([membership.group_id])
+        user['roles'] = roles
+    return all_users
+            
 
 def get_all_vm_list():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
@@ -559,3 +573,24 @@ def check_vm_resource(request_id):
             message = "%s private IP(s) available for security domain '%s" % (str(avl_ip), req_data.security_domain.name)
 
     return message if message != None else 'Success'
+    
+def specify_user_roles(user_id, user_roles):
+    message = None
+    try:
+        if not user_roles:
+            message = "Only user role activated for user"
+        else:
+            for role in user_roles:
+                db.user_membership.insert(user_id=user_id, group_id=role) 
+            message = "User Activated with specified roles"
+        db(db.user.id == user_id).update(registration_key='')    
+        for row in db(db.user_group.role == current.USER).select(db.user_group.id):
+                role_type_user = row.id
+        db.user_membership.insert(user_id=user_id, group_id=role_type_user)
+    except Exception:
+         logger.debug("Ignoring duplicate role entry")
+    return message
+    
+def disable_user(user_id):
+    db(db.user.id == user_id).update(registration_key='disable')
+    return "User disabled in DB"

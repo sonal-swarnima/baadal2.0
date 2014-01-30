@@ -13,6 +13,16 @@ from helper import get_config_file
 config = get_config_file()
 
 #Email templates and subject constants
+REGISTRATION_SUCCESSFUL_SUBJECT = "Baadal Registration Successful"
+
+REGISTRATION_SUCCESSFUL_BODY = "Dear {0[userName]},\n\nYour account with username {0[loginName]} has been activated."\
+                                "\n\nWelcome to Baadal!\n\nRegards,\nBaadal Admin"
+                                
+REGISTRATION_DENIED_SUBJECT = "Baadal Registration Denied"
+
+REGISTRATION_DENIED_BODY = "Dear {0[userName]},\n\nYour registration to Baadal has been denied. "\
+                            "For any query, send an email to {0[supportMail]}\n\nRegards,\nBaadal Admin"
+                            
 VM_REQUEST_SUBJECT = "VM request successful"
 
 VM_REQUEST_BODY="Dear {0[userName]},\n\nYour request for VM({0[vmName]}) creation has been successfully registered. "\
@@ -34,6 +44,8 @@ TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
 TASK_COMPLETE_BODY="Dear {0[userName]},\n\nThe '{0[taskType]}' task for VM({0[vmName]}) requested on {0[requestTime]} is complete."\
                     "\n\nRegards,\nBaadal Admin "
 
+MAIL_FOOTER = "\n\n\nDisclaimer:: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
+             "If you have any queries, send an email to {0[adminEmail]}."
 
 def push_email(to_address, email_subject, email_message, reply_to_address):
     if config.getboolean("MAIL_CONF","mail_active"):
@@ -44,7 +56,9 @@ def push_email(to_address, email_subject, email_message, reply_to_address):
 
 
 def send_email(to_address, email_subject, email_template, context):
-    
+
+    email_template += MAIL_FOOTER
+    context['adminEmail'] = config.get("MAIL_CONF","mail_admin_request")
     if to_address != None:
         email_message = email_template.format(context)
         reply_to_address = config.get("MAIL_CONF","mail_noreply")
@@ -97,3 +111,14 @@ def send_email_to_admin(email_subject, email_message, email_type):
     logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
     push_email(email_address, email_subject, email_message, user_email_address)
 
+def send_email_on_successful_registration(user_id):
+    user_info = get_user_details(user_id)
+    context = dict(userName = user_info[0],
+                    loginName = user_info[2])
+    send_email(user_info[1], REGISTRATION_SUCCESSFUL_SUBJECT, REGISTRATION_SUCCESSFUL_BODY, context)
+    
+def send_email_on_registration_denied(user_id):
+    user_info = get_user_details(user_id)
+    context = dict(userName = user_info[0],
+                    supportMail = config.get("MAIL_CONF","mail_admin_request"))
+    send_email(user_info[1], REGISTRATION_DENIED_SUBJECT, REGISTRATION_DENIED_BODY, context)

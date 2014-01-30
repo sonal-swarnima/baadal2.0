@@ -101,6 +101,13 @@ def generate_random_mac():
         i += 1
     return (':'.join(map(lambda x: "%02x" % x, mac))).upper()
     
+def check_db_storage_type():
+    config = get_config_file()
+    storage_type = config.get("GENERAL_CONF","storage_type")
+    if storage_type == current.AUTH_TYPE_DB:
+         return True
+    return False
+    
 def create_dhcp_entry(host_name, mac_addr, ip_addr):
 
     config = get_config_file()

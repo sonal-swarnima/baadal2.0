@@ -168,7 +168,21 @@ def get_segregated_requests(request_list):
         elif req['request_type'] == TASK_TYPE_EDITCONFIG_VM:
             edit_requests.append(req)
     return (install_requests, clone_requests, disk_requests, edit_requests)
-    
+   
+def get_users_with_organisation(pending_users):
+    users_with_org=[]
+    for user in pending_users:
+        user['organisation']=user.organisation_id.name
+        users_with_org.append(user)
+    return users_with_org
+        
+def get_user_role_types():
+    user_types=db(db.user_group.role != current.USER).select(db.user_group.id, db.user_group.role);
+    return user_types
+        
+def delete_all_user_roles(user_id):
+    db(db.user_membership.user_id == user_id).delete()        
+        
 def add_to_cost(vm_id):
     vm = db.vm_data[vm_id]
 
@@ -192,13 +206,13 @@ def add_to_cost(vm_id):
 # Get user name and email
 def get_user_details(user_id):
     if user_id < 0:
-        return ('System User',None)
+            return ('System User',None, None)
     else:
         user = db.user[user_id]
         if user :
-            return ((user.first_name + ' ' + user.last_name), user.email)
+            return ((user.first_name + ' ' + user.last_name), user.email, user.username)
         else:
-            return (None, None)
+            return (None, None, None)
 
 
 def get_full_name(user_id):

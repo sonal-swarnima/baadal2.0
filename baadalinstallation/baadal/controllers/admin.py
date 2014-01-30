@@ -27,6 +27,35 @@ def list_all_pending_requests():
 
 @check_moderator
 @handle_exception
+def approve_users():
+    pending_users = get_all_unregistered_users()
+    users = get_users_with_organisation(pending_users)
+    types = get_user_role_types()
+    return dict(users = users,
+                type_options = types)
+                
+@check_moderator
+@handle_exception
+def modify_user_role():
+    active_users = get_users_with_roles()
+    all_roles = get_user_role_types()
+    return dict(users = active_users,
+                type_options = all_roles)
+    
+def modify_roles():
+    user_id = request.args[0]
+    user_roles = request.args[1]
+    if user_roles == "empty":
+        user_roles = None
+    else:
+        user_roles = user_roles.split('_')
+    user_id = long(user_id)
+    delete_all_user_roles(user_id)
+    session.flash= specify_user_roles(user_id, user_roles)
+    redirect(URL(c='admin',f='modify_user_role'))
+
+@check_moderator
+@handle_exception
 def hosts_vms():
     hostvmlist = get_vm_groupby_hosts()        
     return dict(hostvmlist = hostvmlist)
@@ -357,3 +386,24 @@ def verify_vm_resource():
     request_id = request.vars['request_id']
     return check_vm_resource(request_id)
 
+@check_moderator
+@handle_exception
+def add_user_with_role():
+    user_id = request.args[0]
+    user_roles = request.args[1]
+    if user_roles == "empty":
+        user_roles = None
+    else:
+        user_roles = user_roles.split('_')
+    user_id = long(user_id)
+    send_email_on_successful_registration(user_id)
+    session.flash= specify_user_roles(user_id, user_roles)
+    redirect(URL(c='admin',f='approve_users'))
+ 
+@check_moderator
+@handle_exception   
+def remove_user():
+    user_id=request.args[0]
+    send_email_on_registration_denied(user_id)
+    session.flash = disable_user(user_id)
+    redirect(URL(c='admin',f='approve_users'))
