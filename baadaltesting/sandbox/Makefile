@@ -118,6 +118,9 @@ openvswitch: sources-list-setup
 	apt-get -y install python-software-properties
 	if [[ "$(PROFILE)" == "iitd" ]]; then \
 		add-apt-repository -y 'deb [arch=amd64] $(PROFILE_PPA) precise main';\
+		wget $(PROFILE_PPA)/key.gpg; \
+		cat key.gpg | apt-key add - ;\
+		rm key.gpg ;\
 		else \
 			add-apt-repository -y ppa:ivoks/ovs-saucy ;\
 		fi
