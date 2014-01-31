@@ -96,7 +96,8 @@ virtmanager: $(VIRTMANAGER)
 
 utils: ubuntu libvirt virtmanager
 
-$(BAADAL_TRANSFER_TAR): $(UTILS_LOCAL_DIR)
+$(BAADAL_TRANSFER_TAR):
+	@ mkdir -p $(UTILS_LOCAL_DIR)
 	@ sudo umount $(UTILS_DIR)/iso 1>/dev/null 2>/dev/null || true
 	@ sudo rm -rf $(UTILS_DIR)/iso 1>/dev/null 2>/dev/null || true
 	@ sudo rm -rf $(UTILS_DIR)/ubuntuiso 1>/dev/null 2>/dev/null || true
