@@ -22,7 +22,30 @@ function file_backup
 
   $ECHO_PROGRESS "$file -\> $file.bak"
 
-  cp $file $file.bak 1>>$LOGS/log.out 2>>$LOGS.log.err
+  cp $file $file.bak 1>>$LOGS/log.out 2>>$LOGS/log.err
 
   $ECHO_OK $file -\> $file.bak
+}
+
+
+# It is recommended to use this for file related commands.
+# This will be replaced by a general sh_run function.
+function file_run
+{
+  command=$1
+
+  $ECHO_PROGRESS "$command"
+
+  $command 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER $command
+    tail -$LOG_SIZE $LOGS/log.err 
+    exit 1
+  else
+    $ECHO_OK $command
+  fi
+
+
 }
