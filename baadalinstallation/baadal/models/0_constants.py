@@ -85,7 +85,9 @@ SNAPSHOT_WEEKLY=2
 SNAPSHOT_MONTHLY=3
 SNAPSHOT_YEARLY=4
 SNAPSHOT_USER=5
+SNAPSHOT_SYSTEM=6
 current.SNAPSHOT_USER=SNAPSHOT_USER
+current.SNAPSHOT_SYSTEM=SNAPSHOT_SYSTEM
 
 #User status
 USER_PENDING_APPROVAL='pending'
@@ -129,5 +131,9 @@ VM_UTIL_ONE_WEEK = 2
 VM_UTIL_ONE_MNTH = 3
 VM_UTIL_ONE_YEAR = 4
 
+BAADAL_STATUS_UP='up'
+BAADAL_STATUS_UP_IN_PROGRESS='up-progress'
+BAADAL_STATUS_DOWN='down'
+BAADAL_STATUS_DOWN_IN_PROGRESS='down-progress'
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

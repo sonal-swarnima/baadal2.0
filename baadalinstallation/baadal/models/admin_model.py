@@ -594,3 +594,16 @@ def specify_user_roles(user_id, user_roles):
 def disable_user(user_id):
     db(db.user.id == user_id).update(registration_key='disable')
     return "User disabled in DB"
+
+def get_baadal_status_info():
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    vm_info = []
+    for vm_detail in vms:
+        sys_snapshot = db.snapshot(vm_id=vm_detail.id,type=SNAPSHOT_SYSTEM)
+        element = {'id' : vm_detail.id,
+                   'vm_name' : vm_detail.vm_identity, 
+                   'host_ip' : vm_detail.host_id.host_ip, 
+                   'vm_status' : get_vm_status(vm_detail.status),
+                   'sys_snapshot': True if sys_snapshot else False}
+        vm_info.append(element)
+    return vm_info

@@ -7,7 +7,8 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin, check_db_storage_type
+from helper import is_moderator, is_faculty, is_orgadmin, check_db_storage_type,\
+    get_constant
 
 response.title = request.application
 response.google_analytics_id = None
@@ -57,9 +58,11 @@ if auth.is_logged_in():
             (T('Host and VMs'), False, URL('admin','hosts_vms')),
             (T('Tasks'), False, URL('admin','task_list')),
             (T('Sanity Check'), False, URL('admin','sanity_check'))]
+
         if check_db_storage_type():
                 response.admin_menu.extend([(T('Approve Users'), False, URL('admin','approve_users')),
                                             (T('Modify User Role'), False, URL('admin','modify_user_role'))])
+
         response.admin_menu.extend([(T('Configure System'), False,dict(_href='#', _id='configure'),[
                 (T('Configure Host'), False, URL('admin','host_details')),
                 (T('Configure Template'), False, URL('admin','manage_template')),
@@ -68,3 +71,16 @@ if auth.is_logged_in():
                 (T('Configure Private IP Pool'), False, URL('admin','manage_private_ip_pool')),
                 (T('Configure Public IP Pool'), False, URL('admin','manage_public_ip_pool'))
                 ])])
+
+        baadal_status = get_constant('baadal_status')
+        status_txt = None
+        if baadal_status == BAADAL_STATUS_DOWN:
+            status_txt = 'Bootup Baadal'
+        elif baadal_status == BAADAL_STATUS_DOWN_IN_PROGRESS:
+            status_txt = 'Check Baadal Shutdown Status'
+        elif baadal_status == BAADAL_STATUS_UP:
+            status_txt = 'Shutdown Baadal'
+        elif baadal_status == BAADAL_STATUS_UP_IN_PROGRESS:
+            status_txt = 'Check Baadal Bootup Status'
+        if status_txt:
+            response.admin_menu.extend([((T(status_txt), False, URL('admin','baadal_status')))])

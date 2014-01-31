@@ -22,6 +22,7 @@
 	</table>
 	
 	<table name="constants">
+		<row name="baadal_status" value="up"/>
 		<row name="vmfiles_path" value="/mnt/datastore"/>
 		<row name="datastore_int" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>

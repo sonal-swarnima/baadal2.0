@@ -38,7 +38,7 @@ def get_datetime():
 
 
 def get_constant(constant_name):
-    constant = current.db(current.db.constants.name == constant_name).select().first()['value']
+    constant = current.db.constants(name = constant_name)['value']
     return constant
 
 def update_constant(constant_name, constant_value):

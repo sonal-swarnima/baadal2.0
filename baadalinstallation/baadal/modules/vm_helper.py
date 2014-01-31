@@ -3,8 +3,6 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    import gluon
-    global db; db = gluon.sql.DAL()
 ###################################################################################
 
 import sys, math, shutil, paramiko, traceback, libvirt, random
@@ -425,13 +423,13 @@ def install(parameters):
 # Starts a vm
 def start(parameters):
     
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.create()
-        current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_RUNNING)  
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)  
         message = vm_details.vm_identity + " is started successfully."
         current.logger.debug(message) 
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -442,13 +440,13 @@ def start(parameters):
 # Suspends a vm
 def suspend(parameters):
 
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.suspend()
-        current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_SUSPENDED)       
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SUSPENDED)       
         message = vm_details.vm_identity + " is suspended successfully." 
         current.logger.debug(message)       
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -459,13 +457,13 @@ def suspend(parameters):
 # Resumes a vm
 def resume(parameters):
 
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.resume()
-        current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_RUNNING) 
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING) 
         message = vm_details.vm_identity + " is resumed successfully."
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -476,14 +474,14 @@ def resume(parameters):
 # Destroys a vm forcefully
 def destroy(parameters):
 
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.destroy()
-        current.db(current.db.vm_data.id == vmid).update(status = current.VM_STATUS_SHUTDOWN) 
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SHUTDOWN) 
         message = vm_details.vm_identity + " is destroyed successfully."
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -531,7 +529,7 @@ def vm_has_snapshots(vm_id):
 # Deletes a vm
 def delete(parameters):
 
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -545,7 +543,7 @@ def delete(parameters):
         message = vm_details.vm_identity + " is deleted successfully."
         current.logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
-        current.db(current.db.vm_data.id == vmid).delete()
+        current.db(current.db.vm_data.id == vm_id).delete()
         current.db.commit()
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -657,32 +655,26 @@ def migrate(parameters):
     migrate_domain(vmid, destination_host_id, live_migration)
   
 
-def snapshot_vm(vm_id, snapshot_type):
-
-    vm_details = current.db.vm_data[vm_id]
-    snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
-    connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-    domain = connection_object.lookupByName(vm_details.vm_identity)
-    xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
-    domain.snapshotCreateXML(xmlDesc, 0)
-    message = "Snapshotted successfully."
-    if snapshot_type != current.SNAPSHOT_USER:
-        snapshot_cron = current.db((current.db.snapshot.vm_id == vmid) & (current.db.snapshot.type == snapshot_type)).select().first()
-        #Delete the existing Daily/Monthly/Yearly snapshot
-        if snapshot_cron:
-            current.logger.debug(snapshot_cron)
-            delete_snapshot({'vm_id':vmid, 'snapshot_id':snapshot_cron.id})
-        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
-    return message
-
-
 # Snapshots a vm
 def snapshot(parameters):
 
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     snapshot_type = parameters['snapshot_type']
     try:
-        message = snapshot_vm(vmid, snapshot_type)
+        vm_details = current.db.vm_data[vm_id]
+        snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_identity)
+        xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
+        domain.snapshotCreateXML(xmlDesc, 0)
+        message = "Snapshotted successfully."
+        if snapshot_type != current.SNAPSHOT_USER:
+            snapshot_cron = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select().first()
+            #Delete the existing Daily/Monthly/Yearly snapshot
+            if snapshot_cron:
+                current.logger.debug(snapshot_cron)
+                delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
+            current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -693,7 +685,7 @@ def snapshot(parameters):
 def revert(parameters):
     
     current.logger.debug("Inside revert snapshot")
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
     vm_details = current.db.vm_data[vm_id]
     try:
@@ -713,7 +705,7 @@ def revert(parameters):
 def delete_snapshot(parameters):
 
     current.logger.debug("Inside delete snapshot")
-    vmid = parameters['vm_id']
+    vm_id = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
     vm_details = current.db.vm_data[vm_id]
     current.logger.debug(str(vm_details))
@@ -757,7 +749,7 @@ def update_security_domain(vm_details, security_domain_id, xmlDesc):
 # Edits vm configuration
 def edit_vm_config(parameters):
 
-    vmid = parameters['vm_id']    
+    vm_id = parameters['vm_id']    
     vm_details = current.db.vm_data[vm_id]
     message = ""
     try:
@@ -768,14 +760,14 @@ def edit_vm_config(parameters):
             new_vcpus = int(parameters['vcpus'])
             domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_AFFECT_CONFIG)
             message += "Edited vCPU successfully."
-            current.db(current.db.vm_data.id == vmid).update(vCPU = new_vcpus)
+            current.db(current.db.vm_data.id == vm_id).update(vCPU = new_vcpus)
 
         if 'ram' in parameters:
             new_ram = int(parameters['ram']) * 1024
             current.logger.debug(str(new_ram))
             domain.setMemoryFlags(new_ram, VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_MEM_MAXIMUM)
             message +=  " And edited RAM successfully."
-            current.db(current.db.vm_data.id == vmid).update(RAM = int(parameters['ram']))
+            current.db(current.db.vm_data.id == vm_id).update(RAM = int(parameters['ram']))
             
         if 'public_ip' in parameters:
             enable_public_ip = parameters['public_ip']
@@ -783,15 +775,15 @@ def edit_vm_config(parameters):
                 public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
                 if public_ip_pool:
                     create_NAT_IP_mapping('add', public_ip_pool.public_ip, vm_details.private_ip)
-                    current.db.public_ip_pool[public_ip_pool.id] = dict(vm_id=vmid)
-                    current.db.vm_data[vmid] = dict(public_ip=public_ip_pool.public_ip)
+                    current.db.public_ip_pool[public_ip_pool.id] = dict(vm_id=vm_id)
+                    current.db.vm_data[vm_id] = dict(public_ip=public_ip_pool.public_ip)
                     
                 else:
                     raise Exception("Available Public IPs are exhausted.")
             else:
                 create_NAT_IP_mapping('remove', vm_details.public_ip, vm_details.private_ip)
                 current.db(current.db.public_ip_pool.public_ip == vm_details.public_ip).update(vm_id = None)
-                current.db.vm_data[vmid] = dict(public_ip=current.PUBLIC_IP_NOT_ASSIGNED)
+                current.db.vm_data[vm_id] = dict(public_ip=current.PUBLIC_IP_NOT_ASSIGNED)
         
         if 'security_domain' in parameters:
             current.logger.debug('Updating security domain')
@@ -897,3 +889,18 @@ def attach_extra_disk(parameters):
         message = log_exception()
         return (current.TASK_QUEUE_STATUS_FAILED, message)            
 
+def shutdown_baadal():
+    vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
+    for vm_detail in vms:
+        snapshot({'vm_id':vm_detail.id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
+        destroy({'vm_id':vm_detail.id})
+    return
+
+def bootup_baadal():
+    vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
+    for vm_detail in vms:
+        sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=current.SNAPSHOT_SYSTEM)
+        if sys_snapshot:
+            revert({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+            delete_snapshot({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+    return
