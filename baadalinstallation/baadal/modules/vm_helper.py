@@ -454,7 +454,7 @@ def install(parameters):
 def start(parameters):
     
     vmid = parameters['vm_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
@@ -471,7 +471,7 @@ def start(parameters):
 def suspend(parameters):
 
     vmid = parameters['vm_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
@@ -488,7 +488,7 @@ def suspend(parameters):
 def resume(parameters):
 
     vmid = parameters['vm_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
@@ -505,7 +505,7 @@ def resume(parameters):
 def destroy(parameters):
 
     vmid = parameters['vm_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -555,34 +555,21 @@ def vm_has_snapshots(vm_id):
     else:
         return False
 
-# Deletes all vm snapshots
-def delete_vm_snapshots(vmid, domain):
-
-    try:
-        for row in current.db(current.db.snapshot.vm_id == vmid).select(current.db.snapshot.snapshot_name) :
-            current.logger.debug(row.snapshot_name)
-            snapshot = domain.snapshotLookupByName(row.snapshot_name, 0)
-            snapshot.delete(0)
-            current.logger.debug("Deleted " + row.snapshot_name + " snapshot successfully.")
-    except:
-        raise Exception("Could not delete snapshots. Try later")
         
 # Deletes a vm
 def delete(parameters):
 
     vmid = parameters['vm_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         current.logger.debug(str(vm_details.status))
         if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
-            #domain.destroy()
-        if (vm_has_snapshots(vmid)):
-            delete_vm_snapshots(vmid, domain)
+            domain.destroy()
         current.logger.debug("Starting to delete it...")
-        domain.undefine()
+        domain.undefine(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
         message = vm_details.vm_identity + " is deleted successfully."
         current.logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
@@ -616,65 +603,76 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
     current.logger.debug("Migrating the vm to destination host...")
     domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
-    # Shutdown vm on the source host
-    domain.shutdown()
-
     # Redefine all the snapshot(s) of the vm on the destination host and set current snapshot
     current.logger.debug("Starting to redefine all the snapshot(s) of the domain...")
     for domain_snapshot in domain_snapshot_list:
         redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
         snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
-        exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_redefine_command)
+        exec_command_on_host(destination_host_ip, 'root', snapshot_redefine_command)
     snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
-    exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_current_command)
+    exec_command_on_host(destination_host_ip, 'root', snapshot_current_command)
 
-    # Undefine the vm on the source host
-    current.logger.debug("Undefining the vm on the source host...")
-    domain.undefineFlags(VIR_DOMAIN_UNDEFINE_MANAGED_SAVE)
-    
     return
+
+# Undo the migration 
+def undo_migration(vm_details, domain_snapshot_list):
+
+    if domain_snapshot_list:
+        # Redefine the snapshots of the vm on the source host
+        current.logger.debug("Starting to redefine all the snapshot(s) of the vm on the source host...")
+        for domain_snapshot in domain_snapshot_list:
+            redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
+            snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
+            exec_command_on_host(vm_details.host_ip, 'root', snapshot_redefine_command)
+        snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
+        exec_command_on_host(vm_details.host_ip, 'root', snapshot_current_command)
+
+    return
+
 
 # Migrate domain
 def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
     vm_details = current.db.vm_data[vm_id]
+    domain_snapshots_list = []
     if destination_host_id == None:
         new_destination_host = find_new_host(vm_details.RAM, vm_details.vCPU)
         destination_host_ip = new_destination_host.host_ip
     else:
         destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
 
-    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST
+    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
     if live_migration:
         flags |= VIR_MIGRATE_LIVE    
-    current.logger.debug("Flags: " + str(flags))       
-    
-    current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-    domain = current_host_connection_object.lookupByName(vm_details.vm_identity)
-    domain_snapshots_list = domain.snapshotListNames(0)
-    
-    if domain_snapshots_list:
-        current_snapshot = domain.snapshotCurrent(0)
-        current_snapshot_name = current_snapshot.getName()
-        migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags)
-    else:
-        domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
+    current.logger.debug("Flags: " + str(flags))   
 
-    vm_details.update_record(host_id = destination_host_id)
+    try:    
+        current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = current_host_connection_object.lookupByName(vm_details.vm_identity)
+        domain_snapshots_list = domain.snapshotListNames(0)
     
-    old_host = current.db.host[vm_details.host_id]
-    old_host.update_record(vm_count = old_host.vm_count - 1)
+        if domain_snapshots_list:
+            current_snapshot = domain.snapshotCurrent(0)
+            current_snapshot_name = current_snapshot.getName()
+            migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags)
+        else:
+            domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
-    new_host = current.db.host[destination_host_id]
-    new_host.update_record(vm_count = new_host.vm_count + 1)
-    message = vm_details.vm_identity + " is migrated successfully."
+        vm_details.update_record(host_id = destination_host_id)
     
-    return message
-        
+        old_host = current.db.host[vm_details.host_id]
+        old_host.update_record(vm_count = old_host.vm_count - 1)
+
+        new_host = current.db.host[destination_host_id]
+        new_host.update_record(vm_count = new_host.vm_count + 1)
+
+        message = vm_details.vm_identity + " is migrated successfully."
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except libvirt.libvirtError,e:
+        undo_migration(vm_details, domain_snapshots_list)
+        message = e.get_error_message()
+        return (current.TASK_QUEUE_STATUS_FAILED, message)        
  
-def clean_up_migration_data():
-    pass
-
 
 # Migrates a vm to a new host
 def migrate(parameters):
@@ -683,35 +681,35 @@ def migrate(parameters):
     destination_host_id = parameters['destination_host']
     if 'live_migration' in parameters:
         live_migration = True
-    try:
-        message = migrate_domain(vmid, destination_host_id, live_migration)
-        current.logger.debug("Migrated successfully..")       
-        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        clean_up_migration_data()
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+    migrate_domain(vmid, destination_host_id, live_migration)
+  
+
+def snapshot_vm(vm_id, snapshot_type):
+
+    vm_details = current.db.vm_data[vm_id]
+    snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
+    connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+    domain = connection_object.lookupByName(vm_details.vm_identity)
+    xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
+    domain.snapshotCreateXML(xmlDesc, 0)
+    message = "Snapshotted successfully."
+    if snapshot_type != current.SNAPSHOT_USER:
+        snapshot_cron = current.db((current.db.snapshot.vm_id == vmid) & (current.db.snapshot.type == snapshot_type)).select().first()
+        #Delete the existing Daily/Monthly/Yearly snapshot
+        if snapshot_cron:
+            current.logger.debug(snapshot_cron)
+            delete_snapshot({'vm_id':vmid, 'snapshot_id':snapshot_cron.id})
+        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
+    return message
+
 
 # Snapshots a vm
 def snapshot(parameters):
 
     vmid = parameters['vm_id']
     snapshot_type = parameters['snapshot_type']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
     try:
-        snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
-        xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
-        domain.snapshotCreateXML(xmlDesc, 0)
-        message = "Snapshotted successfully."
-        if snapshot_type != current.SNAPSHOT_USER:
-            snapshot_cron = current.db((current.db.snapshot.vm_id == vmid) & (current.db.snapshot.type == snapshot_type)).select().first()
-            #Delete the existing Daily/Monthly/Yearly snapshot
-            if snapshot_cron:
-                current.logger.debug(snapshot_cron)
-                delete_snapshot({'vm_id':vmid, 'snapshot_id':snapshot_cron.id})
-        current.db.snapshot.insert(vm_id = vmid, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
+        message = snapshot_vm(vmid, snapshot_type)
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -724,7 +722,7 @@ def revert(parameters):
     current.logger.debug("Inside revert snapshot")
     vmid = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
@@ -744,7 +742,7 @@ def delete_snapshot(parameters):
     current.logger.debug("Inside delete snapshot")
     vmid = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     current.logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -787,7 +785,7 @@ def update_security_domain(vm_details, security_domain_id, xmlDesc):
 def edit_vm_config(parameters):
 
     vmid = parameters['vm_id']    
-    vm_details = current.db(current.db.vm_data.id == vmid).select().first()
+    vm_details = current.db.vm_data[vm_id]
     message = ""
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
