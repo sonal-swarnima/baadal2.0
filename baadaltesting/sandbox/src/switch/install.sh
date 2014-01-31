@@ -24,15 +24,27 @@ function run
   ifconfig_dhcp $OVS_BRIDGE_EXTERNAL
 
   config_get NETWORK_INTERNAL_IP_SANDBOX
-  ifconfig_ip $OVS_BRIDGE_INTERNAL $NETWORK_INTERNAL_IP_SANDBOX 255.255.0.0 
+  ifconfig_ip $OVS_BRIDGE_INTERNAL $NETWORK_INTERNAL_IP_SANDBOX $VLAN_NETMASK
 
   file_backup /etc/network/interfaces
-
-  # FIXME
-  # does not use values from our settings in $CONFIG
-  # one step sed solution right now
-  # which would always give right result
-	cp $OVS_EXTERNAL_CUSTOM_IFS /etc/network/interfaces
+  
+  interfaces_str=" auto lo\n
+  iface lo inet loopback\n
+  up service openvswitch-switch restart\n
+  \n
+  auto $OVS_BRIDGE_EXTERNAL\n
+  iface $OVS_BRIDGE_EXTERNAL inet dhcp\n
+  \n
+  auto $INTERFACE\n
+  iface $INTERFACE inet static\n
+  address 0.0.0.0\n
+  \n
+  auto $OVS_BRIDGE_INTERNAL\n
+  iface $OVS_BRIDGE_INTERNAL inet static\n
+  address $NETWORK_INTERNAL_IP_SANDBOX\n
+  netmask $VLAN_NETMASK\n
+  "
+  echo -e $interfaces_str > /etc/network/interfaces
 
   virsh_force "net-destroy $OVS_NET_INTERNAL"
   virsh_force "net-undefine $OVS_NET_INTERNAL"
