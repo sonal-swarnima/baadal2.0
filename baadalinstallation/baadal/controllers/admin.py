@@ -422,9 +422,11 @@ def baadal_status():
 def start_shutdown():
     update_constant('baadal_status', BAADAL_STATUS_DOWN_IN_PROGRESS)
     shutdown_baadal()
+    update_constant('baadal_status', BAADAL_STATUS_DOWN)
     
 @check_moderator
 @handle_exception   
 def start_bootup():
     update_constant('baadal_status', BAADAL_STATUS_UP_IN_PROGRESS)
     bootup_baadal()
+    update_constant('baadal_status', BAADAL_STATUS_UP)
