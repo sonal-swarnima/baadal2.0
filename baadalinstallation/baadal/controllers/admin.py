@@ -7,6 +7,8 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from host_helper import delete_orhan_vm
+from helper import get_constant, update_constant
+from vm_helper import shutdown_baadal, bootup_baadal
 
 @check_moderator
 @handle_exception
@@ -407,3 +409,24 @@ def remove_user():
     send_email_on_registration_denied(user_id)
     session.flash = disable_user(user_id)
     redirect(URL(c='admin',f='approve_users'))
+
+@check_moderator
+@handle_exception   
+def baadal_status():
+    vm_list = get_baadal_status_info()
+    baadal_status = get_constant('baadal_status')
+    return dict(vm_list=vm_list, baadal_status=baadal_status)
+
+@check_moderator
+@handle_exception   
+def start_shutdown():
+    update_constant('baadal_status', BAADAL_STATUS_DOWN_IN_PROGRESS)
+    shutdown_baadal()
+    update_constant('baadal_status', BAADAL_STATUS_DOWN)
+    
+@check_moderator
+@handle_exception   
+def start_bootup():
+    update_constant('baadal_status', BAADAL_STATUS_UP_IN_PROGRESS)
+    bootup_baadal()
+    update_constant('baadal_status', BAADAL_STATUS_UP)

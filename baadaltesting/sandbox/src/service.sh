@@ -48,6 +48,17 @@ function service_stop
   $ECHO_OK Service stopped $service
 }
 
+function kill_all
+{
+  program=$1
+
+  $ECHO_PROGRESS "Killing the process $program"
+
+  killall $program 1>>$LOGS/log.out 2>>$LOGS/log.err
+
+  $ECHO_OK $program successfully killed
+}
+
 function network_restart
 {
   service=$1

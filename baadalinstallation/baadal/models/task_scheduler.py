@@ -5,7 +5,7 @@ if 0:
     from gluon import db,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime
+from helper import get_datetime, log_exception
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
 
@@ -73,7 +73,7 @@ def process_task_queue(task_event_id):
         
         db.commit()
     except:
-        msg = logger.exception()
+        msg = log_exception()
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
         
 def process_clone_task(task_event_id, vm_id):
@@ -123,7 +123,7 @@ def process_clone_task(task_event_id, vm_id):
         db.commit()
 
     except:
-        msg = logger.exception()
+        msg = log_exception()
         vm_data = db.vm_data[vm_id]
         message = message + '\n' + vm_data.vm_name + ': ' + msg
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=message)

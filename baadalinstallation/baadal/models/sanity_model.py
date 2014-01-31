@@ -100,7 +100,7 @@ def check_vm_sanity():
         except:pass
         db.commit()
         
-    db_vms=db(db.vm_data.host_id == host.id & db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    db_vms=db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     for db_vm in db_vms:
         if(db_vm.vm_identity not in vm_list):
             vmcheck.append({'vmname':db_vm.vm_identity,

@@ -22,6 +22,7 @@
 	</table>
 	
 	<table name="constants">
+		<row name="baadal_status" value="up"/>
 		<row name="vmfiles_path" value="/mnt/datastore"/>
 		<row name="datastore_int" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
@@ -45,6 +46,15 @@
 	<table name="security_domain">
 		<row id="1" name="Private" vlan="1" visible_to_all="False" />
 		<row id="2" name="Research" vlan="2" visible_to_all="True" />
+	</table>
+
+	<table name="user">
+		<row id="1" first_name="Admin" last_name="User" email="Admin@baadal" username="admin" password="baadal" organisation_id="1"/>
+	</table>
+
+	<table name="user_membership">
+		<row user_id="1" group_id="1"/>
+		<row user_id="1" group_id="4"/>
 	</table>
 
 </dataset>

@@ -21,28 +21,6 @@ def get_configured_logger(name):
 
     return logger
 
-
-def debug(message):
-    logger.log(message, level='DEBUG')
-
-def info(message):
-    logger.log(message, level='INFO')
-    
-def warn(message):
-    logger.log(message, level='WARNING')
-    
-def error(message):
-    logger.log(message, level='ERROR')
-
-def exception(message=None):
-    import sys, traceback
-    etype, value, tb = sys.exc_info()
-    trace = ''.join(traceback.format_exception(etype, value, tb, 10))
-    if message:
-        trace += message
-    logger.error(trace)
-    return trace
-
 logger = get_configured_logger(request.application)
 from gluon import current
 current.logger = logger

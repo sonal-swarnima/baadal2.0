@@ -196,13 +196,11 @@ def update_rrd():
                     else:
                         logger.info("rrd updated successfully.")
                 except:
-                    logger.warn("Error occured while creating/updating rrd.")
-                    logger.exception()
+                    logger.exception("Error occured while creating/updating rrd.")
                     pass
             
         except:
-            logger.warn("Error occured while creating/updating rrd or host.")
-            logger.exception()           
+            logger.exception("Error occured while creating/updating rrd or host.")           
             pass
         finally: 
             if conn:

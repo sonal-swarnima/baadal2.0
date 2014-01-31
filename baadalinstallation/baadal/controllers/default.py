@@ -2,8 +2,12 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import auth,request
+    from gluon import *  # @UnusedWildImport
+    from gluon import auth,request,response
+    import gluon
+    global auth; auth = gluon.tools.Auth()
 ###################################################################################
+from helper import is_moderator, get_constant
 
 def user():
     """
@@ -22,7 +26,12 @@ def user():
 
 
 def index():
-    return dict()
+    if auth.is_logged_in():
+        if get_constant("baadal_status") == BAADAL_STATUS_UP:
+            if not is_moderator():
+                redirect(URL(r=request,c='default', f='user/logout'))
+            response.flash="Baadal is in Maintenance Mode"
+    return dict(request=request)
 
 def contact():
     return dict()
