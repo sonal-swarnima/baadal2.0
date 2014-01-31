@@ -183,25 +183,6 @@ def get_user_role_types():
 def delete_all_user_roles(user_id):
     db(db.user_membership.user_id == user_id).delete()        
         
-def add_to_cost(vm_id):
-    vm = db.vm_data[vm_id]
-
-    oldtime = vm.start_time
-    newtime = get_datetime()
-    
-    if(oldtime==None):oldtime=newtime
-    #Calculate hour difference between start_time and current_time
-    hours  = ((newtime - oldtime).total_seconds()) / 3600
-    
-    if(vm.current_run_level == 0): scale = 0
-    elif(vm.current_run_level == 1): scale = 1
-    elif(vm.current_run_level == 2): scale = .5
-    elif(vm.current_run_level == 3): scale = .25
-
-    totalcost = float(hours*(vm.vCPU*float(COST_CPU) + vm.RAM*float(COST_RAM)/1024)*float(COST_SCALE)*float(scale)) + float(vm.total_cost)
-    totalcost = round(totalcost,2)
-    db(db.vm_data.id == vm_id).update(start_time=get_datetime(),total_cost=totalcost)
-    return totalcost
 
 # Get user name and email
 def get_user_details(user_id):

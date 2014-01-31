@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ =['add_faculty_approver', 'add_orhan_vm', 'add_private_ip_range', 'add_public_ip_range', 'add_to_cost', 
+__all__ =['add_faculty_approver', 'add_orhan_vm', 'add_private_ip_range', 'add_public_ip_range', 
 			'add_user_vm_access', 'add_vm_task_to_queue', 'add_vm_users', 'approve_vm_request', 
 			'check_delete_security_domain', 'check_faculty', 'check_host_sanity', 'check_moderator', 'check_orgadmin', 
 			'check_snapshot_limit', 'check_vm_owner', 'check_vm_resource', 'check_vm_sanity', 'configure_host_by_mac', 

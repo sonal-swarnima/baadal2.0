@@ -22,33 +22,6 @@ def choose_datastore():
         raise Exception("No datastore found.")
     else:
         return datastores[0]
-       
-# Computes effective RAM and CPU
-def compute_effective_ram_vcpu(RAM, vCPU, runlevel):
-
-    effective_ram = 1024
-    effective_cpu = 1
-    divideby = 1
-
-    if(runlevel == 0): 
-        effective_ram = 0
-        effective_cpu = 0
-    else:
-
-        if(runlevel == 1): 
-            divideby = 1
-        elif(runlevel == 2): 
-            divideby = 2
-        elif(runlevel == 3): 
-            divideby = 4
-
-        if(RAM/divideby >= 1024):
-            effective_ram = RAM/divideby
-
-        if(vCPU/divideby >= 1): 
-            effective_cpu = vCPU/divideby
-
-    return (effective_ram, effective_cpu)
 
 #Returns resources utilization of a host in MB,Count
 def host_resources_used(host_id):
@@ -150,7 +123,8 @@ def allocate_vm_properties(vm_details):
     current.logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
                           + str(vm_properties['vnc_port']))
     
-    (vm_properties['ram'], vm_properties['vcpus']) = compute_effective_ram_vcpu(vm_details.RAM, vm_details.vCPU, 1)
+    vm_properties['ram'] = vm_details.RAM
+    vm_properties['vcpus'] = vm_details.vCPU
 
     return vm_properties
 
@@ -390,8 +364,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
                                                                mac_addr = vm_properties['mac_addr'],
                                                                public_ip = vm_properties['public_ip'], 
                                                                start_time = get_datetime(), 
-                                                               current_run_level = 3, 
-                                                               last_run_level = 3,
                                                                parent_id = parent_id,
                                                                status = vm_status)
 
