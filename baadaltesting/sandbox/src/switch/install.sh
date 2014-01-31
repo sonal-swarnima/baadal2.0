@@ -137,6 +137,9 @@ function libvirt_install
       $ECHO_OK libvirt - configure
     fi
 
+    file_backup $(which libvirtd)
+    kill_all libvirtd
+
     $ECHO_PROGRESS "libvirt - make"
     make 1>>$LOGS/log.out 2>>$LOGS/log.err
     status=$?
