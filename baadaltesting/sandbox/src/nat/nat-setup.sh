@@ -90,7 +90,7 @@ function run
       interfaces_str+="\n
       auto vlan$i\n
       iface vlan$i inet static\n
-      address $baseaddr.$i.0\n
+      address $baseaddr.$i.1\n
       netmask $VLAN_NETMASK\n
       "
       trunk_str+="$i,"
