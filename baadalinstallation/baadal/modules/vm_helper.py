@@ -581,13 +581,13 @@ def delete(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Migrate domain with snapshots
-def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshot_list, current_snapshot_name, flags):
+def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags):
 
     # XML dump of snapshot(s) of the vm
     current.logger.debug("Starting to take xml dump of the snapshot(s) of the vm... ")
     if not os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
             os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
-    for domain_snapshot in domain_snapshot_list:
+    for domain_snapshot in domain_snapshots_list:
         current.logger.debug("snapshot name is " + str(domain_snapshot))
         dump_xml_path = get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
         snapshot_dumpxml_command = 'virsh snapshot-dumpxml %s %s > %s' % ( vm_details.vm_identity, domain_snapshot, dump_xml_path)
@@ -597,7 +597,7 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
 
     # Delete snapshot(s) of the vm and migrate it to destination host
     current.logger.debug("Starting to delete snapshots of the vm....")
-    for domain_snapshot in domain_snapshot_list:
+    for domain_snapshot in domain_snapshots_list:
         snapshot = domain.snapshotLookupByName(domain_snapshot, 0)
         snapshot.delete(0)
     current.logger.debug("Migrating the vm to destination host...")
@@ -605,7 +605,7 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
 
     # Redefine all the snapshot(s) of the vm on the destination host and set current snapshot
     current.logger.debug("Starting to redefine all the snapshot(s) of the domain...")
-    for domain_snapshot in domain_snapshot_list:
+    for domain_snapshot in domain_snapshots_list:
         redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
         snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
         exec_command_on_host(destination_host_ip, 'root', snapshot_redefine_command)
@@ -615,12 +615,12 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
     return
 
 # Undo the migration 
-def undo_migration(vm_details, domain_snapshot_list):
+def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name):
 
-    if domain_snapshot_list:
+    if domain_snapshots_list:
         # Redefine the snapshots of the vm on the source host
         current.logger.debug("Starting to redefine all the snapshot(s) of the vm on the source host...")
-        for domain_snapshot in domain_snapshot_list:
+        for domain_snapshot in domain_snapshots_list:
             redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
             snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
             exec_command_on_host(vm_details.host_ip, 'root', snapshot_redefine_command)
@@ -635,6 +635,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
     vm_details = current.db.vm_data[vm_id]
     domain_snapshots_list = []
+    current_snapshot_name = ''
     if destination_host_id == None:
         new_destination_host = find_new_host(vm_details.RAM, vm_details.vCPU)
         destination_host_ip = new_destination_host.host_ip
@@ -669,7 +670,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
-        undo_migration(vm_details, domain_snapshots_list)
+        undo_migration(vm_details, domain_snapshots_list, current_snapshot_name)
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)        
  
