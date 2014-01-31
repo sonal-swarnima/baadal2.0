@@ -171,7 +171,6 @@ $(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
-	@ cp $(SRC_DIR)/switch/interfaces $(BIN_DIR)/interfaces.sandbox
 	@ cp $(SRC_DIR)/switch/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
 	@ cp $(SRC_DIR)/switch/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
   
