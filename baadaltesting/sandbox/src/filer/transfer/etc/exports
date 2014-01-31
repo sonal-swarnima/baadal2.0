@@ -1,2 +1,2 @@
 #This must be fixed. The network should be taken from $CONFIG.
-/baadal/data 0.0.0.0/0(rw,sync,no_root_squash,no_all_squash)
+/baadal/data 10.0.0.0/8(rw,sync,no_root_squash,no_all_squash)
