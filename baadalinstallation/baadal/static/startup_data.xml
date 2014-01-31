@@ -47,4 +47,13 @@
 		<row id="2" name="Research" vlan="2" visible_to_all="True" />
 	</table>
 
+	<table name="user">
+		<row id="1" first_name="Admin" last_name="User" email="Admin@baadal" username="admin" password="baadal" organisation_id="1"/>
+	</table>
+
+	<table name="user_membership">
+		<row user_id="1" group_id="1"/>
+		<row user_id="1" group_id="4"/>
+	</table>
+
 </dataset>
