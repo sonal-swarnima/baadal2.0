@@ -58,6 +58,14 @@ function run
       trunk_str+="$i,"
   done
 
+  # NOTE TO DEVELOPER
+  # Apparently trunking is not needed here. This will work if no trunking
+  # is set on eth0. But theoretically since OVS is a bridge, and there is
+  # another physical bridge that eth0 is connected to, the trunking rules
+  # should be defined on both eth0-in-OVS and the port-on-physical-bridge
+  # where eth0 is connected. I am not quite sure why it works if trunking
+  # is not defined on eth0-in-OVS. I am not deleting it until I've got an
+  # answer.  
   trunk_str="$(echo ${trunk_str:0:-1})"
   trunk_str="trunk=[$trunk_str]"
   ovsvsctl_set_port $HOST_INTERFACE $trunk_str
