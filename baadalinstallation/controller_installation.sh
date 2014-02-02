@@ -65,10 +65,18 @@ Chk_installation_config()
 	fi
 
 	if test "$AUTH_TYPE" == "ldap"; then
-		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || "$LDAP_URL" == "" || "$LDAP_DN" == ""; then
+
+		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || test "$LDAP_URL" == "" || test "$LDAP_DN" == ""; then
+
 			echo "Ldap setup config missing/incomplete!!!"
 			exit 1
 		fi
+
+		if test ! -d $LDAP_KERBEROS_SETUP_FILES_PATH; then
+                	echo "Ldap/Kerberos Setup Files not Found!!!"
+			exit 1
+		fi
+
 	fi
 
 	if test "$DB_NAME" == ""; then
@@ -86,10 +94,31 @@ Chk_installation_config()
 		exit 1
 	fi	
 
+	if test ! -d $PXE_SETUP_FILES_PATH; then
+		echo "PXE Setup Files not Found!!!"
+                exit 1
+        fi 
+
+        if test ! -d $ABSOLUTE_PATH_OF_BAADALREPO; then
+                echo "Baadal Repo not Found!!!"
+                exit 1
+        fi 
+
+
+        if test ! -d $BAADAL_APP_DIR_PATH; then
+                echo "Baadal App not Found!!!"
+                exit 1
+        fi 
+
 	if test "$STORAGE_TYPE" == "" || test "$STORAGE_SERVER_IP" == "" || test "$STORAGE_DIRECTORY" == "" || test "$LOCAL_MOUNT_POINT" == ""; then
 		echo "Storage server details missing!!!"
 		exit 1
 	fi
+
+        if test ! -d $LOCAL_MOUNT_POINT; then
+                echo "Local Mount Point Does Not Exists!!!"
+                exit 1
+        fi
 
 	if test "$PRIMARY_NETWORK_INTERFACE" == ""; then
 		echo "Primary Interface info missing!!!"
@@ -101,11 +130,30 @@ Chk_installation_config()
 		exit 1
 	fi
 
+	if [[ "$CONTROLLER_IP" =~ "$STARTING_IP_RANGE" ]];then
+        	echo "IP RANGE specified is correct"
+	else
+        	echo "Invalid IP Range!!!"
+        	exit 1
+	fi
+
 	if test "$INSTALL_LOCAL_UBUNTU_REPO" == "y"; then
+
 		if test "$EXTERNAL_REPO_IP" == "" || test "$LOCAL_REPO_SETUP_FILES_PATH" == ""; then
 			echo "local ubuntu repo setup config missing!!!"
 			exit 1
 		fi
+
+	        if test ! -f $ISO_LOCATION; then
+                	echo "ISO to be mounted for PXE server missing!!!"
+        	        exit 1
+	        fi
+
+		if test ! -d $LOCAL_REPO_SETUP_FILES_PATH; then
+			echo "Setup Files Required to configure local ubuntu repo not found!!!"
+			exit 1
+		fi
+
 	fi
 
 	if test "$WEB2PY_PASSWD" == ""; then
@@ -119,6 +167,8 @@ Chk_installation_config()
 			exit 1
 		fi
 	fi
+
+
 
 	echo "config verification complete!!!"
 }
@@ -545,7 +595,7 @@ Enbl_Modules()
 	esac
 
 	
-	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
+	mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
 
 }
 
@@ -760,8 +810,8 @@ Start_Web2py()
 
 Chk_Root_Login
 Chk_installation_config
-#Chk_Gateway
-#Instl_Pkgs
+Chk_Gateway
+Instl_Pkgs
 #Setup_Web2py
 #Configure_Local_Ubuntu_Repo
 #Enbl_Modules
