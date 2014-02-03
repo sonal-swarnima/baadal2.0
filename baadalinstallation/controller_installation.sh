@@ -745,9 +745,13 @@ Configure_Dhcp_Pxe()
 		sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
 	fi
 
+	cp $PXE_SETUP_FILES_PATH/ks_cfg $PXE_SETUP_FILES_PATH/ks.cfg
+
 	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	VLANS=$(echo ${VLANS:0:-1})
+
+	cp $PXE_SETUP_FILES_PATH/host_installation_sh $PXE_SETUP_FILES_PATH/host_installation.sh
 
 	sed -i -e 's/NETWORK_GATEWAY_IP/'"$NETWORK_GATEWAY_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
 	
