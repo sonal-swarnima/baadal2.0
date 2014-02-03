@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 
 CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -812,13 +812,13 @@ Chk_Root_Login
 Chk_installation_config
 Chk_Gateway
 Instl_Pkgs
-#Setup_Web2py
-#Configure_Local_Ubuntu_Repo
-#Enbl_Modules
-#Create_SSL_Certi
-#Rewrite_Apache_Conf
-#Configure_Tftp
-#Configure_Dhcp_Pxe
-#Setup_Baadalapp
-#Start_Web2py
+Setup_Web2py
+Configure_Local_Ubuntu_Repo
+Enbl_Modules
+Create_SSL_Certi
+Rewrite_Apache_Conf
+Configure_Tftp
+Configure_Dhcp_Pxe
+Setup_Baadalapp
+Start_Web2py
 
