@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 
 CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -33,13 +33,14 @@ Chk_Root_Login()
 #Function to check whther the network gateway is pingable or not
 Chk_Gateway()
 {
-	ping -q -c5 $NETWORK_GATEWAY_IP > /dev/null 
+	ping -q -c4 $NETWORK_GATEWAY_IP > /dev/null 
 	
 	if test $? -ne 0;then
 		echo "NETWORK GATEWAY IS NOT REACHABLE!!!"
 		exit 1
 	fi
 
+	echo "Network Gateway is Pingable!!!"
 }
 
 Chk_installation_config()
@@ -65,10 +66,18 @@ Chk_installation_config()
 	fi
 
 	if test "$AUTH_TYPE" == "ldap"; then
-		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || "$LDAP_URL" == "" || "$LDAP_DN" == ""; then
+
+		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || test "$LDAP_URL" == "" || test "$LDAP_DN" == ""; then
+
 			echo "Ldap setup config missing/incomplete!!!"
 			exit 1
 		fi
+
+		if test ! -d $LDAP_KERBEROS_SETUP_FILES_PATH; then
+                	echo "Ldap/Kerberos Setup Files not Found!!!"
+			exit 1
+		fi
+
 	fi
 
 	if test "$DB_NAME" == ""; then
@@ -86,10 +95,37 @@ Chk_installation_config()
 		exit 1
 	fi	
 
+        if test ! -f $ISO_LOCATION; then
+                echo "ISO to be mounted for PXE server missing!!!"
+                exit 1
+        fi
+
+
+	if test ! -d $PXE_SETUP_FILES_PATH; then
+		echo "PXE Setup Files not Found!!!"
+                exit 1
+        fi 
+
+        if test ! -d $ABSOLUTE_PATH_OF_BAADALREPO; then
+                echo "Baadal Repo not Found!!!"
+                exit 1
+        fi 
+
+
+        if test ! -d $BAADAL_APP_DIR_PATH; then
+                echo "Baadal App not Found!!!"
+                exit 1
+        fi 
+
 	if test "$STORAGE_TYPE" == "" || test "$STORAGE_SERVER_IP" == "" || test "$STORAGE_DIRECTORY" == "" || test "$LOCAL_MOUNT_POINT" == ""; then
 		echo "Storage server details missing!!!"
 		exit 1
 	fi
+
+        if test ! -d $LOCAL_MOUNT_POINT; then
+                echo "Local Mount Point Does Not Exists!!!"
+                exit 1
+        fi
 
 	if test "$PRIMARY_NETWORK_INTERFACE" == ""; then
 		echo "Primary Interface info missing!!!"
@@ -101,11 +137,25 @@ Chk_installation_config()
 		exit 1
 	fi
 
+	if [[ "$CONTROLLER_IP" =~ "$STARTING_IP_RANGE" ]];then
+        	echo "IP RANGE specified is correct"
+	else
+        	echo "Invalid IP Range!!!"
+        	exit 1
+	fi
+
 	if test "$INSTALL_LOCAL_UBUNTU_REPO" == "y"; then
+
 		if test "$EXTERNAL_REPO_IP" == "" || test "$LOCAL_REPO_SETUP_FILES_PATH" == ""; then
 			echo "local ubuntu repo setup config missing!!!"
 			exit 1
 		fi
+
+		if test ! -d $LOCAL_REPO_SETUP_FILES_PATH; then
+			echo "Setup Files Required to configure local ubuntu repo not found!!!"
+			exit 1
+		fi
+
 	fi
 
 	if test "$WEB2PY_PASSWD" == ""; then
@@ -120,95 +170,98 @@ Chk_installation_config()
 		fi
 	fi
 
+        if test "$AUTH_TYPE" != "ldap" -o "db"; then
+                echo "Invalid Auth Type!!!"
+                exit 1
+        fi
+
 	echo "config verification complete!!!"
 }
 
 Configure_Ldap_Kerberos()
 {
 
-if test -f "/etc/krb5.conf";then
-		if test -f "ldap_krb/krb5.conf";then
-			mv /etc/{krb5.conf,krb5.conf.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/krb5.conf /etc/
-		else
-			echo "ERROR: ldap_krb/krb5.conf"	
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi 
+	echo "Starting LDAP/kerberos Configuration"	
+
+	if test -f "ldap_krb/krb5.conf";then
+		cp /etc/{krb5.conf,krb5.conf.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/krb5.conf /etc/.
+	else
+		echo "ERROR: ldap_krb/krb5.conf"	
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
 	
-if test -f "/etc/ldap.conf";then
-		if test -f "ldap_krb/ldap.conf";then
-			mv /etc/{ldap.conf,ldap.conf.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/ldap.conf /etc/
-		else
-			echo "ERROR: ldap_krb/ldap.conf"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
+	if test -f "ldap_krb/ldap.conf";then
+		cp /etc/{ldap.conf,ldap.conf.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/ldap.conf /etc/.
+	else
+		echo "ERROR: ldap_krb/ldap.conf"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
 	
-if test -f "/etc/nsswitch.conf";then
-		if test -f "ldap_krb/nsswitch.conf";then
-			mv /etc/{nsswitch.conf,nsswitch.conf.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/nsswitch.conf /etc/
-		else
-			echo "ERROR: ldap_krb/nsswitch.conf"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi	
-fi
+	if test -f "ldap_krb/nsswitch.conf";then
+		cp /etc/{nsswitch.conf,nsswitch.conf.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/nsswitch.conf /etc/.
+	else
+		echo "ERROR: ldap_krb/nsswitch.conf"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi	
 
 	
-if test -f "/etc/pam.d/common-account";then
-		if test -f "ldap_krb/common-account";then
-			mv /etc/pam.d/{common-account,common-account.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-account /etc/pam.d/
-		else
-			echo "ERROR: ldap_krb/common-account"
-  			echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
+	if test -f "ldap_krb/common-account";then
+		cp /etc/pam.d/{common-account,common-account.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-account /etc/pam.d/.
+	else
+		echo "ERROR: ldap_krb/common-account"
+		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
 	
-if test -f "/etc/pam.d/common-auth";then
-		if test -f "ldap_krb/common-auth";then
-			mv /etc/pam.d/{common-auth,common-auth.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-auth /etc/pam.d/	
-		else
-			echo "ERROR: ldap_krb/common-auth"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
+	if test -f "ldap_krb/common-auth";then
+		cp /etc/pam.d/{common-auth,common-auth.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-auth /etc/pam.d/.
+	else
+		echo "ERROR: ldap_krb/common-auth"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
+	if test -f "ldap_krb/common-password";then
+		cp /etc/pam.d/{common-password,common-password.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-password /etc/pam.d/.
+	else
+		echo "ERROR: ldap_krb/common-password"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
-if test -f "/etc/pam.d/common-password";then
-		if test -f "ldap_krb/common-password";then
-			mv /etc/pam.d/{common-password,common-password.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-password /etc/pam.d/	
-		else
-			echo "ERROR: ldap_krb/common-password"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
-	
-	
-if test -f "/etc/pam.d/common-session";then
-		if test -f "ldap_krb/common-session";then
-			mv /etc/pam.d/{common-session,common-session.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-session /etc/pam.d/		
-		else
-			echo "ERROR: ldap_krb/common-session"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi	
 
+	if test -f "ldap_krb/common-session";then
+		cp /etc/pam.d/{common-session,common-session.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-session /etc/pam.d/.		
+	else
+		echo "ERROR: ldap_krb/common-session"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
+
+}
+
+
+Setup_Ldap_Kerberos()
+{
+	Configure_Ldap_Kerberos
+
+	for pkg in ${Ldap_pkg_lst[@]}; do
+		apt-get install -y $pkg
+	done
+	
 }
 
 #Function to populate the list of packages to be installted
@@ -232,29 +285,12 @@ Populate_Pkg_Lst()
 
 	fi			
 			
-	if [[ $AUTH_TYPE == "ldap" ]]; then
-	
-		Pkg_lst=("${Pkg_lst[@]}" "${Ldap_pkg_lst[@]}")
-		Configure_Ldap_Kerberos
-
-	elif [[ $AUTH_TYPE == "db" ]]; then
-
-		echo "Do nothing as of now"
-
-	else
-		
-		echo "Invalid Authentication Type!!!"
-		echo "Please Check Configuration File.........."
-  		echo "EXITING INSTALLATION......................................"
-		exit 1
-	fi
-
 }
 
 #Function that install all the packages packages
 Instl_Pkgs()
 {	
-	apt-get update &&	apt-get -y upgrade
+	apt-get update && apt-get -y upgrade
 
 	echo "Updating System............."	
 
@@ -350,7 +386,14 @@ Instl_Pkgs()
 	make install
 	/etc/init.d/libvirt-bin restart
 
+	apt-get install -y python-libvirt
+
 	cd -
+
+	if test "$AUTH_TYPE" == "ldap"; then
+		Setup_Ldap_Kerberos
+	fi
+
 	echo "Packages Installed Successfully..................................."
 }
 
@@ -545,7 +588,7 @@ Enbl_Modules()
 	esac
 
 	
-	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
+	mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
 
 }
 
@@ -751,6 +794,13 @@ Start_Web2py()
 
 	su - www-data -c 'python /home/www-data/web2py/web2py.py -K  baadal &'
 
+	rrd_cron_exists=`cat /etc/crontab | grep "rrd_gen_cron.py" | wc -l`
+
+	if test $rrd_cron_exists -eq 0; then
+		echo "*/5 * * * *  www-data python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py    /applications/baadal/private/rrd_gen_cron.py" >> /etc/crontab
+	fi
+	
+	echo "Controller Installation Complete!!!"
 }
 
 
@@ -760,8 +810,8 @@ Start_Web2py()
 
 Chk_Root_Login
 Chk_installation_config
-#Chk_Gateway
-#Instl_Pkgs
+Chk_Gateway
+Instl_Pkgs
 #Setup_Web2py
 #Configure_Local_Ubuntu_Repo
 #Enbl_Modules
