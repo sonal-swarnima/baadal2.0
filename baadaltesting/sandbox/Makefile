@@ -140,21 +140,21 @@ $(BIN_CONFIGURE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
   
-$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu keygen-ssh-all controller-transfer
+$(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu controller-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
   
-$(BIN_FILER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu keygen-ssh-all filer-transfer
+$(BIN_FILER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu filer-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 	@ cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu keygen-ssh-all nat-transfer
+$(BIN_NAT): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu nat-transfer
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
@@ -199,28 +199,34 @@ host-setup: $(BIN_HOST_SETUP)
 switch: $(BIN_SWITCH)
 	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL INTERFACE=$$INTERFACE $<
   
-nat-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR)
+nat-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
 	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.nat $(BIN_DIR)/transfer.nat/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.nat.pub $(BIN_DIR)/transfer.nat/root/.ssh/id_rsa.pub
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.nat/baadal/baadal.tar
 	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.baadal
 	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.nat/root/.baadal
 
-controller-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR)
+controller-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
 	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.controller/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.controller $(BIN_DIR)/transfer.controller/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.controller.pub $(BIN_DIR)/transfer.controller/root/.ssh/id_rsa.pub
 	@ mkdir -p $(BIN_DIR)/transfer.controller/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.controller/baadal/baadal.tar
 	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.baadal
 	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.controller/root/.baadal
 
-filer-transfer: $(CONFIG_DIR)
+filer-transfer: $(CONFIG_DIR) keygen-ssh-all
 	@ cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
 	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
 	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.filer $(BIN_DIR)/transfer.filer/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.filer.pub $(BIN_DIR)/transfer.filer/root/.ssh/id_rsa.pub
 	@ mkdir -p $(BIN_DIR)/transfer.filer/baadal
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.filer/baadal/baadal.tar
 	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.baadal
