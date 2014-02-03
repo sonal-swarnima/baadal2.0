@@ -625,7 +625,9 @@ Rewrite_Apache_Conf()
 
 		<VirtualHost *:80>
 		  DocumentRoot /var/www
-                  Redirect permanent /(baadal|admin).* https://$CONTROLLER_IP%{REQUEST_URI}   
+		  RewriteEngine On
+		  RewriteCond %{REQUEST_URL} (baadal|admin).*
+		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 		</VirtualHost>
 
 		<VirtualHost *:443>
