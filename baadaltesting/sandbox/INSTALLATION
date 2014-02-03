@@ -1,0 +1,57 @@
+1. make utils
+   This will fetch all the required installers and the ubuntu ISO
+2. make configure
+   This will get the IP address range to be used for the internal network
+   e.g., 10.0.0.0 or 192.168.0.0
+3. make openvswitch
+   This will install openvswitch on the sandbox machine. It requires access
+   to a mirror hosting the PPA repo.	The instructions to create a mirror are
+   at https://launchpad.net/~ivoks/+archive/ovs-saucy. The mirror is only
+   20MB in size. Fill the webserver's address in Makefile's PROFILE_PPA
+   variable.
+4. make switch LIBVIRT_INSTALL=yes VIRTMANAGER_INSTALL=yes
+   This will setup the internal bridges on the sandbox machine. These
+   arguments reinstall libvirt and virtmanager -- this may be required
+   if the machine has old versions of these programs.
+5. make baadal-transfer-tar
+   This will create a ~/.baadal/utils/baadal.tar file, which is to be
+   transferred to all the VMs.
+6. make nat
+   This will create the NAT VM. The NAT VM should be completely installed
+   before installing the controller, because the controller's post VM
+   installation script requires NAT to be setup.
+7. make filer
+   This will create the filer VM. Can be tested by mounting x.y.0.4:/baadal/data
+   on the sandbox machine. (here x.y=10.0 or 192.168 depending on internal
+   network IPs). The data on the filer is stored in /baadal/data.
+8. make controller
+
+----- wait for all VMs to get fully installed -----
+
+9. Go to the NAT VM and type
+   $ cd /baadal/baadal/baadaltesting/sandbox
+   $ make openvswitch
+   $ make nat-setup
+
+10. Go to controller VM and type
+    $ cd /baadal/baadal/baadaltesting/sandbox
+    $ make openvswitch
+    $ make controller-setup
+
+11. Go to filer VM and type
+    $ cd /baadal/baadal/baadaltesting/sandbox
+    $ make openvswitch
+    $ make filer-setup
+
+---- start creating hosts ----
+
+12. On the sandbox machine, type
+    $ make host HOST_ID=id
+    Currently, nine MAC addresses have been specified in the script with
+    IDs 1-9.
+
+13. Optionally, go to the host VM and type
+    $ cd /baadal/baadal/baadaltesting/sandbox
+    $ make host-setup
+    Actually this should not be required as the host should have been
+    preseeded using PXE boot from the controller.
