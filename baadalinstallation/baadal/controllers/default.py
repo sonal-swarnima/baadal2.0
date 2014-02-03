@@ -27,7 +27,7 @@ def user():
 
 def index():
     if auth.is_logged_in():
-        if get_constant("baadal_status") == BAADAL_STATUS_UP:
+        if get_constant("baadal_status") != BAADAL_STATUS_UP:
             if not is_moderator():
                 redirect(URL(r=request,c='default', f='user/logout'))
             response.flash="Baadal is in Maintenance Mode"
