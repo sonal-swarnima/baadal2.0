@@ -422,7 +422,7 @@ Setup_Baadalapp()
 
         sed -i -e 's/ldap_url=/'"ldap_url=$LDAP_URL"'/g' $baadalapp_config_path
 
-        sed -i -e 's/ldap_dn=/'"ldap_url=$LDAP_DN"'/g' $baadalapp_config_path
+        sed -i -e 's/ldap_dn=/'"ldap_dn=$LDAP_DN"'/g' $baadalapp_config_path
 
         if test $DISABLE_MAIL_SENDING != 'y'; then
 
@@ -705,7 +705,7 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         touch $TFTP_DIR/pxelinux.cfg/default
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
         touch $TFTP_DIR/mybootmenu.cfg
-        echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu background ubuntu-installer/amd64/boot-screens/splash.png\nmenu vshift 12\nmenu hshift 13\nmenu width 60\nmenu margin 8\nmenu tabmsgrow 18\nmenu tabmsg Press ENTER to boot or TAB to edit a menu entry\nmenu title My Customised Network Boot Menu\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
 
@@ -724,14 +724,16 @@ Configure_Dhcp_Pxe()
         end_range=$(( $num_hosts + 1 ))
         final_subnet_string=""
 				VLANS=""
-        for ((i=0;i<$NUMBER_OF_VLANS;i++))
+        for ((i=0;i<=$NUMBER_OF_VLANS;i++))
         do
 		j=$(($i + 1))
                 if test $i -eq 0;then
 			final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range;\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
-                fi
+                else
 
-                final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range\n\toption routers $STARTING_IP_RANGE.$i.1\n\toption broadcast-address $STARTING_IP_RANGE.$i.255\n\toption subnet-mask $subnet\n}\n\n"
+                	final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range;\n\toption routers $STARTING_IP_RANGE.$i.1;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n}\n\n"
+		fi
+
 		if test $j -ge 2; then
 			VLANS+="vlan$j,"
 		fi
