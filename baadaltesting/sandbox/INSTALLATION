@@ -15,7 +15,9 @@
    if the machine has old versions of these programs.
 5. make baadal-transfer-tar
    This will create a ~/.baadal/utils/baadal.tar file, which is to be
-   transferred to all the VMs.
+   transferred to all the VMs. If an old version of baadal.tar exists, and
+   you want to replace it with a new one (because you think that something
+   has changed), type 'make clean-transfer-tar' before this command.
 6. make nat
    This will create the NAT VM. The NAT VM should be completely installed
    before installing the controller, because the controller's post VM
