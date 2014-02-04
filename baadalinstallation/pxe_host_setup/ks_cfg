@@ -43,7 +43,7 @@ reboot
 
 %post
 
-mkdir -p /baadal
+(mkdir -p /baadal
 wget http://CONTROLLER_IP/baadal.tar
 /baadal/baadal.tar
 
@@ -59,6 +59,6 @@ make openvswitch
 make host-update
 
 cd /baadal/baadal/baadalinstallation
-./pxe-server-setup/host_installation.sh
+./pxe-server-setup/host_installation.sh) 1> /var/log/installation.log 2>&1  
 
 %end
