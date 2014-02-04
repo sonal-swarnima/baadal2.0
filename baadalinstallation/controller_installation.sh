@@ -165,7 +165,7 @@ Chk_installation_config()
 		fi
 	fi
 
-        if test "$AUTH_TYPE" != "ldap" -o "db"; then
+        if test "$AUTH_TYPE" != "ldap" && test "$AUTH_TYPE" !=  "db"; then
                 echo "Invalid Auth Type!!!"
                 exit 1
         fi
