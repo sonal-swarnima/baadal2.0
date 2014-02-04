@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import auth,request,response
+    from gluon import auth,request,session
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
@@ -30,7 +30,7 @@ def index():
         if get_constant("baadal_status") != BAADAL_STATUS_UP:
             if not is_moderator():
                 redirect(URL(r=request,c='default', f='user/logout'))
-            response.flash="Baadal is in Maintenance Mode"
+            session.flash="Baadal is in Maintenance Mode"
     return dict(request=request)
 
 def contact():
