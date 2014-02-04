@@ -7,7 +7,7 @@
 	</table>
 	
 	<table name="organisation">
-		<row id="1" name="Admin" details="Dummy Organisation for Admin"/>
+		<row id="1" name="IITD" details="Indian Institute of Technology"/>
 	</table>
 	
 	<table name="vm_config">
