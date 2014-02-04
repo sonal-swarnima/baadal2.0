@@ -82,7 +82,7 @@ def validate_approver(form):
 
 def send_remind_faculty_email(req_id):
     req_data = db.request_queue[req_id]
-    send_email_to_approver(req_data.owner_id, req_data.requester_id, req_data.request_type, req_data.start_time)
+    send_email_to_approver(req_data.owner_id, req_data.requester_id, req_data.request_type, req_data.request_time)
 
 
 def send_remind_orgadmin_email(req_id):
@@ -93,7 +93,7 @@ def send_remind_orgadmin_email(req_id):
                 & (db.user_group.role == ORGADMIN)).select(db.user.id)
                 
     for admin in admins:
-        send_email_to_approver(admin.id, req_data.requester_id, req_data.request_type, req_data.start_time)
+        send_email_to_approver(admin.id, req_data.requester_id, req_data.request_type, req_data.request_time)
 
 
 def get_request_status():
