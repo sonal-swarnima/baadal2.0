@@ -122,11 +122,6 @@ Chk_installation_config()
 		exit 1
 	fi
 
-        if test ! -d $LOCAL_MOUNT_POINT; then
-                echo "Local Mount Point Does Not Exists!!!"
-                exit 1
-        fi
-
 	if test "$PRIMARY_NETWORK_INTERFACE" == ""; then
 		echo "Primary Interface info missing!!!"
 		exit 1
@@ -587,6 +582,7 @@ Enbl_Modules()
 				fi					
 	esac
 
+	mkdir -p $LOCAL_MOUNT_POINT
 	
 	mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
 
@@ -724,20 +720,25 @@ Configure_Dhcp_Pxe()
         end_range=$(( $num_hosts + 1 ))
         final_subnet_string=""
 				VLANS=""
-        for ((i=0;i<=$NUMBER_OF_VLANS;i++))
+        for ((i=0;i<$NUMBER_OF_VLANS;i++))
         do
 		j=$(($i + 1))
                 if test $i -eq 0;then
-			final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range;\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
+			final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
+
                 else
 
-                	final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range;\n\toption routers $STARTING_IP_RANGE.$i.1;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n}\n\n"
+                	final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\toption routers $STARTING_IP_RANGE.$i.1;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n}\n\n"
 		fi
 
 		if test $j -ge 2; then
 			VLANS+="vlan$j,"
 		fi
         done
+
+
+	final_subnet_string+="subnet $STARTING_IP_RANGE.$NUMBER_OF_VLANS.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$NUMBER_OF_VLANS.2 $STARTING_IP_RANGE.$NUMBER_OF_VLANS.$end_range;\n\toption routers $STARTING_IP_RANGE.$NUMBER_OF_VLANS.1;\n\toption broadcast-address $STARTING_IP_RANGE.$NUMBER_OF_VLANS.255;\n\toption subnet-mask $subnet;\n}\n\n"
+
         echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 
 
