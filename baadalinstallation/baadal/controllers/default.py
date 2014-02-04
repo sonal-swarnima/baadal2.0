@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import auth,request,session
+    from gluon import auth, request, session
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
