@@ -754,6 +754,8 @@ Configure_Dhcp_Pxe()
 
 	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
+	mv $PXE_SETUP_FILES_PATH/ks.cfg /var/www/.
+
 	VLANS=$(echo ${VLANS:0:-1})
 
 	cp $PXE_SETUP_FILES_PATH/host_installation_sh $PXE_SETUP_FILES_PATH/host_installation.sh
