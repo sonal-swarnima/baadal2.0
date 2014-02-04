@@ -254,7 +254,7 @@ Setup_Ldap_Kerberos()
 	Configure_Ldap_Kerberos
 
 	for pkg in ${Ldap_pkg_lst[@]}; do
-		apt-get install -y $pkg
+		DEBIAN_FRONTEND=noninteractive apt-get -y install $pkg --force-yes
 	done
 	
 }
@@ -381,7 +381,7 @@ Instl_Pkgs()
 	make install
 	/etc/init.d/libvirt-bin restart
 
-	apt-get install -y python-libvirt
+	DEBIAN_FRONTEND=noninteractive apt-get -y install python-libvirt --force-yes
 
 	cd -
 
