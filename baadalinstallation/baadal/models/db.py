@@ -205,7 +205,7 @@ db.define_table('request_queue',
     Field('clone_count', 'integer', label='No. of Clones'),
     Field('purpose', 'string', length = 512),
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
-    Field('start_time', 'datetime', default = get_datetime()))
+    Field('request_time', 'datetime', default = get_datetime()))
 
 db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
 db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
