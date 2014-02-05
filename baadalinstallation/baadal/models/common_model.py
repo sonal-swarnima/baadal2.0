@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import get_datetime, is_moderator, is_orgadmin, is_faculty, log_exception
+from helper import is_moderator, is_orgadmin, is_faculty, log_exception
 
 def get_vm_status(iStatus):
     vm_status_map = {

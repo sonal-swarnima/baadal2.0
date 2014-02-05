@@ -151,7 +151,7 @@ def vm_sanity_check():
 def host_sanity_check():
 
     logger.debug("Starting Host Sanity Check")
-    host_status_sanity_check
+    host_status_sanity_check()
 
 
 # Defining scheduler tasks
