@@ -697,11 +697,12 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         mount $ISO_LOCATION $TFTP_DIR/ubuntu
         cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
         cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
+	rm -rf $TFTP_DIR/pxelinux.cfg
         mkdir $TFTP_DIR/pxelinux.cfg
         touch $TFTP_DIR/pxelinux.cfg/default
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
         touch $TFTP_DIR/mybootmenu.cfg
-        echo -e "menu background ubuntu-installer/amd64/boot-screens/splash.png\nmenu vshift 12\nmenu hshift 13\nmenu width 60\nmenu margin 8\nmenu tabmsgrow 18\nmenu tabmsg Press ENTER to boot or TAB to edit a menu entry\nmenu title My Customised Network Boot Menu\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
 
@@ -740,7 +741,10 @@ Configure_Dhcp_Pxe()
 	final_subnet_string+="subnet $STARTING_IP_RANGE.$NUMBER_OF_VLANS.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$NUMBER_OF_VLANS.2 $STARTING_IP_RANGE.$NUMBER_OF_VLANS.$end_range;\n\toption routers $STARTING_IP_RANGE.$NUMBER_OF_VLANS.1;\n\toption broadcast-address $STARTING_IP_RANGE.$NUMBER_OF_VLANS.255;\n\toption subnet-mask $subnet;\n}\n\n"
 
         echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
-
+	sed -i -e "s/option domain-name/#option domain-name/g" /etc/dhcp/dhcpd.conf
+	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
+	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
+	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
@@ -772,7 +776,7 @@ Configure_Dhcp_Pxe()
 
 	sed -i -e 's@STORAGE_DIRECTORY@'"$STORAGE_DIRECTORY"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	tar -cvf /var/www/baadal.tar $ABSOLUTE_PATH_OF_BAADALREPO/
+	tar -cvf /var/www/newbaadal.tar $ABSOLUTE_PATH_OF_BAADALREPO/
 
 }
 
