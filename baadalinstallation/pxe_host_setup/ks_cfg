@@ -44,12 +44,11 @@ reboot
 %post
 
 (mkdir -p /baadal
-wget http://CONTROLLER_IP/baadal.tar
-/baadal/baadal.tar
+cd /baadal
+wget http://CONTROLLER_IP/newbaadal.tar
 
-cd /target/baadal
-tar xvf baadal.tar
-rm baadal.tar
+tar xvf newbaadal.tar
+rm newbaadal.tar
 
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
 cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/sources.list
