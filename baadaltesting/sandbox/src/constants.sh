@@ -99,7 +99,7 @@ FILER_KS=$FILER/ks.cfg
 
 HOST_ID=${HOST_ID:-0}
 HOST_DISK=$DISKS/host.$HOST_ID.img
-HOST_SPACE=5
+HOST_SPACE=10
 HOST_ARCH=x86_64
 HOST_NAME=baadal_host_$HOST_ID
 HOST_HOSTNAME=baadal-host # Should match in ks.cfg
