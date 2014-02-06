@@ -57,9 +57,10 @@ cd /baadal/baadal/baadaltesting/sandbox
 apt-get update
 apt-get install -y make
 make openvswitch
-make host-update
+make host-setup
 
 cd /baadal/baadal/baadalinstallation
+chmod u+x ./pxe_host_setup/host_installation.sh
 ./pxe_host_setup/host_installation.sh) 1> /var/log/installation.log 2>&1  
 
 %end
