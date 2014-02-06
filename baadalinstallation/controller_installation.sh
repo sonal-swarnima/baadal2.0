@@ -747,7 +747,13 @@ Configure_Dhcp_Pxe()
 
 	if test $INSTALL_LOCAL_UBUNTU_REPO == 'y'; then
 		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
-		sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+		sed -i -e 's/REPO_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+	else if test -n $EXTERNAL_REPO_IP; then
+		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
+                sed -i -e 's/REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+	else 
+		sed -i -e 's/cp \/etc\/apt\/sources.list \/etc\/apt\/sources.list.bak\ncp \/baadal\/baadal\/baadalinstallation\/pxe_host_setup\/sources.list \/etc\/apt\/sources.list//' $PXE_SETUP_FILES_PATH/ks_cfg
+
 	fi
 
 	cp $PXE_SETUP_FILES_PATH/ks_cfg $PXE_SETUP_FILES_PATH/ks.cfg
