@@ -752,7 +752,7 @@ Configure_Dhcp_Pxe()
 	if test $INSTALL_LOCAL_UBUNTU_REPO == 'y'; then
 		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
 		sed -i -e 's/REPO_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
-	else if test -n $EXTERNAL_REPO_IP; then
+	elif test -n $EXTERNAL_REPO_IP; then
 		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
                 sed -i -e 's/REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
 	else 
