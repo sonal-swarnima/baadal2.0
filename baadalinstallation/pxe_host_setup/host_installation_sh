@@ -58,7 +58,7 @@ Enbl_Modules()
 	modprobe kvm_intel
 
 	cd /root
-	libvirt_output=`ls BAADAL_REPO_INSTALL | grep "libvirt"`
+	libvirt_output=`ls BAADAL_REPO_INSTALL/baadalinstallation | grep "libvirt"`
 
 	if test -z $libvirt_output; then
         	echo "libvirt tar is not found. Please retry SCP"
