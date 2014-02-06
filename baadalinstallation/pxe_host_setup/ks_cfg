@@ -54,10 +54,12 @@ cp /etc/apt/sources.list /etc/apt/sources.list.bak
 cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/sources.list
 
 cd /baadal/baadal/baadaltesting/sandbox
+apt-get update
+apt-get install -y make
 make openvswitch
 make host-update
 
 cd /baadal/baadal/baadalinstallation
-./pxe-server-setup/host_installation.sh) 1> /var/log/installation.log 2>&1  
+./pxe_host_setup/host_installation.sh) 1> /var/log/installation.log 2>&1  
 
 %end
