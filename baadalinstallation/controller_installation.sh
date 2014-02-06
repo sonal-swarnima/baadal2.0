@@ -782,7 +782,9 @@ Configure_Dhcp_Pxe()
 
 	sed -i -e 's@STORAGE_DIRECTORY@'"$STORAGE_DIRECTORY"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	tar -cvf /var/www/newbaadal.tar $ABSOLUTE_PATH_OF_BAADALREPO/
+	cd $ABSOLUTE_PATH_OF_PARENT_BAADALREPO
+	tar -cvf /var/www/newbaadal.tar $BAADAL_REPO_DIR/
+	cd -
 
 }
 
