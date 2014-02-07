@@ -337,7 +337,7 @@ def get_vm_operations(vm_id):
     all_disabled = False
     if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):   
         all_disabled = True
-    if (vmstatus == VM_STATUS_RUNNING) or (vmstatus == VM_STATUS_SUSPENDED) or (vmstatus == VM_STATUS_SHUTDOWN):
+    if vmstatus in (VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN):
 
         valid_operations_list.append(A(IMG(_src=URL('static','images/snapshot.png'), _height=20, _width=20),
                     _href=URL(r=request, c='user' ,f='snapshot', args=[vm_id]), _disabled=all_disabled,
