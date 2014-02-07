@@ -218,7 +218,7 @@ db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
 db.define_table('vm_event_log',
     Field('vm_id', db.vm_data),
-    Field('event_type', 'string', length = 100),
+    Field('attribute', 'string', length = 100),
     Field('old_value', 'string', length = 255),
     Field('new_value', 'string', length = 255),
     Field('requester_id', db.user),

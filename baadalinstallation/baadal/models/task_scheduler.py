@@ -52,7 +52,7 @@ def log_vm_event(old_vm_data, task_queue_data):
                                      TASK_TYPE_DELETE_VM, 
                                      TASK_TYPE_DESTROY_VM):
         db.vm_event_log.insert(vm_id = vm_data.id,
-                               event_type = 'VM Status',
+                               attribute = 'VM Status',
                                requester_id = task_queue_data.requester_id,
                                old_value = get_vm_status(old_vm_data.status),
                                new_value = get_vm_status(vm_data.status))
@@ -62,34 +62,34 @@ def log_vm_event(old_vm_data, task_queue_data):
         if 'vcpus' in parameters:
             vm_log = {'vm_id' : vm_data.id, 
                       'requester_id' : task_queue_data.requester_id,
-                      'event_type' : 'Edit CPU',
+                      'attribute' : 'Edit CPU',
                       'old_value' : str(old_vm_data.vCPU) + ' CPU',
                       'new_value' : str(vm_data.vCPU) + ' CPU'}
             data_list.append(vm_log)
         if 'ram' in parameters:
             vm_log = {'vm_id' : vm_data.id, 
                       'requester_id' : task_queue_data.requester_id,
-                      'event_type' : 'Edit RAM',
+                      'attribute' : 'Edit RAM',
                       'old_value' : str(old_vm_data.RAM) + ' MB',
                       'new_value' : str(vm_data.RAM) + ' MB'}
             data_list.append(vm_log)
         if 'public_ip' in parameters:
             vm_log = {'vm_id' : vm_data.id, 
                       'requester_id' : task_queue_data.requester_id,
-                      'event_type' : 'Public IP',
+                      'attribute' : 'Public IP',
                       'old_value' : old_vm_data.public_ip,
                       'new_value' : vm_data.public_ip}
             data_list.append(vm_log)
         if 'security_domain' in parameters:
             vm_log = {'vm_id' : vm_data.id, 
                       'requester_id' : task_queue_data.requester_id,
-                      'event_type' : 'Security Domain',
+                      'attribute' : 'Security Domain',
                       'old_value' : old_vm_data.security_domain.name,
                       'new_value' : vm_data.security_domain.name}
             data_list.append(vm_log)
             vm_log = {'vm_id' : vm_data.id, 
                       'requester_id' : task_queue_data.requester_id,
-                      'event_type' : 'Private IP',
+                      'attribute' : 'Private IP',
                       'old_value' : old_vm_data.private_ip,
                       'new_value' : vm_data.private_ip}
             data_list.append(vm_log)

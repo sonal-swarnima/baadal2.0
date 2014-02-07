@@ -8,8 +8,8 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_orgadmin, is_faculty
 from auth_user import fetch_ldap_user, create_or_update_user
+from helper import is_moderator, is_orgadmin, is_faculty
 
 def get_my_requests():
     
@@ -354,3 +354,14 @@ def get_mail_admin_form():
                 TR(INPUT(_type = 'submit', _value = 'Send Email')),_style='width:100%; border:0px'))
     return form
 
+def get_vm_history(vm_id):
+    
+    vm_history = []
+    for vm_log in db(db.vm_event_log.vm_id == vm_id).select(orderby = ~db.vm_event_log.timestamp):
+        element = {'attribute' : vm_log.attribute,
+                   'old_value' : vm_log.old_value,
+                   'new_value' : vm_log.new_value,
+                   'requested_by' : vm_log.requester_id.first_name + ' ' + vm_log.requester_id.last_name if vm_log.requester_id > 0 else 'System User', 
+                   'timestamp' : vm_log.timestamp}
+        vm_history.append(element)
+    return vm_history

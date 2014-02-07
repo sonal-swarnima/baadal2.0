@@ -6,8 +6,8 @@
 }}
 <h3>No VM Running</h3>
 {{else:}}
-<div class="TABLE">
-  <table id="myvms">
+  <table id="myvms" class="tablesorter">
+    <thead>  
       <tr>
         <th>Name</th>
         <th>Owner</th>
@@ -19,8 +19,9 @@
         <th>Status</th>
         <th>Settings</th>
       </tr>
-  {{for vm in hosted_vm:}}
-      <form>
+    </thead>
+    <tbody>
+    {{for vm in hosted_vm:}}
       <tr>
         <td>{{=vm['name']}}</td>
         <td>{{=(vm['owner'])}}</td>
@@ -40,8 +41,13 @@
         </div>
         </td>
       </tr>
-      </form>
-  {{pass}}
+    {{pass}}
+    </tbody>
   </table>
-</div>
 {{pass}}
+
+<script>
+jQuery(document).ready(function(){
+      jQuery("#myvms").tablesorter(); 
+});
+</script>
