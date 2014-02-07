@@ -662,11 +662,6 @@ Rewrite_Apache_Conf()
 
 	echo "Restarting Apache................................................"
 
-
-	mkdir /var/www/baadal/
-	touch /var/www/baadal/index.html
-	echo "<meta http-equiv='Refresh' content='0;URL=https://$CONTROLLER_IP/baadal/' />" > /var/www/baadal/index.html
-	
 	/etc/init.d/apache2 restart
 	if test $? -ne 0; then
 		echo "UNABLE TO RESTART APACHE!!!"
