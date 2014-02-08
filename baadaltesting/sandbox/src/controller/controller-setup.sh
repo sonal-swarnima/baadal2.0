@@ -3,29 +3,28 @@ function run
   check_root
   
   hostname="$(uname -n)"
-  if [ "$hostname" != "$HOST_HOSTNAME" ]
+  if [ "$hostname" != "$CONTROLLER_HOSTNAME" ]
   then
-    $ECHO_ER Hostname not found equal to $HOST_HOSTNAME. This script should be run on HOST.
+    $ECHO_ER Hostname not found equal to $CONTROLLER_HOSTNAME. This script should be run on CONTROLLER.
     $ECHO_ER Please correct the hostname or check the underlying system before running.
     exit 1
   fi
   
-  #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
     
   ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
   
-  ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $HOST_INTERFACE
-  ovsvsctl_set_port $HOST_INTERFACE "vlan_mode=native-untagged"
+  ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $CONTROLLER_INTERFACE
+  ovsvsctl_set_port $CONTROLLER_INTERFACE "vlan_mode=native-untagged"
    
-  #Get the IP Address of Host from ifconfig.
-  host_ip="$(/sbin/ifconfig $HOST_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
-  ifconfig_noip $HOST_INTERFACE
-  ifconfig_ip $OVS_BRIDGE_INTERNAL $host_ip $VLAN_NETMASK
+  #Get the IP Address of Controller from ifconfig.
+  controller_ip="$(/sbin/ifconfig $CONTROLLER_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+  ifconfig_noip $CONTROLLER_INTERFACE
+  ifconfig_ip $OVS_BRIDGE_INTERNAL $controller_ip $VLAN_NETMASK
   route_add_net $NETWORK_INTERNAL_IP_NAT 0.0.0.0 $OVS_BRIDGE_INTERNAL
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
-  baseaddr="$(echo $host_ip | cut -d. -f1-2)"
+  baseaddr="$(echo $controller_ip | cut -d. -f1-2)"
   
   echo "net.ipv4.ip_forward = 1" > /etc/sysctl.conf
   echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -36,17 +35,17 @@ function run
   iface lo inet loopback\n
   up service openvswitch-switch restart\n
   \n
-  auto $HOST_INTERFACE\n
-  iface $HOST_INTERFACE inet static\n
+  auto $CONTROLLER_INTERFACE\n
+  iface $CONTROLLER_INTERFACE inet static\n
   address 0.0.0.0\n
   \n
   auto $OVS_BRIDGE_INTERNAL\n
   iface $OVS_BRIDGE_INTERNAL inet static\n
-  address $host_ip\n
+  address $controller_ip\n
   netmask $VLAN_NETMASK\n
   gateway $NETWORK_INTERNAL_IP_NAT\n
   "
-  
+ 
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
     do
       ovsvsctl_add_fake_br_force vlan$i $OVS_BRIDGE_INTERNAL $i
@@ -72,9 +71,9 @@ function run
   # all other vlans.
   trunk_str="$(echo ${trunk_str:0:-1})"
   trunk_str="trunk=[$trunk_str]"
-  ovsvsctl_set_port $HOST_INTERFACE $trunk_str
+  ovsvsctl_set_port $CONTROLLER_INTERFACE $trunk_str
 
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
-}
+}   
 

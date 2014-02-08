@@ -29,8 +29,6 @@ LOG_CLEAN="rm -f $LOGS/*"
 LOG_SIZE=10
 
 INTERFACE=${INTERFACE:-eth0}
-OVS_NAT_BRIDGE=nat-br-int
-OVS_HOST_BRIDGE=host-br-int
 
 #Update this in OVS_NET_XML too
 OVS_BRIDGE_INTERNAL=baadal-br-int
@@ -84,6 +82,7 @@ CONTROLLER_ISO=$UTILS_LOCAL/ubuntu.controller.iso
 CONTROLLER_KICKSTART=$BIN/ks.controller.cfg
 CONTROLLER_TRANSFER=$BIN/transfer.controller/
 CONTROLLER_KS=$CONTROLLER/ks.cfg
+CONTROLLER_INTERFACE=eth0
 
 FILER_DISK=$DISKS/filer.img
 FILER_SPACE=50

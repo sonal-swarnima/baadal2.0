@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# TODO
+# Too many redundant packages. Minimize. Some are dependencies of each other.
+# Confirm and remove them. Like kvm, qemu should get automatically installed
+# by qemu-kvm. Python-libvirt shouldn't be here. Linux headers are not needed.
+# virtinst, and virt-top will raise dependency for libvirt in repo. Assume
+# make exists, as `make host-setup` has already been run when this script is
+# run. Why gettext. Why python-urlgrabber. Why python-gtk-vnc. Why vlan.
 Normal_pkg_lst=(make python kvm qemu qemu-kvm  python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server cgroup-bin libpciaccess-dev)
 
 ############################################################################################################################
@@ -67,8 +74,31 @@ Enbl_Modules()
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
+
+  # FIXME
+  # There should not exist any libvirt-bin in init.d unless libvirt is
+  # installed from repositories. libvirt shouldn't be installed from repo
+  # unless a post 1.0.0 version is available in repo.
 	/etc/init.d/libvirt-bin restart
-	
+
+  #CREATE LIBVIRT NETWORK
+  virsh net-destroy default
+  virsh net-autostart --disable default
+
+  touch ovs-net.xml
+  ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='$OVS_BRIDGE_INTERNAL'/>\n<virtualport type='openvswitch'/>\n"
+  for ((i=$VLAN_START;i<=$VLAN_END;i++))
+    do
+	ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
+    done
+
+  ovs_net_config+="</network>"
+  echo -e $ovs_net_config > ovs-net.xml
+  
+  virsh net-define ovs-net.xml
+  virsh net-start ovs-net
+  virsh net-autostart ovs-net
+
 	mkdir -p LOCAL_MOUNT_POINT
 	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
 	echo "If you have done all the steps correctly, Congo!!!"
