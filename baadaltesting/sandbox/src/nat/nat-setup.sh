@@ -27,17 +27,17 @@ function run
   fi
    
   #Install the ovs packages on NAT.
-  ovsvsctl_del_br $OVS_NAT_BRIDGE
+  ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
     
-  ovsvsctl_add_br $OVS_NAT_BRIDGE
+  ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
   
-  ovsvsctl_add_port $OVS_NAT_BRIDGE $NAT_INTERNAL_INTERFACE
+  ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $NAT_INTERNAL_INTERFACE
   ovsvsctl_set_port $NAT_INTERNAL_INTERFACE "vlan_mode=native-untagged"
    
   #Get the IP Address of NAT from ifconfig.
   nat_ip="$(/sbin/ifconfig $NAT_INTERNAL_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
   ifconfig_noip $NAT_INTERNAL_INTERFACE
-  ifconfig_ip $OVS_NAT_BRIDGE $nat_ip $VLAN_NETMASK
+  ifconfig_ip $OVS_BRIDGE_INTERNAL $nat_ip $VLAN_NETMASK
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
   baseaddr="$(echo $nat_ip | cut -d. -f1-2)"
@@ -77,15 +77,15 @@ function run
   iface $NAT_INTERNAL_INTERFACE inet static\n
   address 0.0.0.0\n
   \n
-  auto $OVS_NAT_BRIDGE\n
-  iface $OVS_NAT_BRIDGE inet static\n
+  auto $OVS_BRIDGE_INTERNAL\n
+  iface $OVS_BRIDGE_INTERNAL inet static\n
   address $nat_ip\n
   netmask $VLAN_NETMASK\n
   "
   
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
     do
-      ovsvsctl_add_fake_br_force vlan$i $OVS_NAT_BRIDGE $i
+      ovsvsctl_add_fake_br_force vlan$i $OVS_BRIDGE_INTERNAL $i
       ifconfig_ip vlan$i $baseaddr.$i.2 $VLAN_NETMASK
       interfaces_str+="\n
       auto vlan$i\n

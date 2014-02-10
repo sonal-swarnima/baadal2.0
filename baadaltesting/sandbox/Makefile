@@ -39,6 +39,7 @@ VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot
 
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
+BIN_CONTROLLER_SETUP = $(BIN_DIR)/controller-setup.sh
 BIN_FILER = $(BIN_DIR)/filer.sh
 BIN_FILER_SETUP = $(BIN_DIR)/filer-setup.sh
 BIN_NAT = $(BIN_DIR)/nat.sh
@@ -177,6 +178,9 @@ $(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)
   
 controller: $(BIN_CONTROLLER)
 	@ sudo $<
+
+controller-setup: $(BIN_CONTROLLER_SETUP)
+	@ sudo $<
   
 filer: $(BIN_FILER)
 	@ sudo $<
@@ -231,6 +235,12 @@ filer-transfer: $(CONFIG_DIR) keygen-ssh-all
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.filer/baadal/baadal.tar
 	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.baadal
 	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.filer/root/.baadal
+
+$(BIN_CONTROLLER_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/controller $(SRC_DIR)/controller/*
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/controller-setup.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
 
 $(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
 	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
