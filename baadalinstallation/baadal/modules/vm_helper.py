@@ -289,7 +289,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     attach_disk_status_message = 'Your request for additional HDD is completed.'
     install_command = get_install_command(vm_details, vm_image_location, vm_properties)  
     # Starts installing a vm
-    host_ip = vm_properties['host'].host_ip
+    host_ip = current.db.host[vm_properties['host']].host_ip
     current.logger.debug("Installation started...")
     current.logger.debug("Host is "+ host_ip)
     current.logger.debug("Installation command : " + install_command)
@@ -337,9 +337,8 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     current.logger.debug(str(hostid))
 
     # Updating the count of vms on host
-    count = current.db(current.db.host.id == hostid).select().first()['vm_count']
-    current.logger.debug("Count is " + str(hostid))
-    current.db(current.db.host.id == hostid).update(vm_count = count + 1)
+    host = current.db.host[hostid]
+    host.update_record(vm_count = host.vm_count+1)
 
     # Updating the used entry of datastore
     current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +        
@@ -539,7 +538,7 @@ def delete(parameters):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
             domain.destroy()
         current.logger.debug("Starting to delete it...")
-        domain.undefine(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
+        domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
         message = vm_details.vm_identity + " is deleted successfully."
         current.logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
@@ -607,10 +606,9 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
     domain_snapshots_list = []
     current_snapshot_name = ''
     if destination_host_id == None:
-        new_destination_host = find_new_host(vm_details.RAM, vm_details.vCPU)
-        destination_host_ip = new_destination_host.host_ip
-    else:
-        destination_host_ip = current.db(current.db.host.id == destination_host_id).select(current.db.host.host_ip).first()['host_ip']
+        destination_host_id = find_new_host(vm_details.RAM, vm_details.vCPU)
+
+    destination_host_ip = current.db.host[destination_host_id]['host_ip']
 
     flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
     if live_migration:
@@ -674,7 +672,7 @@ def snapshot(parameters):
             if snapshot_cron:
                 current.logger.debug(snapshot_cron)
                 delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
-            current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
+        current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
         current.logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
@@ -724,7 +722,7 @@ def delete_snapshot(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 
-def update_security_domain(vm_details, security_domain_id, xmlDesc):
+def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
     # fetch new private IP from db from given security domain
     private_ip_info = get_private_ip_mac(security_domain_id)
     # update vm config to add new mac address.
@@ -816,7 +814,7 @@ def get_clone_properties(vm_details, cloned_vm_details):
   
     # Template and host of parent vm
     vm_properties['template'] = current.db(current.db.template.id == vm_details.template_id).select()[0]
-    vm_properties['host'] = current.db(current.db.host.id == vm_details.host_id).select()[0]
+    vm_properties['host'] = current.db.host[vm_details.host_id]
 
     # Creates a directory for the cloned vm
     current.logger.debug("Creating directory for cloned vm...")

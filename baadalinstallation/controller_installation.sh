@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 
 CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -622,7 +622,6 @@ Rewrite_Apache_Conf()
 		<VirtualHost *:80>
 		  DocumentRoot /var/www
 		  RewriteEngine On
-		  RewriteCond %{REQUEST_URL} (baadal|admin).*
 		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 		</VirtualHost>
 
@@ -662,11 +661,6 @@ Rewrite_Apache_Conf()
 
 	echo "Restarting Apache................................................"
 
-
-	mkdir /var/www/baadal/
-	touch /var/www/baadal/index.html
-	echo "<meta http-equiv='Refresh' content='0;URL=https://$CONTROLLER_IP/baadal/' />" > /var/www/baadal/index.html
-	
 	/etc/init.d/apache2 restart
 	if test $? -ne 0; then
 		echo "UNABLE TO RESTART APACHE!!!"
@@ -720,7 +714,7 @@ Configure_Dhcp_Pxe()
         num_hosts=$NUMBER_OF_HOSTS
         end_range=$(( $num_hosts + 1 ))
         final_subnet_string=""
-				VLANS=""
+	VLANS=""
         for ((i=0;i<$NUMBER_OF_VLANS;i++))
         do
 		j=$(($i + 1))
@@ -731,10 +725,7 @@ Configure_Dhcp_Pxe()
 
                 	final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\toption routers $STARTING_IP_RANGE.$i.1;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n}\n\n"
 		fi
-
-		if test $j -ge 2; then
-			VLANS+="vlan$j,"
-		fi
+		VLANS+="vlan$j "
         done
 
 
@@ -745,6 +736,8 @@ Configure_Dhcp_Pxe()
 	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
 	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
 	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
+
+	sed -i -e "s/INTERFACES=\"\"/INTERFACES="$OVS_BRIDGE_NAME" $VLANS" /etc/default/isc-dhcp-server
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
@@ -765,8 +758,6 @@ Configure_Dhcp_Pxe()
 	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	mv $PXE_SETUP_FILES_PATH/ks.cfg /var/www/.
-
-	VLANS=$(echo ${VLANS:0:-1})
 
 	cp $PXE_SETUP_FILES_PATH/host_installation_sh $PXE_SETUP_FILES_PATH/host_installation.sh
 
@@ -827,7 +818,6 @@ Start_Web2py()
 	
 	echo "Controller Installation Complete!!!"
 }
-
 
 ##############################################################################################################################
 

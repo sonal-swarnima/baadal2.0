@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Normal_pkg_lst=(debconf-utils make python kvm qemu qemu-kvm  python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server dhcp3-relay cgroup-bin libpciaccess-dev)
+Normal_pkg_lst=(make python kvm qemu qemu-kvm  python-libvirt gettext python-urlgrabber python-gtk-vnc virtinst nfs-common virt-top kvm-ipxe vlan vim libnl-dev gcc make pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude linux-headers-3.2.0-29-generic  openssh-server cgroup-bin libpciaccess-dev)
 
 ############################################################################################################################
  
@@ -34,11 +34,6 @@ Instl_Pkgs()
 
                                 echo "Installing Package: $pkg.................."
                                 DEBIAN_FRONTEND=noninteractive apt-get -y install $pkg --force-yes
-				if test $pkg == "debconf-utils"; then
-					echo "isc-dhcp-relay isc-dhcp-relay/servers string CONTROLLER_IP" | debconf-set-selections
-        				echo "isc-dhcp-relay isc-dhcp-relay/interfaces string VLAN_INTERFACES" | debconf-set-selections
-				        echo "isc-dhcp-relay isc-dhcp-relay/options string \"\"" | debconf-set-selections
-				fi
 
                 done
 
@@ -85,8 +80,8 @@ apt-get update && apt-get -y upgrade
 Chk_Gateway
 Instl_Pkgs
 Enbl_Modules
-hostname baadalhost
-echo "baadalhost" > /etc/hostname
+hostname baadal-host
+echo "baadal-host" > /etc/hostname
 reboot
 
 
