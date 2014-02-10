@@ -21,6 +21,7 @@ function run
   controller_ip="$(/sbin/ifconfig $CONTROLLER_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
   ifconfig_noip $CONTROLLER_INTERFACE
   ifconfig_ip $OVS_BRIDGE_INTERNAL $controller_ip $VLAN_NETMASK
+  route_add_net $NETWORK_INTERNAL_IP_NAT $VLAN_NETMASK $OVS_BRIDGE_INTERNAL
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
   baseaddr="$(echo $controller_ip | cut -d. -f1-2)"

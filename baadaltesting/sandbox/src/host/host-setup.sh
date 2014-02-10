@@ -22,6 +22,7 @@ function run
   host_ip="$(/sbin/ifconfig $HOST_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
   ifconfig_noip $HOST_INTERFACE
   ifconfig_ip $OVS_BRIDGE_INTERNAL $host_ip $VLAN_NETMASK
+  route_add_net $NETWORK_INTERNAL_IP_NAT $VLAN_NETMASK $OVS_BRIDGE_INTERNAL
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
   baseaddr="$(echo $host_ip | cut -d. -f1-2)"
