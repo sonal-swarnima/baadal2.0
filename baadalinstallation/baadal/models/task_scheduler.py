@@ -41,41 +41,101 @@ def send_task_complete_mail(task_event):
         vm_users.append(task_event.requester_id)
     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
     
-    
+#Logs data into vm_event_log table
+def log_vm_event(old_vm_data, task_queue_data):
+    db.commit()
+    vm_data = db.vm_data[old_vm_data.id]
+    if task_queue_data.task_type in (TASK_TYPE_START_VM, 
+                                     TASK_TYPE_STOP_VM, 
+                                     TASK_TYPE_SUSPEND_VM, 
+                                     TASK_TYPE_RESUME_VM, 
+                                     TASK_TYPE_DELETE_VM, 
+                                     TASK_TYPE_DESTROY_VM):
+        db.vm_event_log.insert(vm_id = vm_data.id,
+                               attribute = 'VM Status',
+                               requester_id = task_queue_data.requester_id,
+                               old_value = get_vm_status(old_vm_data.status),
+                               new_value = get_vm_status(vm_data.status))
+    elif task_queue_data.task_type == TASK_TYPE_EDITCONFIG_VM:
+        parameters = task_queue_data.parameters
+        data_list = []
+        if 'vcpus' in parameters:
+            vm_log = {'vm_id' : vm_data.id, 
+                      'requester_id' : task_queue_data.requester_id,
+                      'attribute' : 'Edit CPU',
+                      'old_value' : str(old_vm_data.vCPU) + ' CPU',
+                      'new_value' : str(vm_data.vCPU) + ' CPU'}
+            data_list.append(vm_log)
+        if 'ram' in parameters:
+            vm_log = {'vm_id' : vm_data.id, 
+                      'requester_id' : task_queue_data.requester_id,
+                      'attribute' : 'Edit RAM',
+                      'old_value' : str(old_vm_data.RAM) + ' MB',
+                      'new_value' : str(vm_data.RAM) + ' MB'}
+            data_list.append(vm_log)
+        if 'public_ip' in parameters:
+            vm_log = {'vm_id' : vm_data.id, 
+                      'requester_id' : task_queue_data.requester_id,
+                      'attribute' : 'Public IP',
+                      'old_value' : old_vm_data.public_ip,
+                      'new_value' : vm_data.public_ip}
+            data_list.append(vm_log)
+        if 'security_domain' in parameters:
+            vm_log = {'vm_id' : vm_data.id, 
+                      'requester_id' : task_queue_data.requester_id,
+                      'attribute' : 'Security Domain',
+                      'old_value' : old_vm_data.security_domain.name,
+                      'new_value' : vm_data.security_domain.name}
+            data_list.append(vm_log)
+            vm_log = {'vm_id' : vm_data.id, 
+                      'requester_id' : task_queue_data.requester_id,
+                      'attribute' : 'Private IP',
+                      'old_value' : old_vm_data.private_ip,
+                      'new_value' : vm_data.private_ip}
+            data_list.append(vm_log)
+            
+        db.vm_event_log.bulk_insert(data_list)        
+
+# Called when scheduler runs task of type 'vm_task'
 def process_task_queue(task_event_id):
 
     logger.debug("Processing task: " + str(task_event_id))
-    task_event = db.task_queue_event[task_event_id]
-    task_process = db.task_queue[task_event.task_id] 
+    task_event_data = db.task_queue_event[task_event_id]
+    task_queue_data = db.task_queue[task_event_data.task_id]
+    vm_data = db.vm_data[task_event_data.vm_id]
     try:
         #Update attention_time for task in the event table
-        task_event.update_record(attention_time=get_datetime())
+        task_event_data.update_record(attention_time=get_datetime())
         #Call the corresponding function from vm_helper
-        ret = task[task_process.task_type](task_process.parameters)
+        ret = task[task_queue_data.task_type](task_queue_data.parameters)
         #On return, update the status and end time in task event table
-        task_event.update_record(status=ret[0], message=ret[1], end_time=get_datetime())
+        task_event_data.update_record(status=ret[0], message=ret[1], end_time=get_datetime())
         
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
 #             markFailedTask(task_process.id, task_event_id, ret[1])
-            task_process.update_record(status=TASK_QUEUE_STATUS_FAILED)
-            if task_process.task_type == TASK_TYPE_CREATE_VM:
-                db.vm_data[task_process.vm_id] = dict(status = VM_STATUS_UNKNOWN)
-            if 'request_id' in task_process.parameters:
-                db.request_queue[task_process.parameters['request_id']] = dict(status = REQ_STATUS_FAILED)
+            task_queue_data.update_record(status=TASK_QUEUE_STATUS_FAILED)
+            if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
+                db.vm_data[task_queue_data.vm_id] = dict(status = VM_STATUS_UNKNOWN)
+            if 'request_id' in task_queue_data.parameters:
+                db.request_queue[task_queue_data.parameters['request_id']] = dict(status = REQ_STATUS_FAILED)
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
+            # Create log event for the task
+            log_vm_event(vm_data, task_queue_data)
             # For successful task, delete the task from queue 
-            if db.task_queue[task_process.id]:
-                del db.task_queue[task_process.id]
-            if 'request_id' in task_process.parameters:
-                del db.request_queue[task_process.parameters['request_id']]
-            send_task_complete_mail(task_event)
+            if db.task_queue[task_queue_data.id]:
+                del db.task_queue[task_queue_data.id]
+            if 'request_id' in task_queue_data.parameters:
+                del db.request_queue[task_queue_data.parameters['request_id']]
+            
+            send_task_complete_mail(task_event_data)
         
         db.commit()
     except:
         msg = log_exception()
-        task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
+        task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
         
+# Called when scheduler runs task of type 'clone_task'
 def process_clone_task(task_event_id, vm_id):
 
     logger.debug("Processing clone task: " + str(task_event_id))
@@ -130,6 +190,7 @@ def process_clone_task(task_event_id, vm_id):
 
 
 # Handles periodic snapshot task
+# Called when scheduler runs task of type 'snapshot_vm'
 def process_snapshot_vm(snapshot_type):
 
     logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
@@ -140,6 +201,7 @@ def process_snapshot_vm(snapshot_type):
         db.commit()
         
 # Handles periodic VM sanity check
+# Called when scheduler runs task of type 'vm_sanity'
 def vm_sanity_check():
 
     logger.debug("Starting VM Sanity Check")
@@ -148,10 +210,11 @@ def vm_sanity_check():
 
 
 # Handles periodic Host sanity check
+# Called when scheduler runs task of type 'host_sanity'
 def host_sanity_check():
 
     logger.debug("Starting Host Sanity Check")
-    host_status_sanity_check
+    host_status_sanity_check()
 
 
 # Defining scheduler tasks

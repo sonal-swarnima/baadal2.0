@@ -1,0 +1,61 @@
+{{extend 'layout.html'}}
+{{
+  if not vm_list:
+}}
+<center><h3>No hosted VM present</h3></center>
+
+{{else:}}
+<h2 class="subtitle">{{=T(' VM Shutdown status')}}</h2>
+{{if baadal_status == BAADAL_STATUS_UP :}}
+{{=INPUT(value='Start Baadal Shutdown',_id='start_shutbown_button',_type='button',_onclick='start_shutdown()')}}
+{{elif baadal_status == BAADAL_STATUS_DOWN :}}
+{{=INPUT(value='Start Baadal Bootup',_id='start_bootup_button',_type='button',_onclick='start_bootup()')}}
+{{pass}}
+<div class="TABLE">
+  <table>
+      <tr>
+        <th>Name</th>
+        <th>Host</th>
+        <th>VM Status</th>
+        <th>Shutdown Status</th>
+      </tr>
+  {{for vm_info in vm_list:}}
+      <tr>
+        <td>{{=vm_info['vm_name']}}</td>
+        <td>{{=vm_info['host_ip']}}</td>
+        <td>{{=vm_info['vm_status']}}</td>
+        <td>
+            {{if vm_info['sys_snapshot']:}}
+                {{=IMG(_src=URL('static','images/redlight.gif'), _style='height:14px;width:14px;border:0px')}}
+            {{else:}}
+                {{=IMG(_src=URL('static','images/greenlight.gif'), _style='height:14px;width:14px;border:0px')}}
+            {{pass}}
+        </td>
+      </tr>
+  {{pass}}
+  </table>
+</div>
+{{pass}}
+
+
+<script>
+function start_shutdown() {
+    var shutdown_url = "{{=URL('start_shutdown')}}";
+    jQuery.post(shutdown_url, {},
+        function(result){
+        }
+    );
+	$('#start_shutbown_button').prop('disabled', true);
+    jQuery('.flash').html('Baadal Shutdown initiated').slideDown();
+}
+
+function start_bootup() {
+    var bootup_url = "{{=URL('start_bootup')}}";
+    jQuery.post(bootup_url, {},
+        function(result){
+        }
+    );
+	$('#start_bootup_button').prop('disabled', true);
+    jQuery('.flash').html('Baadal Bootup initiated').slideDown();
+}
+</script>

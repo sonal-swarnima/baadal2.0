@@ -169,7 +169,7 @@ def list_my_task():
 def show_vm_performance():
     vm_id = int(request.args[0])
     vm_info = get_vm_info(vm_id)    
-    return dict(vm_name = vm_info['vm_name'])
+    return dict(vm_id = vm_id, vm_name = vm_info['vm_name'])
 
 @auth.requires_login()
 @handle_exception       
@@ -242,3 +242,10 @@ def list_my_requests():
                 disk_requests = requests[2], 
                 edit_requests= requests[3])
         
+@check_vm_owner
+@handle_exception       
+def vm_history():
+
+    vm_id = request.args[0]
+    vm_history = get_vm_history(vm_id)        
+    return dict(vm_id = vm_id, vm_history = vm_history)

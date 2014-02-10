@@ -214,6 +214,7 @@ html>body #menu a {
 	width: 90%;
 	margin: 0 auto 20px auto;
 	background:  url(images/img07.gif) repeat-y 260px 0;
+	padding-bottom: 20px;
 }
 
 /* Content */

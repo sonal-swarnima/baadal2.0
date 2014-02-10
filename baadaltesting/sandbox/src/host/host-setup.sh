@@ -19,7 +19,7 @@ function run
   ovsvsctl_set_port $HOST_INTERFACE "vlan_mode=native-untagged"
    
   #Get the IP Address of Host from ifconfig.
-  host_ip="$(/sbin/ifconfig $NAT_INTERNAL_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+  host_ip="$(/sbin/ifconfig $HOST_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
   ifconfig_noip $HOST_INTERFACE
   ifconfig_ip $OVS_HOST_BRIDGE $host_ip $VLAN_NETMASK
 
@@ -43,6 +43,7 @@ function run
   iface $OVS_HOST_BRIDGE inet static\n
   address $host_ip\n
   netmask $VLAN_NETMASK\n
+  gateway $NETWORK_INTERNAL_IP_NAT\n
   "
   
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
@@ -72,4 +73,27 @@ function run
 
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
-}
+
+  #CREATE LIBVIRT NETWORK
+  virsh net-destroy default
+  virsh net-autostart --disable default
+  
+  touch ovs-net.xml
+  ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='$OVS_HOST_BRIDGE'/>\n<virtualport type='openvswitch'/>\n"
+  for ((i=$VLAN_START;i<=$VLAN_END;i++))
+    do
+	ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
+    done
+
+  ovs_net_config+="</network>"
+  echo -e $ovs_net_config > ovs-net.xml
+  
+  virsh net-define ovs-net.xml
+  virsh net-start ovs-net
+  virsh net-autostart ovs-net
+
+}   
+
+
+
+

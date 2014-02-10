@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 
 CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(ssh zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi postfix debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial python-libvirt sshpass inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -33,13 +33,14 @@ Chk_Root_Login()
 #Function to check whther the network gateway is pingable or not
 Chk_Gateway()
 {
-	ping -q -c5 $NETWORK_GATEWAY_IP > /dev/null 
+	ping -q -c4 $NETWORK_GATEWAY_IP > /dev/null 
 	
 	if test $? -ne 0;then
 		echo "NETWORK GATEWAY IS NOT REACHABLE!!!"
 		exit 1
 	fi
 
+	echo "Network Gateway is Pingable!!!"
 }
 
 Chk_installation_config()
@@ -65,10 +66,18 @@ Chk_installation_config()
 	fi
 
 	if test "$AUTH_TYPE" == "ldap"; then
-		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || "$LDAP_URL" == "" || "$LDAP_DN" == ""; then
+
+		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || test "$LDAP_URL" == "" || test "$LDAP_DN" == ""; then
+
 			echo "Ldap setup config missing/incomplete!!!"
 			exit 1
 		fi
+
+		if test ! -d $LDAP_KERBEROS_SETUP_FILES_PATH; then
+                	echo "Ldap/Kerberos Setup Files not Found!!!"
+			exit 1
+		fi
+
 	fi
 
 	if test "$DB_NAME" == ""; then
@@ -81,10 +90,32 @@ Chk_installation_config()
 		exit 1
 	fi
 
-	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_BAADALREPO" == ""; then
+	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_PARENT_BAADALREPO" == "" || test "$BAADAL_REPO_DIR" == ""; then
 		echo "TFTP Setup config missing/incomplete!!!"
 		exit 1
 	fi	
+
+        if test ! -f $ISO_LOCATION; then
+                echo "ISO to be mounted for PXE server missing!!!"
+                exit 1
+        fi
+
+
+	if test ! -d $PXE_SETUP_FILES_PATH; then
+		echo "PXE Setup Files not Found!!!"
+                exit 1
+        fi 
+
+        if test ! -d $ABSOLUTE_PATH_OF_BAADALREPO; then
+                echo "Baadal Repo not Found!!!"
+                exit 1
+        fi 
+
+
+        if test ! -d $BAADAL_APP_DIR_PATH; then
+                echo "Baadal App not Found!!!"
+                exit 1
+        fi 
 
 	if test "$STORAGE_TYPE" == "" || test "$STORAGE_SERVER_IP" == "" || test "$STORAGE_DIRECTORY" == "" || test "$LOCAL_MOUNT_POINT" == ""; then
 		echo "Storage server details missing!!!"
@@ -101,11 +132,25 @@ Chk_installation_config()
 		exit 1
 	fi
 
+	if [[ "$CONTROLLER_IP" =~ "$STARTING_IP_RANGE" ]];then
+        	echo "IP RANGE specified is correct"
+	else
+        	echo "Invalid IP Range!!!"
+        	exit 1
+	fi
+
 	if test "$INSTALL_LOCAL_UBUNTU_REPO" == "y"; then
+
 		if test "$EXTERNAL_REPO_IP" == "" || test "$LOCAL_REPO_SETUP_FILES_PATH" == ""; then
 			echo "local ubuntu repo setup config missing!!!"
 			exit 1
 		fi
+
+		if test ! -d $LOCAL_REPO_SETUP_FILES_PATH; then
+			echo "Setup Files Required to configure local ubuntu repo not found!!!"
+			exit 1
+		fi
+
 	fi
 
 	if test "$WEB2PY_PASSWD" == ""; then
@@ -120,95 +165,98 @@ Chk_installation_config()
 		fi
 	fi
 
+        if test "$AUTH_TYPE" != "ldap" && test "$AUTH_TYPE" !=  "db"; then
+                echo "Invalid Auth Type!!!"
+                exit 1
+        fi
+
 	echo "config verification complete!!!"
 }
 
 Configure_Ldap_Kerberos()
 {
 
-if test -f "/etc/krb5.conf";then
-		if test -f "ldap_krb/krb5.conf";then
-			mv /etc/{krb5.conf,krb5.conf.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/krb5.conf /etc/
-		else
-			echo "ERROR: ldap_krb/krb5.conf"	
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi 
+	echo "Starting LDAP/kerberos Configuration"	
+
+	if test -f "ldap_krb/krb5.conf";then
+		cp /etc/{krb5.conf,krb5.conf.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/krb5.conf /etc/.
+	else
+		echo "ERROR: ldap_krb/krb5.conf"	
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
 	
-if test -f "/etc/ldap.conf";then
-		if test -f "ldap_krb/ldap.conf";then
-			mv /etc/{ldap.conf,ldap.conf.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/ldap.conf /etc/
-		else
-			echo "ERROR: ldap_krb/ldap.conf"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
+	if test -f "ldap_krb/ldap.conf";then
+		cp /etc/{ldap.conf,ldap.conf.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/ldap.conf /etc/.
+	else
+		echo "ERROR: ldap_krb/ldap.conf"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
 	
-if test -f "/etc/nsswitch.conf";then
-		if test -f "ldap_krb/nsswitch.conf";then
-			mv /etc/{nsswitch.conf,nsswitch.conf.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/nsswitch.conf /etc/
-		else
-			echo "ERROR: ldap_krb/nsswitch.conf"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi	
-fi
+	if test -f "ldap_krb/nsswitch.conf";then
+		cp /etc/{nsswitch.conf,nsswitch.conf.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/nsswitch.conf /etc/.
+	else
+		echo "ERROR: ldap_krb/nsswitch.conf"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi	
 
 	
-if test -f "/etc/pam.d/common-account";then
-		if test -f "ldap_krb/common-account";then
-			mv /etc/pam.d/{common-account,common-account.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-account /etc/pam.d/
-		else
-			echo "ERROR: ldap_krb/common-account"
-  			echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
+	if test -f "ldap_krb/common-account";then
+		cp /etc/pam.d/{common-account,common-account.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-account /etc/pam.d/.
+	else
+		echo "ERROR: ldap_krb/common-account"
+		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
 	
-if test -f "/etc/pam.d/common-auth";then
-		if test -f "ldap_krb/common-auth";then
-			mv /etc/pam.d/{common-auth,common-auth.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-auth /etc/pam.d/	
-		else
-			echo "ERROR: ldap_krb/common-auth"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
+	if test -f "ldap_krb/common-auth";then
+		cp /etc/pam.d/{common-auth,common-auth.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-auth /etc/pam.d/.
+	else
+		echo "ERROR: ldap_krb/common-auth"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
+	if test -f "ldap_krb/common-password";then
+		cp /etc/pam.d/{common-password,common-password.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-password /etc/pam.d/.
+	else
+		echo "ERROR: ldap_krb/common-password"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
 	
-if test -f "/etc/pam.d/common-password";then
-		if test -f "ldap_krb/common-password";then
-			mv /etc/pam.d/{common-password,common-password.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-password /etc/pam.d/	
-		else
-			echo "ERROR: ldap_krb/common-password"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi
-	
-	
-if test -f "/etc/pam.d/common-session";then
-		if test -f "ldap_krb/common-session";then
-			mv /etc/pam.d/{common-session,common-session.bkp}
-			cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-session /etc/pam.d/		
-		else
-			echo "ERROR: ldap_krb/common-session"
-	  		echo "EXITING INSTALLATION......................................"
-			exit 1
-		fi
-fi	
 
+	if test -f "ldap_krb/common-session";then
+		cp /etc/pam.d/{common-session,common-session.bkp}
+		cp -f $LDAP_KERBEROS_SETUP_FILES_PATH/common-session /etc/pam.d/.		
+	else
+		echo "ERROR: ldap_krb/common-session"
+  		echo "EXITING INSTALLATION......................................"
+		exit 1
+	fi
+
+}
+
+
+Setup_Ldap_Kerberos()
+{
+	Configure_Ldap_Kerberos
+
+	for pkg in ${Ldap_pkg_lst[@]}; do
+		DEBIAN_FRONTEND=noninteractive apt-get -y install $pkg --force-yes
+	done
+	
 }
 
 #Function to populate the list of packages to be installted
@@ -232,29 +280,12 @@ Populate_Pkg_Lst()
 
 	fi			
 			
-	if [[ $AUTH_TYPE == "ldap" ]]; then
-	
-		Pkg_lst=("${Pkg_lst[@]}" "${Ldap_pkg_lst[@]}")
-		Configure_Ldap_Kerberos
-
-	elif [[ $AUTH_TYPE == "db" ]]; then
-
-		echo "Do nothing as of now"
-
-	else
-		
-		echo "Invalid Authentication Type!!!"
-		echo "Please Check Configuration File.........."
-  		echo "EXITING INSTALLATION......................................"
-		exit 1
-	fi
-
 }
 
 #Function that install all the packages packages
 Instl_Pkgs()
 {	
-	apt-get update &&	apt-get -y upgrade
+	apt-get update && apt-get -y upgrade
 
 	echo "Updating System............."	
 
@@ -350,7 +381,14 @@ Instl_Pkgs()
 	make install
 	/etc/init.d/libvirt-bin restart
 
+	DEBIAN_FRONTEND=noninteractive apt-get -y install python-libvirt --force-yes
+
 	cd -
+
+	if test "$AUTH_TYPE" == "ldap"; then
+		Setup_Ldap_Kerberos
+	fi
+
 	echo "Packages Installed Successfully..................................."
 }
 
@@ -379,7 +417,7 @@ Setup_Baadalapp()
 
         sed -i -e 's/ldap_url=/'"ldap_url=$LDAP_URL"'/g' $baadalapp_config_path
 
-        sed -i -e 's/ldap_dn=/'"ldap_url=$LDAP_DN"'/g' $baadalapp_config_path
+        sed -i -e 's/ldap_dn=/'"ldap_dn=$LDAP_DN"'/g' $baadalapp_config_path
 
         if test $DISABLE_MAIL_SENDING != 'y'; then
 
@@ -544,8 +582,9 @@ Enbl_Modules()
 				fi					
 	esac
 
+	mkdir -p $LOCAL_MOUNT_POINT
 	
-	mount $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
+	mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
 
 }
 
@@ -582,7 +621,9 @@ Rewrite_Apache_Conf()
 
 		<VirtualHost *:80>
 		  DocumentRoot /var/www
-                  Redirect permanent /(baadal|admin).* https://$CONTROLLER_IP%{REQUEST_URI}   
+		  RewriteEngine On
+		  RewriteCond %{REQUEST_URL} (baadal|admin).*
+		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 		</VirtualHost>
 
 		<VirtualHost *:443>
@@ -656,11 +697,12 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         mount $ISO_LOCATION $TFTP_DIR/ubuntu
         cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
         cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
+	rm -rf $TFTP_DIR/pxelinux.cfg
         mkdir $TFTP_DIR/pxelinux.cfg
         touch $TFTP_DIR/pxelinux.cfg/default
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
         touch $TFTP_DIR/mybootmenu.cfg
-        echo -e "menu hshift 13\nmenu width 49\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel Boot from the first HDD\n\tlocalboot 0\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --" >> $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
 
@@ -683,28 +725,50 @@ Configure_Dhcp_Pxe()
         do
 		j=$(($i + 1))
                 if test $i -eq 0;then
-			final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range;\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
-                fi
+			final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\toption routers $NETWORK_GATEWAY_IP;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n\tfilename \"pxelinux.0\";\n}\n\n"
 
-                final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$i.2 $STARTING_IP_RANGE.$i.$end_range\n\toption routers $STARTING_IP_RANGE.$i.1\n\toption broadcast-address $STARTING_IP_RANGE.$i.255\n\toption subnet-mask $subnet\n}\n\n"
+                else
+
+                	final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\toption routers $STARTING_IP_RANGE.$i.1;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n}\n\n"
+		fi
+
 		if test $j -ge 2; then
 			VLANS+="vlan$j,"
 		fi
         done
-        echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 
+
+	final_subnet_string+="subnet $STARTING_IP_RANGE.$NUMBER_OF_VLANS.0 netmask $subnet {\n\trange $STARTING_IP_RANGE.$NUMBER_OF_VLANS.2 $STARTING_IP_RANGE.$NUMBER_OF_VLANS.$end_range;\n\toption routers $STARTING_IP_RANGE.$NUMBER_OF_VLANS.1;\n\toption broadcast-address $STARTING_IP_RANGE.$NUMBER_OF_VLANS.255;\n\toption subnet-mask $subnet;\n}\n\n"
+
+        echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
+	sed -i -e "s/option domain-name/#option domain-name/g" /etc/dhcp/dhcpd.conf
+	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
+	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
+	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
 
 	if test $INSTALL_LOCAL_UBUNTU_REPO == 'y'; then
 		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
-		sed -i -e 's/EXTERNAL_REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+		sed -i -e 's/REPO_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+	elif test -n $EXTERNAL_REPO_IP; then
+		cp $PXE_SETUP_FILES_PATH/sources_file $PXE_SETUP_FILES_PATH/sources.list
+                sed -i -e 's/REPO_IP/'"$EXTERNAL_REPO_IP"'/g' $PXE_SETUP_FILES_PATH/sources.list
+	else 
+		sed -i -e 's/cp \/etc\/apt\/sources.list \/etc\/apt\/sources.list.bak\ncp \/baadal\/baadal\/baadalinstallation\/pxe_host_setup\/sources.list \/etc\/apt\/sources.list//' $PXE_SETUP_FILES_PATH/ks_cfg
+
 	fi
+
+	cp $PXE_SETUP_FILES_PATH/ks_cfg $PXE_SETUP_FILES_PATH/ks.cfg
 
 	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
+	mv $PXE_SETUP_FILES_PATH/ks.cfg /var/www/.
+
 	VLANS=$(echo ${VLANS:0:-1})
+
+	cp $PXE_SETUP_FILES_PATH/host_installation_sh $PXE_SETUP_FILES_PATH/host_installation.sh
 
 	sed -i -e 's/NETWORK_GATEWAY_IP/'"$NETWORK_GATEWAY_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
 	
@@ -718,7 +782,11 @@ Configure_Dhcp_Pxe()
 
 	sed -i -e 's@STORAGE_DIRECTORY@'"$STORAGE_DIRECTORY"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
-	tar -cvf /var/www/baadal.tar $ABSOLUTE_PATH_OF_BAADALREPO/
+	sed -i -e 's@BAADAL_REPO_INSTALL@'"$ABSOLUTE_PATH_OF_PARENT_BAADALREPO/$BAADAL_REPO_DIR"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
+
+	cd $ABSOLUTE_PATH_OF_PARENT_BAADALREPO
+	tar -cvf /var/www/newbaadal.tar $BAADAL_REPO_DIR/
+	cd -
 
 }
 
@@ -751,6 +819,13 @@ Start_Web2py()
 
 	su - www-data -c 'python /home/www-data/web2py/web2py.py -K  baadal &'
 
+	rrd_cron_exists=`cat /etc/crontab | grep "rrd_gen_cron.py" | wc -l`
+
+	if test $rrd_cron_exists -eq 0; then
+		echo "*/5 * * * *  www-data python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py    /applications/baadal/private/rrd_gen_cron.py" >> /etc/crontab
+	fi
+	
+	echo "Controller Installation Complete!!!"
 }
 
 
@@ -760,15 +835,15 @@ Start_Web2py()
 
 Chk_Root_Login
 Chk_installation_config
-#Chk_Gateway
-#Instl_Pkgs
-#Setup_Web2py
-#Configure_Local_Ubuntu_Repo
-#Enbl_Modules
-#Create_SSL_Certi
-#Rewrite_Apache_Conf
-#Configure_Tftp
-#Configure_Dhcp_Pxe
-#Setup_Baadalapp
-#Start_Web2py
+Chk_Gateway
+Instl_Pkgs
+Setup_Web2py
+Configure_Local_Ubuntu_Repo
+Enbl_Modules
+Create_SSL_Certi
+Rewrite_Apache_Conf
+Configure_Tftp
+Configure_Dhcp_Pxe
+Setup_Baadalapp
+Start_Web2py
 

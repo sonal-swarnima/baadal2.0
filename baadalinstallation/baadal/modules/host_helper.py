@@ -15,6 +15,7 @@ HOST_STATUS_MAINTENANCE = 2
 
 def check_host_status(host_ip):
     out=commands.getstatusoutput("ping -c 2 -W 1 " + host_ip)[0]
+    current.logger.debug("Host Check command response for %s: %s" %(host_ip, str(out)))
     if(out == 0):
         if check_host_service_status(host_ip):
             return HOST_STATUS_UP
@@ -67,12 +68,13 @@ def check_host_service_status(host_ip):
     return True
     
 def host_status_sanity_check():
-    for host in current.db().select(db.host.ALL):
+    for host in current.db().select(current.db.host.ALL):
         if host.status != HOST_STATUS_MAINTENANCE:
-            status=check_host_status(host.ip)
-        if(status!=host.status):
-            current.logger.debug("Changing status of " + host.host_name +" to " + str(status))
-            host.update_record(status=status)
+            host_status=check_host_status(host.host_ip)
+        if(host_status != host.status):
+            current.logger.debug("Changing status of " + host.host_name +" to " + str(host_status))
+            host.update_record(status=host_status)
+    current.db.commit()
 
 def has_running_vm(host_ip):
     found=False

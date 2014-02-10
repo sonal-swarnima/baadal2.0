@@ -892,8 +892,12 @@ def attach_extra_disk(parameters):
 def shutdown_baadal():
     vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
     for vm_detail in vms:
-        snapshot({'vm_id':vm_detail.id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
-        destroy({'vm_id':vm_detail.id})
+        try:
+            snapshot({'vm_id':vm_detail.id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
+            destroy({'vm_id':vm_detail.id})
+        except:
+            log_exception()
+            pass
     return
 
 def bootup_baadal():
@@ -901,6 +905,10 @@ def bootup_baadal():
     for vm_detail in vms:
         sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=current.SNAPSHOT_SYSTEM)
         if sys_snapshot:
-            revert({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
-            delete_snapshot({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+            try:
+                revert({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+                delete_snapshot({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+            except:
+                log_exception()
+                pass
     return

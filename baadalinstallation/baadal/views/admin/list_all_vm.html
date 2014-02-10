@@ -6,8 +6,8 @@
 
 {{else:}}
 <h2 class="subtitle">{{=T('All VMs')}}</h2>
-<div class="TABLE">
-  <table id="listallvm">
+  <table id="listallvm" class="tablesorter">
+    <thead>  
       <tr>
         <th>Name</th>
         <th>Owner</th>
@@ -19,7 +19,9 @@
         <th>Status</th>
         <th>Settings</th>
       </tr>
-  {{for vm in vmlist:}}
+    </thead>
+    <tbody>
+    {{for vm in vmlist:}}
       <form>
       <tr>
         <td>{{=vm['name']}}</td>
@@ -38,7 +40,13 @@
         </td>
       </tr>
       </form>
-  {{pass}}
+    {{pass}}
+    </tbody>
   </table>
-</div>
 {{pass}}
+
+<script>
+jQuery(document).ready(function(){
+      jQuery("#listallvm").tablesorter(); 
+});
+</script>

@@ -1,0 +1,44 @@
+{{extend 'layout.html'}}
+<h2 class="subtitle">{{=T('VM History')}}</h2>
+
+{{
+  if not vm_history:
+}}
+<h3>No history information for the VM</h3>
+{{else:}}
+  <table id="vm_history_table" class="tablesorter">
+    <thead>  
+      <tr>
+        <th>Attribute</th>
+        <th>Old Value</th>
+        <th>New Value</th>
+        <th>Requested By</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{for vm_log in vm_history:}}
+      <tr>
+        <td>{{=vm_log['attribute']}}</td>
+        <td>{{=vm_log['old_value']}}</td>
+        <td>{{=vm_log['new_value']}}</td>
+        <td>{{=vm_log['requested_by']}}</td>
+        <td>{{=vm_log['timestamp']}}</td>
+      </tr>
+    {{pass}}
+    </tbody>
+  </table>
+<div>
+    {{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
+    _href=URL(r=request, f='settings', args=[vm_id]), 
+    _title="Settings", 
+    _alt="Settings")}}
+</div>
+{{pass}}
+
+
+<script>
+jQuery(document).ready(function(){
+      jQuery("#vm_history_table").tablesorter(); 
+});
+</script>

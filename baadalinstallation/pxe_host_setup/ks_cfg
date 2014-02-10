@@ -43,22 +43,24 @@ reboot
 
 %post
 
-mkdir -p /baadal
-wget http://CONTROLLER_IP/baadal.tar
-/baadal/baadal.tar
+(mkdir -p /baadal
+cd /baadal
+wget http://CONTROLLER_IP/newbaadal.tar
 
-cd /target/baadal
-tar xvf baadal.tar
-rm baadal.tar
+tar xvf newbaadal.tar
+rm newbaadal.tar
 
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
 cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/sources.list
 
 cd /baadal/baadal/baadaltesting/sandbox
+apt-get update
+apt-get install -y make
 make openvswitch
-make host-update
+make host-setup
 
 cd /baadal/baadal/baadalinstallation
-./pxe-server-setup/host_installation.sh
+chmod u+x ./pxe_host_setup/host_installation.sh
+./pxe_host_setup/host_installation.sh) 1> /var/log/installation.log 2>&1  
 
 %end
