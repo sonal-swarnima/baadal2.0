@@ -77,6 +77,3 @@ function run
   echo -e $interfaces_str > /etc/network/interfaces
 }   
 
-
-
-
