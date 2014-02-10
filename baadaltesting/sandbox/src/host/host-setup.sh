@@ -76,31 +76,5 @@ function run
 
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
-
-  # TODO
-  # Move this to baadalinstallation/pxe_host_setup/host_installation.sh
-  # Libvirt is not installed at this point.
-
-  #CREATE LIBVIRT NETWORK
-  virsh net-destroy default
-  virsh net-autostart --disable default
-
-  touch ovs-net.xml
-  ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='$OVS_BRIDGE_INTERNAL'/>\n<virtualport type='openvswitch'/>\n"
-  for ((i=$VLAN_START;i<=$VLAN_END;i++))
-    do
-	ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
-    done
-
-  ovs_net_config+="</network>"
-  echo -e $ovs_net_config > ovs-net.xml
-  
-  virsh net-define ovs-net.xml
-  virsh net-start ovs-net
-  virsh net-autostart ovs-net
-
-}   
-
-
-
+}
 
