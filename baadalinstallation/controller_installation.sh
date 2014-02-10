@@ -708,6 +708,13 @@ echo "tftp is configured."
 
 }
 
+configure_network()
+{
+        ip_address=$(ifconfig eth0 | grep "inet addr" | cut -d":" -f2 | cut -d" " -f1)
+        sed -i -e "s/dhcp/static\n\taddress $ip_address\n\tnetmask 255.255.255.0\n\tgateway $NETWORK_GATEWAY_IP\n\tdns-nameservers $nameserver_str" /etc/network/interfaces
+        /etc/init.d/networking restart
+}
+
 Configure_Dhcp_Pxe()
 {
 
@@ -737,6 +744,7 @@ Configure_Dhcp_Pxe()
 	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
 	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
 	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
+	configure_network	
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
@@ -817,7 +825,6 @@ Start_Web2py()
 	
 	echo "Controller Installation Complete!!!"
 }
-
 
 ##############################################################################################################################
 
