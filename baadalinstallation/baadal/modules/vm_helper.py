@@ -538,7 +538,7 @@ def delete(parameters):
             current.logger.debug("Vm is not shutoff. Shutting it off first.")
             domain.destroy()
         current.logger.debug("Starting to delete it...")
-        domain.undefine(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
+        domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
         message = vm_details.vm_identity + " is deleted successfully."
         current.logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
