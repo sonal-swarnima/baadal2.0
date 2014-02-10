@@ -60,13 +60,15 @@ function run
   done
 
   # NOTE TO DEVELOPER
-  # Apparently trunking is not needed here. This will work if no trunking
-  # is set on eth0. But theoretically since OVS is a bridge, and there is
-  # another physical bridge that eth0 is connected to, the trunking rules
-  # should be defined on both eth0-in-OVS and the port-on-physical-bridge
-  # where eth0 is connected. I am not quite sure why it works if trunking
-  # is not defined on eth0-in-OVS. I am not deleting it until I've got an
-  # answer.  
+  # Apparently trunking is not needed here. This is because an openvswitch
+  # interface will act as trunk port for all vlans by default if there are
+  # no trunk values as well as no tag values defined for the interface. It
+  # should be better is these things are explicitly defined as this is not
+  # well documented in openvswitch's docs. If any trunk value or tag value
+  # is defined for an interface on openvswitch then it automatically won't
+  # work as trunk for all other remaining vlans. In baadal's current state
+  # eth0 will act as trunk for vlans 1-255 and will filter out traffic for
+  # all other vlans.
   trunk_str="$(echo ${trunk_str:0:-1})"
   trunk_str="trunk=[$trunk_str]"
   ovsvsctl_set_port $HOST_INTERFACE $trunk_str
@@ -74,10 +76,18 @@ function run
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
 
+  # TODO
+  # Move this to baadalinstallation/pxe_host_setup/host_installation.sh
+  # Libvirt network should be part of baadal-core and not baadal's networking
+  # module. The network architecture can change, but that should not change
+  # how baadal sets up the network for its VMs. Also, use of any other
+  # virtualization management tool should not make developers rewrite the
+  # network-architecture.
+
   #CREATE LIBVIRT NETWORK
   virsh net-destroy default
   virsh net-autostart --disable default
-  
+
   touch ovs-net.xml
   ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='$OVS_HOST_BRIDGE'/>\n<virtualport type='openvswitch'/>\n"
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
