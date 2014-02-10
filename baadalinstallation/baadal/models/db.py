@@ -216,6 +216,14 @@ db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
+db.define_table('vm_event_log',
+    Field('vm_id', db.vm_data),
+    Field('attribute', 'string', length = 100),
+    Field('old_value', 'string', length = 255),
+    Field('new_value', 'string', length = 255),
+    Field('requester_id', db.user),
+    Field('timestamp', 'datetime', default = get_datetime()))
+
 db.define_table('user_vm_map',
     Field('user_id', db.user),
     Field('vm_id', db.vm_data),

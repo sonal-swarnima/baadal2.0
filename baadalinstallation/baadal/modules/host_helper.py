@@ -70,10 +70,11 @@ def check_host_service_status(host_ip):
 def host_status_sanity_check():
     for host in current.db().select(current.db.host.ALL):
         if host.status != HOST_STATUS_MAINTENANCE:
-            status=check_host_status(host.host_ip)
-        if(status!=host.status):
-            current.logger.debug("Changing status of " + host.host_name +" to " + str(status))
-            host.update_record(status=status)
+            host_status=check_host_status(host.host_ip)
+        if(host_status != host.status):
+            current.logger.debug("Changing status of " + host.host_name +" to " + str(host_status))
+            host.update_record(status=host_status)
+    current.db.commit()
 
 def has_running_vm(host_ip):
     found=False
