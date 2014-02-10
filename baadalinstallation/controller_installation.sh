@@ -379,9 +379,12 @@ Instl_Pkgs()
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
-	/etc/init.d/libvirt-bin restart
 
-	DEBIAN_FRONTEND=noninteractive apt-get -y install python-libvirt --force-yes
+  # TODO
+  # Do not take the source from sandbox
+  cd $BAADAL_APP_DIR_PATH/../baadaltesting/sandbox/utils/libvirt-python
+  python setup.py build
+  python setup.py install
 
 	cd -
 
