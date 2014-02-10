@@ -37,7 +37,7 @@ Instl_Pkgs()
 				if test $pkg == "debconf-utils"; then
 					echo "isc-dhcp-relay isc-dhcp-relay/servers string CONTROLLER_IP" | debconf-set-selections
         				echo "isc-dhcp-relay isc-dhcp-relay/interfaces string VLAN_INTERFACES" | debconf-set-selections
-				        echo "isc-dhcp-relay isc-dhcp-relay/options string \"\"" | debconf-set-selections
+				        echo "isc-dhcp-relay isc-dhcp-relay/options string """ | debconf-set-selections
 				fi
 
                 done

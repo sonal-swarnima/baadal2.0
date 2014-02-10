@@ -715,7 +715,7 @@ Configure_Dhcp_Pxe()
         num_hosts=$NUMBER_OF_HOSTS
         end_range=$(( $num_hosts + 1 ))
         final_subnet_string=""
-				VLANS=""
+	VLANS=""
         for ((i=0;i<$NUMBER_OF_VLANS;i++))
         do
 		j=$(($i + 1))
@@ -726,10 +726,7 @@ Configure_Dhcp_Pxe()
 
                 	final_subnet_string+="subnet $STARTING_IP_RANGE.$i.0 netmask $subnet {\n\toption routers $STARTING_IP_RANGE.$i.1;\n\toption broadcast-address $STARTING_IP_RANGE.$i.255;\n\toption subnet-mask $subnet;\n}\n\n"
 		fi
-
-		if test $j -ge 2; then
-			VLANS+="vlan$j,"
-		fi
+		VLANS+="vlan$j "
         done
 
 
@@ -760,8 +757,6 @@ Configure_Dhcp_Pxe()
 	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	mv $PXE_SETUP_FILES_PATH/ks.cfg /var/www/.
-
-	VLANS=$(echo ${VLANS:0:-1})
 
 	cp $PXE_SETUP_FILES_PATH/host_installation_sh $PXE_SETUP_FILES_PATH/host_installation.sh
 
