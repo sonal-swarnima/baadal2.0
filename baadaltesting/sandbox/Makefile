@@ -180,7 +180,7 @@ controller: $(BIN_CONTROLLER)
 	@ sudo $<
 
 controller-setup: $(BIN_CONTROLLER_SETUP)
-	@ sudo $<
+	@ sudo DNS=$$DNS $<
   
 filer: $(BIN_FILER)
 	@ sudo $<
