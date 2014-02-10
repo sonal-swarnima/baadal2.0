@@ -55,7 +55,11 @@ cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/source
 
 cd /baadal/baadal/baadaltesting/sandbox
 apt-get update
+
+# TODO
+# Remove this. Install `make` from CD when Ubuntu is being installed.
 apt-get install -y make
+
 make openvswitch
 make host-setup
 

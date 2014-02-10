@@ -86,24 +86,26 @@ function run
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
     do
       ovsvsctl_add_fake_br_force vlan$i $OVS_NAT_BRIDGE $i
-      ifconfig_ip vlan$i $baseaddr.$i.1 $VLAN_NETMASK
+      ifconfig_ip vlan$i $baseaddr.$i.2 $VLAN_NETMASK
       interfaces_str+="\n
       auto vlan$i\n
       iface vlan$i inet static\n
-      address $baseaddr.$i.1\n
+      address $baseaddr.$i.2\n
       netmask $VLAN_NETMASK\n
       "
       trunk_str+="$i,"
   done
 
   # NOTE TO DEVELOPER
-  # Apparently trunking is not needed here. This will work if no trunking
-  # is set on eth0. But theoretically since OVS is a bridge, and there is
-  # another physical bridge that eth0 is connected to, the trunking rules
-  # should be defined on both eth0-in-OVS and the port-on-physical-bridge
-  # where eth0 is connected. I am not quite sure why it works if trunking
-  # is not defined on eth0-in-OVS. I am not deleting it until I've got an
-  # answer.
+  # Apparently trunking is not needed here. This is because an openvswitch
+  # interface will act as trunk port for all vlans by default if there are
+  # no trunk values as well as no tag values defined for the interface. It
+  # should be better is these things are explicitly defined as this is not
+  # well documented in openvswitch's docs. If any trunk value or tag value
+  # is defined for an interface on openvswitch then it automatically won't
+  # work as trunk for all other remaining vlans. In baadal's current state
+  # eth0 will act as trunk for vlans 1-255 and will filter out traffic for
+  # all other vlans.
   trunk_str="$(echo ${trunk_str:0:-1})"
   trunk_str="trunk=[$trunk_str]"
   ovsvsctl_set_port $NAT_INTERNAL_INTERFACE $trunk_str
