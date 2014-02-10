@@ -9,6 +9,18 @@ function run
     
   libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
 
+  dns=$(cat /var/run/dnsmasq/resolv.conf | sed "s:nameserver ::g")
+  ipcalc -b $dns | tee -a $LOGS/log.err | grep INVALID\ ADDRESS 1>>$LOGS/log.out
+  status=$?
+
+  if [[ $status -eq 0 ]]; then
+    $ECHO_ER Failed to retrieve DNS info from sandbox system \(check logs\)
+    tail -$LOG_SIZE $LOGS/log.err
+    exit 1
+  else
+    $ECHO_OK DNS = $dns
+  fi
+
   ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
 
@@ -76,6 +88,7 @@ function run
     --dhcp-host=$MAC_CONTROLLER,$NETWORK_INTERNAL_IP_CONTROLLER \
     --dhcp-host=$MAC_NAT,$NETWORK_INTERNAL_IP_NAT \
     --dhcp-host=$MAC_FILER,$NETWORK_INTERNAL_IP_FILER \
+    --dhcp-option=6,$dns \
     --dhcp-option=nat,option:router,0.0.0.0 \
     --dhcp-option=3,$NETWORK_INTERNAL_IP_GATEWAY \
     --dhcp-range=$NETWORK_INTERNAL,static
@@ -86,7 +99,7 @@ function run
     tail -$LOG_SIZE $LOGS/log.err 
     exit 1
   else
-      $ECHO_OK dnsmasq
+    $ECHO_OK dnsmasq
   fi
 
   $ECHO_OK Switch Installation Complete

@@ -78,11 +78,7 @@ function run
 
   # TODO
   # Move this to baadalinstallation/pxe_host_setup/host_installation.sh
-  # Libvirt network should be part of baadal-core and not baadal's networking
-  # module. The network architecture can change, but that should not change
-  # how baadal sets up the network for its VMs. Also, use of any other
-  # virtualization management tool should not make developers rewrite the
-  # network-architecture.
+  # Libvirt is not installed at this point.
 
   #CREATE LIBVIRT NETWORK
   virsh net-destroy default
