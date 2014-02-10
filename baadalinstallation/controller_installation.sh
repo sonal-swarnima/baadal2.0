@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 
 CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko apache2 libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab mercurial inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -622,7 +622,6 @@ Rewrite_Apache_Conf()
 		<VirtualHost *:80>
 		  DocumentRoot /var/www
 		  RewriteEngine On
-		  RewriteCond %{REQUEST_URL} (baadal|admin).*
 		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 		</VirtualHost>
 
@@ -708,13 +707,6 @@ echo "tftp is configured."
 
 }
 
-configure_network()
-{
-        ip_address=$(ifconfig eth0 | grep "inet addr" | cut -d":" -f2 | cut -d" " -f1)
-        sed -i -e "s/dhcp/static\n\taddress $ip_address\n\tnetmask 255.255.255.0\n\tgateway $NETWORK_GATEWAY_IP\n\tdns-nameservers $nameserver_str" /etc/network/interfaces
-        /etc/init.d/networking restart
-}
-
 Configure_Dhcp_Pxe()
 {
 
@@ -744,7 +736,8 @@ Configure_Dhcp_Pxe()
 	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
 	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
 	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
-	configure_network	
+
+	sed -i -e "s/INTERFACES=\"\"/INTERFACES="$OVS_BRIDGE_NAME" $VLANS" /etc/default/isc-dhcp-server
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
