@@ -94,6 +94,7 @@ Enbl_Modules()
 	
 	mkdir -p LOCAL_MOUNT_POINT
 	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
+	echo -e "STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
 	echo "If you have done all the steps correctly, Congo!!!"
 }
 

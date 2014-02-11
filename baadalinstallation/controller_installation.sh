@@ -592,7 +592,7 @@ Enbl_Modules()
 	mkdir -p $LOCAL_MOUNT_POINT
 	
 	mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
-
+	echo -e "$STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
 }
 
 #Function to create SSL certificate
