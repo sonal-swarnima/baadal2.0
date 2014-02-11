@@ -379,6 +379,12 @@ Instl_Pkgs()
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
+	/usr/sbin/libvirtd -d
+        if test $? -ne 0; then
+                echo "Unable to start libvirtd. Check installation and try again"
+                exit $?
+        fi
+        sed -i -e "s@exit 0@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
 	cd -
 
 	cd python-libvirt
