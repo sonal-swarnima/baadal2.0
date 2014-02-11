@@ -79,7 +79,7 @@ Enbl_Modules()
 	virsh net-autostart ovs-net
 
 	cd -
-	cd ../libvirt-python
+	cd ../python-libvirt
 	python setup.py build
 	python setup.py install
 

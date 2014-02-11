@@ -37,15 +37,17 @@
 	</table>
 
 	<table name="vlan">
-		<row id="1" name="vlan1" vlan_tag="1" vlan_addr="10.0.0.0" />
-		<row id="2" name="vlan2" vlan_tag="2" vlan_addr="10.2.0.0" />
-		<row name="vlan3" vlan_tag="3" vlan_addr="10.4.0.0" />
-		<row name="vlan4" vlan_tag="4" vlan_addr="10.6.0.0" />
+		<row id="1" name="vlan0" vlan_tag="1" vlan_addr="10.0.0.0" />
+		<row id="2" name="vlan1" vlan_tag="1" vlan_addr="10.0.1.0" />
+		<row id="3" name="vlan2" vlan_tag="2" vlan_addr="10.0.2.0" />
+		<row name="vlan3" vlan_tag="3" vlan_addr="10.0.3.0" />
+		<row name="vlan4" vlan_tag="4" vlan_addr="10.0.4.0" />
 	</table>
 
 	<table name="security_domain">
 		<row id="1" name="Private" vlan="1" visible_to_all="False" />
-		<row id="2" name="Research" vlan="2" visible_to_all="True" />
+		<row id="2" name="Infrastructure" vlan="2" visible_to_all="False" />
+		<row id="3" name="Research" vlan="2" visible_to_all="True" />
 	</table>
 
 	<table name="user">

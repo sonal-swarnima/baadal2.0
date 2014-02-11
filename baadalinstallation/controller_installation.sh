@@ -372,20 +372,18 @@ Instl_Pkgs()
 	done
 	# end of FOR loop / package installation from pkg_lst
 
-	cp libvirt-1.0.0.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.0.0.tar.gz
-	tar -xvzf libvirt-1.0.0.tar.gz
-	mv libvirt-1.0.0 /tmp/libvirt-1.0.0
-	cd /tmp/libvirt-1.0.0
+	cp libvirt-1.2.1.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.2.1.tar.gz
+	tar -xvzf libvirt-1.2.1.tar.gz
+	mv libvirt-1.2.1 /tmp/libvirt-1.2.1
+	cd /tmp/libvirt-1.2.1
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
+	cd -
 
-  # TODO
-  # Do not take the source from sandbox
-  cd $BAADAL_APP_DIR_PATH/../baadaltesting/sandbox/utils/libvirt-python
-  python setup.py build
-  python setup.py install
-
+	cd python-libvirt
+	python setup.py build
+	python setup.py install
 	cd -
 
 	if test "$AUTH_TYPE" == "ldap"; then
