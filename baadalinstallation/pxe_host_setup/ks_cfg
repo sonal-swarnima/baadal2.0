@@ -63,8 +63,8 @@ apt-get install -y make
 make openvswitch
 make host-setup
 
-cd /baadal/baadal/baadalinstallation
-chmod u+x ./pxe_host_setup/host_installation.sh
-./pxe_host_setup/host_installation.sh) 1> /var/log/installation.log 2>&1  
+cd /baadal/baadal/baadalinstallation/pxe_host_setup
+chmod u+x ./host_installation.sh
+./host_installation.sh) 1> /var/log/installation.log 2>&1  
 
 %end
