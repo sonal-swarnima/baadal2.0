@@ -81,7 +81,7 @@ function run
     --dhcp-option=6,$dns \
     --dhcp-option=nat,option:router,0.0.0.0 \
     --dhcp-option=3,$NETWORK_INTERNAL_IP_GATEWAY \
-    --dhcp-range=$NETWORK_INTERNAL,static
+    --dhcp-range=$NETWORK_INTERNAL,static 1>>$LOGS/log.out 2>>$LOGS/log.err
   status=$?
 
   if [[ $status -ne 0 ]]; then
@@ -100,7 +100,7 @@ function dns_get
   if [[ $DNS != '' ]]; then
     dns=$DNS
   else
-    dns=$(cat /var/run/dnsmasq/resolv.conf | sed "s:nameserver ::g")
+    dns=$(cat /var/run/dnsmasq/resolv.conf | sed "s:nameserver ::g" | head -n 1)
   fi
 
   package_install ipcalc
