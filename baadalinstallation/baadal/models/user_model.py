@@ -27,27 +27,21 @@ def get_my_hosted_vm():
 #Create configuration dropdowns
 def get_configuration_elem(form):
     
-    vm_configs = db().select(db.vm_config.ALL, orderby =db.vm_config.template_id)
+    templates = db().select(db.template.ALL)
     _label = LABEL(SPAN('Configuration:', ' ', SPAN('*', _class='fld_required'), ' '))
-    _id=0
-    i=0
-    select = SELECT(_name='configuration_'+str(_id))
-    for config in vm_configs:
-        if config.template_id != _id:
-            config_elem = TR(_label, select, TD(), _id='config_row__'+str(_id))
-            form[0].insert(2,config_elem)#insert tr element in the form
-            _id = config.template_id
-            select = SELECT(_name='configuration_'+str(_id))
-            i=0
+
+    for template in templates:
+        _id = template.id
+        select = SELECT(_name='configuration_'+str(_id))
         
-        display = str(config.CPU) + ' CPU, ' + str(config.RAM) + 'GB RAM, ' + str(config.HDD) + 'GB HDD'
-        value = str(config.CPU) + ',' + str(config.RAM) + ',' + str(config.HDD)
-        select.insert(i,OPTION(display, _value=value))
-        i+=1
-        
-        #Create HTML tr, and insert label and select box
-    config_elem = TR(_label,select,TD(),_id='config_row__'+str(_id))
-    form[0].insert(2,config_elem)#insert tr element in the form
+        for _config in VM_CONFIGURATION:
+            display = str(_config[0]) + ' CPU, ' + str(_config[1]) + 'GB RAM, ' + str(template.hdd) + 'GB HDD'
+            value = str(_config[0]) + ',' + str(_config[1]) + ',' + str(template.hdd)
+            select.insert(len(select), OPTION(display, _value=value))
+            
+        #Create TR tag, and insert label and select box
+        config_elem = TR(_label,select,TD(),_id='config_row__'+str(_id))
+        form[0].insert(2,config_elem)#insert tr element in the form
 
 # Gets CPU, RAM and HDD information on the basis of template selected.
 def set_configuration_elem(form):
