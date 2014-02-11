@@ -134,5 +134,9 @@ BAADAL_STATUS_UP='up'
 BAADAL_STATUS_UP_IN_PROGRESS='up-progress'
 BAADAL_STATUS_DOWN='down'
 BAADAL_STATUS_DOWN_IN_PROGRESS='down-progress'
+
+# List of valid CPU and RAM combination
+VM_CONFIGURATION = [(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(8,16)]
+
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
