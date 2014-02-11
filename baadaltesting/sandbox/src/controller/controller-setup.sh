@@ -9,9 +9,11 @@ function run
     $ECHO_ER Please correct the hostname or check the underlying system before running.
     exit 1
   fi
-  
+
+  dns_get
+
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
-    
+
   ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
   
   ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $CONTROLLER_INTERFACE
@@ -43,6 +45,7 @@ function run
   iface $OVS_BRIDGE_INTERNAL inet static\n
   address $controller_ip\n
   netmask $VLAN_NETMASK\n
+  nameserver $dns\n
   gateway $NETWORK_INTERNAL_IP_NAT\n
   "
  
