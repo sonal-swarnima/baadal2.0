@@ -6,7 +6,7 @@ NUMBER_OF_HOSTS=254
 
 NUMBER_OF_VLANS=255
 
-CONTROLLER_IP=$(ifconfig $PRIMARY_NETWORK_INTERFACE | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
+CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
 Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
 
@@ -372,20 +372,24 @@ Instl_Pkgs()
 	done
 	# end of FOR loop / package installation from pkg_lst
 
-	cp libvirt-1.0.0.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.0.0.tar.gz
-	tar -xvzf libvirt-1.0.0.tar.gz
-	mv libvirt-1.0.0 /tmp/libvirt-1.0.0
-	cd /tmp/libvirt-1.0.0
+	cp libvirt-1.2.1.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.2.1.tar.gz
+	tar -xvzf libvirt-1.2.1.tar.gz
+	mv libvirt-1.2.1 /tmp/libvirt-1.2.1
+	cd /tmp/libvirt-1.2.1
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
+	/usr/sbin/libvirtd -d
+        if test $? -ne 0; then
+                echo "Unable to start libvirtd. Check installation and try again"
+                exit $?
+        fi
+        sed -i -e "s@exit 0@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
+	cd -
 
-  # TODO
-  # Do not take the source from sandbox
-  cd $BAADAL_APP_DIR_PATH/../baadaltesting/sandbox/utils/libvirt-python
-  python setup.py build
-  python setup.py install
-
+	cd python-libvirt
+	python setup.py build
+	python setup.py install
 	cd -
 
 	if test "$AUTH_TYPE" == "ldap"; then
@@ -588,7 +592,7 @@ Enbl_Modules()
 	mkdir -p $LOCAL_MOUNT_POINT
 	
 	mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
-
+	echo -e "$STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
 }
 
 #Function to create SSL certificate

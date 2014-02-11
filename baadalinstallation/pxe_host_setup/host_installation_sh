@@ -57,8 +57,12 @@ Enbl_Modules()
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
 	make install
-
-	/etc/init.d/libvirtd restart
+	/usr/sbin/libvirtd -d 
+	if test $? -ne 0; then
+		echo "Unable to start libvirtd. Check installation and try again"
+		exit $?
+	fi
+	sed -i -e "s@exit 0@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
 
 	#CREATE LIBVIRT NETWORK
 	virsh net-destroy default
@@ -79,7 +83,7 @@ Enbl_Modules()
 	virsh net-autostart ovs-net
 
 	cd -
-	cd ../libvirt-python
+	cd ../python-libvirt
 	python setup.py build
 	python setup.py install
 
@@ -90,6 +94,7 @@ Enbl_Modules()
 	
 	mkdir -p LOCAL_MOUNT_POINT
 	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
+	echo -e "STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
 	echo "If you have done all the steps correctly, Congo!!!"
 }
 
