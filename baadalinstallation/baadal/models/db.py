@@ -136,12 +136,6 @@ db.define_table('template',
     format = '%(name)s')
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
-db.define_table('vm_config',
-    Field('template_id', 'integer', notnull = True),
-    Field('HDD', 'integer', notnull = True),
-    Field('CPU', 'integer', notnull = True),
-    Field('RAM', 'integer', notnull = True))
-
 db.define_table('vlan',
     Field('name', 'string', length = 30, notnull = True, unique = True),
     Field('vlan_tag', 'string', length = 30, notnull = True, unique = True),
