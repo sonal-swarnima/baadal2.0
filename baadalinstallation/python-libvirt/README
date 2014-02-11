@@ -1,0 +1,37 @@
+     Libvirt Python Binding README
+     =============================
+
+This package provides a python binding to the libvirt.so,
+libvirt-qemu.so and libvirt-lxc.so library APIs.
+
+It is written to build against any version of libvirt that
+is 0.9.11 or newer.
+
+This code is distributed under the terms of the LGPL version
+2 or later.
+
+The module can be built by following the normal python module
+build process
+
+  python setup.py build
+  sudo python setup.py install
+
+or to install as non-root
+
+  python setup.py build
+  python setup.py install --user
+
+
+Patches for this code should be sent to the main libvirt
+development mailing list
+
+  http://libvirt.org/contact.html#email
+
+To send patches, it is strongly recommended to use the
+'git send-email' command.
+
+Make sure the mails mention that the patch is for the python
+binding. This can be done by setting a config parameter in the
+local git checkout
+
+  git config format.subjectprefix "PATCH python"
