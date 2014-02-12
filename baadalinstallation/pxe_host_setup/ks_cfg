@@ -71,6 +71,6 @@ cd /baadal
 wget http://CONTROLLER_IP/.ssh/id_rsa.pub
 touch /root/.ssh/authorized_keys
 cat id_rsa.pub >> /root/.ssh/authorized_keys
-) 1> /var/log/installation.log 2>&1  
+rm id_rsa.pub) 1> /var/log/installation.log 2>&1  
 
 %end
