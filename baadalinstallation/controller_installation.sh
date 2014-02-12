@@ -770,10 +770,8 @@ Configure_Dhcp_Pxe()
 
 	sed -i -e 's/NETWORK_GATEWAY_IP/'"$NETWORK_GATEWAY_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
 	
-	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
+	sed -i -e 's/OVS_BRIDGE_NAME/'"$OVS_BRIDGE_NAME"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
 	
-	sed -i -e 's/VLAN_INTERFACES/'"$VLANS"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
-
 	sed -i -e "s@LOCAL_MOUNT_POINT@$LOCAL_MOUNT_POINT@g" $PXE_SETUP_FILES_PATH/host_installation.sh
 
 	sed -i -e 's/STORAGE_SERVER_IP/'"$STORAGE_SERVER_IP"'/g' $PXE_SETUP_FILES_PATH/host_installation.sh
