@@ -384,7 +384,7 @@ Instl_Pkgs()
                 echo "Unable to start libvirtd. Check installation and try again"
                 exit $?
         fi
-        sed -i -e "s@exit 0@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
+        sed -i -e "s@\nexit 0@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
 	cd -
 
 	cd python-libvirt

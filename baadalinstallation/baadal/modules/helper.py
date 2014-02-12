@@ -115,12 +115,8 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
     entry_cmd = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
     restart_cmd = '/etc/init.d/isc-dhcp-server restart'
     
-    if dhcp_ip == 'localhost':
-        os.system(entry_cmd)
-        os.system(restart_cmd)
-    else:
-        execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
-        execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
+    execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
+    execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
 def log_exception(message=None):
     import sys, traceback
