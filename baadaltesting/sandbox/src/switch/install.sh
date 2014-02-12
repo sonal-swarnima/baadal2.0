@@ -81,7 +81,7 @@ function run
     --dhcp-option=6,$dns \
     --dhcp-option=nat,option:router,0.0.0.0 \
     --dhcp-option=3,$NETWORK_INTERNAL_IP_GATEWAY \
-    --dhcp-range=$NETWORK_INTERNAL,static
+    --dhcp-range=$NETWORK_INTERNAL,static 1>>$LOGS/log.out 2>>$LOGS/log.err
   status=$?
 
   if [[ $status -ne 0 ]]; then
@@ -93,26 +93,4 @@ function run
   fi
 
   $ECHO_OK Switch Installation Complete
-}
-
-function dns_get
-{
-  if [[ $DNS != '' ]]; then
-    dns=$DNS
-  else
-    dns=$(cat /var/run/dnsmasq/resolv.conf | sed "s:nameserver ::g")
-  fi
-
-  package_install ipcalc
-  ipcalc -b $dns | tee -a $LOGS/log.err | grep INVALID\ ADDRESS 1>>$LOGS/log.out
-  status=$?
-
-  if [[ $status -eq 0 ]]; then
-    $ECHO_ER Failed to retrieve DNS info from sandbox system \(check logs\) OR \
-      manually specify DNS as \'make switch DNS=a.b.c.d\'
-    tail -15 $LOGS/log.err
-    exit 1
-  else
-    $ECHO_OK DNS = $dns
-  fi
 }
