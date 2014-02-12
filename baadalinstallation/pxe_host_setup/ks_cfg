@@ -45,6 +45,9 @@ reboot
 
 (mkdir -p /baadal
 cd /baadal
+wget http://CONTROLLER_IP/.ssh/id_rsa.pub
+touch /root/.ssh/authorized_keys
+cat id_rsa.pub >> /root/.ssh/authorized_keys
 wget http://CONTROLLER_IP/newbaadal.tar
 
 tar xvf newbaadal.tar
