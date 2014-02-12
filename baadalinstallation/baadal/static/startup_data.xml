@@ -10,17 +10,6 @@
 		<row id="1" name="IITD" details="Indian Institute of Technology"/>
 	</table>
 	
-	<table name="vm_config">
-		<row template_id="0" HDD="40" CPU="1" RAM="1"/>
-		<row template_id="0" HDD="40" CPU="1" RAM="2"/>
-		<row template_id="0" HDD="40" CPU="2" RAM="2"/>
-		<row template_id="0" HDD="40" CPU="2" RAM="4"/>
-		<row template_id="0" HDD="40" CPU="4" RAM="4"/>
-		<row template_id="0" HDD="40" CPU="4" RAM="8"/>
-		<row template_id="0" HDD="40" CPU="8" RAM="8"/>
-		<row template_id="0" HDD="40" CPU="8" RAM="16"/>
-	</table>
-	
 	<table name="constants">
 		<row name="baadal_status" value="up"/>
 		<row name="vmfiles_path" value="/mnt/datastore"/>
