@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 
 CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
 
@@ -791,23 +791,32 @@ Configure_Dhcp_Pxe()
 
 Start_Web2py()
 {
+
 	if test ! -d "/var/www/"; then
-		echo "PROBLEM IN APACHE!!!"
-  		echo "EXITING INSTALLATION......................................"
-		exit 1
 
-	elif test ! -f "/var/www/.ssh/id_rsa"; then
-		if test ! -d "/var/www/.ssh"; then
-			mkdir /var/www/.ssh
-			chown -R www-data:www-data /var/www/.
-		fi
+               echo "PROBLEM IN APACHE!!!"
+               echo "EXITING INSTALLATION......................................"
+               exit 1
 
-		su www-data -c "ssh-keygen -t rsa -f /var/www/.ssh/id_rsa -N \"\""
-		echo "BAADAL PUBLIC KEY CREATED!!!"
+	elif test -f "/var/www/.ssh/id_rsa.pub"; then
 
-	elif test -f "/var/www/.ssh/id_rsa"; then
 		echo "PUBLIC KEY ALREADY EXISTS!!!"
+
+	elif test -f "/root/.ssh/id_rsa.pub";then
+
+		cp -r /root/.ssh/ /var/www/.
+		chown -R www-data:www-data /var/www/.ssh/
+
+	else
+
+		ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+		cp -r /root/.ssh/ /var/www/.
+                chown -R www-data:www-data /var/www/.ssh/
+	
 	fi
+
+	touch /root/.ssh/authorized_keys
+	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
@@ -815,7 +824,7 @@ Start_Web2py()
 	sudo -u www-data python -c "from gluon.main import save_password; save_password(\"$WEB2PY_PASSWD\",443)"
 	cd -
 
-	su - www-data -c 'python /home/www-data/web2py/web2py.py -K  baadal &'
+	su www-data -c "python /home/www-data/web2py/web2py.py -K  baadal &"
 
 	rrd_cron_exists=`cat /etc/crontab | grep "rrd_gen_cron.py" | wc -l`
 
