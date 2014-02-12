@@ -14,19 +14,13 @@ function run
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
     
   ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
-  
+
   ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $HOST_INTERFACE
   ovsvsctl_set_port $HOST_INTERFACE "vlan_mode=native-untagged"
-   
-  #Get the IP Address of Host from ifconfig.
-  host_ip="$(/sbin/ifconfig $HOST_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
-  ifconfig_noip $HOST_INTERFACE
-  ifconfig_ip $OVS_BRIDGE_INTERNAL $host_ip $VLAN_NETMASK
-  route_add_net $NETWORK_INTERNAL_IP_NAT 0.0.0.0 $OVS_BRIDGE_INTERNAL
 
-  #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
-  baseaddr="$(echo $host_ip | cut -d. -f1-2)"
-  
+  ifconfig_noip $HOST_INTERFACE
+  ifconfig_dhcp $OVS_BRIDGE_INTERNAL
+
   echo "net.ipv4.ip_forward = 1" > /etc/sysctl.conf
   echo 1 > /proc/sys/net/ipv4/ip_forward
 
@@ -41,12 +35,9 @@ function run
   address 0.0.0.0\n
   \n
   auto $OVS_BRIDGE_INTERNAL\n
-  iface $OVS_BRIDGE_INTERNAL inet static\n
-  address $host_ip\n
-  netmask $VLAN_NETMASK\n
-  gateway $NETWORK_INTERNAL_IP_NAT\n
+  iface $OVS_BRIDGE_INTERNAL inet dhcp\n
   "
-  
+
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
     do
       ovsvsctl_add_fake_br_force vlan$i $OVS_BRIDGE_INTERNAL $i
