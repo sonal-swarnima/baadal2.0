@@ -70,7 +70,7 @@ Enbl_Modules()
 
 	touch ovs-net.xml
 	ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='OVS_BRIDGE_NAME'/>\n<virtualport type='openvswitch'/>\n"
-	for ((i=$VLAN_START;i<=$VLAN_END;i++))
+	for ((i=1;i<=255;i++))
 	do
 		ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
 	done
