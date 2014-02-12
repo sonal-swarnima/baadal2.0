@@ -108,11 +108,22 @@ def check_db_storage_type():
         return True
     return False
     
+#Creates entry into DHCP
 def create_dhcp_entry(host_name, mac_addr, ip_addr):
 
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
+    restart_cmd = '/etc/init.d/isc-dhcp-server restart'
+    
+    execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
+    execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
+
+#Removes entry into DHCP
+def remove_dhcp_entry(host_name, mac_addr, ip_addr):
+    config = get_config_file()
+    dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
+    entry_cmd = 'sed -i -e "s/host %s.*{.*hardware ethernet %s;.*fixed-address %s;.*}//" /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
     restart_cmd = '/etc/init.d/isc-dhcp-server restart'
     
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
