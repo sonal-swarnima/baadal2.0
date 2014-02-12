@@ -142,13 +142,12 @@ def get_security_domain_form(req_type):
     form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30, create=create)
     return form
 
+# Check if the security domain can be deleted
 def check_delete_security_domain(sd_id):
     if db((db.vm_data.security_domain == sd_id)).count() > 0:
         return SECURITY_DOMAIN_DELETE_MESSAGE
-    elif db.security_domain[sd_id].name == 'Research':
-        return 'Security Domain ''Research'' can''t be deleted.'
-    elif db.security_domain[sd_id].name == 'Private':
-        return 'Security Domain ''Private'' can''t be deleted.'
+    elif db.security_domain[sd_id].name in ('Research', 'Private', 'Infrastructure'):
+        return 'Security Domain %s can''t be deleted.' %(db.security_domain[sd_id].name)
     
 def get_all_pending_requests():
 
