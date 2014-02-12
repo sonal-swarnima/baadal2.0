@@ -6,7 +6,8 @@ if 0:
     from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac
+from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
+    remove_dhcp_entry
 from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram
 
@@ -519,6 +520,10 @@ def updte_host_status(host_id, status):
         put_host_in_maint_mode(host_id)
         
 def delete_host_from_db(host_id):
+    
+    host_data = db.host[host_id]
+    private_ip_data = db.private_ip_pool(private_ip = host_data.host_ip)    
+    remove_dhcp_entry(host_data.host_name, private_ip_data['mac_addr'], private_ip_data['private_ip'])
     del db.host[host_id]
     
 def get_util_period_form():
