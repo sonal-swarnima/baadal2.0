@@ -36,15 +36,17 @@ def get_datetime():
     import datetime
     return datetime.datetime.now()
 
-
+# Get value from table 'costants'
 def get_constant(constant_name):
     constant = current.db.constants(name = constant_name)['value']
     return constant
 
+# Update value into table 'costants'
 def update_constant(constant_name, constant_value):
     current.db(current.db.constants.name == constant_name).update(value = constant_value)
     return 
 
+#Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password=None):
 
     import paramiko
@@ -53,17 +55,21 @@ def execute_remote_cmd(machine_ip, user_name, command, password=None):
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(machine_ip, username = user_name, password = password)
     stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
-    output = stdout.readlines()
-    if stderr.readlines():
-        raise
-    return output[0]
+    
+    output = "".join(stdout.readlines())
+    error = "".join(stderr.readlines())
+    if error:
+        raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
+    
+    return output
 
-
+#Checks if string represents 4 octets seperated by decimal.
 def is_valid_ipv4(value):
     regex = re.compile(
         '^(([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])\.){3}([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])$')
     return regex.match(value)
 
+#Validates each IP string, checks if first three octets are same; and the last octet has a valid range.
 def validate_ip_range(ipFrom, ipTo):
     
     if is_valid_ipv4(ipFrom) and is_valid_ipv4(ipTo):
@@ -84,7 +90,6 @@ def get_ips_in_range(ipFrom, ipTo):
     for x in range(int(ip1[3]), int(ip2[3])+1):
         ip_addr_lst.append(subnet + str(x))
     return ip_addr_lst
-
 
 # Generates MAC address
 def generate_random_mac():
