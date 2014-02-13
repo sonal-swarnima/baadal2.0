@@ -106,6 +106,5 @@ Instl_Pkgs
 Enbl_Modules
 hostname baadal-host
 echo "baadal-host" > /etc/hostname
-reboot
 
 
