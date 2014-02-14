@@ -740,9 +740,8 @@ Configure_Dhcp_Pxe()
 
         echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 	sed -i -e "s/option domain-name/#option domain-name/g" /etc/dhcp/dhcpd.conf
-	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
-	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
-	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
+
+	echo "option domain-name-servers $DNS_SERVERS;" >> /etc/dhcp/dhcpd.conf
 
 	sed -i -e "s/INTERFACES=\"\"/INTERFACES="$OVS_BRIDGE_NAME" $VLANS" /etc/default/isc-dhcp-server
 
