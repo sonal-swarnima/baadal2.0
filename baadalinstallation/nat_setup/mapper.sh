@@ -41,8 +41,8 @@ elif test $# -eq 3; then
 
 					if test "$(cat db.err)" == ""; then
 
-						iptables -t nat -A PREROUTING -i eth0 -d $2 -j DNAT --to-destination $3 2> iptables.err
-						iptables -t nat -A POSTROUTING -s $3 -o eth0 -j SNAT --to-source $2 2>> iptables.err
+						iptables -t nat -I PREROUTING 1 -i eth0 -d $2 -j DNAT --to-destination $3 2> iptables.err
+						iptables -t nat -I POSTROUTING 1 -s $3 -o eth0 -j SNAT --to-source $2 2>> iptables.err
 
 						if test "$(cat iptables.err)" == ""; then
 
