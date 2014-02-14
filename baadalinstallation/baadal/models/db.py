@@ -138,7 +138,7 @@ db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('vlan',
     Field('name', 'string', length = 30, notnull = True, unique = True),
-    Field('vlan_tag', 'string', length = 30, notnull = True, unique = True),
+    Field('vlan_tag', 'string', length = 30, notnull = True),
     Field('vlan_addr', 'string', length = 15, notnull = True, requires=IS_IPV4()),
     format = '%(name)s')
 

@@ -10,9 +10,9 @@ if test $# -eq 0; then
 	ip_mapping_list=(`echo "$ip_mapping_string" | tr " " " "`)
 	echo "" > restart.err
 	
-	for ip_mapping in ${mapping_list[@]}; do
+	for ip_mapping in ${ip_mapping_list[@]}; do
 	
-		ip_pair=(`echo "$ip_{mapping}" | tr "|" " "`)
+		ip_pair=(`echo "$ip_mapping" | tr "|" " "`)
 		public_ip=${ip_pair[0]}
 		private_ip=${ip_pair[1]}
 		mapping_name=(`echo "$private_ip" | tr "." " "`)

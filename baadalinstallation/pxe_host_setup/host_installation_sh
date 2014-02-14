@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Normal_pkg_lst=(python qemu-kvm gconf2 librsvg2-common python-appindicator python-dbus python-glade2 python-gnome2 python-gtk-vnc python-gtk2 python-urlgrabber python-vte intltool libvirt-glib-1.0-dev nfs-common kvm-ipxe vim libnl-dev gcc pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude  openssh-server cgroup-bin libpciaccess-dev)
+Normal_pkg_lst=(python qemu-kvm gconf2 librsvg2-common python-appindicator python-dbus python-glade2 python-gnome2 python-gtk-vnc python-gtk2 python-urlgrabber python-vte intltool libvirt-glib-1.0-dev nfs-common kvm-ipxe vim libnl-dev gcc pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude  openssh-server cgroup-bin libpciaccess-dev libglib2.0-dev)
 
 ############################################################################################################################
  
@@ -62,15 +62,15 @@ Enbl_Modules()
 		echo "Unable to start libvirtd. Check installation and try again"
 		exit $?
 	fi
-	sed -i -e "s@exit 0@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
+	sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
 
 	#CREATE LIBVIRT NETWORK
 	virsh net-destroy default
 	virsh net-autostart --disable default
 
 	touch ovs-net.xml
-	ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='$OVS_BRIDGE_INTERNAL'/>\n<virtualport type='openvswitch'/>\n"
-	for ((i=$VLAN_START;i<=$VLAN_END;i++))
+	ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='OVS_BRIDGE_NAME'/>\n<virtualport type='openvswitch'/>\n"
+	for ((i=1;i<=255;i++))
 	do
 		ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
 	done
@@ -106,6 +106,5 @@ Instl_Pkgs
 Enbl_Modules
 hostname baadal-host
 echo "baadal-host" > /etc/hostname
-reboot
 
 

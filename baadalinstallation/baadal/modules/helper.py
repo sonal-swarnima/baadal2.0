@@ -36,34 +36,48 @@ def get_datetime():
     import datetime
     return datetime.datetime.now()
 
-
+# Get value from table 'costants'
 def get_constant(constant_name):
     constant = current.db.constants(name = constant_name)['value']
     return constant
 
+# Update value into table 'costants'
 def update_constant(constant_name, constant_value):
     current.db(current.db.constants.name == constant_name).update(value = constant_value)
     return 
 
+#Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password=None):
 
-    import paramiko
-
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(machine_ip, username = user_name, password = password)
-    stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
-    output = stdout.readlines()
-    if stderr.readlines():
+    output = None
+    try:
+        import paramiko
+    
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(machine_ip, username = user_name, password = password)
+        stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
+        
+        output = "".join(stdout.readlines())
+        error = "".join(stderr.readlines())
+        if (stdout.channel.recv_exit_status()) == 1:
+            raise Exception("Exception while executing command %s on %s: %s" %(command, machine_ip, error))
+    except paramiko.SSHException:
+        log_exception()
         raise
-    return output[0]
+    finally:
+        if ssh:
+            ssh.close()
+    
+    return output
 
-
+#Checks if string represents 4 octets seperated by decimal.
 def is_valid_ipv4(value):
     regex = re.compile(
         '^(([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])\.){3}([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])$')
     return regex.match(value)
 
+#Validates each IP string, checks if first three octets are same; and the last octet has a valid range.
 def validate_ip_range(ipFrom, ipTo):
     
     if is_valid_ipv4(ipFrom) and is_valid_ipv4(ipTo):
@@ -84,7 +98,6 @@ def get_ips_in_range(ipFrom, ipTo):
     for x in range(int(ip1[3]), int(ip2[3])+1):
         ip_addr_lst.append(subnet + str(x))
     return ip_addr_lst
-
 
 # Generates MAC address
 def generate_random_mac():
@@ -108,6 +121,7 @@ def check_db_storage_type():
         return True
     return False
     
+#Creates entry into DHCP
 def create_dhcp_entry(host_name, mac_addr, ip_addr):
 
     config = get_config_file()
@@ -115,12 +129,18 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
     entry_cmd = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
     restart_cmd = '/etc/init.d/isc-dhcp-server restart'
     
-    if dhcp_ip == 'localhost':
-        os.system(entry_cmd)
-        os.system(restart_cmd)
-    else:
-        execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
-        execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
+    execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
+    execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
+
+#Removes entry into DHCP
+def remove_dhcp_entry(host_name, mac_addr, ip_addr):
+    config = get_config_file()
+    dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
+    entry_cmd = 'sed -i -e "s/host %s.*{.*hardware ethernet %s;.*fixed-address %s;.*}//" /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
+    restart_cmd = '/etc/init.d/isc-dhcp-server restart'
+    
+    execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
+    execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
 def log_exception(message=None):
     import sys, traceback

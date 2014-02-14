@@ -10,24 +10,13 @@
 		<row id="1" name="IITD" details="Indian Institute of Technology"/>
 	</table>
 	
-	<table name="vm_config">
-		<row template_id="0" HDD="40" CPU="1" RAM="1"/>
-		<row template_id="0" HDD="40" CPU="1" RAM="2"/>
-		<row template_id="0" HDD="40" CPU="2" RAM="2"/>
-		<row template_id="0" HDD="40" CPU="2" RAM="4"/>
-		<row template_id="0" HDD="40" CPU="4" RAM="4"/>
-		<row template_id="0" HDD="40" CPU="4" RAM="8"/>
-		<row template_id="0" HDD="40" CPU="8" RAM="8"/>
-		<row template_id="0" HDD="40" CPU="8" RAM="16"/>
-	</table>
-	
 	<table name="constants">
 		<row name="baadal_status" value="up"/>
 		<row name="vmfiles_path" value="/mnt/datastore"/>
 		<row name="datastore_int" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
 		<row name="archives_dir" value="vm_deleted"/>
-        <row name="migration_data" value="vm_migration_data"/>
+                <row name="migration_data" value="vm_migration_data"/>
 		<row name="vncport_start_range" value="20000"/>
 		<row name="vncport_end_range" value="50000"/>
 		<row name="vm_rrds_dir" value="vm_rrds"/>
@@ -47,7 +36,7 @@
 	<table name="security_domain">
 		<row id="1" name="Private" vlan="1" visible_to_all="False" />
 		<row id="2" name="Infrastructure" vlan="2" visible_to_all="False" />
-		<row id="3" name="Research" vlan="2" visible_to_all="True" />
+		<row id="3" name="Research" vlan="3" visible_to_all="True" />
 	</table>
 
 	<table name="user">
