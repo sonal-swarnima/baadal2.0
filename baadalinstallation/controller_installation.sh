@@ -89,6 +89,11 @@ Chk_installation_config()
 		echo "Please speficy mysql root password!!!"
 		exit 1
 	fi
+	
+	if test -z "$RUN_MODE"; then
+		echo "Please specify run mode!!"
+		exit 1
+	fi
 
 	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_PARENT_BAADALREPO" == "" || test "$BAADAL_REPO_DIR" == ""; then
 		echo "TFTP Setup config missing/incomplete!!!"
@@ -122,8 +127,8 @@ Chk_installation_config()
 		exit 1
 	fi
 
-	if test "$PRIMARY_NETWORK_INTERFACE" == ""; then
-		echo "Primary Interface info missing!!!"
+	if test "$OVS_BRIDGE_NAME" == ""; then
+		echo "OVS Bridge missing!!!"
 		exit 1
 	fi
 
@@ -812,8 +817,17 @@ Start_Web2py()
 	
 	fi
 
-	touch /root/.ssh/authorized_keys
-	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+	if test ! -f /root/.ssh/authorized_keys;then
+		touch /root/.ssh/authorized_keys
+	fi
+
+	chmod 644 /root/.ssh/authorized_keys
+	chmod -r 666 /var/www/.ssh/	
+	chmod 400 /var/www/.ssh/id_rsa
+
+	if test "$RUN_MODE" == "production"; then
+		cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+	fi 
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
