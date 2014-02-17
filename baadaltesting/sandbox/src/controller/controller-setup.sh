@@ -47,7 +47,7 @@ function run
   iface $OVS_BRIDGE_INTERNAL inet static\n
   address $controller_ip\n
   netmask $VLAN_NETMASK\n
-  nameserver $dns\n
+  dns-nameservers $dns\n
   gateway $NETWORK_INTERNAL_IP_NAT\n
   "
  

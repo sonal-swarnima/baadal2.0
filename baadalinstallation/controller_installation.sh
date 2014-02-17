@@ -89,6 +89,11 @@ Chk_installation_config()
 		echo "Please speficy mysql root password!!!"
 		exit 1
 	fi
+	
+	if test -z "$RUN_MODE"; then
+		echo "Please specify run mode!!"
+		exit 1
+	fi
 
 	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_PARENT_BAADALREPO" == "" || test "$BAADAL_REPO_DIR" == ""; then
 		echo "TFTP Setup config missing/incomplete!!!"
@@ -122,8 +127,8 @@ Chk_installation_config()
 		exit 1
 	fi
 
-	if test "$PRIMARY_NETWORK_INTERFACE" == ""; then
-		echo "Primary Interface info missing!!!"
+	if test "$OVS_BRIDGE_NAME" == ""; then
+		echo "OVS Bridge missing!!!"
 		exit 1
 	fi
 
@@ -740,9 +745,8 @@ Configure_Dhcp_Pxe()
 
         echo -e $final_subnet_string >> /etc/dhcp/dhcpd.conf
 	sed -i -e "s/option domain-name/#option domain-name/g" /etc/dhcp/dhcpd.conf
-	nameservers=$(grep "nameserver" /etc/resolv.conf | cut -d" " -f2)
-	nameserver_str=$(echo $nameservers | sed -e "s/ /, /g")
-	echo "option domain-name-servers $nameserver_str;" >> /etc/dhcp/dhcpd.conf
+
+	echo "option domain-name-servers $DNS_SERVERS;" >> /etc/dhcp/dhcpd.conf
 
 	sed -i -e "s/INTERFACES=\"\"/INTERFACES="$OVS_BRIDGE_NAME" $VLANS" /etc/default/isc-dhcp-server
 
@@ -813,8 +817,25 @@ Start_Web2py()
 	
 	fi
 
+<<<<<<< HEAD
+	if test ! -f /root/.ssh/authorized_keys;then
+		touch /root/.ssh/authorized_keys
+	fi
+
+	chmod 644 /root/.ssh/authorized_keys
+	chmod -r 666 /var/www/.ssh/	
+	chmod 400 /var/www/.ssh/id_rsa
+
+	if test "$RUN_MODE" == "production"; then
+		cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+	fi 
+=======
+	chmod 666 /var/www/.ssh/	
+	chmod 400 /var/www/.ssh/id_rsa
+	mkdir /root/.ssh
 	touch /root/.ssh/authorized_keys
 	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+>>>>>>> 503e8ec469b38674673cb3b9fc8c016668ac52f2
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py

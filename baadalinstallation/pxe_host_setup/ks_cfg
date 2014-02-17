@@ -58,21 +58,21 @@ apt-get update
 
 # TODO
 # Remove this. Install `make` from CD when Ubuntu is being installed.
-apt-get install -y make
+apt-get install -y make linux-headers-3.2.0-29-generic
 
 make openvswitch
+make host-setup
 
 
 cd /baadal/baadal/baadalinstallation/pxe_host_setup
 chmod u+x ./host_installation.sh
 ./host_installation.sh
 
-cd -
-make host-setup
+
 cd /baadal
 wget http://CONTROLLER_IP/.ssh/id_rsa.pub
 touch /root/.ssh/authorized_keys
 cat id_rsa.pub >> /root/.ssh/authorized_keys
 rm id_rsa.pub) 1> /var/log/installation.log 2>&1  
 
-i%end
+%end
