@@ -1,15 +1,8 @@
 function run
 {  
   check_root
-  
-  hostname="$(uname -n)"
-  if [ "$hostname" != "$HOST_HOSTNAME" ]
-  then
-    $ECHO_ER Hostname not found equal to $HOST_HOSTNAME. This script should be run on HOST.
-    $ECHO_ER Please correct the hostname or check the underlying system before running.
-    exit 1
-  fi
-  
+
+  baseaddr=$(ifconfig $HOST_INTERFACE | grep "inet addr" | cut -d":" -f2| cut -d" " -f1 | cut -d"." -f1,2 )
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
     

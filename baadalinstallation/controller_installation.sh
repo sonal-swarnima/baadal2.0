@@ -812,6 +812,9 @@ Start_Web2py()
 	
 	fi
 
+	chmod 666 /var/www/.ssh/	
+	chmod 400 /var/www/.ssh/id_rsa
+	mkdir /root/.ssh
 	touch /root/.ssh/authorized_keys
 	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 
