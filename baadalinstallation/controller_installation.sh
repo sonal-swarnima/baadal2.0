@@ -817,6 +817,7 @@ Start_Web2py()
 	
 	fi
 
+<<<<<<< HEAD
 	if test ! -f /root/.ssh/authorized_keys;then
 		touch /root/.ssh/authorized_keys
 	fi
@@ -828,6 +829,13 @@ Start_Web2py()
 	if test "$RUN_MODE" == "production"; then
 		cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 	fi 
+=======
+	chmod 666 /var/www/.ssh/	
+	chmod 400 /var/www/.ssh/id_rsa
+	mkdir /root/.ssh
+	touch /root/.ssh/authorized_keys
+	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+>>>>>>> 503e8ec469b38674673cb3b9fc8c016668ac52f2
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
