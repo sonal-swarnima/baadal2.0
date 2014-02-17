@@ -2,7 +2,6 @@ function run
 {  
   check_root
 
-  baseaddr=$(ifconfig $HOST_INTERFACE | grep "inet addr" | cut -d":" -f2| cut -d" " -f1 | cut -d"." -f1,2 )
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
     
