@@ -12,7 +12,7 @@ function run
   file_run "mkdir -p /baadal/data/vm_templates"
 
   config_get NETWORK_INTERNAL
-  exports_str="/baadal/data $NETWORK_INTERNAL/16(rw,sync,no_root_squash,no_all_squash)\n"
+  exports_str="/baadal/data $NETWORK_INTERNAL/16(rw,sync,no_root_squash,no_all_squash,subtree_check)\n"
 
   echo -e $exports_str > /etc/exports
 
