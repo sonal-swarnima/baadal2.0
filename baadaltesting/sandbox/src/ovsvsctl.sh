@@ -83,6 +83,26 @@ function ovsvsctl_set_port
   fi
 }
 
+# function for ovs-vsctl set bridge
+function ovsvsctl_set_bridge
+{
+  bridge=$1
+  arg=$2
+
+  $ECHO_PROGRESS "Setting bridge $port parameter"
+
+  ovs-vsctl set bridge $bridge $arg 1>>$LOGS/log.out 2>>$LOGS/log.err
+  status=$?
+
+  if [[ $status -ne 0 ]]; then
+    $ECHO_ER Setting bridge $port parameter failed. Please check logs.
+    tail -$LOG_SIZE $LOGS/log.err
+    exit 1
+  else
+    $ECHO_OK Bridge $port parameter set.
+  fi
+}
+
 # function for ovs-vsctl add-port
 function ovsvsctl_add_port_force
 {

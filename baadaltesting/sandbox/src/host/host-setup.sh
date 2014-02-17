@@ -17,9 +17,15 @@ function run
 
   ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $HOST_INTERFACE
   ovsvsctl_set_port $HOST_INTERFACE "vlan_mode=native-untagged"
+  INTERFACE_MAC=$(cat /sys/class/net/$HOST_INTERFACE/address)
+  ovsvsctl_set_bridge $OVS_BRIDGE_INTERNAL "other-config:hwaddr=$INTERFACE_MAC"
 
   ifconfig_noip $HOST_INTERFACE
   ifconfig_dhcp $OVS_BRIDGE_INTERNAL
+
+  #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
+  host_ip="$(/sbin/ifconfig $OVS_BRIDGE_INTERNAL | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+  baseaddr="$(echo $host_ip | cut -d. -f1-2)"
 
   echo "net.ipv4.ip_forward = 1" > /etc/sysctl.conf
   echo 1 > /proc/sys/net/ipv4/ip_forward

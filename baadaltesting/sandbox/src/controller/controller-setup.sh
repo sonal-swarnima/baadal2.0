@@ -18,6 +18,8 @@ function run
   
   ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $CONTROLLER_INTERFACE
   ovsvsctl_set_port $CONTROLLER_INTERFACE "vlan_mode=native-untagged"
+  INTERFACE_MAC=$(cat /sys/class/net/$CONTROLLER_INTERFACE/address)
+  ovsvsctl_set_bridge $OVS_BRIDGE_INTERNAL "other-config:hwaddr=$INTERFACE_MAC"
    
   #Get the IP Address of Controller from ifconfig.
   controller_ip="$(/sbin/ifconfig $CONTROLLER_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
