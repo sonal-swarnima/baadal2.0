@@ -705,9 +705,7 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
 	rm -rf $TFTP_DIR/pxelinux.cfg
         mkdir $TFTP_DIR/pxelinux.cfg
-        touch $TFTP_DIR/pxelinux.cfg/default
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
-        touch $TFTP_DIR/mybootmenu.cfg
         echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
@@ -817,11 +815,6 @@ Start_Web2py()
 	
 	fi
 
-<<<<<<< HEAD
-	if test ! -f /root/.ssh/authorized_keys;then
-		touch /root/.ssh/authorized_keys
-	fi
-
 	chmod 644 /root/.ssh/authorized_keys
 	chmod -r 666 /var/www/.ssh/	
 	chmod 400 /var/www/.ssh/id_rsa
@@ -829,13 +822,6 @@ Start_Web2py()
 	if test "$RUN_MODE" == "production"; then
 		cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 	fi 
-=======
-	chmod 666 /var/www/.ssh/	
-	chmod 400 /var/www/.ssh/id_rsa
-	mkdir /root/.ssh
-	touch /root/.ssh/authorized_keys
-	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
->>>>>>> 503e8ec469b38674673cb3b9fc8c016668ac52f2
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
