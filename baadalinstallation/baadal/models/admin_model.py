@@ -7,7 +7,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
-    remove_dhcp_entry
+    remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd
 
@@ -102,6 +102,7 @@ def add_public_ip_range(rangeFrom, rangeTo):
 def add_private_ip_range(rangeFrom, rangeTo, vlan):
 
     failed = 0
+    dhcp_info_list = []
     for ip_addr in get_ips_in_range(rangeFrom, rangeTo):
         mac_address = None
         while True:
@@ -114,7 +115,8 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
         else:
             idx = db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
             if vlan != HOST_VLAN_ID:
-                create_dhcp_entry('baadal_vm'+str(idx), mac_address, ip_addr)
+                dhcp_info_list.append(('baadal_vm'+str(idx), mac_address, ip_addr))
+    create_dhcp_bulk_entry(dhcp_info_list)
     return failed
 
 
@@ -429,7 +431,8 @@ def get_host_form(host_ip):
 
 def configure_host_by_mac(mac_addr):
     
-    avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))&(db.private_ip_pool.vlan==HOST_VLAN_ID)).select(db.private_ip_pool.private_ip).first()['private_ip']
+    avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
+                & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip).first()['private_ip']
     if avl_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_ip))
         host_name = 'host'+str(avl_ip.split('.')[3])

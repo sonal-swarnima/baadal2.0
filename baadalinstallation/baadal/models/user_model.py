@@ -56,7 +56,7 @@ def set_configuration_elem(form):
     configVal = configVal.split(',')
     
     form.vars.vCPU = int(configVal[0])
-    form.vars.RAM = int(configVal[1])*1024
+    form.vars.RAM = float(configVal[1])*1024
     form.vars.HDD = int(configVal[2])
     if form.vars.extra_HDD == None:
         form.vars.extra_HDD = 0
@@ -214,9 +214,9 @@ def get_vm_config(vm_id):
     
     vm_info_map = {'id'               : str(vminfo.id),
                    'name'             : str(vminfo.vm_name),
-                   'hdd'              : str(vminfo.HDD)+'GB' + ('+ ' + str(vminfo.extra_HDD) + 'GB' if vminfo.extra_HDD!=0 else ''),
-                   'ram'              : str(vminfo.RAM),
-                   'vcpus'            : str(vminfo.vCPU),
+                   'hdd'              : str(vminfo.HDD)+' GB' + ('+ ' + str(vminfo.extra_HDD) + ' GB' if vminfo.extra_HDD!=0 else ''),
+                   'ram'              : str(vminfo.RAM) + ' MB',
+                   'vcpus'            : str(vminfo.vCPU) + ' CPU',
                    'status'           : get_vm_status(vminfo.status),
                    'ostype'           : 'Linux',
                    'purpose'          : str(vminfo.purpose),

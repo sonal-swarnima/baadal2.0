@@ -54,7 +54,7 @@ def get_host_ram(host_ip):
 
 
 def get_host_hdd(host_ip):
-    command = "fdisk -l | egrep 'Disk.*bytes' | awk '{ sub(/,/,""); sum +=$3;} END {print sum}'"
+    command = "fdisk -l | egrep 'Disk.*bytes' | awk '{ sub(/,/,\"\"); sum +=$3;} END {print sum}'"
     ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. 500.1 kB
     hdd_in_gb = int(round(int(ret),0))
     return hdd_in_gb

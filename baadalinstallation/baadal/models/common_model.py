@@ -41,7 +41,7 @@ def get_hosted_vm_list(vms):
                    'private_ip' : vm.private_ip, 
                    'public_ip' : vm.public_ip, 
                    'hostip' : vm.host_id.host_ip,
-                   'RAM' : str(int(round(vm.RAM/1024))) + 'GB',
+                   'RAM' : str(round((vm.RAM/1024.0),2)) + ' GB',
                    'vcpus' : str(vm.vCPU) + ' CPU',
                    'status' : get_vm_status(vm.status)}
         vmlist.append(element)
@@ -80,7 +80,7 @@ def update_edit_config_request(vm_request, element):
     vm_data = db.vm_data[vm_request.parent_id]
     
     element['parent_vm_id'] = vm_request.parent_id
-    element['old_RAM'] = str(vm_data.RAM/1024)+'GB'
+    element['old_RAM'] = str(round((vm_data.RAM/1024.0),2))+' GB'
     if vm_request.RAM == vm_data.RAM:
         element['RAM'] = 'Same'
     
@@ -135,8 +135,8 @@ def get_pending_request_list(vm_requests):
                    'org_id' : vm_request.requester_id.organisation_id,
                    'organisation' : vm_request.requester_id.organisation_id.name,
                    'vCPUs' : str(vm_request.vCPU)+' CPU', 
-                   'RAM' : str(vm_request.RAM/1024) + 'GB' if vm_request.RAM else None, 
-                   'HDD' : str(vm_request.HDD) + 'GB' if vm_request.HDD else None,
+                   'RAM' : str(round((vm_request.RAM/1024.0),2)) + ' GB' if vm_request.RAM else None, 
+                   'HDD' : str(vm_request.HDD) + ' GB' if vm_request.HDD else None,
                    'request_type' : vm_request.request_type,
                    'status' : vm_request.status}
         

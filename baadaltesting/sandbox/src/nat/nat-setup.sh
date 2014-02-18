@@ -33,6 +33,8 @@ function run
   
   ovsvsctl_add_port $OVS_BRIDGE_INTERNAL $NAT_INTERNAL_INTERFACE
   ovsvsctl_set_port $NAT_INTERNAL_INTERFACE "vlan_mode=native-untagged"
+  INTERFACE_MAC=$(cat /sys/class/net/$NAT_INTERNAL_INTERFACE/address)
+  ovsvsctl_set_bridge $OVS_BRIDGE_INTERNAL "other-config:hwaddr=$INTERFACE_MAC"
    
   #Get the IP Address of NAT from ifconfig.
   nat_ip="$(/sbin/ifconfig $NAT_INTERNAL_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
