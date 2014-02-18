@@ -16,7 +16,7 @@ rootpw --iscrypted $1$/4ksSDdC$QpZKK9Dyy4QnObPnEY7Z..
 #Initial user
 user baadalhost --fullname "Baadal Host" --iscrypted --password $1$/ehGLNTG$jxEnH4EBuK.4Emnkm67X1/
 #Reboot after installation
-
+reboot
 #Install OS instead of upgrade
 install
 #Use Web installation
@@ -34,13 +34,15 @@ part / --fstype ext4 --size 1 --grow --onpart sda3
 #System authorization infomation
 auth  --useshadow  --enablemd5
 #Network information
-network --bootproto=dhcp --device=eth0
+network --bootproto=dhcp --hostname=baadal-host --device=eth0
 #Firewall configuration
-firewall --disabled --trust=eth0 --http --ftp --ssh --telnet --smtp
+firewall --disabled
 #Do not configure the X Window System
 skipx
-reboot
 
+%packages
+openssh-server
+make
 %post
 
 (mkdir -p /baadal
@@ -54,11 +56,6 @@ cp /etc/apt/sources.list /etc/apt/sources.list.bak
 cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/sources.list
 
 cd /baadal/baadal/baadaltesting/sandbox
-apt-get update
-
-# TODO
-# Remove this. Install `make` from CD when Ubuntu is being installed.
-apt-get install -y make linux-headers-3.2.0-29-generic
 
 make openvswitch
 make host-setup
@@ -71,7 +68,7 @@ chmod u+x ./host_installation.sh
 
 cd /baadal
 wget http://CONTROLLER_IP/.ssh/id_rsa.pub
-touch /root/.ssh/authorized_keys
+mkdir -p /root/.ssh
 cat id_rsa.pub >> /root/.ssh/authorized_keys
 rm id_rsa.pub) 1> /var/log/installation.log 2>&1  
 

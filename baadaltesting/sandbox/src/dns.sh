@@ -3,7 +3,7 @@ function dns_get
   if [[ $DNS != '' ]]; then
     dns=$DNS
   else
-    dns=$(cat /var/run/dnsmasq/resolv.conf | sed "s:nameserver ::g" | head -n 1)
+    dns=$(cat /var/run/dnsmasq/resolv.conf | grep "nameserver" | sed "s:nameserver ::g" | head -n 1)
   fi
 
   package_install ipcalc
@@ -11,7 +11,7 @@ function dns_get
   status=$?
 
   if [[ $status -eq 0 ]]; then
-    dns=$(cat /etc/resolv.conf | sed "s:nameserver ::g" | head -n 1)
+    dns=$(cat /etc/resolv.conf | grep "nameserver" | sed "s:nameserver ::g" | head -n 1)
 
     ipcalc -b $dns | tee -a $LOGS/log.err | grep INVALID\ ADDRESS 1>>$LOGS/log.out
     status=$?

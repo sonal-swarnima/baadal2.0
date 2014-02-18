@@ -68,7 +68,6 @@ Enbl_Modules()
 	virsh net-destroy default
 	virsh net-autostart --disable default
 
-	touch ovs-net.xml
 	ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='OVS_BRIDGE_NAME'/>\n<virtualport type='openvswitch'/>\n"
 	for ((i=1;i<=255;i++))
 	do
@@ -104,7 +103,5 @@ apt-get update && apt-get -y upgrade
 Chk_Gateway
 Instl_Pkgs
 Enbl_Modules
-hostname baadal-host
-echo "baadal-host" > /etc/hostname
 
 

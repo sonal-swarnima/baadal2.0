@@ -186,6 +186,7 @@ filer: $(BIN_FILER)
 	@ sudo $<
 
 filer-setup: $(BIN_FILER_SETUP)
+	@ sudo apt-get install nfs-kernel-server
 	@ sudo $<
   
 nat: $(BIN_NAT)
