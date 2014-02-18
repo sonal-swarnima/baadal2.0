@@ -83,7 +83,7 @@ def get_manage_private_ip_pool_form():
                                         'To: ', 
                                         INPUT(_name='rangeTo', _id='private_ip_pool_rangeTo')),TD()))
         
-        grid.create_form.process()
+        grid.create_form.process(onsuccess=lambda form: add_private_ip(form.vars.id))
 
     return grid
 
@@ -118,6 +118,19 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
                 dhcp_info_list.append(('baadal_vm'+str(idx), mac_address, ip_addr))
     create_dhcp_bulk_entry(dhcp_info_list)
     return failed
+
+
+#Generate mac address and add them with IP
+def add_private_ip(ip_pool_id):
+
+    private_ip_pool = db.private_ip_pool[ip_pool_id]
+
+    mac_address = None
+    while True:
+        if private_ip_pool.vlan != HOST_VLAN_ID:
+            mac_address = generate_random_mac()
+            create_dhcp_entry('baadal_vm'+str(ip_pool_id), mac_address, private_ip_pool.private_ip)
+        if not (db.private_ip_pool(mac_addr=mac_address)):break
 
 
 def get_org_visibility(row):
