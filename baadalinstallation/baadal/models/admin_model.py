@@ -105,10 +105,10 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
     dhcp_info_list = []
     for ip_addr in get_ips_in_range(rangeFrom, rangeTo):
         mac_address = None
-        while True:
-            if vlan != HOST_VLAN_ID:
+        if vlan != HOST_VLAN_ID:
+            while True:
                 mac_address = generate_random_mac()
-            if not (db.private_ip_pool(mac_addr=mac_address)):break
+                if not (db.private_ip_pool(mac_addr=mac_address)):break
         
         if(db.private_ip_pool(private_ip=ip_addr)):
             failed += 1
@@ -116,6 +116,7 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
             idx = db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
             if vlan != HOST_VLAN_ID:
                 dhcp_info_list.append(('baadal_vm'+str(idx), mac_address, ip_addr))
+
     create_dhcp_bulk_entry(dhcp_info_list)
     return failed
 
@@ -123,14 +124,13 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
 #Generate mac address and add them with IP
 def add_private_ip(ip_pool_id):
 
-    private_ip_pool = db.private_ip_pool[ip_pool_id]
-
-    mac_address = None
-    while True:
-        if private_ip_pool.vlan != HOST_VLAN_ID:
+    if private_ip_pool.vlan != HOST_VLAN_ID:
+        private_ip_pool = db.private_ip_pool[ip_pool_id]
+        mac_address = None
+        while True:
             mac_address = generate_random_mac()
-            create_dhcp_entry('baadal_vm'+str(ip_pool_id), mac_address, private_ip_pool.private_ip)
-        if not (db.private_ip_pool(mac_addr=mac_address)):break
+            if not (db.private_ip_pool(mac_addr=mac_address)):break
+        create_dhcp_entry('baadal_vm'+str(ip_pool_id), mac_address, private_ip_pool.private_ip)
 
 
 def get_org_visibility(row):
