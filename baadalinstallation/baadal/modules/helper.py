@@ -61,7 +61,7 @@ def execute_remote_cmd(machine_ip, user_name, command, password=None):
         output = "".join(stdout.readlines())
         error = "".join(stderr.readlines())
         if (stdout.channel.recv_exit_status()) == 1:
-            raise Exception("Exception while executing command %s on %s: %s" %(command, machine_ip, error))
+            raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:
         log_exception()
         raise
@@ -99,6 +99,7 @@ def get_ips_in_range(ipFrom, ipTo):
         ip_addr_lst.append(subnet + str(x))
     return ip_addr_lst
 
+
 # Generates MAC address
 def generate_random_mac():
     MAC_GEN_FIRST_BIT=0xa2
@@ -121,18 +122,28 @@ def check_db_storage_type():
         return True
     return False
     
-#Creates entry into DHCP
-def create_dhcp_entry(host_name, mac_addr, ip_addr):
-
+#Creates bulk entry into DHCP
+# Gets list of tuple containing (host_name, mac_addr, ip_addr)
+def create_dhcp_bulk_entry(dhcp_info_list):
+    
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = 'echo -e  "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}" >> /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
+    entry_cmd = 'echo -e  "'
+    for dhcp_info in dhcp_info_list:
+        entry_cmd += 'host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n' %(dhcp_info[0], dhcp_info[1], dhcp_info[2])
+    entry_cmd += '" >> /etc/dhcp/dhcpd.conf'    
     restart_cmd = '/etc/init.d/isc-dhcp-server restart'
-    
+    print entry_cmd
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
-#Removes entry into DHCP
+#Creates single entry into DHCP
+def create_dhcp_entry(host_name, mac_addr, ip_addr):
+    
+    dhcp_info_list = [(host_name, mac_addr, ip_addr)]
+    create_dhcp_bulk_entry(dhcp_info_list)
+
+#Removes entry from DHCP
 def remove_dhcp_entry(host_name, mac_addr, ip_addr):
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")

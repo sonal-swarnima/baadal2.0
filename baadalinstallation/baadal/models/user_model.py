@@ -56,7 +56,7 @@ def set_configuration_elem(form):
     configVal = configVal.split(',')
     
     form.vars.vCPU = int(configVal[0])
-    form.vars.RAM = int(configVal[1])*1024
+    form.vars.RAM = float(configVal[1])*1024
     form.vars.HDD = int(configVal[2])
     if form.vars.extra_HDD == None:
         form.vars.extra_HDD = 0
