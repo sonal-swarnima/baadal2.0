@@ -377,7 +377,6 @@ Instl_Pkgs()
 	done
 	# end of FOR loop / package installation from pkg_lst
 
-	cp libvirt-1.2.1.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.2.1.tar.gz
 	tar -xvzf libvirt-1.2.1.tar.gz
 	mv libvirt-1.2.1 /tmp/libvirt-1.2.1
 	cd /tmp/libvirt-1.2.1
