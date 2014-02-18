@@ -816,7 +816,7 @@ Start_Web2py()
 	fi
 
 	chmod 644 /root/.ssh/authorized_keys
-	chmod -r 666 /var/www/.ssh/	
+	chmod -R 666 /var/www/.ssh/	
 	chmod 400 /var/www/.ssh/id_rsa
 
 	if test "$RUN_MODE" == "production"; then
