@@ -307,10 +307,11 @@ db.define_table('public_ip_pool',
 db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
 
 db.define_table('private_ip_pool',
-    Field('private_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]),
-    Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=[IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')]),
+    Field('private_ip', 'string', length = 15, notnull = True, unique = True),
+    Field('mac_addr', 'string', length = 20, unique = True),
     Field('vlan', db.vlan, notnull = True),
     Field('vm_id', db.vm_data, writable = False))
 
 db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]
+db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
 db.private_ip_pool.vlan.requires = IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None)
