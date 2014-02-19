@@ -128,12 +128,12 @@ def create_dhcp_bulk_entry(dhcp_info_list):
     
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = 'echo -e  "'
+    entry_cmd = "echo -e  '"
     for dhcp_info in dhcp_info_list:
-        entry_cmd += 'host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n' %(dhcp_info[0], dhcp_info[1], dhcp_info[2])
-    entry_cmd += '}" >> /etc/dhcp/dhcpd.conf'    
-    restart_cmd = '/etc/init.d/isc-dhcp-server restart'
-    print entry_cmd
+        entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(dhcp_info[0], dhcp_info[1], dhcp_info[2])
+    entry_cmd += "' >> /etc/dhcp/dhcpd.conf"    
+    restart_cmd = "/etc/init.d/isc-dhcp-server restart"
+    current.logger.debug(entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
