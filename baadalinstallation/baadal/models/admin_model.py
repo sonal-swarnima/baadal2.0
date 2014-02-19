@@ -125,11 +125,13 @@ def add_private_ip(ip_pool_id):
 
     private_ip_pool = db.private_ip_pool[ip_pool_id]
     if private_ip_pool.vlan != HOST_VLAN_ID:
-        mac_address = None
-        while True:
-            mac_address = generate_random_mac()
-            if not (db.private_ip_pool(mac_addr=mac_address)):break
-
+        mac_address = private_ip_pool.mac_addr
+        if mac_address == None:
+            while True:
+                mac_address = generate_random_mac()
+                if not (db.private_ip_pool(mac_addr=mac_address)):break
+            #Update generated mac address in DB
+            private_ip_pool.update_record(mac_addr=mac_address)
         create_dhcp_entry('baadal_vm'+str(ip_pool_id), mac_address, private_ip_pool.private_ip)
 
 
