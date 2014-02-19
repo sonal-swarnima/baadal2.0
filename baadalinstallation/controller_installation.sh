@@ -702,6 +702,7 @@ echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-
 if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         mkdir $TFTP_DIR/ubuntu
         mount $ISO_LOCATION $TFTP_DIR/ubuntu
+	echo -e "$ISO_LOCATION $TFTP_DIR/ubuntu\tudf,iso9660\tuser,loop\t0\t0" >> /etc/fstab
         cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
         cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
 	rm -rf $TFTP_DIR/pxelinux.cfg
