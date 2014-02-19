@@ -69,6 +69,7 @@ chmod u+x ./host_installation.sh
 cd /baadal
 wget http://CONTROLLER_IP/.ssh/id_rsa.pub
 mkdir -p /root/.ssh
+touch /root/.ssh/authorized_keys
 cat id_rsa.pub >> /root/.ssh/authorized_keys
 rm id_rsa.pub) 1> /var/log/installation.log 2>&1  
 

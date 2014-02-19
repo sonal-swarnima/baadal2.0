@@ -10,7 +10,7 @@ CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut 
 
 Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils)
 
-Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev)
+Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev ntpdate)
 
 Mysql_pkg_lst=(mysql-server-5.5:mysql-server-5.1 libapache2-mod-auth-mysql php5-mysql)
 
@@ -377,7 +377,6 @@ Instl_Pkgs()
 	done
 	# end of FOR loop / package installation from pkg_lst
 
-	cp libvirt-1.2.1.tar.gz $PXE_SETUP_FILES_PATH/libvirt-1.2.1.tar.gz
 	tar -xvzf libvirt-1.2.1.tar.gz
 	mv libvirt-1.2.1 /tmp/libvirt-1.2.1
 	cd /tmp/libvirt-1.2.1
@@ -542,6 +541,7 @@ Enbl_Modules()
 {
 	if test $AUTH_TYPE == "ldap"; then
 		/etc/init.d/nscd restart
+		ntpdate $LDAP_URL
 	fi
 	echo "Enabling Apache Modules.........................................."
 	a2enmod ssl
@@ -701,6 +701,7 @@ echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-
 if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
         mkdir $TFTP_DIR/ubuntu
         mount $ISO_LOCATION $TFTP_DIR/ubuntu
+	echo -e "$ISO_LOCATION $TFTP_DIR/ubuntu\tudf,iso9660\tuser,loop\t0\t0" >> /etc/fstab
         cp -r $TFTP_DIR/ubuntu/install/netboot/* $TFTP_DIR/
         cp $TFTP_DIR/ubuntu/install/netboot/ubuntu-installer/amd64/pxelinux.0 $TFTP_DIR/
 	rm -rf $TFTP_DIR/pxelinux.cfg
@@ -816,7 +817,7 @@ Start_Web2py()
 	fi
 
 	chmod 644 /root/.ssh/authorized_keys
-	chmod -r 666 /var/www/.ssh/	
+	chmod -R 666 /var/www/.ssh/	
 	chmod 400 /var/www/.ssh/id_rsa
 
 	if test "$RUN_MODE" == "production"; then

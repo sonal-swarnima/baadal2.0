@@ -41,7 +41,7 @@ def send_task_complete_mail(task_event):
         vm_users.append(task_event.requester_id)
     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
     
-#Logs data into vm_event_log table
+#Logs action data into vm_event_log table
 def log_vm_event(old_vm_data, task_queue_data):
     db.commit()
     vm_data = db.vm_data[old_vm_data.id]
