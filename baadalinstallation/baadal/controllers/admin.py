@@ -95,8 +95,8 @@ def host_details():
         redirect(URL(c='admin', f='add_host',args=form1.vars.host_ip))
         
     if form2.process(formname='form_mac').accepted:
-        configure_host_by_mac(form2.vars.host_mac_addr)
-        session.flash='Host configured. Proceed for PXE boot.'
+        message = configure_host_by_mac(form2.vars.host_mac_addr)
+        session.flash=message
         redirect(URL(c='admin', f='host_details'))
 
     return dict(form1=form1, form2=form2, hosts=hosts)   

@@ -447,17 +447,20 @@ def get_host_form(host_ip):
 def configure_host_by_mac(mac_addr):
     
     avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
-                & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip).first()['private_ip']
+                & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
     if avl_ip:
-        logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_ip))
-        host_name = 'host'+str(avl_ip.split('.')[3])
-        create_dhcp_entry(host_name, mac_addr, avl_ip)
-        db.host[0] = dict(host_ip=avl_ip, 
+        avl_private_ip = avl_ip.first()['private_ip']
+        logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
+        host_name = 'host'+str(avl_private_ip.split('.')[3])
+        create_dhcp_entry(host_name, mac_addr, avl_private_ip)
+        db.host[0] = dict(host_ip=avl_private_ip, 
                           host_name=host_name, 
                           mac_addr=mac_addr, 
                           status=HOST_STATUS_DOWN)
+        return 'Host configured. Proceed for PXE boot.'
     else:
         logger.error('Available Private IPs for host are exhausted.')
+        return 'Available Private IPs for host are exhausted.'
 
 
 def add_live_migration_option(form):
