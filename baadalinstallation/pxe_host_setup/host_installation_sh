@@ -15,6 +15,19 @@ Chk_Gateway()
         fi
 }
 
+Network_Setup()
+{
+  cd /baadal/baadal/baadaltesting/sandbox
+
+  apt-get update
+  apt-get -y install linux-headers-generic
+
+  make openvswitch | tee ~/.openvswitch.install.log
+  make host-setup
+
+  cd -
+}
+
 
 #Function that install all the packages packages
 Instl_Pkgs()
@@ -99,9 +112,9 @@ Enbl_Modules()
 
 ############################################################################################################################
 
-apt-get update && apt-get -y upgrade
 Chk_Gateway
+Network_Setup
 Instl_Pkgs
 Enbl_Modules
-
+rm -f /etc/init.d/host_installation.sh
 

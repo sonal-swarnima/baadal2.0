@@ -55,16 +55,11 @@ rm newbaadal.tar
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
 cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/sources.list
 
-cd /baadal/baadal/baadaltesting/sandbox
+apt-get update
+apt-get -y dist-upgrade
 
-make openvswitch
-make host-setup
-
-
-cd /baadal/baadal/baadalinstallation/pxe_host_setup
-chmod u+x ./host_installation.sh
-./host_installation.sh
-
+ln -s /baadal/baadal/baadalinstallation/pxe_host_setup/host_installation.sh /etc/init.d/host_installation.sh
+update-rc.d host_installation.sh defaults
 
 cd /baadal
 wget http://CONTROLLER_IP/.ssh/id_rsa.pub
