@@ -147,8 +147,8 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
 def remove_dhcp_entry(host_name, mac_addr, ip_addr):
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = 'sed -i -e "s/host %s.*{.*hardware ethernet %s;.*fixed-address %s;.*}//" /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
-    restart_cmd = '/etc/init.d/isc-dhcp-server restart'
+    entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}'/etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
+    restart_cmd = "/etc/init.d/isc-dhcp-server restart"
     
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
