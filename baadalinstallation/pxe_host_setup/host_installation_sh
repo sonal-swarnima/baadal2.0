@@ -112,6 +112,9 @@ Enbl_Modules()
 
 ############################################################################################################################
 
+exec > >(tee /var/log/installation.log)
+exec 2>&1
+
 Chk_Gateway
 Network_Setup
 Instl_Pkgs
