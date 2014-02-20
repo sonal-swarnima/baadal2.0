@@ -64,8 +64,9 @@ Enbl_Modules()
 
 	modprobe kvm
 	modprobe kvm_intel
-
-	tar -xvzf ../libvirt-1.2.1.tar.gz -C /root/
+	
+	cd /baadal/baadal/baadalinstallation
+	tar -xvzf libvirt-1.2.1.tar.gz -C /root/
 	cd /root/libvirt-1.2.1
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
@@ -95,12 +96,12 @@ Enbl_Modules()
 	virsh net-autostart ovs-net
 
 	cd -
-	cd ../python-libvirt
+	cd python-libvirt
 	python setup.py build
 	python setup.py install
 
 	cd -
-	tar -xvzf ../virt-manager-0.10.0.tar.gz -C /root
+	tar -xvzf virt-manager-0.10.0.tar.gz -C /root
 	cd /root/virt-manager-0.10.0
 	python setup.py install --prefix=/usr
 	
@@ -119,5 +120,7 @@ Chk_Gateway
 Network_Setup
 Instl_Pkgs
 Enbl_Modules
+echo "baadal-host" >> /etc/hostname
+hostname baadal-host
 rm -f /etc/init.d/host_installation.sh
-
+reboot
