@@ -799,30 +799,37 @@ Start_Web2py()
                echo "EXITING INSTALLATION......................................"
                exit 1
 
-	elif test -f "/var/www/.ssh/id_rsa.pub"; then
+	elif test -d "/var/www/.ssh"; then
 
-		echo "PUBLIC KEY ALREADY EXISTS!!!"
-
-	elif test -f "/root/.ssh/id_rsa.pub";then
-
-		cp -r /root/.ssh/ /var/www/.
-		chown -R www-data:www-data /var/www/.ssh/
-
-	else
-
-		ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
-		cp -r /root/.ssh/ /var/www/.
-                chown -R www-data:www-data /var/www/.ssh/
+		mv /var/www/.ssh /var/www/.ssh.bak
 	
+	elif test -d "/root/.ssh"; then
+	
+		mv /root/.ssh /root/.ssh.bak
+
 	fi
 
-	chmod 644 /root/.ssh/authorized_keys
-	chmod -R 766 /var/www/.ssh/	
-	chmod 400 /var/www/.ssh/id_rsa
+	ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+	su www-data -c "ssh-keygen -t rsa -f /var/www/.ssh/id_rsa -N \"\""
 
-	if test "$RUN_MODE" == "production"; then
-		cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-	fi 
+	#cp -r /root/.ssh/ /var/www/.
+        #chown -R www-data:www-data /var/www/.ssh/
+	#chmod 644 /root/.ssh/authorized_keys
+	#chmod -R 766 /var/www/.ssh/	
+	#chmod 400 /var/www/.ssh/id_rsa
+
+        #if test ! -f "/root/.ssh/authorized_keys";then
+
+        touch /root/.ssh/authorized_keys
+	chmod 644 /root/.ssh/authorized_keys
+
+        #fi
+
+	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+
+	#if test "$RUN_MODE" == "production"; then
+	#	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+	#fi 
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
