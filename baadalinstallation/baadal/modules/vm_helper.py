@@ -178,12 +178,11 @@ def create_vm_image(vm_details, datastore):
         current.logger.debug("Copied successfully.")
     else:
         current.logger.debug("Copy in progress (storage_type = linux_nfs)...")
-        rcode = os.system('cp %s %s' % (template_location, vm_image_location))
-        if rcode != 0:
-            current.logger.error("Unsuccessful in copying image...")
-            raise Exception("Unsuccessful in copying image...")
-        else:
-            current.logger.debug("Copied successfully.")
+        command_to_execute = 'cp ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
+                             template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
+                             vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
+        exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+        current.logger.debug("Copied successfully.")
 
     return (template, vm_image_location)
 
