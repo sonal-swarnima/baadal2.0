@@ -747,7 +747,7 @@ Configure_Dhcp_Pxe()
 
 	echo "option domain-name-servers $DNS_SERVERS;" >> /etc/dhcp/dhcpd.conf
 
-	sed -i -e "s/INTERFACES=\"\"/INTERFACES="$OVS_BRIDGE_NAME" $VLANS" /etc/default/isc-dhcp-server
+	sed -i -e "s/INTERFACES=\"\"/INTERFACES=\"$OVS_BRIDGE_NAME $VLANS\"/" /etc/default/isc-dhcp-server
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
@@ -810,26 +810,13 @@ Start_Web2py()
 	fi
 
 	ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+	
+        mkdir /var/www/.ssh
+        chown -R www-data:www-data /var/www/.ssh	
 	su www-data -c "ssh-keygen -t rsa -f /var/www/.ssh/id_rsa -N \"\""
 
-	#cp -r /root/.ssh/ /var/www/.
-        #chown -R www-data:www-data /var/www/.ssh/
-	#chmod 644 /root/.ssh/authorized_keys
-	#chmod -R 766 /var/www/.ssh/	
-	#chmod 400 /var/www/.ssh/id_rsa
-
-        #if test ! -f "/root/.ssh/authorized_keys";then
-
-        touch /root/.ssh/authorized_keys
-	chmod 644 /root/.ssh/authorized_keys
-
-        #fi
-
+	touch /root/.ssh/authorized_keys
 	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-
-	#if test "$RUN_MODE" == "production"; then
-	#	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-	#fi 
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
