@@ -31,7 +31,7 @@ elif test $# -eq 3; then
 
 		if test "$2" != "$3" && test ${public_ip[0]} -ne 0 && test ${public_ip[0]} -le 255 && test ${public_ip[1]} -le 255 && test ${public_ip[2]} -le 255 && test ${public_ip[3]} -le 255 && test ${public_ip[3]} -ne 0 && test ${private_ip[0]} -ne 0 && test ${private_ip[0]} -le 255 && test ${private_ip[1]} -le 255 && test ${private_ip[2]} -le 255 && test ${private_ip[3]} -le 255 && test ${private_ip[3]} -ne 0; then
 
-			db_schema=$(sqlite3 baadal_nat.db ".schema $table")
+			db_schema=$(sqlite3 $db_name ".schema $table")
 
 			if test -f $db_name && test "$db_schema" != ""; then
 			

@@ -373,7 +373,7 @@ def create_NAT_IP_mapping(action, public_ip, private_ip):
     nat_user = config.get("GENERAL_CONF","nat_user")
     nat_script = config.get("GENERAL_CONF","nat_script_path")
     
-    command = "sh %s %s %s %s"%(nat_script, action, public_ip, private_ip)
+    command = "bash %s %s %s %s"%(nat_script, action, public_ip, private_ip)
     
     exec_command_on_host(nat_ip, nat_user, command)
     
