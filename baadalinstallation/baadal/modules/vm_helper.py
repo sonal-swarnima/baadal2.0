@@ -170,19 +170,16 @@ def create_vm_image(vm_details, datastore):
     storage_type = config.get("GENERAL_CONF","storage_type")
 
     if storage_type == current.STORAGE_NETAPP_NFS:
-        command_to_execute = 'ndmpcopy ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
-                             template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
-                             vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
-        current.logger.debug("Copy in progress (storage type =  netapp_nfs)...")
-        exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
-        current.logger.debug("Copied successfully.")
+        copy_command = 'ndmpcopy ' 
     else:
-        current.logger.debug("Copy in progress (storage_type = linux_nfs)...")
-        command_to_execute = 'cp ' + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
-                             template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
-                             vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
-        exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
-        current.logger.debug("Copied successfully.")
+        copy_command = 'cp '
+        
+    current.logger.debug("Copy in progress when storage type is " + str(storage_type))
+    command_to_execute = copy_command + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
+                         template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
+                         vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
+    exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+    current.logger.debug("Copied successfully.")
 
     return (template, vm_image_location)
 
@@ -373,7 +370,7 @@ def create_NAT_IP_mapping(action, public_ip, private_ip):
     nat_user = config.get("GENERAL_CONF","nat_user")
     nat_script = config.get("GENERAL_CONF","nat_script_path")
     
-    command = "sh %s %s %s %s"%(nat_script, action, public_ip, private_ip)
+    command = "bash %s %s %s %s"%(nat_script, action, public_ip, private_ip)
     
     exec_command_on_host(nat_ip, nat_user, command)
     

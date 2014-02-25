@@ -542,9 +542,20 @@ def vm_has_snapshots(vm_id):
         return False
     
 def updte_host_status(host_id, status):
-    db(db.host.id == host_id).update(status = status)
-    if status == HOST_STATUS_MAINTENANCE:
+    host_data = db.host[host_id]
+    if status == HOST_STATUS_UP:
+        if is_host_available():
+            if host_data.CPUs == 0:
+                cpu_num = get_host_cpu(host_data.host_ip)
+                ram_gb = get_host_ram(host_data.host_ip)
+                hdd_gb = get_host_hdd(host_data.host_ip)
+                host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
+        else:
+            return False
+    elif status == HOST_STATUS_MAINTENANCE:
         put_host_in_maint_mode(host_id)
+    host_data.update_record(status = status)
+    return True
         
 def delete_host_from_db(host_id):
     
