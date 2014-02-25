@@ -90,10 +90,6 @@ Chk_installation_config()
 		exit 1
 	fi
 	
-	if test -z "$RUN_MODE"; then
-		echo "Please specify run mode!!"
-		exit 1
-	fi
 
 	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_PARENT_BAADALREPO" == "" || test "$BAADAL_REPO_DIR" == ""; then
 		echo "TFTP Setup config missing/incomplete!!!"
