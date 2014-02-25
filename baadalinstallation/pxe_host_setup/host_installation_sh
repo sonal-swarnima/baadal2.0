@@ -120,7 +120,7 @@ Chk_Gateway
 Network_Setup
 Instl_Pkgs
 Enbl_Modules
-echo "baadal-host" >> /etc/hostname
+echo "baadal-host" > /etc/hostname
 hostname baadal-host
 rm -f /etc/init.d/host_installation.sh
 reboot
