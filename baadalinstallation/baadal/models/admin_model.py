@@ -544,7 +544,7 @@ def vm_has_snapshots(vm_id):
 def updte_host_status(host_id, status):
     host_data = db.host[host_id]
     if status == HOST_STATUS_UP:
-        if is_host_available():
+        if is_host_available(host_data.host_ip):
             if host_data.CPUs == 0:
                 cpu_num = get_host_cpu(host_data.host_ip)
                 ram_gb = get_host_ram(host_data.host_ip)
