@@ -294,7 +294,8 @@ def maintenance_host():
 @handle_exception
 def boot_up_host():
     host_id=request.args[0]
-    updte_host_status(host_id, HOST_STATUS_UP)
+    if not (updte_host_status(host_id, HOST_STATUS_UP)):
+        session.flash = 'Host not accessible. Please verify'
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
