@@ -24,6 +24,7 @@ function run
     exit 1
   fi
 
+  NETWORK_INTERNAL=$baseaddr.$lastaddr
   lastaddr=$(( $lastaddr + 1 ))
   NETWORK_INTERNAL_IP_SANDBOX=$baseaddr.$lastaddr
   lastaddr=$(( $lastaddr + 1 ))
