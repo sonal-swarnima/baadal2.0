@@ -588,7 +588,7 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name):
         for domain_snapshot in domain_snapshots_list:
             redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
             snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
-            exec_command_on_host(vm_details.host_ip, 'root', snapshot_redefine_command)
+            exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_redefine_command)
         snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
         exec_command_on_host(vm_details.host_ip, 'root', snapshot_current_command)
 
@@ -634,6 +634,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
+        current.logger.debug("vm details are : " + str(vm_details))
         undo_migration(vm_details, domain_snapshots_list, current_snapshot_name)
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)        
@@ -656,7 +657,7 @@ def snapshot(parameters):
     snapshot_type = parameters['snapshot_type']
     try:
         vm_details = current.db.vm_data[vm_id]
-        snapshot_name = get_datetime().strftime("%I:%M%p on %B %d,%Y")
+        snapshot_name = get_datetime().strftime("%I:%M%p_%B%d,%Y")
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
