@@ -53,14 +53,6 @@ function run
  
   for ((i=$VLAN_START;i<=$VLAN_END;i++))
     do
-      ovsvsctl_add_fake_br_force vlan$i $OVS_BRIDGE_INTERNAL $i
-      ifconfig_ip vlan$i $baseaddr.$i.1 $VLAN_NETMASK
-      interfaces_str+="\n
-      auto vlan$i\n
-      iface vlan$i inet static\n
-      address $baseaddr.$i.1\n
-      netmask $VLAN_NETMASK\n
-      "
       trunk_str+="$i,"
   done
 
