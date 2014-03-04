@@ -19,7 +19,8 @@ def get_manage_template_form(req_type):
     if req_type in ('new','edit'):
         mark_required(db.template)
     #Creating the grid object
-    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
+    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+                        csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 def get_manage_datastore_form(req_type):
@@ -31,7 +32,8 @@ def get_manage_datastore_form(req_type):
     if req_type in ('new','edit'):
         mark_required(db.datastore)
     #Creating the grid object
-    form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
+    form = SQLFORM.grid(db.datastore, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+                        csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
 
@@ -50,7 +52,9 @@ def get_manage_public_ip_pool_form():
     default_sort_order=[db.public_ip_pool.id]
 
     #Creating the grid object
-    grid = SQLFORM.grid(db.public_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Assigned to', body=get_vm_link)], csv=False, searchable=False, details=False, showbuttontext=False)
+    grid = SQLFORM.grid(db.public_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+                        csv=False, searchable=False, details=False, showbuttontext=False, 
+                        links=[dict(header='Assigned to', body=get_vm_link)])
 
     if grid.create_form:
         grid.create_form[0].insert(-1, TR(SPAN(
@@ -65,14 +69,21 @@ def get_manage_public_ip_pool_form():
 
     return grid
 
+def private_ip_on_delete(private_ip_pool_id):
+    private_ip_data = db.private_ip_pool[private_ip_pool_id]
+    if private_ip_data.vlan != HOST_VLAN_ID:
+        remove_dhcp_entry('baadal_vm' + str(private_ip_pool_id), private_ip_data.mac_addr ,private_ip_data.private_ip)
+    
 def get_manage_private_ip_pool_form():
     db.private_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
     db.private_ip_pool.vm_id.readable=False
 
     default_sort_order=[db.private_ip_pool.id]
-
     #Creating the grid object
-    grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Assigned to', body=get_vm_link)], csv=False, searchable=False, details=False, showbuttontext=False)
+    grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+                        csv=False, searchable=False, details=False, showbuttontext=False, 
+                        links=[dict(header='Assigned to', body=get_vm_link)], 
+                        ondelete=lambda _table, _id: private_ip_on_delete(_id))
 
     if grid.create_form:
         grid.create_form[0].insert(-1, TR(SPAN(
@@ -145,7 +156,7 @@ def get_org_visibility(row):
     return '-'
 
 
-def get_security_domain_form(req_type):
+def get_security_domain_form():
     
     db.security_domain.id.readable=False 
 
@@ -156,16 +167,22 @@ def get_security_domain_form(req_type):
     avl_vlan = db(~db.vlan.id.belongs(db()._select(db.security_domain.vlan))).count()
     if avl_vlan == 0: create = False
 
-    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, links=[dict(header='Visibility', body=get_org_visibility)], csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30, create=create)
+    form = SQLFORM.grid(db.security_domain, fields=fields, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, create=create, 
+                        csv=False, searchable=False, details=False, selectable=False, showbuttontext=False, maxtextlength=30, 
+                        links=[dict(header='Visibility', body=get_org_visibility)])
     return form
 
 # Check if the security domain can be deleted
 def check_delete_security_domain(sd_id):
-    if db((db.vm_data.security_domain == sd_id)).count() > 0:
+    if db.vm_data(security_domain = sd_id):
         return SECURITY_DOMAIN_DELETE_MESSAGE
     elif db.security_domain[sd_id].name in ('Research', 'Private', 'Infrastructure'):
         return 'Security Domain %s can''t be deleted.' %(db.security_domain[sd_id].name)
     
+def check_delete_private_ip(private_ip_id):
+    if not db.private_ip_pool(id=private_ip_id, vm_id = None):
+        return PRIVATE_IP_DELETE_MESSAGE
+
 def get_all_pending_requests():
 
     vms = db(db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED, REQ_STATUS_IN_QUEUE)).select()
@@ -447,17 +464,20 @@ def get_host_form(host_ip):
 def configure_host_by_mac(mac_addr):
     
     avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
-                & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip).first()['private_ip']
+                & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
     if avl_ip:
-        logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_ip))
-        host_name = 'host'+str(avl_ip.split('.')[3])
-        create_dhcp_entry(host_name, mac_addr, avl_ip)
-        db.host[0] = dict(host_ip=avl_ip, 
+        avl_private_ip = avl_ip.first()['private_ip']
+        logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
+        host_name = 'host'+str(avl_private_ip.split('.')[3])
+        create_dhcp_entry(host_name, mac_addr, avl_private_ip)
+        db.host[0] = dict(host_ip=avl_private_ip, 
                           host_name=host_name, 
                           mac_addr=mac_addr, 
                           status=HOST_STATUS_DOWN)
+        return 'Host configured. Proceed for PXE boot.'
     else:
         logger.error('Available Private IPs for host are exhausted.')
+        return 'Available Private IPs for host are exhausted.'
 
 
 def add_live_migration_option(form):
@@ -539,15 +559,26 @@ def vm_has_snapshots(vm_id):
         return False
     
 def updte_host_status(host_id, status):
-    db(db.host.id == host_id).update(status = status)
-    if status == HOST_STATUS_MAINTENANCE:
+    host_data = db.host[host_id]
+    if status == HOST_STATUS_UP:
+        if is_host_available(host_data.host_ip):
+            if host_data.CPUs == 0:
+                cpu_num = get_host_cpu(host_data.host_ip)
+                ram_gb = get_host_ram(host_data.host_ip)
+                hdd_gb = get_host_hdd(host_data.host_ip)
+                host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
+        else:
+            return False
+    elif status == HOST_STATUS_MAINTENANCE:
         put_host_in_maint_mode(host_id)
+    host_data.update_record(status = status)
+    return True
         
 def delete_host_from_db(host_id):
     
     host_data = db.host[host_id]
     private_ip_data = db.private_ip_pool(private_ip = host_data.host_ip)    
-    remove_dhcp_entry(host_data.host_name, private_ip_data['mac_addr'], private_ip_data['private_ip'])
+    remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
     del db.host[host_id]
     
 def get_util_period_form():

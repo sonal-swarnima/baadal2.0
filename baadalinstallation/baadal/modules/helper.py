@@ -49,6 +49,8 @@ def update_constant(constant_name, constant_value):
 #Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password=None):
 
+    current.logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+
     output = None
     try:
         import paramiko
@@ -133,7 +135,7 @@ def create_dhcp_bulk_entry(dhcp_info_list):
         entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(dhcp_info[0], dhcp_info[1], dhcp_info[2])
     entry_cmd += "' >> /etc/dhcp/dhcpd.conf"    
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"
-    current.logger.debug(entry_cmd)
+
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
@@ -147,8 +149,8 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
 def remove_dhcp_entry(host_name, mac_addr, ip_addr):
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = 'sed -i -e "s/host %s.*{.*hardware ethernet %s;.*fixed-address %s;.*}//" /etc/dhcp/dhcpd.conf' %(host_name, mac_addr, ip_addr)
-    restart_cmd = '/etc/init.d/isc-dhcp-server restart'
+    entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
+    restart_cmd = "/etc/init.d/isc-dhcp-server restart"
     
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)

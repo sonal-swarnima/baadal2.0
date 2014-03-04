@@ -15,6 +15,19 @@ Chk_Gateway()
         fi
 }
 
+Network_Setup()
+{
+  cd /baadal/baadal/baadaltesting/sandbox
+
+  apt-get update
+  apt-get -y install linux-headers-generic
+
+  make openvswitch | tee ~/.openvswitch.install.log
+  make host-setup
+
+  cd -
+}
+
 
 #Function that install all the packages packages
 Instl_Pkgs()
@@ -51,8 +64,9 @@ Enbl_Modules()
 
 	modprobe kvm
 	modprobe kvm_intel
-
-	tar -xvzf ../libvirt-1.2.1.tar.gz -C /root/
+	
+	cd /baadal/baadal/baadalinstallation
+	tar -xvzf libvirt-1.2.1.tar.gz -C /root/
 	cd /root/libvirt-1.2.1
 	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 	make
@@ -82,12 +96,12 @@ Enbl_Modules()
 	virsh net-autostart ovs-net
 
 	cd -
-	cd ../python-libvirt
+	cd python-libvirt
 	python setup.py build
 	python setup.py install
 
 	cd -
-	tar -xvzf ../virt-manager-0.10.0.tar.gz -C /root
+	tar -xvzf virt-manager-0.10.0.tar.gz -C /root
 	cd /root/virt-manager-0.10.0
 	python setup.py install --prefix=/usr
 	
@@ -99,9 +113,14 @@ Enbl_Modules()
 
 ############################################################################################################################
 
-apt-get update && apt-get -y upgrade
+exec > >(tee /var/log/installation.log)
+exec 2>&1
+
 Chk_Gateway
+Network_Setup
 Instl_Pkgs
 Enbl_Modules
-
-
+echo "baadal-host" > /etc/hostname
+hostname baadal-host
+rm -f /etc/init.d/host_installation.sh
+reboot

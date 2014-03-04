@@ -119,6 +119,7 @@ VM_vCPU_SET = (1,2,4,8)
 IP_ERROR_MESSAGE = 'Enter valid IP address'
 VM_NAME_ERROR_MESSAGE = 'VM name should start with alphanumeric and can only contain letters, numbers, dash and underscore'
 SECURITY_DOMAIN_DELETE_MESSAGE = 'There are VMs assigned to this security domain. It can''t be deleted.'
+PRIVATE_IP_DELETE_MESSAGE = 'Private IP is assigned to a VM. It can''t be deleted.'
 
 SECONDS = 1
 MINUTES = 60 * SECONDS

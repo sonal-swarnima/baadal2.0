@@ -79,7 +79,7 @@ def manage_security_domain():
             session.flash = error_message
             redirect(URL(c='admin', f='manage_security_domain'))
 
-    form = get_security_domain_form(req_type)
+    form = get_security_domain_form()
     return dict(form = form)
 
 @check_moderator
@@ -95,8 +95,8 @@ def host_details():
         redirect(URL(c='admin', f='add_host',args=form1.vars.host_ip))
         
     if form2.process(formname='form_mac').accepted:
-        configure_host_by_mac(form2.vars.host_mac_addr)
-        session.flash='Host configured. Proceed for PXE boot.'
+        message = configure_host_by_mac(form2.vars.host_mac_addr)
+        session.flash=message
         redirect(URL(c='admin', f='host_details'))
 
     return dict(form1=form1, form2=form2, hosts=hosts)   
@@ -294,7 +294,8 @@ def maintenance_host():
 @handle_exception
 def boot_up_host():
     host_id=request.args[0]
-    updte_host_status(host_id, HOST_STATUS_UP)
+    if not (updte_host_status(host_id, HOST_STATUS_UP)):
+        session.flash = 'Host not accessible. Please verify'
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
@@ -348,6 +349,14 @@ def validate_private_ip_range():
 @check_moderator
 @handle_exception
 def manage_private_ip_pool():
+    
+    req_type = request.args(0)
+    if req_type == 'delete' or request.vars['delete_this_record'] == 'on':
+        error_message = check_delete_private_ip(request.args(2))
+        if error_message != None:
+            session.flash = error_message
+            redirect(URL(c='admin', f='manage_private_ip_pool'))
+        
     form = get_manage_private_ip_pool_form()
     return dict(form=form)
 

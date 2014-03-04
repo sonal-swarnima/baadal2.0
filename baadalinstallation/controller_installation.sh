@@ -90,10 +90,6 @@ Chk_installation_config()
 		exit 1
 	fi
 	
-	if test -z "$RUN_MODE"; then
-		echo "Please specify run mode!!"
-		exit 1
-	fi
 
 	if test "$TFTP_DIR" == "" || test "$PXE_SETUP_FILES_PATH" == "" || test "$ISO_LOCATION" == "" || test "$ABSOLUTE_PATH_OF_PARENT_BAADALREPO" == "" || test "$BAADAL_REPO_DIR" == ""; then
 		echo "TFTP Setup config missing/incomplete!!!"
@@ -747,7 +743,7 @@ Configure_Dhcp_Pxe()
 
 	echo "option domain-name-servers $DNS_SERVERS;" >> /etc/dhcp/dhcpd.conf
 
-	sed -i -e "s/INTERFACES=\"\"/INTERFACES="$OVS_BRIDGE_NAME" $VLANS" /etc/default/isc-dhcp-server
+	sed -i -e "s/INTERFACES=\"\"/INTERFACES=\"$OVS_BRIDGE_NAME $VLANS\"/" /etc/default/isc-dhcp-server
 
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
 	
@@ -799,30 +795,24 @@ Start_Web2py()
                echo "EXITING INSTALLATION......................................"
                exit 1
 
-	elif test -f "/var/www/.ssh/id_rsa.pub"; then
+	elif test -d "/var/www/.ssh"; then
 
-		echo "PUBLIC KEY ALREADY EXISTS!!!"
-
-	elif test -f "/root/.ssh/id_rsa.pub";then
-
-		cp -r /root/.ssh/ /var/www/.
-		chown -R www-data:www-data /var/www/.ssh/
-
-	else
-
-		ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
-		cp -r /root/.ssh/ /var/www/.
-                chown -R www-data:www-data /var/www/.ssh/
+		mv /var/www/.ssh /var/www/.ssh.bak
 	
+	elif test -d "/root/.ssh"; then
+	
+		mv /root/.ssh /root/.ssh.bak
+
 	fi
 
-	chmod 644 /root/.ssh/authorized_keys
-	chmod -R 666 /var/www/.ssh/	
-	chmod 400 /var/www/.ssh/id_rsa
+	ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+	
+        mkdir /var/www/.ssh
+        chown -R www-data:www-data /var/www/.ssh	
+	su www-data -c "ssh-keygen -t rsa -f /var/www/.ssh/id_rsa -N \"\""
 
-	if test "$RUN_MODE" == "production"; then
-		cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
-	fi 
+	touch /root/.ssh/authorized_keys
+	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 
 	echo "setting up web2py.................."
 	cd /home/www-data/web2py
