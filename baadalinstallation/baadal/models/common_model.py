@@ -36,7 +36,7 @@ def get_hosted_vm_list(vms):
     for vm in vms:
         element = {'id' : vm.id,
                    'name' : vm.vm_name,
-                   'organisation' : vm.owner_id.organisation_id.name,
+                   'organisation' : vm.owner_id.organisation_id.name if vm.owner_id > 0 else 'System',
                    'owner' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name if vm.owner_id > 0 else 'System User', 
                    'private_ip' : vm.private_ip, 
                    'public_ip' : vm.public_ip, 
