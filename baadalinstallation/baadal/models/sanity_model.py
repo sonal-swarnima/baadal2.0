@@ -134,13 +134,13 @@ def add_orhan_vm(vm_name, host_id):
     vnc_elem = root.xpath("devices/graphics[@type='vnc']")[0]
     vnc_port = vnc_elem.attrib['port']
     
-    mac_elem = root.xpath("devices/interface[@type='bridge']/mac")[0]
+    mac_elem = root.xpath("devices/interface[@type='network']/mac")[0]
     mac_address = mac_elem.attrib['address']
 
-    ip_addr = db(db.private_ip_pool.mac_addr == mac_address).select(db.private_ip_pool.private_ip)
+    ip_addr = db.private_ip_pool(mac_addr = mac_address)
     ip_address = '127.0.0.1'
     if ip_addr:
-        ip_address = ip_addr.first()['private_ip']
+        ip_address = ip_addr['private_ip']
     
     template_elem = root.xpath("devices/disk[@type='file']/source")[0]
     template_file = template_elem.attrib['file']
@@ -167,7 +167,7 @@ def add_orhan_vm(vm_name, host_id):
         security_domain = 1,
         status = vm_status)
         
-    db.private_ip_pool[ip_addr.id] = dict(vm_id=vm_id)
+    db.private_ip_pool[ip_addr['id']] = dict(vm_id=vm_id)
     return
 
 def delete_vm_info(vm_identity):
