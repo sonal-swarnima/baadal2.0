@@ -9,6 +9,7 @@ import libvirt
 from libvirt import *  # @UnusedWildImport
 from lxml import etree
 from helper import execute_remote_cmd
+from host_helper import HOST_STATUS_UP
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,

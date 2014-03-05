@@ -9,7 +9,6 @@ import sys, math, shutil, paramiko, traceback, libvirt, random
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
-from host_helper import *  # @UnusedWildImport
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():
@@ -90,7 +89,7 @@ def choose_mac_ip_vncport(vm_properties):
 
 #Returns all the host running vms of particular run level
 def find_new_host(RAM, vCPU):
-    hosts = current.db(current.db.host.status == current.HOST_STATUS_UP).select() 
+    hosts = current.db(current.db.host.status == 1).select() 
     for host in hosts:
         current.logger.debug("checking host="+host.host_name)
         (uram, ucpu)=host_resources_used(host.id)

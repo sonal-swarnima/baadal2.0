@@ -9,6 +9,7 @@ from libvirt import *  # @UnusedWildImport
 from vm_helper import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
 
+#Host Status
 HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
 HOST_STATUS_MAINTENANCE = 2

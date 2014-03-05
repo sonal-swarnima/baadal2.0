@@ -14,8 +14,13 @@ import rrdtool
 from xml.etree import ElementTree
 
 from helper import *  # @UnusedWildImport
+from host_helper import HOST_STATUS_UP
 
 TIME_DIFF_MS = 300
+VM_UTIL_24_HOURS = 1
+VM_UTIL_ONE_WEEK = 2
+VM_UTIL_ONE_MNTH = 3
+VM_UTIL_ONE_YEAR = 4
 
 def get_rrd_file(vm_name):
 
@@ -24,7 +29,7 @@ def get_rrd_file(vm_name):
 
 def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
-    logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
+    current.logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
     rrd_file = vm_name + '.rrd'       
 
     shutil.copyfile(rrd_file_path, rrd_file)
@@ -100,22 +105,22 @@ def get_performance_graph(graph_type, vm, graph_period):
             if create_graph(vm, graph_type, rrd_file, graph_period):   
                 img_pos = "images/vm_graphs/" + vm + "_" + graph_type + ".png"
                 img = IMG(_src = URL("static", img_pos), _style = "height:100%")
-                logger.info("Graph created successfully")
+                current.logger.info("Graph created successfully")
             else:
-                logger.warn("Unable to create graph from rrd file!!!")
+                current.logger.warn("Unable to create graph from rrd file!!!")
                 error = H3("Unable to create graph from rrd file")
         else:
-            logger.warn("VMs RRD File Unavailable!!!")
+            current.logger.warn("VMs RRD File Unavailable!!!")
             error = "VMs RRD File Unavailable!!!"
     except: 
-        logger.warn("Error occured while creating graph.")
+        current.logger.warn("Error occured while creating graph.")
         error = log_exception()
 
     finally:
         if (is_moderator() and (error != None)):
             return H3(error)
         else:
-            logger.info("Returning image.")
+            current.logger.info("Returning image.")
             return img
 
 def fetch_rrd_data(vm_identity, period=VM_UTIL_24_HOURS):
@@ -181,12 +186,12 @@ def create_rrd(rrd_file):
         "RRA:AVERAGE:0:105120:5")
     
     if ret:
-        logger.warn(rrdtool.error())    
+        current.logger.warn(rrdtool.error())    
 
-    logger.info("RRD Created")
+    current.logger.info("RRD Created")
 
 def get_dom_mem_usage(dom_name, host):
-    logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
+    current.logger.debug("fetching memory usage of domain %s defined on host %s" % (dom_name, host))
     
     import paramiko
     ssh = paramiko.SSHClient()
@@ -200,7 +205,7 @@ def get_dom_mem_usage(dom_name, host):
     if len(output) == 3:
         return int(re.split('\s+', output[0])[5])
     else:
-        logger.warn("Unable to fetch memory usage details for dom %s" % (dom_name))
+        current.logger.warn("Unable to fetch memory usage details for dom %s" % (dom_name))
 
 def get_dom_nw_usage(dom_obj):
 
@@ -214,7 +219,7 @@ def get_dom_nw_usage(dom_obj):
         nwr   += stats[0]
         nww   += stats[4]
 
-    logger.info("%s%s" % (nwr, nww))
+    current.logger.info("%s%s" % (nwr, nww))
 
     return [nwr, nww]
 
@@ -235,7 +240,7 @@ def get_dom_disk_usage(dom_obj):
         wreq   += stats[2]
         bytesw += stats[3]
     
-    logger.info("rreq: %s bytesr: %s wreq: %s bytesw: %s" % (rreq, bytesr, wreq, bytesw))
+    current.logger.info("rreq: %s bytesr: %s wreq: %s bytesw: %s" % (rreq, bytesr, wreq, bytesw))
 
     return [bytesr, bytesw]
 
@@ -254,8 +259,8 @@ def get_dom_info(dom_id, host_ip, conn):
     dom_diskr      = dom_disk_usage[0]
     dom_diskw      = dom_disk_usage[1]
 
-    logger.info(dom_name)
-    logger.warn("As we get VM mem usage info from rrs size of the process running on host therefore it is observed that the memused is sometimes greater than max mem specified in case when the VM uses memory near to its mam memory")
+    current.logger.info(dom_name)
+    current.logger.warn("As we get VM mem usage info from rrs size of the process running on host therefore it is observed that the memused is sometimes greater than max mem specified in case when the VM uses memory near to its mam memory")
 
     return [dom_name, dom_maxmem, dom_memusage, dom_cputime, dom_cpus, dom_nwr, dom_nww, dom_diskr, dom_diskw]
 
@@ -264,33 +269,32 @@ def get_rrd_file_abs_path(dom_name):
 
 def calculate_cpu_usage(rrd_file, time_now, cputime, n_cores):
     
-    logger.debug('time_now: '+ str(time_now))
+    current.logger.debug('time_now: '+ str(time_now))
     rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', 'now-%s'%(str(TIME_DIFF_MS*2)))
     time_info = rrd_ret[0]
-    logger.debug('time_info: '+ str(time_info))
+    current.logger.debug('time_info: '+ str(time_info))
     data_info = rrd_ret[2]
-    logger.debug('data_info: '+ str(data_info))
+    current.logger.debug('data_info: '+ str(data_info))
     cputime1 = data_info[0][0]
-    logger.debug('cputime1: '+ str(cputime1))
-    logger.debug('n_cores: '+ str(n_cores))
+    current.logger.debug('cputime1: '+ str(cputime1))
+    current.logger.debug('n_cores: '+ str(n_cores))
 
     if cputime1 == None: return 0
     
     cpu_time_diff = cputime - cputime1
     time_diff = time_now - time_info[0]
     
-    logger.debug('time_diff: '+ str(time_diff))
+    current.logger.debug('time_diff: '+ str(time_diff))
     
     cpu_usage = 100 * cpu_time_diff / (time_diff * n_cores * 1000000000)
-    logger.debug('cpu_usage: '+ str(cpu_usage))
+    current.logger.debug('cpu_usage: '+ str(cpu_usage))
     
     return cpu_usage
 
-@handle_exception
 def update_rrd():
 
     active_host_list = current.db(current.db.host.status == HOST_STATUS_UP).select(current.db.host.host_ip)
-    logger.debug(active_host_list)
+    current.logger.debug(active_host_list)
     
     for host in active_host_list:
     
@@ -298,22 +302,22 @@ def update_rrd():
         try:
             host_ip = host['host_ip']
             conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
-            logger.debug(conn.getHostname())
+            current.logger.debug(conn.getHostname())
             
             active_dom_ids = conn.listDomainsID()
-            logger.debug(active_dom_ids)
+            current.logger.debug(active_dom_ids)
             for dom_id in active_dom_ids:
             
                 try:
                 
                     dom_info = get_dom_info(dom_id, host_ip, conn)
                     timestamp_now = int(time.time())
-                    logger.info(dom_info)
+                    current.logger.info(dom_info)
                     rrd_file = get_rrd_file_abs_path(dom_info[0])
                     
                     if not (os.path.exists(rrd_file)):
-                        logger.warn("RRD file does not exists")
-                        logger.warn("Creating new RRD file")
+                        current.logger.warn("RRD file does not exists")
+                        current.logger.warn("Creating new RRD file")
                         create_rrd(rrd_file)
                         time.sleep(1)
                     
@@ -330,16 +334,16 @@ def update_rrd():
                                 str(dom_info[4]) )
 
                     if ret:
-                        logger.warn("Error while Updating %s.rrd" % (dom_info[0]))
-                        logger.warn(rrdtool.error())
+                        current.logger.warn("Error while Updating %s.rrd" % (dom_info[0]))
+                        current.logger.warn(rrdtool.error())
                     else:
-                        logger.info("rrd updated successfully.")
+                        current.logger.info("rrd updated successfully.")
                 except:
-                    logger.exception("Error occured while creating/updating rrd.")
+                    current.logger.exception("Error occured while creating/updating rrd.")
                     pass
 
         except:
-            logger.exception("Error occured while creating/updating rrd or host.")           
+            current.logger.exception("Error occured while creating/updating rrd or host.")           
             pass
         finally: 
             if conn:

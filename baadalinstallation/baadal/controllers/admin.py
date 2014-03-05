@@ -6,9 +6,11 @@ if 0:
     from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from host_helper import delete_orhan_vm
+from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN, \
+    HOST_STATUS_MAINTENANCE
 from helper import get_constant, update_constant
 from vm_helper import shutdown_baadal, bootup_baadal
+from vm_utilization import VM_UTIL_24_HOURS
 
 @check_moderator
 @handle_exception

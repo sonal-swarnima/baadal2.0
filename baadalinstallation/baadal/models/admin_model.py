@@ -9,8 +9,9 @@ if 0:
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
     remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
-    get_host_cpu, get_host_ram, get_host_hdd
-from vm_utilization import fetch_rrd_data
+    get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE
+from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
+    VM_UTIL_ONE_YEAR
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
