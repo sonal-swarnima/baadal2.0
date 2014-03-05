@@ -888,7 +888,7 @@ def shutdown_baadal():
     for vm_detail in vms:
         try:
             snapshot({'vm_id':vm_detail.id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
-            destroy({'vm_id':vm_detail.id})
+            suspend({'vm_id':vm_detail.id})
         except:
             log_exception()
             pass
