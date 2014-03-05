@@ -149,7 +149,7 @@ def add_orhan_vm(vm_name, host_id):
     ret = execute_remote_cmd(host_details.host_ip, 'root', command) # Returns e.g. virtual size: 40G (42949672960 bytes)
     hdd = int(ret[ret.index(':')+1:ret.index('G ')].strip())
 
-    security_domain_row = db.security_domain(name='Research')
+    security_domain_row = db.security_domain(vlan=ip_addr['vlan'])
     
     vm_id = db.vm_data.insert(
         vm_name = vm_name, 
