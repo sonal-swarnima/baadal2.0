@@ -8,12 +8,14 @@ if 0:
 from helper import get_datetime, log_exception
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
+from vm_utilization import update_rrd
 
 UUID_SNAPSHOT_DAILY = 'scheduler-uuid-snapshot-daily'
 UUID_SNAPSHOT_WEEKLY = 'scheduler-uuid-snapshot-weekly'
 UUID_SNAPSHOT_MONTHLY = 'scheduler-uuid-snapshot-monthly'
 UUID_VM_SANITY_CHECK = 'scheduler-uuid-vm-sanity-check'
 UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
+UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
 
 task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_START_VM                :    start,
@@ -208,7 +210,6 @@ def vm_sanity_check():
     vmcheck = check_vm_sanity()
     logger.debug(vmcheck) 
 
-
 # Handles periodic Host sanity check
 # Called when scheduler runs task of type 'host_sanity'
 def host_sanity_check():
@@ -216,14 +217,21 @@ def host_sanity_check():
     logger.debug("Starting Host Sanity Check")
     host_status_sanity_check()
 
-
+# Handles periodic collection of VM utilization data &
+# updation of respective RRD file.
+def vm_utilization_rrd():
+    
+    logger.debug("Starting VM Utilization data collection task")
+    update_rrd()
+    
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler
 vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue, 
                                         clone_task=process_clone_task,
                                         snapshot_vm=process_snapshot_vm,
                                         vm_sanity=vm_sanity_check,
-                                        host_sanity=host_sanity_check))
+                                        host_sanity=host_sanity_check,
+                                        vm_util_rrd=vm_utilization_rrd))
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
 
@@ -264,3 +272,11 @@ vm_scheduler.queue_task('host_sanity',
                     period = 10 * MINUTES, # every 10 minutes
                     timeout = 5 * MINUTES,
                     uuid = UUID_HOST_SANITY_CHECK)
+
+vm_scheduler.queue_task('vm_util_rrd', 
+                    repeats = 0, # run indefinitely
+                    start_time = request.now, 
+                    period = 5 * MINUTES, # every 5 minutes
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_VM_UTIL_RRD)
+

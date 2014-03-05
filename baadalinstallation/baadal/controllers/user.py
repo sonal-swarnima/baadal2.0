@@ -9,6 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import is_moderator, is_faculty, is_orgadmin
+from vm_utilization import get_performance_graph
 
 @auth.requires_login()
 @handle_exception

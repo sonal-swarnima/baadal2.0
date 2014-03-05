@@ -40,7 +40,7 @@ def get_host_mac_address(host_ip):
 
 
 def get_host_cpu(host_ip):
-    command = "cat /proc/cpuinfo | grep processor | wc -l"
+    command = "grep -c processor /proc/cpuinfo"
     ret = execute_remote_cmd(host_ip, 'root',command)
     return int(ret)/2
     
@@ -57,7 +57,7 @@ def get_host_hdd(host_ip):
     import math
     command = "fdisk -l | egrep 'Disk.*bytes' | awk '{ sub(/,/,\"\"); sum +=$3;} END {print sum}'"
     ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. 500.1 kB
-    current.logger.debug(ret)
+    current.logger.debug("Host HDD is %s" %ret)
     hdd_in_gb = int(math.ceil(float(ret)))
     return hdd_in_gb
 
