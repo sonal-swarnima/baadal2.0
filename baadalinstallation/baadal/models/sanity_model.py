@@ -159,7 +159,8 @@ def add_orhan_vm(vm_name, host_id):
         extra_HDD = 0,
         vCPU = cpu,
         host_id = host_id,
-        template_id = 1,
+        template_id = 1, #TBD
+        datastore_id = 1, #TBD
         owner_id = -1,
         requester_id = -1,
         private_ip = ip_address,
