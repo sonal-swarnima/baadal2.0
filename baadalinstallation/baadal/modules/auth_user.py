@@ -31,12 +31,13 @@ def login_ldap_callback(form):
 def fetch_user_role(username):
 
     _role_list = [current.USER]
+    username_qt = '\'' + username +'\''
     
-    if username in config.get("GENERAL_CONF","admin_uid"):
+    if username_qt in config.get("GENERAL_CONF","admin_uid"):
         _role_list.append(current.ADMIN)
-    if username in config.get("GENERAL_CONF","orgadmin_uid"):
+    if username_qt in config.get("GENERAL_CONF","orgadmin_uid"):
         _role_list.append(current.ORGADMIN)
-    if username in config.get("GENERAL_CONF","faculty_uid"):
+    if username_qt in config.get("GENERAL_CONF","faculty_uid"):
         _role_list.append(current.FACULTY)
             
     return _role_list
