@@ -37,7 +37,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
     line = line1 = line2 = None
     
     if graph_period == 'hour':
-        start_time = 'now - ' + str(24 * HOURS)
+        start_time = 'now - ' + str(24*60*60)
         grid = 'HOUR:1:HOUR:1:HOUR:1:0:%k'
         consolidation = 'MIN'
     elif graph_period == 'day':
