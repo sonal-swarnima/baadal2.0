@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-# Added to enable code completion in IDE's.
-import libvirt
-if 0:
-    import gluon
-    global auth; auth = gluon.tools.Auth()
-    from gluon import URL,IMG, H3
-    from applications.baadal.models import *  # @UnusedWildImport
-###################################################################################
 import shutil
 import time
 import rrdtool
+import libvirt
 from xml.etree import ElementTree
+
+from gluon import H3, IMG, URL
 
 from helper import *  # @UnusedWildImport
 from host_helper import HOST_STATUS_UP

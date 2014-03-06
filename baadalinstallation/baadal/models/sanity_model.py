@@ -126,7 +126,7 @@ def add_orhan_vm(vm_name, host_id):
 
     ram_elem = root.xpath('memory')[0]
     ram_in_kb = int(ram_elem.text)
-    ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
+    ram_in_mb = int(round(int(ram_in_kb)/(1024),0))
 
     cpu_elem = root.xpath('vcpu')[0]
     cpu = int(cpu_elem.text)
@@ -154,7 +154,7 @@ def add_orhan_vm(vm_name, host_id):
     vm_id = db.vm_data.insert(
         vm_name = vm_name, 
         vm_identity = (vm_name), 
-        RAM = ram_in_gb,
+        RAM = ram_in_mb,
         HDD = hdd,
         extra_HDD = 0,
         vCPU = cpu,

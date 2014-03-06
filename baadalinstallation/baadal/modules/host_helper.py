@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    from gluon import *  # @UnusedWildImport
-###################################################################################
 import libvirt,commands  # @UnusedImport
 from libvirt import *  # @UnusedWildImport
 from vm_helper import *  # @UnusedWildImport
@@ -55,7 +51,6 @@ def get_host_ram(host_ip):
 
 
 def get_host_hdd(host_ip):
-    import math
     command = "fdisk -l | egrep 'Disk.*bytes' | awk '{ sub(/,/,\"\"); sum +=$3;} END {print sum}'"
     ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. 500.1 kB
     current.logger.debug("Host HDD is %s" %ret)
