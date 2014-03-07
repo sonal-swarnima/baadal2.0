@@ -589,7 +589,7 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name):
             snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
             exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_redefine_command)
         snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
-        exec_command_on_host(vm_details.host_ip, 'root', snapshot_current_command)
+        exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_current_command)
 
     return
 
