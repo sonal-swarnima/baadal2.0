@@ -60,7 +60,6 @@ def fetch_ldap_user(username):
     user_info={'user_name':username}
     user_info['email'] = None
     user_info['last_name'] = ''
-    user_info['organisation'] = 'IITD'
 
     try:
         ldap_result_id = l.search(base_dn, searchScope, searchFilter, retrieveAttributes)  
@@ -86,6 +85,11 @@ def fetch_ldap_user(username):
 #TODO: find role and organisation from ldap and set in db accordingly (current iitd ldap does not support this feature entirely) 
                                     
         user_info['roles'] = fetch_user_role(username)
+        # If user has super admin rights; it is added to separate organization
+        if current.ADMIN in user_info['roles']:
+            user_info['organisation'] = 'ADMIN'
+        else:
+            user_info['organisation'] = 'IITD'
 
     except ldap.LDAPError, e:
         current.logger.error(e)

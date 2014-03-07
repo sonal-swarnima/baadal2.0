@@ -45,7 +45,7 @@ def send_task_complete_mail(task_event):
     
 #Logs action data into vm_event_log table
 def log_vm_event(old_vm_data, task_queue_data):
-    db.commit()
+
     vm_data = db.vm_data[old_vm_data.id]
     if task_queue_data.task_type in (TASK_TYPE_START_VM, 
                                      TASK_TYPE_STOP_VM, 
