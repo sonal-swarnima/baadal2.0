@@ -322,7 +322,6 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
     db.request_queue.HDD.default = vm_data.HDD
-#     db.request_queue.enable_service.default = vm_data.enable_service
     db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
@@ -334,7 +333,7 @@ def get_edit_vm_config_form(vm_id):
     
     form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain','purpose']
     form = SQLFORM(db.request_queue, fields = form_fields)
-#     add_security_domain(form, vm_id=vm_id)
+
     return form
 
 def get_mail_admin_form():

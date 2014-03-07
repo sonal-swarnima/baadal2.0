@@ -5,7 +5,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
 ###################################################################################
 
-import sys, math, shutil, paramiko, traceback, libvirt, random
+import sys, math, shutil, paramiko, traceback, libvirt
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
@@ -331,10 +331,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     current.logger.debug("Inside update db after installation")
     current.logger.debug(str(hostid))
 
-    # Updating the count of vms on host
-    host = current.db.host[hostid]
-    host.update_record(vm_count = host.vm_count+1)
-
     # Updating the used entry of datastore
     current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +        
                                                                 int(template_hdd))
@@ -503,10 +499,6 @@ def clean_up_database_after_vm_deletion(vm_details):
         shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + vm_details.datastore_id.ds_name \
                           + "/" + vm_details.vm_identity)
 
-    # updating the count of guest vms on host
-    count = current.db(current.db.host.id == vm_details.host_id).select().first()['vm_count']
-    current.db(current.db.host.id == vm_details.host_id).update(vm_count = count - 1)
-
     # updating the used entry of database
     current.db(current.db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
                                                           (int(vm_details.extra_HDD) + int(vm_details.template_id.hdd)))
@@ -623,15 +615,8 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         else:
             domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
-        current.logger.debug("Updating database")
-    
-        old_host = current.db.host[vm_details.host_id]
-        old_host.update_record(vm_count = old_host.vm_count - 1)
-
         vm_details.update_record(host_id = destination_host_id)
-
-        new_host = current.db.host[destination_host_id]
-        new_host.update_record(vm_count = new_host.vm_count + 1)
+        current.db.commit()
 
         shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
 

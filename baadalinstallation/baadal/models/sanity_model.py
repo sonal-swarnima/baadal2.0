@@ -176,8 +176,6 @@ def add_orhan_vm(vm_name, host_id):
 def delete_vm_info(vm_identity):
 
     vm_details = db(db.vm_data.vm_identity == vm_identity).select().first()
-    count = vm_details.host_id.vm_count
-    db(db.host.id == vm_details.host_id).update(vm_count = count - 1)
 
     # updating the used entry of database
     if vm_details.HDD != None:

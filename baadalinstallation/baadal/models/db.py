@@ -111,8 +111,7 @@ db.define_table('host',
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
     Field("category",'string', length = 50),
-    Field('status', 'integer'),
-    Field('vm_count', 'integer', default = 0))
+    Field('status', 'integer'))
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
