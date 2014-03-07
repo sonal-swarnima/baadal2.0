@@ -205,7 +205,7 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
                      --name=' + vm_details.vm_identity + ' \
                      --ram=' + str(vm_properties['ram']) + ' \
                      --vcpus=' + str(vm_properties['vcpus']) + optional + variant_command + ' \
-                     --disk path=' + vm_image_location + format_command + bus + ' \
+                     --disk path=' + vm_image_location + format_command + bus + ',cache=none' + ' \
                      --network network='+current.LIBVIRT_NETWORK+',model=virtio,mac=' + vm_properties['mac_addr'] + ' \
                      --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
                      --noautoconsole \
@@ -573,6 +573,7 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
         redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
         snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
         exec_command_on_host(destination_host_ip, 'root', snapshot_redefine_command)
+
     snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
     exec_command_on_host(destination_host_ip, 'root', snapshot_current_command)
 
@@ -622,13 +623,17 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         else:
             domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
-        vm_details.update_record(host_id = destination_host_id)
+        current.logger.debug("Updating database")
     
         old_host = current.db.host[vm_details.host_id]
         old_host.update_record(vm_count = old_host.vm_count - 1)
 
+        vm_details.update_record(host_id = destination_host_id)
+
         new_host = current.db.host[destination_host_id]
         new_host.update_record(vm_count = new_host.vm_count + 1)
+
+        shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
 
         message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -771,6 +776,7 @@ def edit_vm_config(parameters):
                     create_NAT_IP_mapping('add', public_ip_pool.public_ip, vm_details.private_ip)
                     current.db.public_ip_pool[public_ip_pool.id] = dict(vm_id=vm_id)
                     current.db.vm_data[vm_id] = dict(public_ip=public_ip_pool.public_ip)
+                    message += "Edited Public IP successfully."
                     
                 else:
                     raise Exception("Available Public IPs are exhausted.")
