@@ -200,14 +200,6 @@ html>body #menu a {
 	width: auto;
 }
 
-#menu li.active {
-	background: #EDEBD5 url(images/img05.gif) no-repeat;
-}
-
-#menu li.active a {
-	background: url(images/img06.gif) no-repeat right top;
-}
-
 /* Page */
 
 #page {
