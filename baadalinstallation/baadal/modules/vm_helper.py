@@ -606,7 +606,10 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
     try:    
         current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = current_host_connection_object.lookupByName(vm_details.vm_identity)
-        domain_snapshots_list = domain.snapshotListNames(0)
+        for snapshot in current.db(current.db.snapshot.vm_id == vm_id).select():
+            current.logger.debug("snapshot:" + str(snapshot.snapshot_name))
+            domain_snapshots_list.append(snapshot.snapshot_name)
+        current.logger.debug("domain snapshot list is " + str(domain_snapshots_list))
     
         if domain_snapshots_list:
             current_snapshot = domain.snapshotCurrent(0)
@@ -636,7 +639,7 @@ def migrate(parameters):
     destination_host_id = parameters['destination_host']
     if 'live_migration' in parameters:
         live_migration = True
-    migrate_domain(vmid, destination_host_id, live_migration)
+    return migrate_domain(vmid, destination_host_id, live_migration)
   
 
 # Snapshots a vm
