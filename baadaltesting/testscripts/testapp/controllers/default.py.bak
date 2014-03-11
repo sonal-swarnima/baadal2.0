@@ -87,9 +87,9 @@ def unit_testing():
             
            TR(INPUT(_name='testcase9', _type='checkbox', _value="9"),'List All Org-Level VMs',),
            TR(INPUT(_name='testcase10', _type='checkbox', _value="10"),'All VMs'),
-           TR(INPUT(_name='testcase19', _type='checkbox', _value="19"),'Pending Admin VM Requests(Install VM)'),
-           TR(INPUT(_name='testcase54', _type='checkbox', _value="54"),'Pending Admin VM Requests(Clone VM)'),
-           TR(INPUT(_name='testcase55', _type='checkbox', _value="55"),'Pending Admin VM Requests(Attach Disk)'),
+           #TR(INPUT(_name='testcase19', _type='checkbox', _value="19"),'Pending Admin VM Requests(Install VM)'),
+           #TR(INPUT(_name='testcase54', _type='checkbox', _value="54"),'Pending Admin VM Requests(Clone VM)'),
+           #TR(INPUT(_name='testcase55', _type='checkbox', _value="55"),'Pending Admin VM Requests(Attach Disk)'),
            
            TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Pending User VM Requests(Install VM)'),
            TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Pending User VM Requests(Clone VM)'),
@@ -105,17 +105,18 @@ def unit_testing():
            
            TR(INPUT(_name='testcase21', _type='checkbox', _value="21"),'Add User to VM   (Running )'),
            
-           TR(INPUT(_name='testcase22', _type='checkbox', _value="22"),'Delete VM    (Running)'),
+           
            TR(INPUT(_name='testcase23', _type='checkbox', _value="23"),'Gracefully shut down VM    (Running )'),
            TR(INPUT(_name='testcase24', _type='checkbox', _value="24"),'Forcefully power off VM   (Running )'),
            TR(INPUT(_name='testcase25', _type='checkbox', _value="25"),'Attach Extra Disk to VM   (Running )'),
            TR(INPUT(_name='testcase57', _type='checkbox', _value="57"),'Migrate VM(Running)'),
+           TR(INPUT(_name='testcase22', _type='checkbox', _value="22"),'Delete VM    (Running)'),
            TR(INPUT(_name='testcase26', _type='checkbox', _value="26"),'Take VM snapshot   (Paused )'),
            TR(INPUT(_name='testcase27', _type='checkbox', _value="27"),'Migrate VM(Paused)'),
            TR(INPUT(_name='testcase28', _type='checkbox', _value="28"),'Unpause VM   (Paused )'),
            TR(INPUT(_name='testcase29', _type='checkbox', _value="29"),'Add User to VM  (Paused )'),
            TR(INPUT(_name='testcase30', _type='checkbox', _value="30"),'Delete VM   (Paused )'),
-           TR(INPUT(_name='testcase31', _type='checkbox', _value="31"),'Adjust VM Resources Utilization   (Paused )'),
+           #TR(INPUT(_name='testcase31', _type='checkbox', _value="31"),'Adjust VM Resources Utilization   (Paused )'),
            TR(INPUT(_name='testcase32', _type='checkbox', _value="32"),'Forcefully power off VM   (Paused)'),
            TR(INPUT(_name='testcase33', _type='checkbox', _value="33"),'Delete Addtional User   (Paused )'), 
            TR(INPUT(_name='testcase47', _type='checkbox', _value="47"),'Revert Snapshot    (Paused )'),
@@ -131,12 +132,12 @@ def unit_testing():
            TR(INPUT(_name='testcase58', _type='checkbox', _value="58"),'Migrate VM(Shutdown)'),
            TR(INPUT(_name='testcase43', _type='checkbox', _value="43"),'Take VM snapshot   (Shutdown )'),
             
-            TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Approve VM(Org-admin)'),
-           TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Reject VM(Org-admin)'), 
+            #TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Approve VM(Org-admin)'),
+          # TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Reject VM(Org-admin)'), 
             TR(INPUT(_name='testcase60', _type='checkbox', _value="60"),'Approve VM(Faculty)'),
            TR(INPUT(_name='testcase61', _type='checkbox', _value="61"),'Reject VM(Faculty)'), 
-               TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Approve VM(Admin)'),
-           TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Reject VM(Admin)'), 
+               #TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Approve VM(Admin)'),
+           #TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Reject VM(Admin)'), 
            TR(INPUT(_name='testcase48', _type='checkbox', _value="48"),'Sanity Table'),
            
            BR(),

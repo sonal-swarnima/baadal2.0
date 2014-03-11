@@ -1,5 +1,5 @@
 [db_info]
-host_ip:10.208.23.68
+host_ip:10.208.21.67
 database_user_name:baadaltesting
 database_name:baadal
 password:test_baadal
@@ -9,7 +9,7 @@ autocommit:True
 [MYSQL_CONF]
 mysql_user=baadaltesting
 mysql_password=test_baadal
-#mysql_ip=10.208.23.68
+#mysql_ip=10.208.21.67
 mysql_db=baadal
 mysql_buffered=True
 mysql_autocommit=True
@@ -21,4 +21,4 @@ database_type=mysql
 
 
 [web2py_app_name]
-path=https://10.208.23.68/baadal
+path=https://10.208.21.67/baadal
