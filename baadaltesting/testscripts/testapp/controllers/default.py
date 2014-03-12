@@ -108,7 +108,7 @@ def unit_testing():
            
            TR(INPUT(_name='testcase23', _type='checkbox', _value="23"),'Gracefully shut down VM    (Running )'),
            TR(INPUT(_name='testcase24', _type='checkbox', _value="24"),'Forcefully power off VM   (Running )'),
-           TR(INPUT(_name='testcase25', _type='checkbox', _value="25"),'Attach Extra Disk to VM   (Running )'),
+     
            TR(INPUT(_name='testcase57', _type='checkbox', _value="57"),'Migrate VM(Running)'),
            TR(INPUT(_name='testcase22', _type='checkbox', _value="22"),'Delete VM    (Running)'),
            TR(INPUT(_name='testcase26', _type='checkbox', _value="26"),'Take VM snapshot   (Paused )'),

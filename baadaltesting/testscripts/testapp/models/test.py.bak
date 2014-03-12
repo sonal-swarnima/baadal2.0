@@ -762,8 +762,8 @@ def maintain_idompotency(driver,xml_sub_child,xml_child):
     for username in username_list:
     	usrnam=str(username)
     	print usrnam
-    	query_result=execute_query("select vm_name,vm_data.id from vm_data,user where requester_id=user.id and username=%s",(usrnam)).fetchall() 
-        print "123"
+    	query_result=execute_query(xml_sub_child.get("query1"),(usrnam)).fetchall() #fetching all the running VMs
+        
         if query_result!=():
             print query_result
             length=len(query_result)
@@ -771,6 +771,24 @@ def maintain_idompotency(driver,xml_sub_child,xml_child):
                 vm_name=query_result[row][0]
                 vm_id=query_result[row][1]
                 op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)	
+	query_result=execute_query(xml_sub_child.get("query2"),(usrnam)).fetchall() #fetching all the requested VMs
+        if query_result!=():
+            print query_result
+            length=len(query_result)
+            for row in range(0,length):
+                vm_name=query_result[row][0]
+                vm_id=query_result[row][1]
+                op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
+
+	query_result=execute_query(xml_sub_child.get("query3"),(usrnam)).fetchall() #fetching all the failed VMs
+       
+        if query_result!=():
+            print query_result
+            length=len(query_result)
+            for row in range(0,length):
+                vm_name=query_result[row][0]
+                vm_id=query_result[row][1]
+                op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
     return
 
      
@@ -788,19 +806,15 @@ def vm_mode(xml_child,xml_sub_child,driver):
         status=query_result[length][2]
         
         if (str(status)==xml_sub_child.get("status")) & (str(username) in username_list):
-            print "1"
-            print username
+            
             vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id)
             break
-        if (str(status)==xml_sub_child.get("other_status1")) | (str(status)==xml_sub_child.get("other_status2")):
-            print "2"
-            if (row_count-1)==count: 
-            	print "3"
-                logger.debug(xml_sub_child.get("print_mode"))
-                break
+        else:
             count+=1
-            continue
-       
+            
+    
+    if count==row_count:
+        logger.debug(xml_sub_child.get("print_mode"))        
     return
     
     
@@ -1963,7 +1977,7 @@ def execute_query(sql_query,arg=None):
 def click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id):
     
     path="//*[@href='/baadal/user/settings/"+ str(vm_id) +"']"
-    print path
+    
     if isElementPresent(driver,xml_child,path):
         driver.find_element_by_xpath(path).click()
         
@@ -2119,12 +2133,12 @@ def op_snap_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
         path=xml_sub_child.get("xpath_snap")
     
     if isElementPresent(driver,xml_child,path): 
-        print "3" 
+         
         if op_name=="snapshot":
-            print "4" 
+            
             driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(op_name) +"/"+ str(vm_id) + "']").click()
         else:
-            print "4" 
+            
             snapshot_id=get_snapshot_id(driver,xml_sub_child,xml_child,vm_name) 
             driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(op_name) +"/"+ str(vm_id) +"/"+ str(snapshot_id) + "']").click()
         result=snap_result(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name)
@@ -2388,17 +2402,17 @@ def vm_mode(xml_child,xml_sub_child,driver):
         vm_id=query_result[length][1]
         vm_name=query_result[length][0]
         status=query_result[length][2]
-        
+       
         if (str(status)==xml_sub_child.get("status")) & (str(username) in username_list):
             
             vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id)
             break
-        if (str(status)==xml_sub_child.get("other_status1")) | (str(status)==xml_sub_child.get("other_status2")):
-            count+=1
-            continue
-        if (row_count-1)==count: 
-			logger.debug(xml_sub_child.get("print_mode"))
-			break
+        
+        count+=1
+    
+    if row_count==count: 
+        logger.debug(xml_sub_child.get("print_mode"))
+			
        
     return
     
