@@ -113,6 +113,14 @@ Enbl_Modules()
 
 ############################################################################################################################
 
+Set_Hostname()
+{
+	ip_addr=$(ifconfig OVS_BRIDGE_NAME | grep "inet addr" | cut -d":" -f2 | cut -d" " -f1 | tr "." "-")
+	hostname="host-$ip_addr"
+	echo $hostname > /etc/hostname
+	hostname $hostname
+}
+
 exec > >(tee /var/log/installation.log)
 exec 2>&1
 
@@ -120,7 +128,6 @@ Chk_Gateway
 Network_Setup
 Instl_Pkgs
 Enbl_Modules
-echo "baadal-host" > /etc/hostname
-hostname baadal-host
+Set_Hostname
 rm -f /etc/init.d/host_installation.sh
 reboot
