@@ -119,8 +119,8 @@ def generate_random_mac():
     
 def check_db_storage_type():
     config = get_config_file()
-    storage_type = config.get("GENERAL_CONF","storage_type")
-    if storage_type == current.AUTH_TYPE_DB:
+    auth_type = config.get("AUTH_CONF","auth_type")
+    if auth_type == current.AUTH_TYPE_DB:
         return True
     return False
     
