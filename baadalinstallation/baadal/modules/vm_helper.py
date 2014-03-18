@@ -598,9 +598,16 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
     destination_host_ip = current.db.host[destination_host_id]['host_ip']
 
-    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
+    flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE
     if live_migration:
-        flags |= VIR_MIGRATE_LIVE    
+        flags |= VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_LIVE
+        
+    if vm_details.status == current.VM_STATUS_SUSPENDED:
+        current.logger.debug("Vm is suspended")
+        flags |= VIR_MIGRATE_TUNNELLED|VIR_MIGRATE_PAUSED
+    elif vm_details.status == current.VM_STATUS_SHUTDOWN:
+        current.logger.debug("Vm is shut off")
+        flags |= VIR_MIGRATE_OFFLINE   
     current.logger.debug("Flags: " + str(flags))   
 
     try:    
@@ -621,13 +628,16 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         vm_details.update_record(host_id = destination_host_id)
         current.db.commit()
 
-        shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
+        if os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
+            shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
 
         message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
-        current.logger.debug("vm details are : " + str(vm_details))
+        current.logger.debug(" Exception caused...vm details are : " + str(vm_details))
         undo_migration(vm_details, domain_snapshots_list, current_snapshot_name)
+        if os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
+            shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)        
  
@@ -637,8 +647,10 @@ def migrate(parameters):
 
     vmid = parameters['vm_id']
     destination_host_id = parameters['destination_host']
-    if 'live_migration' in parameters:
+    if parameters['live_migration'] == 'on':
         live_migration = True
+    else:
+        live_migration = False
     return migrate_domain(vmid, destination_host_id, live_migration)
   
 
@@ -853,6 +865,7 @@ def clone(vmid):
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
         current.logger.error("Exception " + message)
+        free_vm_properties(cloned_vm_details)
         return (current.TASK_QUEUE_STATUS_FAILED, str(value)) 
 
 # Attaches extra disk to VM
