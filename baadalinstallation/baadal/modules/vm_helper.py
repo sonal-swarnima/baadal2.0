@@ -281,7 +281,7 @@ def serve_extra_disk_request(vm_details, disk_size, host_ip):
 # Launches a vm on host
 def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
 
-    attach_disk_status_message = 'Your request for additional HDD is completed.'
+    attach_disk_status_message = ''
     install_command = get_install_command(vm_details, vm_image_location, vm_properties)  
     # Starts installing a vm
     host_ip = current.db.host[vm_properties['host']].host_ip
@@ -294,10 +294,11 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     # Serving HDD request
     if (int(vm_details.extra_HDD) != 0):
         if (serve_extra_disk_request(vm_details, vm_details.extra_HDD, host_ip)):
-            message = "Attached extra disk successfully"
+            message = "Attached extra disk successfully."
+            attach_disk_status_message += message
             current.logger.debug(message)
         else:
-            attach_disk_status_message = " Your request for additional HDD could not be completed at this moment. Check logs."
+            attach_disk_status_message += "Attached extra disk failed."
     return attach_disk_status_message
 
 # Checks if a newly created vm is defined
@@ -571,6 +572,14 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
 
     return
 
+# Delete directory created for storing dumpxml of vm snapshots
+def clean_migration_directory(vm_details):
+
+    if os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
+        shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
+
+    return
+
 # Undo the migration 
 def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name):
 
@@ -583,6 +592,8 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name):
             exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_redefine_command)
         snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
         exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_current_command)
+    # Delete directory created for storing dumpxml of vm snapshots
+    clean_migration_directory(vm_details)
 
     return
 
@@ -627,17 +638,15 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
         vm_details.update_record(host_id = destination_host_id)
         current.db.commit()
-
-        if os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
-            shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
+        
+        # Delete directory created for storing dumpxml of vm snapshot
+        clean_migration_directory(vm_details)
 
         message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
         current.logger.debug(" Exception caused...vm details are : " + str(vm_details))
         undo_migration(vm_details, domain_snapshots_list, current_snapshot_name)
-        if os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity):
-            shutil.rmtree(get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity)
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)        
  
