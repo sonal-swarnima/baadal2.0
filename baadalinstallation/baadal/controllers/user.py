@@ -170,16 +170,16 @@ def list_my_task():
 def show_vm_performance():
     vm_id = int(request.args[0])
     vm_info = get_vm_info(vm_id)    
-    return dict(vm_id = vm_id, vm_name = vm_info['vm_name'])
+    return dict(vm_id = vm_id, vm_identity = vm_info['vm_identity'])
 
 @auth.requires_login()
 @handle_exception       
 def get_updated_graph():
 
         logger.debug(request.vars['graphType'])
-        logger.debug(request.vars['vmName'])
+        logger.debug(request.vars['vmIdentity'])
         logger.debug(request.vars['graphPeriod'])
-        return get_performance_graph(request.vars['graphType'], request.vars['vmName'], request.vars['graphPeriod'])
+        return get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
 
 @check_vm_owner
 @handle_exception       

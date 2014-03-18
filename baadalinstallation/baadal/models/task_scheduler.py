@@ -230,8 +230,7 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         clone_task=process_clone_task,
                                         snapshot_vm=process_snapshot_vm,
                                         vm_sanity=vm_sanity_check,
-                                        host_sanity=host_sanity_check,
-                                        vm_util_rrd=vm_utilization_rrd))
+                                        host_sanity=host_sanity_check))
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
 
@@ -273,10 +272,10 @@ vm_scheduler.queue_task('host_sanity',
                     timeout = 5 * MINUTES,
                     uuid = UUID_HOST_SANITY_CHECK)
 
-vm_scheduler.queue_task('vm_util_rrd', 
-                    repeats = 0, # run indefinitely
-                    start_time = request.now, 
-                    period = 5 * MINUTES, # every 5 minutes
-                    timeout = 5 * MINUTES,
-                    uuid = UUID_VM_UTIL_RRD)
+# vm_scheduler.queue_task('vm_util_rrd', 
+#                     repeats = 0, # run indefinitely
+#                     start_time = request.now, 
+#                     period = 5 * MINUTES, # every 5 minutes
+#                     timeout = 5 * MINUTES,
+#                     uuid = UUID_VM_UTIL_RRD)
 
