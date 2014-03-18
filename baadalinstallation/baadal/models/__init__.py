@@ -21,7 +21,7 @@ __all__ =['add_faculty_approver', 'add_orhan_vm', 'add_private_ip', 'add_private
 			'get_user_role_types', 'get_users_with_organisation', 'get_users_with_roles', 'get_util_period_form', 
 			'get_verified_requests', 'get_vm_config', 'get_vm_groupby_hosts', 'get_vm_history', 'get_vm_info', 'get_vm_operations', 
 			'get_vm_snapshots', 'get_vm_status', 'get_vm_user_list', 'get_vm_util_data', 'handle_exception', 'is_request_in_queue', 
-			'is_vm_owner', 'is_vm_running', 'logger', 'mark_required', 'reject_vm_request', 'request_vm_validation', 
+			'is_vm_owner', 'is_vm_running', 'mark_required', 'reject_vm_request', 'request_vm_validation', 
 			'send_email_on_registration_denied', 'send_email_on_successful_registration', 'send_email_to_admin', 
 			'send_email_to_approver', 'send_email_to_requester', 'send_email_to_vm_user', 'send_remind_faculty_email', 
 			'send_remind_orgadmin_email', 'set_configuration_elem', 'specify_user_roles', 'update_task_ignore', 
@@ -35,4 +35,4 @@ if 0:
     from orgadmin_model import *    
     from sanity_model import *    
     from task_scheduler import *
-    from user_model import *   
+    from user_model import *

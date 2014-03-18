@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from auth_user import fetch_ldap_user, create_or_update_user
-from helper import is_moderator, is_orgadmin, is_faculty
+from helper import is_moderator, is_orgadmin, is_faculty, logger
 
 def get_my_requests():
     
@@ -175,8 +175,8 @@ def get_request_vm_form():
 
 
 def get_user_info(username, roles):
+
     user_query = db((db.user.username == username) 
-             & (db.user.organisation_id == auth.user.organisation_id)
              & (db.user.id == db.user_membership.user_id)
              & (db.user_membership.group_id == db.user_group.id)
              & (db.user_group.role.belongs(roles)))
@@ -193,7 +193,8 @@ def get_user_info(username, roles):
                     user = user_query.select(db.user.ALL).first()
     
     if user:
-        return (user['id'], (user['first_name'] + ' ' + user['last_name']))	
+        if is_moderator() | (user['organisation_id'] == auth.user.organisation_id):
+            return (user['id'], (user['first_name'] + ' ' + user['last_name']))
 
 
 def get_my_task_list(task_status, task_num):

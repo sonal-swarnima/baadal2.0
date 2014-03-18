@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 from gluon import current
-from helper import get_config_file
+from helper import get_config_file, logger
 
 config = get_config_file()
 
@@ -26,7 +26,7 @@ def login_ldap_callback(form):
             if user_info:
                 create_or_update_user(user_info, True)
             else:
-                current.logger.error('Unable To Update User Info!!!')
+                logger.error('Unable To Update User Info!!!')
 
 def fetch_user_role(username):
 
@@ -51,7 +51,7 @@ def fetch_ldap_user(username):
         l = ldap.open(ldap_url)
         l.protocol_version = ldap.VERSION3    
     except ldap.LDAPError, e:
-        current.logger.error(e)
+        logger.error(e)
         return None
 
     searchScope = ldap.SCOPE_SUBTREE
@@ -92,9 +92,9 @@ def fetch_ldap_user(username):
             user_info['organisation'] = 'IITD'
 
     except ldap.LDAPError, e:
-        current.logger.error(e)
+        logger.error(e)
 
-    current.logger.info(user_info)
+    logger.info(user_info)
     if 'first_name' in user_info:
         return user_info
     else: 
@@ -126,7 +126,7 @@ def add_or_update_user_memberships(user_id, roles, update_session):
     current_roles = current.db((user_id == current.db.user_membership.user_id) 
                                & (current.db.user_membership.group_id == current.db.user_group.id)).select(current.db.user_group.role).as_list()
 
-    current.logger.info("users current roles: %s", current_roles)
+    logger.info("users current roles: %s", current_roles)
     if current_roles != roles:
         current.db(current.db.user_membership.user_id == user_id).delete()
         for role in roles:

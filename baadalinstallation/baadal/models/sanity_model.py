@@ -8,7 +8,7 @@ if 0:
 import libvirt
 from libvirt import *  # @UnusedWildImport
 from lxml import etree
-from helper import execute_remote_cmd
+from helper import execute_remote_cmd, logger
 from host_helper import HOST_STATUS_UP
 
 vm_state_map = {

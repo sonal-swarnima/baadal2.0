@@ -8,7 +8,7 @@ if 0:
     global mail; auth = gluon.tools.Mail()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_config_file
+from helper import get_config_file, logger
 
 config = get_config_file()
 

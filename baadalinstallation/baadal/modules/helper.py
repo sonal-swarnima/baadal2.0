@@ -4,6 +4,7 @@
 import os, re, random
 from gluon import current
 from gluon.validators import Validator
+import logging
 
 def is_moderator():
     if current.ADMIN in current.auth.user_groups.values():
@@ -49,7 +50,7 @@ def update_constant(constant_name, constant_value):
 #Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password=None):
 
-    current.logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+    logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
 
     output = None
     try:
@@ -155,14 +156,34 @@ def remove_dhcp_entry(host_name, mac_addr, ip_addr):
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
+
+def get_configured_logger(name):
+    logger = logging.getLogger(name)
+    if (len(logger.handlers) == 0):
+        # This logger has no handlers, so we can assume it hasn't yet been configured.
+        log_file = os.path.join(current.request.folder,'logs/%s.log'%(name)) # @UndefinedVariable
+        handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=14)
+
+        formatter="%(asctime)s %(levelname)s %(funcName)s():%(lineno)d %(message)s"
+        handler.setFormatter(logging.Formatter(formatter))
+        handler.setLevel(logging.DEBUG)
+        
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+
+    return logger
+
+logger = get_configured_logger(current.request.application)  # @UndefinedVariable
+
 def log_exception(message=None):
     import sys, traceback
     etype, value, tb = sys.exc_info()
     trace = ''.join(traceback.format_exception(etype, value, tb, 10))
     if message:
         trace = message + trace
-    current.logger.error(trace)
+    logger.error(trace)
     return trace
+
 
 class IS_MAC_ADDRESS(Validator):
     
@@ -176,3 +197,4 @@ class IS_MAC_ADDRESS(Validator):
             return (value, None)
         else:
             return (value, self.error_message)
+

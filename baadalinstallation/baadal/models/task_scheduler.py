@@ -5,7 +5,7 @@ if 0:
     from gluon import db,request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception
+from helper import get_datetime, log_exception, logger
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd

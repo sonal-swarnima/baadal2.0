@@ -7,6 +7,7 @@ if 0:
     from task_scheduler import vm_scheduler
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from helper import logger
 
 def schedule_task(fields, _id):
     #Add entry into task_queue_event
