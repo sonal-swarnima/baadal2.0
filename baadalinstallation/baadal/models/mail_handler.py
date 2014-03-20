@@ -5,7 +5,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
     import gluon
     global auth; auth = gluon.tools.Auth()
-    global mail; auth = gluon.tools.Mail()
+    global mail; mail = gluon.tools.Mail()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_config_file, logger
@@ -100,9 +100,9 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
         
 
 def send_email_to_admin(email_subject, email_message, email_type):
-    if email_type == 'request':
-        email_address = config.get("MAIL_CONF","mail_admin_bug_report")
     if email_type == 'report_bug':
+        email_address = config.get("MAIL_CONF","mail_admin_bug_report")
+    if email_type == 'request':
         email_address = config.get("MAIL_CONF","mail_admin_request")
     if email_type == 'complaint':
         email_address = config.get("MAIL_CONF","mail_admin_complaint")
