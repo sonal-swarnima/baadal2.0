@@ -631,6 +631,7 @@ Rewrite_Apache_Conf()
 		  DocumentRoot /var/www
 		  RewriteEngine On
 		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+		  RewriteRule / https://%{HTTP_HOST}/ [R=301,L]
 		</VirtualHost>
 
 		<VirtualHost *:443>
