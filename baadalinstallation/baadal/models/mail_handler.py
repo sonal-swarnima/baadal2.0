@@ -50,9 +50,11 @@ MAIL_FOOTER = "\n\n\nDisclaimer:: Please do not reply to this email. It correspo
 def push_email(to_address, email_subject, email_message, reply_to_address):
     if config.getboolean("MAIL_CONF","mail_active"):
         if not reply_to_address:
-            mail.send(to=to_address, subject=email_subject, message = email_message)
+            rtn = mail.send(to=to_address, subject=email_subject, message = email_message)
         else:
-            mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
+            rtn = mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
+	logger.error("ERROR:: " + str(mail.error))
+	logger.info("EMAIL STATUS:: " + str(rtn))
 
 
 def send_email(to_address, email_subject, email_template, context):
