@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 source ./controller_installation.cfg 2>> /dev/null
 
@@ -441,6 +441,8 @@ Setup_Baadalapp()
                 sed -i -e 's/mail_admin_complaint=/'"mail_admin_complaint=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
                 
                 sed -i -e 's/mail_login=/'"mail_login=$LOGIN_USERNAME:$LOGIN_PASSWORD"'/g' $baadalapp_config_path
+
+		sed -i -e 's/mail_server_tls=/'"mail_server_tls=$MAIL_SERVER_TLS"'/g' $baadalapp_config_path
 
         else
 
