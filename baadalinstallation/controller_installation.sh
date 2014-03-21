@@ -643,6 +643,10 @@ Rewrite_Apache_Conf()
 		  WSGIScriptAlias / /home/www-data/web2py/wsgihandler.py
 		  WSGIPassAuthorization On
 		
+		  <LocationMatch ^/admin>
+                    Order Allow,Deny
+                    Deny from all
+                  </LocationMatch>		
 		  <Directory /home/www-data/web2py>
 		    AllowOverride None
 		    Order Allow,Deny
