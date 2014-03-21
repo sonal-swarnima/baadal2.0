@@ -47,24 +47,21 @@ TASK_COMPLETE_BODY="Dear {0[userName]},\n\nThe '{0[taskType]}' task for VM({0[vm
 MAIL_FOOTER = "\n\n\nDisclaimer:: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
              "If you have any queries, send an email to {0[adminEmail]}."
 
-def push_email(to_address, email_subject, email_message, reply_to_address):
+def push_email(to_address, email_subject, email_message, reply_to_address, cc_addresses=[]):
     if config.getboolean("MAIL_CONF","mail_active"):
-        if not reply_to_address:
-            rtn = mail.send(to=to_address, subject=email_subject, message = email_message)
-        else:
-            rtn = mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address)
+	rtn = mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address, cc=cc_addresses)
 	logger.error("ERROR:: " + str(mail.error))
 	logger.info("EMAIL STATUS:: " + str(rtn))
 
 
-def send_email(to_address, email_subject, email_template, context):
+def send_email(to_address, email_subject, email_template, context, cc_addresses=[]):
 
     email_template += MAIL_FOOTER
     context['adminEmail'] = config.get("MAIL_CONF","mail_admin_request")
     if to_address != None:
         email_message = email_template.format(context)
     
-        push_email(to_address, email_subject, email_message, None)
+        push_email(to_address, email_subject, email_message, [], cc_addresses)
 
 
 def send_email_to_approver(approver_id, requester_id, request_type, request_time):
@@ -88,6 +85,8 @@ def send_email_to_requester(vm_name):
     
 def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
 
+    cc_addresses = []
+    cc_addresses.append(config.get("MAIL_CONF","mail_admin_request"))
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
         context = dict(vmName = vm_name, 
@@ -95,10 +94,10 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
                        taskType = task_type,
                        requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
         if task_type == TASK_TYPE_CREATE_VM:
-            send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
+            send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
         else:
             subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
-            send_email(user_info[1], subject, TASK_COMPLETE_BODY, context)
+            send_email(user_info[1], subject, TASK_COMPLETE_BODY, context, cc_addresses)
         
 
 def send_email_to_admin(email_subject, email_message, email_type):
