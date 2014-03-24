@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from auth_user import fetch_ldap_user, create_or_update_user
+from auth_user import fetch_ldap_user, create_or_update_user, AUTH_TYPE_LDAP
 from log_handler import logger
 
 def get_my_requests():
