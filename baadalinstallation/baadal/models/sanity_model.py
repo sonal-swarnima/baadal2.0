@@ -9,7 +9,7 @@ import libvirt
 from libvirt import *  # @UnusedWildImport
 from lxml import etree
 from helper import execute_remote_cmd, logger
-from host_helper import HOST_STATUS_UP
+from host_helper import HOST_STATUS_UP, get_host_domains
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,
@@ -32,24 +32,14 @@ def vminfo_to_state(vm_state):
 
     return status
 
-# def check_host_sanity():
-
 def check_vm_sanity():
     vmcheck=[]
     vm_list = []
     hosts=db(db.host.status == HOST_STATUS_UP).select()
     for host in hosts:
         try:
-            #Establish a read only remote connection to libvirtd
-            #find out all domains running and not running
-            conn = libvirt.openReadOnly('qemu+ssh://root@'+host.host_ip+'/system')
-            domains=[]
-            ids = conn.listDomainsID()
-            for _id in ids:
-                domains.append(conn.lookupByID(_id))
-            names = conn.listDefinedDomains()
-            for dom_name in names:
-                domains.append(conn.lookupByName(dom_name))
+            #Get list of the domains(running and not running) on the hypervisor
+            domains = get_host_domains(host.host_ip)
             for dom in domains:
                 try:
                     domain_name = dom.name()
@@ -95,9 +85,6 @@ def check_vm_sanity():
                                         'message':'Some Error Occurred', 
                                         'operation':'Error'})
 
-            domains=[]
-            names=[]
-            conn.close()
         except:pass
         db.commit()
         

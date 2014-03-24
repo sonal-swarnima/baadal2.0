@@ -82,11 +82,9 @@ def host_status_sanity_check():
                 host.update_record(status=host_status)
                 current.db.commit()
 
-def has_running_vm(host_ip):
-    found=False
-    if not check_host_status(host_ip):
-        logger.debug("Host %s is down" %(host_ip))
-        return False
+# Establishes a read only remote connection to libvirtd
+# Finds out all domains running and not running
+def get_host_domains(host_ip):
     try:
         conn = libvirt.openReadOnly('qemu+ssh://root@'+host_ip+'/system')
         domains=[]
@@ -96,13 +94,23 @@ def has_running_vm(host_ip):
         for name in conn.listDefinedDomains():
             domains.append(conn.lookupByName(name))
 
+        conn.close()
+        return domains
+    except:
+        raise
+
+# Finds if the given host has a running vm
+def has_running_vm(host_ip):
+    found=False
+    if not check_host_status(host_ip):
+        logger.debug("Host %s is down" %(host_ip))
+        return False
+    try:
+        domains = get_host_domains(host_ip)
         for dom in domains:
             logger.debug("Checking "+str(dom.name()))
             if(dom.info()[0] != VIR_DOMAIN_SHUTOFF):
                 found=True
-
-        domains=None
-        conn.close()
     except:
         logger.exception('Exception: ')
     return found
@@ -117,24 +125,16 @@ def move_all_dead_vms(host_ip):
     if(has_running_vm(host_ip)):
         logger.debug("All the vms on this host are not Off")
         return
+    host1 = current.db.host(status=HOST_STATUS_UP)
+
     try:
-        conn = libvirt.openReadOnly('qemu+ssh://root@'+host_ip+'/system')
-        domains=[]
-        host1 = current.db.host(status=HOST_STATUS_UP)
-        for domain_id in conn.listDomainsID():
-            domains.append(conn.lookupByID(domain_id))
-        names = conn.listDefinedDomains()
-        for name in names:
-            domains.append(conn.lookupByName(name))
+        domains = get_host_domains(host_ip)
         for dom in domains:
             logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
             vm_details = current.db.vm_data(vm_identity=dom.name())
             migrate_domain(vm_details['id'], host1['id'])
         logger.debug("All the vms moved Successfully. Host is empty")
         logger.debug(commands.getstatusoutput("ssh root@"+host_ip+" virsh list --all"))
-        domains=None
-        names=None
-        conn.close()
     except:
         logger.exception('Exception: ')
     return
@@ -176,17 +176,10 @@ def put_host_in_maint_mode(host_id):
 
     host_data = current.db.host[host_id]
     host_data.update_record(status=HOST_STATUS_MAINTENANCE)
+    host1 = current.db.host(status=HOST_STATUS_UP)
 
     try:
-        conn = libvirt.openReadOnly('qemu+ssh://root@'+host_data.host_ip+'/system')
-        domains=[]
-        host1 = current.db.host(status=HOST_STATUS_UP)
-        for domain_id in conn.listDomainsID():
-            domains.append(conn.lookupByID(domain_id))
-
-        for name in conn.listDefinedDomains():
-            domains.append(conn.lookupByName(name))
-        
+        domains = get_host_domains(host_data.host_ip)
         for dom in domains:
             vm_details = current.db.vm_data(vm_identity=dom.name())
             if vm_details:
@@ -198,7 +191,6 @@ def put_host_in_maint_mode(host_id):
                     add_migrate_task_to_queue(vm_details['id'], live_migration=True)
         
         move_all_dead_vms(host_data.host_ip)
-        conn.close()
     except:
         logger.exception('Exception: ')
     return
