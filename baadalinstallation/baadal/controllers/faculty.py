@@ -8,7 +8,6 @@ if 0:
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
-from helper import is_moderator, is_orgadmin
 
 @check_faculty
 @handle_exception

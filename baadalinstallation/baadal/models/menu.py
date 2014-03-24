@@ -7,8 +7,8 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin, check_db_storage_type,\
-    get_constant
+from helper import get_constant
+from auth_user import is_auth_type_db
 
 response.title = request.application
 response.google_analytics_id = None
@@ -59,7 +59,7 @@ if auth.is_logged_in():
             (T('Tasks'), False, URL('admin','task_list')),
             (T('Sanity Check'), False, URL('admin','sanity_check'))]
 
-        if check_db_storage_type():
+        if is_auth_type_db():
                 response.admin_menu.extend([(T('Approve Users'), False, URL('admin','approve_users')),
                                             (T('Modify User Role'), False, URL('admin','modify_user_role'))])
 

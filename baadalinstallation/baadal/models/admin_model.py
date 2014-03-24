@@ -7,11 +7,12 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
-    remove_dhcp_entry, create_dhcp_bulk_entry, logger
+    remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR
+from log_handler import logger
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -647,7 +648,7 @@ def specify_user_roles(user_id, user_roles):
                 db.user_membership.insert(user_id=user_id, group_id=role) 
             message = "User Activated with specified roles"
         db(db.user.id == user_id).update(registration_key='')    
-        for row in db(db.user_group.role == current.USER).select(db.user_group.id):
+        for row in db(db.user_group.role == USER).select(db.user_group.id):
                 role_type_user = row.id
         db.user_membership.insert(user_id=user_id, group_id=role_type_user)
     except Exception:

@@ -233,3 +233,7 @@ def delete_orhan_vm(vm_name, host_id):
             VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA)
 
     logger.debug(vm_name + " is deleted successfully.")
+    
+def get_active_hosts():
+    
+    return current.db(current.db.host.status == HOST_STATUS_UP).select(current.db.host.ALL)

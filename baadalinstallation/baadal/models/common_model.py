@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import is_moderator, is_orgadmin, is_faculty, log_exception, logger
+from helper import log_exception, logger
 
 def get_vm_status(iStatus):
     vm_status_map = {
@@ -177,7 +177,7 @@ def get_users_with_organisation(pending_users):
     return users_with_org
         
 def get_user_role_types():
-    user_types=db(db.user_group.role != current.USER).select(db.user_group.id, db.user_group.role);
+    user_types=db(db.user_group.role != USER).select(db.user_group.id, db.user_group.role);
     return user_types
         
 def delete_all_user_roles(user_id):
@@ -282,6 +282,8 @@ def exception_handler():
     msg = log_exception('Exception: ') 
     if is_moderator():
         error = msg
+    else:
+        error = 'Some error has occurred'
     redirect(URL(c='default', f='error',vars={'error':error}))    
     
     
@@ -470,3 +472,12 @@ def mark_required(table):
         if required:
             _label = field.label
             field.label = SPAN(_label, ' ', marker, ' ')
+
+def is_moderator():
+    return (ADMIN in auth.user_groups.values())
+
+def is_faculty():
+    return (FACULTY in auth.user_groups.values())
+    
+def is_orgadmin():
+    return (ORGADMIN in auth.user_groups.values())

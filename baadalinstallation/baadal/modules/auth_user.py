@@ -4,6 +4,8 @@ from gluon import current
 from helper import get_config_file, logger
 
 config = get_config_file()
+AUTH_TYPE_LDAP = 'ldap'
+AUTH_TYPE_DB = 'db'
 
 def register_callback(form):
     add_membership_db(current.auth.user.id, current.USER, True)
@@ -141,3 +143,9 @@ def add_membership_db(_user_id, role, update_session):
         if update_session:
             # add role to the current session
             current.auth.user_groups[long(_group_id)] = role
+
+def is_auth_type_db():
+
+    auth_type = config.get("AUTH_CONF","auth_type")
+    return (auth_type == AUTH_TYPE_DB)
+    

@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from auth_user import fetch_ldap_user, create_or_update_user
-from helper import is_moderator, is_orgadmin, is_faculty, logger
+from log_handler import logger
 
 def get_my_requests():
     

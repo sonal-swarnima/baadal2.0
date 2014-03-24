@@ -8,7 +8,7 @@ if 0:
 from helper import get_datetime, log_exception, logger
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
-from vm_utilization import update_rrd
+# from vm_utilization import update_rrd
 
 UUID_SNAPSHOT_DAILY = 'scheduler-uuid-snapshot-daily'
 UUID_SNAPSHOT_WEEKLY = 'scheduler-uuid-snapshot-weekly'
@@ -219,10 +219,10 @@ def host_sanity_check():
 
 # Handles periodic collection of VM utilization data &
 # updation of respective RRD file.
-def vm_utilization_rrd():
+# def vm_utilization_rrd():
     
-    logger.debug("Starting VM Utilization data collection task")
-    update_rrd()
+#     rrd_logger.debug("Starting VM Utilization data collection task")
+#     update_rrd()
     
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler

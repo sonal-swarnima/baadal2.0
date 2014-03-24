@@ -2,24 +2,9 @@
 ###################################################################################
 
 import os, re, random
-from gluon import current
 from gluon.validators import Validator
-import logging
-
-def is_moderator():
-    if current.ADMIN in current.auth.user_groups.values():
-        return True
-    return False    
-
-def is_faculty():
-    if current.FACULTY in current.auth.user_groups.values():
-        return True
-    return False 
-    
-def is_orgadmin():
-    if current.ORGADMIN in current.auth.user_groups.values():
-        return True
-    return False        
+from gluon import current
+from log_handler import logger
 
 def get_config_file():
 
@@ -118,13 +103,7 @@ def generate_random_mac():
         i += 1
     return (':'.join(map(lambda x: "%02x" % x, mac))).upper()
     
-def check_db_storage_type():
-    config = get_config_file()
-    auth_type = config.get("AUTH_CONF","auth_type")
-    if auth_type == current.AUTH_TYPE_DB:
-        return True
-    return False
-    
+
 #Creates bulk entry into DHCP
 # Gets list of tuple containing (host_name, mac_addr, ip_addr)
 def create_dhcp_bulk_entry(dhcp_info_list):
@@ -156,24 +135,6 @@ def remove_dhcp_entry(host_name, mac_addr, ip_addr):
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
-
-def get_configured_logger(name):
-    logger = logging.getLogger(name)
-    if (len(logger.handlers) == 0):
-        # This logger has no handlers, so we can assume it hasn't yet been configured.
-        log_file = os.path.join(current.request.folder,'logs/%s.log'%(name)) # @UndefinedVariable
-        handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=14)
-
-        formatter="%(asctime)s %(levelname)s %(funcName)s():%(lineno)d %(message)s"
-        handler.setFormatter(logging.Formatter(formatter))
-        handler.setLevel(logging.DEBUG)
-        
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-
-    return logger
-
-logger = get_configured_logger(current.request.application)  # @UndefinedVariable
 
 def log_exception(message=None):
     import sys, traceback

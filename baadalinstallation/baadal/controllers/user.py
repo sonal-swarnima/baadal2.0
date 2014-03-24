@@ -8,7 +8,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin, logger
+from log_handler import logger
 from vm_utilization import get_performance_graph
 
 @auth.requires_login()
@@ -179,7 +179,14 @@ def get_updated_graph():
         logger.debug(request.vars['graphType'])
         logger.debug(request.vars['vmIdentity'])
         logger.debug(request.vars['graphPeriod'])
-        return get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
+        graphRet = get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
+        if not isinstance(graphRet, IMG):
+            if is_moderator():
+                return H3(graphRet)
+            else:
+                return H3('VMs RRD File Unavailable!!!')
+        else:
+            return graphRet
 
 @check_vm_owner
 @handle_exception       
