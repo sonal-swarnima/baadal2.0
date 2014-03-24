@@ -24,7 +24,8 @@ def choose_datastore():
 def host_resources_used(host_id):
     RAM = 0.0
     CPU = 0.0
-    vms = current.db(current.db.vm_data.host_id == host_id).select()
+    vms = current.db((current.db.vm_data.host_id == host_id) & (current.db.vm_data.status != current.VM_STATUS_UNKNOWN) &  (current.db.vm_data.status != current.VM_STATUS_IN_QUEUE)).select()
+    logger.debug("vms selected are: " + str(vms))
     for vm_data in vms:
         RAM += vm_data.RAM
         CPU += vm_data.vCPU
@@ -85,7 +86,6 @@ def choose_mac_ip_vncport(vm_properties):
         if not random_vnc_port in vnc_ports_taken:
             break;
     vm_properties['vnc_port'] = str(random_vnc_port)
-    
 
 #Returns all the host running vms of particular run level
 def find_new_host(RAM, vCPU):
@@ -94,7 +94,7 @@ def find_new_host(RAM, vCPU):
         logger.debug("checking host="+host.host_name)
         (uram, ucpu)=host_resources_used(host.id)
         logger.debug("uram "+str(uram)+" ucpu "+str(ucpu)+" hram "+ str(host.RAM)+" hcpu "+ str(host.CPUs))
-        if(uram <= host.RAM*1024 and ucpu <= host.CPUs):
+        if(((host.RAM*1024 - uram) >= RAM) & ((host.CPUs - ucpu) >= vCPU)):
             return host.id
 
     #If no suitable host found
@@ -807,7 +807,6 @@ def edit_vm_config(parameters):
         message = e.get_error_message()
         return (current.TASK_QUEUE_STATUS_FAILED, message)
 
-
 def get_clone_properties(vm_details, cloned_vm_details):
 
     vm_properties = {}
@@ -854,6 +853,26 @@ def get_clone_properties(vm_details, cloned_vm_details):
         already_attached_disks -= 1
 
     return (vm_properties, clone_file_parameters)
+                
+# Migrates cloned vm to new host
+def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm):
+
+    try:
+        new_host_ip_for_cloned_vm = current.db.host[new_host_id_for_cloned_vm]['host_ip']
+        logger.debug("New host ip for cloned vm is: " + str(new_host_ip_for_cloned_vm))
+        flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE|VIR_MIGRATE_OFFLINE
+        logger.debug("Clone currently on: " + str(vm_details.host_id.host_ip))
+        current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = current_host_connection_object.lookupByName(cloned_vm_details.vm_identity)
+        logger.debug("Starting to migrate cloned vm to host " + str(new_host_ip_for_cloned_vm))
+        domain.migrateToURI("qemu+ssh://root@" + new_host_ip_for_cloned_vm + "/system", flags , None, 0)
+        logger.debug("Successfully migrated cloned vm to host " + str(new_host_ip_for_cloned_vm))
+        cloned_vm_details.update_record(host_id = new_host_id_for_cloned_vm)
+        return True
+    except libvirt.libvirtError,e:
+        message = e.get_error_message()
+        logger.debug("Error: " + message)
+        return False
         
 # Clones vm
 def clone(vmid):
@@ -862,14 +881,37 @@ def clone(vmid):
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
         (vm_properties, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
-        clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
+        logger.debug("vm_properties: " + str(vm_properties))
+        host = vm_properties['host']
+        logger.debug("host is: " + str(host))
+        logger.debug("host details are: " + str(host))
+        (uram, ucpu) = host_resources_used(host.id)
+        logger.debug("uram " + str(uram) + " ucpu " + str(ucpu) + " hram " + str(host.RAM) +" hcpu " + str(host.CPUs))
+        if (((host.RAM*1024 - uram) >= cloned_vm_details.RAM) & ((host.CPUs - ucpu) >= cloned_vm_details.vCPU)):
+            clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
-        exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
-        logger.debug("Updating db after cloning")
-        update_db_after_vm_installation(cloned_vm_details, vm_properties, parent_id = vm_details.id)
-        message = "Cloned successfully"
-        logger.debug(message)
-        return (current.TASK_QUEUE_STATUS_SUCCESS, message)        
+            exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
+            logger.debug("Updating db after cloning")
+            update_db_after_vm_installation(cloned_vm_details, vm_properties, parent_id = vm_details.id)
+            message = "Cloned successfully. "
+
+            try:
+                new_host_id_for_cloned_vm = find_new_host(cloned_vm_details.RAM, cloned_vm_details.vCPU)
+                if new_host_id_for_cloned_vm != cloned_vm_details.host_id:
+                    if migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm):
+                        message += "Found new host and migrated successfully."
+                    else:
+                        message += "Found new host but not migrated successfully."
+                else:
+                    message += "New host selected to migrate cloned vm is same as the host on which it currently resides."
+            except:
+                message += "Could not find host to migrate cloned vm."
+        
+            logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+
+        else:
+            raise Exception("Host resources exhausted. Migrate the host vms and then try.")        
     except:
         etype, value, tb = sys.exc_info()
         message = ''.join(traceback.format_exception(etype, value, tb, 10))
