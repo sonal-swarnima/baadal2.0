@@ -142,7 +142,7 @@ def unit_testing():
     
 
 def index():
-    try:
+   
         import commands
         form = FORM( TABLE
                   (  TR(INPUT(_name='testcase1', _type='radio', _value="1"),'Unit Testing'),
@@ -152,25 +152,24 @@ def index():
                      BR(),
                      TR(INPUT(_type='submit',_value='submit'))
                   )
-                )        
+                )
         if form.process().accepted:
             if request.vars['testcase1']!=None:
+                print "unit testing"
                 redirect(URL('unit_testing'))
             if request.vars['testcase2']!=None:
-                redirect(URL('integration_testing')) 
+                redirect(URL('integration_testing'))
             if request.vars['testcase3']!=None:
                  for j in range(1,94):
                         test_case_no=str(j)
                         test_script(test_case_no)
             if request.vars['testcase4']!=None:
-                redirect(URL('network_testing'))        
+                redirect(URL('network_testing'))
         elif form.errors:
             response.flash = 'form has errors'
         else:
             response.flash = 'please fill the form'
         return dict(form=form)
-    except Exception as e:
-        print e
 
 
 def network_testing():

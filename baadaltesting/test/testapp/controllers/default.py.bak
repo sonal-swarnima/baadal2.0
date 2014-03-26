@@ -152,18 +152,19 @@ def index():
                      BR(),
                      TR(INPUT(_type='submit',_value='submit'))
                   )
-                )        
+                )
         if form.process().accepted:
             if request.vars['testcase1']!=None:
+                print "unit testing"
                 redirect(URL('unit_testing'))
             if request.vars['testcase2']!=None:
-                redirect(URL('integration_testing')) 
+                redirect(URL('integration_testing'))
             if request.vars['testcase3']!=None:
                  for j in range(1,94):
                         test_case_no=str(j)
                         test_script(test_case_no)
             if request.vars['testcase4']!=None:
-                redirect(URL('network_testing'))        
+                redirect(URL('network_testing'))
         elif form.errors:
             response.flash = 'form has errors'
         else:
@@ -282,7 +283,7 @@ def integration_testing():
     if form.process().accepted:
         for i in range(56,100):
             test_case_no=request.vars['testcase'+str(i)]
-            if i<=94:
+            if i<=95:
                 if test_case_no!=None:
                     test_script(test_case_no)
             else :
