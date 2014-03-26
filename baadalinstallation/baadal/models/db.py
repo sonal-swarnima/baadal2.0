@@ -143,14 +143,13 @@ db.define_table('vlan',
 
 db.define_table('security_domain',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
-    Field('vlan', 'reference vlan'),
+    Field('vlan', 'reference vlan', unique = True),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
-
-db.security_domain.name.requires = [IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
-vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
-db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
+db.security_domain.name.requires = [IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
+# vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
+# db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
 # db.security_domain.vlan.widget=SQLFORM.widgets.options.widget
 # db.security_domain.vlan.requires=[IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None), IS_NOT_IN_DB(db,'security_domain.vlan')]
 
@@ -200,7 +199,7 @@ db.define_table('request_queue',
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('request_time', 'datetime', default = get_datetime()))
 
-db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
+db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
 db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
