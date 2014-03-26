@@ -1,0 +1,535 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.IOError'> [Errno 2] No such file or directory: '/home/monika/web2py/logs/test.log'"
+p3
+sS'layer'
+p4
+S'/home/monika/Desktop/web2py/applications/todo/models/test.py'
+p5
+sS'code'
+p6
+S'# coding: utf8\nimport os\nimport logging\nimport datetime\nimport logging.config\nfrom helper import xml_connect\nfrom helper import db_connection\nfrom helper import get_context_path\nfrom selenium import webdriver\nfrom selenium.webdriver.common.keys import Keys\nimport sys\n\nlogging.config.fileConfig(os.path.join(get_context_path(),\'static/logging.conf\'))\nbaadal_db=db_connection()\nlogger = logging.getLogger("testing baadal")# create logger\n\ndef isElementPresent(driver, xpath):\n\ttry:\n\t\tdriver.find_element_by_xpath(xpath)\n\t\treturn 1\n\texcept:\n\t\tprint "No Table exists"\n\t\treturn 0\n\t\t\n\t\t\ndef ts(b):\n    root = xml_connect()\n    num=int(b[0])\n    if root[num-1].get("id")==str(b[0]):\n        i=num-1\n        for j in xrange(0,len(root[i])):\n            driver = webdriver.Firefox()#connect to server\n            driver.implicitly_wait(10)\n            driver.get(root[i].get("url")) #url to the page to be hit \n            driver.find_element_by_link_text(root[i].get("href")).click()\n            for k in xrange(0,len(root[i][j])):\n                field_type=root[i][j][k].get("type")\n                user_name=""\n                xml_parent=root[i]\n                xml_child=root[i][j]\n                xml_subchild=root[i][j][k]\n\t\t\t\t\t\n                if field_type=="input": #checking for input fields\n                    user_name=isInput(driver,xml_subchild)\n\t\t\t\t\t\t\n                elif field_type=="submit": #checking for submit button\n                    isSubmit(driver, xml_parent,xml_child,xml_subchild,user_name)\n\t\t\t\t\t\t\n                elif field_type=="button":#checking for submit button\n                    isButton(driver,xml_subchild)\n                        \n                elif field_type=="name":#checking for input fields\n                    isName(driver,xml_subchild)\n\t\t\t\t\t\n                elif field_type=="key":#scrolling the page down\n                    isKey(driver,xml_subchild)\n\t\t\t\t \t\t\n                elif field_type=="href":\n                    isHref(driver,xml_subchild)#redirecting on other page\n\t\t\t\t\t\t\n                elif field_type=="partialink":\n                    ispartialink(driver, xml_subchild)#redirecting on other page\n\t\t\t\t\t\t\n                elif field_type=="select":\n                    isSelect(driver,xml_subchild)# selecting from dropdown menu\n\t\t\t \t\n                elif field_type=="table":\n                    isTable(logger,driver,xml_parent,xml_child,xml_subchild)#checking for data in table\n                         \n                elif field_type=="img":#checking for setting image\n                    a=xml_subchild.text\n                    isImage(driver,xml_subchild,a)\n\t\t\t\t\t\t\t\t\n                elif field_type=="tagname":#cheking for host table\n                    isTagname(driver,xml_parent,xml_child,xml_subchild)\n\t\t\t\t\t\t\t\t\n                else:\n                    logging.debug("report problem") #logging the report\n            driver.close()#disconnect from server\n    #db.commit()\n    #cursor3.close()\n    #db.close()\n\n\t\t\n########################################################################################\n#                  Functions used in input fields                                      #\n########################################################################################\t\t\n\t\n\t\t\n\t\t\ndef print_result(logger,field_text,result,xml_child):#checking whether front end data and daatabase entries are equal and printing the result \n\tquery_result=str(result)\n\tif field_text==query_result:\n\t\tprint "1"\n\t\tlogger.debug(xml_child.get("value") +\': Result:correct input\') \n\telse:\n\t\tlogger.debug(xml_child.get("value") +\': Result:Incorrect input\')\n\t\tprint "2"\n\tprint query_result\n\tprint field_text\n\treturn \n\t\ndef open_error_page(driver,t):#open error link on differnet page\n\tdriver.find_element_by_link_text(t).click()\n\tb=driver.find_element_by_xpath("//span[@id=\'overlayblock\']/div")\n\tt=b.text\n\tdriver.find_element_by_link_text("CLOSE WINDOW").click()\n\tfield=driver.find_element_by_tag_name("html")\n\tfield.send_keys("Keys.PAGE_DOWN")\n\tdriver.execute_script("window.scrollBy(0,200)", "")\n\treturn t\n\t\ndef host_status(query):#checking host status from database and giving them value\n\thost={0:"Down",1:"Up",2:"Maintenance"}\t\n\tif query==0:\n\t\tresult=host[0]\n\tif query==1:\n\t\tresult=host[1]\n\tif query==2:\n\t\tresult=host[2]\n\treturn result\n\t\ndef org_task_status(query):#checking org_task status from database and giving them value\n\ttask_status={0:"Approve  |  Reject",3:"Installation In Progress"}\n\tif\tquery==0 | query==2 :\n\t\tresult=task_status[0]\n\tif query==3:\n\t\tresult=task_status[3]\n\treturn result\n\t\n#########################################################################################\n#  \t\t\t\t\tfunctions for various types of input fields  \t\t\t\t\t\t#\n#########################################################################################\n\t\t\ndef isInput(driver, xml_sub_child):\n\tcurrent_time=datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")\n\tfield = driver.find_element_by_id(xml_sub_child.get("id"))\n\tif xml_sub_child.text!=None:\n\t\tfield.send_keys(xml_sub_child.text) # sending the user name/password/vm name/purpose etc\n\t\tif xml_sub_child.get("id")=="user_username":\t\n\t\t\tuser_name=(xml_sub_child.text)\n\t\telse:\n\t\t\tuser_name=" "\n\telse:\n\t\n\t\tif xml_sub_child.get("id")=="user_username":\t\n\t\t\tuser_name=" "\n\t\tif xml_sub_child.get("id")=="vm_data_vm_name":\n\t\t\tfield.send_keys(str(current_time))\n\t\t\tuser_name=" "\n\treturn user_name\n\n\n\n\t\ndef isName(driver,xml_sub_child):\n\tcurrent_time=datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")\n\tfield=driver.find_element_by_name(xml_sub_child.get("id"))\n\tif xml_sub_child.text!=None:\n\t\tfield.send_keys(xml_sub_child.text)\n\telse:\n\t\tfield.send_keys(str(current_time))\n\treturn\t\n\t\n\n\ndef isTable(logger,driver,xml_parent,xml_child,xml_sub_child):\n\tlist={0:"Error",1:"failed_tasks",2:"TRY AGAIN | IGNORE",3:"list_my_vm",4:"Waiting for admin approval",5:"faculty_pending_tasks",6:"Add_host",7:"org_admin_pending_tasks",8:"org_admin_all_tasks"}\n\ta=xml_sub_child.text\n\tif isElementPresent(driver,a):\n\t\tcursor3=baadal_db.executesql( xml_parent.get("query3"))\n\t\tquery3=cursor3.fetchall()\n\t\tlength=len(query3[0])#calculate number of columns of query\n\t\tm=0\n\t\tp=0\n\t\tfield=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui\n\t\tfor n in field:\n\t\t\tfield_text=n.text\n\t\t\tif field_text!="":\n\t\t\t\tif field_text==list[0]:\n\t\t\t\t\ttext=open_error_page(driver,t)\n\t\t\t\t\tresult=query3[m][p]#data form query\n\t\t\t\t \tprint_result(logger,field_text,result,xml_child)\n\t\t\t\t \t\n\t\t\t\telif (query3[m][p]==4) & (xml_parent.get("name")==list[1]):\n\t\t\t\t\tresult=list[2]\t\n\t\t\t\t\tprint_result(logger,field_text,result,xml_child)\n\n\t\t\t\telif (query3[m][p]==2) & (xml_parent.get("name")==list[3]):\n\t\t\t\t\tresult=list[4]\n\t\t\t\t\tprint_result(logger,field_text,result,xml_child)\n\t\t\t\t\t\n\t\t\t\telif (p%int(length)==6) & ((xml_parent.get("name")==list[5]) | (xml_parent.get("id")==list[7]) | (xml_parent.get("name")==list[8])):\n\t\t\t\t\tquery=query3[m][p]\n\t\t\t\t\tresult=org_task_status(query)\n\t\t\t\t\tprint result\n\t\t\t\t\tprint_result(logger,field_text,result,xml_child)\n\t\t\t\t\t\n\t\t\t\telif (p%int(length)==2) & (xml_parent.get("name")==list[6]):\n\t\t\t\t\tquery=query3[m][p]\n\t\t\t\t\tresult=host_status(query)\n\t\t\t\t\tprint_result(logger,field_text,result,xml_child)\n\t\t\t\t\t\t\n\t\t\t\telse:\n\t\t\t\t\tresult=query3[m][p]\n\t\t\t\t\tprint_result(logger,field_text,result,xml_child)\n\t\t\t\tp=p+1\n\t\t\t\tif p%int(length)==0:\n\t\t\t\t\tm=m+1\n\t\t\t\t\tp=0\t\n\treturn\n\ndef isSubmit( driver, xml_parent, xml_child, xml_sub_child, user_name):\n    current_time=datetime.datetime.now()\n    driver.find_element_by_xpath(xml_sub_child.text).click()\n    cursor1=baadal_db.cursor()\n    cursor1.execute(xml_parent.get("query1")) \n    row= cursor1.fetchone()\n    if cursor1.rowcount!=0:\n        cursor2=baadal_db.cursor() #create object of database cursor\n        cursor2.execute(xml_parent.get("query2"),(str(row[0]))) #execute sql query\n        row = cursor2.fetchone()\n        if cursor2.rowcount!=0:\n            print row\n            if (row[0]>=current_time) | ("Logged-in" in str(row[1])):\n                print "1"\n                logger.debug(xml_child.get("value")  +\': Result:Valid Login\') #logging the report\n            else:\n                logger.debug(xml_child.get("value")  +\': Result:Invalid Login\') #logging the report\n                print "2"\n        else:\n            logger.debug(xml_child.get("value") +\': Result:Invalid Loginss\') #logging the report\n            print "3"\n        cursor2.close()\n    else:\n        logger.debug(xml_child.get("value") +\': Result:Invalid Loginss\') #logging the report\n        print "4"\n    cursor1.close()\n    return\n\t\ndef isButton(driver, xml_sub_child):\n\tdriver.find_element_by_xpath(xml_sub_child.text).click()\n\treturn\n\t\t\t\ndef isKey(driver, xml_sub_child):\n\tfield=driver.find_element_by_tag_name("html")\n\tfield.send_keys(xml_sub_child.text)\n\tdriver.execute_script("window.scrollBy(0,200)", "")\n\treturn\n\t\ndef isHref(driver, xml_sub_child):\n\tdriver.find_element_by_link_text(xml_sub_child.text).click()\n\treturn\n\t\ndef ispartialink(driver, xml_sub_child):\n\tdriver.find_element_by_partial_link_text(xml_sub_child.text).click()\n\treturn\n\ndef isSelect(driver, xml_sub_child):\n\tdriver.find_element_by_xpath(xml_sub_child.text).click()\n\treturn\n\t\ndef isImage(driver,xml_subchild,a):\t\n\tif isElementPresent(driver,a):\n\t\tif xml_subchild.get("name") in ["Pause","Gracefully","Forcefully","Migrate","Request","Lock","Edit","Setting","Resume"]:\n\t\t\tdriver.find_element_by_xpath(xml_subchild.text).click()\n\treturn\n\t\ndef isTagname(driver, xml_parent, xml_child, xml_sub_child):\n\t\n\tfield=driver.find_elements_by_tag_name("tr")\n\tcursor4=baadal_db.executesql("select host_ip from host")\n\ty=cursor4.fetchall()\n\tx=cursor4.rowcount\n\tfor p in xrange(0,x):\n\t\tif y[p][0] in ["10.208.21.67","10.208.21.68"]:\t\n\t\t\tcursor5=baadal_db.executesql(xml_parent.get("query4"))\n\t\t\tquery3=cursor5.fetchall()\n\t\t\tlength=len(query3[0])#calculate number of columns of query\n\t\t\tfield=driver.find_elements_by_xpath(xml_sub_child.text)\n\t\t\ta=xml_sub_child.text\n\t\t\tif isElementPresent(driver,a):\n\t\t\t\tm=0\n\t\t\t\tp=0\n\t\t\t\tfor n in field:\n\t\t\t\t\tif n.text!="":\n\t\t\t\t\t\tt=n.text\n\t\t\t\t\t\tresult=query3[m][p]\n\t\t\t\t\t\tprint_result(logger,t,result,xml_child)\n\t\t\t\t\t\tp=p+1\n\t\t\t\t\t\tif p%int(length)==0:\n\t\t\t\t\t\t\tm=m+1\n\t\t\t\t\t\t\tp=0\t\n\treturn\n#########################################################################################\n#                                The main test class                                    #\n#########################################################################################\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__getslice__'
+p12
+S"<method-wrapper '__getslice__' of exceptions.IOError object>"
+p13
+sS'__str__'
+p14
+S"<method-wrapper '__str__' of exceptions.IOError object>"
+p15
+sS'__reduce__'
+p16
+S'<built-in method __reduce__ of exceptions.IOError object>'
+p17
+sS'__dict__'
+p18
+S'{}'
+p19
+sS'__sizeof__'
+p20
+S'<built-in method __sizeof__ of exceptions.IOError object>'
+p21
+sS'__init__'
+p22
+S"<method-wrapper '__init__' of exceptions.IOError object>"
+p23
+sS'__setattr__'
+p24
+S"<method-wrapper '__setattr__' of exceptions.IOError object>"
+p25
+sS'__reduce_ex__'
+p26
+S'<built-in method __reduce_ex__ of exceptions.IOError object>'
+p27
+sS'__new__'
+p28
+S'<built-in method __new__ of type object>'
+p29
+sS'errno'
+p30
+S'2'
+sS'__format__'
+p31
+S'<built-in method __format__ of exceptions.IOError object>'
+p32
+sS'__class__'
+p33
+S"<type 'exceptions.IOError'>"
+p34
+sS'filename'
+p35
+S"'/home/monika/web2py/logs/test.log'"
+p36
+sS'__doc__'
+p37
+S"'I/O operation failed.'"
+p38
+sS'__getitem__'
+p39
+S"<method-wrapper '__getitem__' of exceptions.IOError object>"
+p40
+sS'__setstate__'
+p41
+S'<built-in method __setstate__ of exceptions.IOError object>'
+p42
+sS'__getattribute__'
+p43
+S"<method-wrapper '__getattribute__' of exceptions.IOError object>"
+p44
+sS'args'
+p45
+S"(2, 'No such file or directory')"
+p46
+sS'__subclasshook__'
+p47
+S'<built-in method __subclasshook__ of type object>'
+p48
+sS'__unicode__'
+p49
+S'<built-in method __unicode__ of exceptions.IOError object>'
+p50
+sS'strerror'
+p51
+S"'No such file or directory'"
+p52
+sS'__delattr__'
+p53
+S"<method-wrapper '__delattr__' of exceptions.IOError object>"
+p54
+sS'__repr__'
+p55
+S"<method-wrapper '__repr__' of exceptions.IOError object>"
+p56
+sS'__hash__'
+p57
+S"<method-wrapper '__hash__' of exceptions.IOError object>"
+p58
+ssS'evalue'
+p59
+S"[Errno 2] No such file or directory: '/home/monika/web2py/logs/test.log'"
+p60
+sS'request'
+p61
+cgluon.html
+XML_unpickle
+p62
+(S'sv[\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">ajax</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">application</td><td valign="top">:</td><td><div>todo</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;open file &#x27;&lt;fdopen&gt;&#x27;, mode &#x27;w+b&#x27; at 0x7f9d501e5660&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cid</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">client</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">controller</td><td valign="top">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">session_id_admin</td><td valign="top">:</td><td><div>127.0.0.1-bdb9ac22-a2d4-4b25-a744-259f1a22783b<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_todo</td><td valign="top">:</td><td><div>127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_welcome</td><td valign="top">:</td><td><div>127.0.0.1-83d68bf4-49d7-4b63-99ab-ee8a9ce8c5a3<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">env</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/monika/Desktop/web2py/applications/welcome/&#x27;, &#x27;/home/monika/Desktop/web2py/applications/admin/&#x27;, &#x27;/home/monika/Desktop/web2py/applications/todo/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_options</td><td valign="top">:</td><td><div>&lt;Values at 0x23da488: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;127.0.1.1&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;dell-OptiPlex-7010&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/monika/Desktop/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;winservice&#x27;: &#x27;&#x27;, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;profiler_filename&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;interfaces&#x27;: None, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">content_length</td><td valign="top">:</td><td><div>435</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">content_type</td><td valign="top">:</td><td><div>multipart/form-data; boundary=---------------------------73885865760616606489684307</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_encoding</td><td valign="top">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_language</td><td valign="top">:</td><td><div>en-US,en;q=0.5</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_cache_control</td><td valign="top">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_connection</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_content_length</td><td valign="top">:</td><td><div>435</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_content_type</td><td valign="top">:</td><td><div>multipart/form-data; boundary=---------------------------73885865760616606489684307</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_cookie</td><td valign="top">:</td><td><div>session_id_welcome=127.0.0.1-83d68bf4-49d7-4b63-99ab-ee8a9ce8c5a3; session_id_admin=127.0.0.1-bdb9ac22-a2d4-4b25-a744-259f1a22783b; session_id_todo=127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_host</td><td valign="top">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_referer</td><td valign="top">:</td><td><div>http://127.0.0.1:8000/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_user_agent</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">local_hosts</td><td valign="top">:</td><td><div><table><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>dell-OptiPlex-7010</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path_info</td><td valign="top">:</td><td><div>/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">query_string</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_addr</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_port</td><td valign="top">:</td><td><div>39453</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_method</td><td valign="top">:</td><td><div>POST</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_uri</td><td valign="top">:</td><td><div>/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">script_name</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_name</td><td valign="top">:</td><td><div>dell-OptiPlex-7010</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_port</td><td valign="top">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_protocol</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_software</td><td valign="top">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_path</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div>2.5.1-stable+timestamp.2013.06.06.15.39.19</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_errors</td><td valign="top">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x7f9d723f7270&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_file_wrapper</td><td valign="top">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x2349738&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_input</td><td valign="top">:</td><td><div>&lt;socket._fileobject object at 0x7f9d40273550&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multiprocess</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multithread</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_version</td><td valign="top">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">extension</td><td valign="top">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">folder</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py/applications/todo/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">function</td><td valign="top">:</td><td><div>display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">get_vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">global_settings</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/monika/Desktop/web2py/applications/welcome/&#x27;, &#x27;/home/monika/Desktop/web2py/applications/admin/&#x27;, &#x27;/home/monika/Desktop/web2py/applications/todo/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_options</td><td valign="top">:</td><td><div>&lt;Values at 0x23da488: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;127.0.1.1&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;dell-OptiPlex-7010&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/monika/Desktop/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;winservice&#x27;: &#x27;&#x27;, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;profiler_filename&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;interfaces&#x27;: None, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">local_hosts</td><td valign="top">:</td><td><div><table><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>dell-OptiPlex-7010</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div>2.5.1-stable+timestamp.2013.06.06.15.39.19</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_https</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_local</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_restful</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">now</td><td valign="top">:</td><td><div>datetime.datetime(2013, 7, 29, 18, 14, 29, 693475)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">post_vars</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">testcase1</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">raw_args</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">raw_extension</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">url</td><td valign="top">:</td><td><div>/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">utcnow</td><td valign="top">:</td><td><div>datetime.datetime(2013, 7, 29, 12, 44, 29, 693504)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">uuid</td><td valign="top">:</td><td><div>todo/127.0.0.1.2013-07-29.18-14-29.6ff480ef-123b-4eff-a637-86a7257c5919</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">vars</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">testcase1</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">environ</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">CONTENT_LENGTH</td><td valign="top">:</td><td><div>435</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">CONTENT_TYPE</td><td valign="top">:</td><td><div>multipart/form-data; boundary=---------------------------73885865760616606489684307</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_ENCODING</td><td valign="top">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_LANGUAGE</td><td valign="top">:</td><td><div>en-US,en;q=0.5</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CACHE_CONTROL</td><td valign="top">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CONNECTION</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CONTENT_LENGTH</td><td valign="top">:</td><td><div>435</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CONTENT_TYPE</td><td valign="top">:</td><td><div>multipart/form-data; boundary=---------------------------73885865760616606489684307</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_COOKIE</td><td valign="top">:</td><td><div>session_id_welcome=127.0.0.1-83d68bf4-49d7-4b63-99ab-ee8a9ce8c5a3; session_id_admin=127.0.0.1-bdb9ac22-a2d4-4b25-a744-259f1a22783b; session_id_todo=127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_HOST</td><td valign="top">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_REFERER</td><td valign="top">:</td><td><div>http://127.0.0.1:8000/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_USER_AGENT</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">PATH_INFO</td><td valign="top">:</td><td><div>/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">QUERY_STRING</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_ADDR</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_PORT</td><td valign="top">:</td><td><div>39453</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_METHOD</td><td valign="top">:</td><td><div>POST</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_URI</td><td valign="top">:</td><td><div>/todo/default/display_form</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SCRIPT_NAME</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_NAME</td><td valign="top">:</td><td><div>dell-OptiPlex-7010</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PORT</td><td valign="top">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PROTOCOL</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_SOFTWARE</td><td valign="top">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.errors</td><td valign="top">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x7f9d723f7270&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.file_wrapper</td><td valign="top">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x2349738&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.input</td><td valign="top">:</td><td><div>&lt;open file &#x27;&lt;fdopen&gt;&#x27;, mode &#x27;w+b&#x27; at 0x7f9d501e5660&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multiprocess</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multithread</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.version</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr></table></div></td></tr></table></div>'
+tRp63
+sS'frames'
+p64
+(lp65
+(dp66
+S'file'
+p67
+S'/home/monika/Desktop/web2py/gluon/restricted.py'
+p68
+sS'dump'
+p69
+(dp70
+S'environment'
+p71
+S"{'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, ...}"
+p72
+sS'ccode'
+p73
+S'<code object <module> at 0x7f9d543d23b0, file "/...web2py/applications/todo/models/test.py", line 2>'
+p74
+ssS'lnum'
+p75
+I212
+sS'lines'
+p76
+(dp77
+I207
+S'    try:'
+p78
+sI208
+S'        if isinstance(code, types.CodeType):'
+p79
+sI209
+S'            ccode = code'
+p80
+sI210
+S'        else:'
+p81
+sI211
+S'            ccode = compile2(code, layer)'
+p82
+sI212
+S'        exec ccode in environment'
+p83
+sI213
+S'    except HTTP:'
+p84
+sI214
+S'        raise'
+p85
+sI215
+S'    except RestrictedError:'
+p86
+sI216
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p87
+ssS'call'
+p88
+S"(code='# coding: utf8\\nimport os\\nimport logging\\nimport d...################################################\\n', environment={'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, ...}, layer='/home/monika/Desktop/web2py/applications/todo/models/test.py')"
+p89
+sS'func'
+p90
+S'restricted'
+p91
+sa(dp92
+g67
+S'/home/monika/Desktop/web2py/applications/todo/models/test.py'
+p93
+sg69
+(dp94
+S'logging'
+p95
+S"<module 'logging' from '/usr/lib/python2.7/logging/__init__.pyc'>"
+p96
+sS'logging.config'
+p97
+S"<module 'logging.config' from '/usr/lib/python2.7/logging/config.pyc'>"
+p98
+sS'logging.config.fileConfig'
+p99
+S'<function fileConfig>'
+p100
+sS'os.path.join'
+p101
+S'<function join>'
+p102
+sS'get_context_path'
+p103
+S'<function get_context_path>'
+p104
+sS'os'
+p105
+S"<module 'os' from '/usr/lib/python2.7/os.pyc'>"
+p106
+sS'os.path'
+p107
+S"<module 'posixpath' from '/usr/lib/python2.7/posixpath.pyc'>"
+p108
+ssg75
+I13
+sg76
+(dp109
+I8
+S'from helper import get_context_path'
+p110
+sI9
+S'from selenium import webdriver'
+p111
+sI10
+S'from selenium.webdriver.common.keys import Keys'
+p112
+sI11
+S'import sys'
+p113
+sI12
+S''
+sI13
+S"logging.config.fileConfig(os.path.join(get_context_path(),'static/logging.conf'))"
+p114
+sI14
+S'baadal_db=db_connection()'
+p115
+sI15
+S'logger = logging.getLogger("testing baadal")# create logger'
+p116
+sI16
+S''
+sI17
+S'def isElementPresent(driver, xpath):'
+p117
+ssg88
+S'()'
+p118
+sg90
+S'<module>'
+p119
+sa(dp120
+g67
+S'/usr/lib/python2.7/logging/config.py'
+p121
+sg69
+(dp122
+S'cp'
+p123
+S'<ConfigParser.ConfigParser instance>'
+p124
+sS'global _install_handlers'
+p125
+S'<function _install_handlers>'
+p126
+sS'formatters'
+p127
+S"{'simpleFormatter': <logging.Formatter object>}"
+p128
+sS'handlers'
+p129
+S'undefined'
+p130
+ssg75
+I78
+sg76
+(dp131
+I73
+S'    logging._acquireLock()'
+p132
+sI74
+S'    try:'
+p133
+sI75
+S'        logging._handlers.clear()'
+p134
+sI76
+S'        del logging._handlerList[:]'
+p135
+sI77
+S'        # Handlers add themselves to logging._handlers'
+p136
+sI78
+S'        handlers = _install_handlers(cp, formatters)'
+p137
+sI79
+S'        _install_loggers(cp, handlers, disable_existing_loggers)'
+p138
+sI80
+S'    finally:'
+p139
+sI81
+S'        logging._releaseLock()'
+p140
+sI82
+S''
+ssg88
+S"(fname='/home/monika/Desktop/web2py/applications/todo/static/logging.conf', defaults=None, disable_existing_loggers=True)"
+p141
+sg90
+S'fileConfig'
+p142
+sa(dp143
+g67
+S'/usr/lib/python2.7/logging/config.py'
+p144
+sg69
+(dp145
+S'h'
+g130
+sS'args'
+p146
+S"('/home/monika/web2py/logs/test.log', 'a')"
+p147
+sS'klass'
+p148
+S"<class 'logging.FileHandler'>"
+p149
+ssg75
+I156
+sg76
+(dp150
+I160
+S'        if len(fmt):'
+p151
+sI151
+S'            klass = eval(klass, vars(logging))'
+p152
+sI152
+S'        except (AttributeError, NameError):'
+p153
+sI153
+S'            klass = _resolve(klass)'
+p154
+sI154
+S'        args = cp.get(sectname, "args")'
+p155
+sI155
+S'        args = eval(args, vars(logging))'
+p156
+sI156
+S'        h = klass(*args)'
+p157
+sI157
+S'        if "level" in opts:'
+p158
+sI158
+S'            level = cp.get(sectname, "level")'
+p159
+sI159
+S'            h.setLevel(logging._levelNames[level])'
+p160
+ssg88
+S"(cp=<ConfigParser.ConfigParser instance>, formatters={'simpleFormatter': <logging.Formatter object>})"
+p161
+sg90
+S'_install_handlers'
+p162
+sa(dp163
+g67
+S'/usr/lib/python2.7/logging/__init__.py'
+p164
+sg69
+(dp165
+S'StreamHandler.__init__'
+p166
+S'<unbound method StreamHandler.__init__>'
+p167
+sS'self._open'
+p168
+S'<bound method FileHandler._open of <logging.FileHandler object>>'
+p169
+sS'global StreamHandler'
+p170
+S"<class 'logging.StreamHandler'>"
+p171
+sS'self'
+p172
+S'<logging.FileHandler object>'
+p173
+ssg75
+I897
+sg76
+(dp174
+I896
+S'        else:'
+p175
+sI897
+S'            StreamHandler.__init__(self, self._open())'
+p176
+sI898
+S''
+sI899
+S'    def close(self):'
+p177
+sI900
+S'        """'
+p178
+sI901
+S'        Closes the stream.'
+p179
+sI892
+S"            #We don't open the stream, but we still need to call the"
+p180
+sI893
+S'            #Handler constructor to set level, formatter, lock etc.'
+p181
+sI894
+S'            Handler.__init__(self)'
+p182
+sI895
+S'            self.stream = None'
+p183
+ssg88
+S"(self=<logging.FileHandler object>, filename='/home/monika/web2py/logs/test.log', mode='a', encoding=None, delay=0)"
+p184
+sg90
+g22
+sa(dp185
+g67
+S'/usr/lib/python2.7/logging/__init__.py'
+p186
+sg69
+(dp187
+S'builtinopen'
+p188
+S'<built-in function open>'
+p189
+sS'self.mode'
+p190
+S"'a'"
+p191
+sS'self'
+p192
+S'<logging.FileHandler object>'
+p193
+sS'stream'
+p194
+g130
+sS'self.baseFilename'
+p195
+S"'/home/monika/web2py/logs/test.log'"
+p196
+ssg75
+I916
+sg76
+(dp197
+I911
+S'        """'
+p198
+sI912
+S'        Open the current base file with the (original) mode and encoding.'
+p199
+sI913
+S'        Return the resulting stream.'
+p200
+sI914
+S'        """'
+p201
+sI915
+S'        if self.encoding is None:'
+p202
+sI916
+S'            stream = open(self.baseFilename, self.mode)'
+p203
+sI917
+S'        else:'
+p204
+sI918
+S'            stream = codecs.open(self.baseFilename, self.mode, self.encoding)'
+p205
+sI919
+S'        return stream'
+p206
+sI920
+S''
+ssg88
+S'(self=<logging.FileHandler object>)'
+p207
+sg90
+S'_open'
+p208
+sasS'pyver'
+p209
+S'Python 2.7.3: /usr/bin/python (prefix: /usr)'
+p210
+sS'session'
+p211
+g62
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp212
+sS'etype'
+p213
+S"<type 'exceptions.IOError'>"
+p214
+sS'date'
+p215
+S'Mon Jul 29 18:14:29 2013'
+p216
+sS'response'
+p217
+g62
+(S'sm,\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x7f9d4c4d4ce0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">session_id_todo</td><td valign="top">:</td><td><div>127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">delimiters</td><td valign="top">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">files</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">flash</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generic_patterns</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">google_analytics_id</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">headers</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">X-Powered-By</td><td valign="top">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">logo</td><td valign="top">:</td><td><div><a class="brand" href="http://www.web2py.com/"><b>web<span>2</span>py</b>&trade;&nbsp;</a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">menu</td><td valign="top">:</td><td><div><table><tr><td><div><table><tr><td><div>Home</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/todo/default/index</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div><span class="highlighted">web2py</span></div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>My Sites</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/site</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>This App</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/design/todo</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Controller&#x27;&gt;, False, &#x27;/admin/default/edit/todo/controllers/default.py&#x27;), (&lt;lazyT &#x27;View&#x27;&gt;, False, &#x27;/admin/default/edit/todo/views/default/display_form.html&#x27;), (&lt;lazyT &#x27;Layout&#x27;&gt;, False, &#x27;/admin/default/edit/todo/views/layout.html&#x27;), (&lt;lazyT &#x27;Stylesheet&#x27;&gt;, False, &#x27;/admin/default/edit/todo/static/css/web2py.css&#x27;), (&lt;lazyT &#x27;DB Model&#x27;&gt;, False, &#x27;/admin/default/edit/todo/models/db.py&#x27;), (&lt;lazyT &#x27;Menu Model&#x27;&gt;, False, &#x27;/admin/default/edit/todo/models/menu.py&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;/todo/appadmin/index&#x27;), (&lt;lazyT &#x27;Errors&#x27;&gt;, False, &#x27;/admin/default/errors/todo&#x27;), (&lt;lazyT &#x27;About&#x27;&gt;, False, &#x27;/admin/default/about/todo&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>web2py.com</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Download&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Support&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/support&#x27;), (&lt;lazyT &#x27;Demo&#x27;&gt;, False, &#x27;http://web2py.com/demo_admin&#x27;), (&lt;lazyT &#x27;Quick Examples&#x27;&gt;, False, &#x27;http://web2py.com/examples/default/examples&#x27;), (&lt;lazyT &#x27;FAQ&#x27;&gt;, False, &#x27;http://web2py.com/AlterEgo&#x27;), (&lt;lazyT &#x27;Videos&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/videos/&#x27;), (&lt;lazyT &#x27;Free Applications&#x27;&gt;, False, &#x27;http://web2py.com/appliances&#x27;), (&lt;lazyT &#x27;Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layouts&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;), (&lt;lazyT &#x27;Recipes&#x27;&gt;, False, &#x27;http://web2pyslices.com/&#x27;), (&lt;lazyT &#x27;Semantic&#x27;&gt;, False, &#x27;http://web2py.com/semantic&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Documentation</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Preface&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/00&#x27;), (&lt;lazyT &#x27;Introduction&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/01&#x27;), (&lt;lazyT &#x27;Python&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/02&#x27;), (&lt;lazyT &#x27;Overview&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/03&#x27;), (&lt;lazyT &#x27;The Core&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/04&#x27;), (&lt;lazyT &#x27;The Views&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/05&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/06&#x27;), (&lt;lazyT &#x27;Forms and Validators&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/07&#x27;), (&lt;lazyT &#x27;Email and SMS&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/08&#x27;), (&lt;lazyT &#x27;Access Control&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/09&#x27;), (&lt;lazyT &#x27;Services&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/10&#x27;), (&lt;lazyT &#x27;Ajax Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/11&#x27;), (&lt;lazyT &#x27;Components and Plugins&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/12&#x27;), (&lt;lazyT &#x27;Deployment Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/13&#x27;), (&lt;lazyT &#x27;Other Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/14&#x27;), (&lt;lazyT &#x27;Buy this book&#x27;&gt;, False, &#x27;http://stores.lulu.com/web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Community</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Groups&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/usergroups&#x27;), (&lt;lazyT &#x27;Twitter&#x27;&gt;, False, &#x27;http://twitter.com/web2py&#x27;), (&lt;lazyT &#x27;Live Chat&#x27;&gt;, False, &#x27;http://webchat.freenode.net/?channels=web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Plugins</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&#x27;plugin_wiki&#x27;, False, &#x27;http://web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Other Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layout Plugins&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;)]</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">meta</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">author</td><td valign="top">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">description</td><td valign="top">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generator</td><td valign="top">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">keywords</td><td valign="top">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">models_to_run</td><td valign="top">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/display_form/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">postprocessing</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_cookie_expires</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_data_name</td><td valign="top">:</td><td><div>session_data_todo</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_file</td><td valign="top">:</td><td><div>&lt;open file &#x27;/home/monika/Desktop/web2py/applications/todo/sessions/127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20&#x27;, mode &#x27;rb+&#x27; at 0x7f9d4c0c2780&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_filename</td><td valign="top">:</td><td><div>/home/monika/Desktop/web2py/applications/todo/sessions/127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id</td><td valign="top">:</td><td><div>127.0.0.1-60feaff0-fdac-4efd-be89-04d9a1602a20</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_name</td><td valign="top">:</td><td><div>session_id_todo</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_locked</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_new</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_storage_type</td><td valign="top">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">status</td><td valign="top">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">subtitle</td><td valign="top">:</td><td><div>customize me!</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">title</td><td valign="top">:</td><td><div>Todo</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">view</td><td valign="top">:</td><td><div>default/display_form.html</div></td></tr></table></div>'
+tRp218
+sS'locals'
+p219
+(dp220
+S'self'
+p221
+S'<logging.FileHandler object>'
+p222
+sssS'traceback'
+p223
+S'Traceback (most recent call last):\n  File "/home/monika/Desktop/web2py/gluon/restricted.py", line 212, in restricted\n    exec ccode in environment\n  File "/home/monika/Desktop/web2py/applications/todo/models/test.py", line 13, in <module>\n    logging.config.fileConfig(os.path.join(get_context_path(),\'static/logging.conf\'))\n  File "/usr/lib/python2.7/logging/config.py", line 78, in fileConfig\n    handlers = _install_handlers(cp, formatters)\n  File "/usr/lib/python2.7/logging/config.py", line 156, in _install_handlers\n    h = klass(*args)\n  File "/usr/lib/python2.7/logging/__init__.py", line 897, in __init__\n    StreamHandler.__init__(self, self._open())\n  File "/usr/lib/python2.7/logging/__init__.py", line 916, in _open\n    stream = open(self.baseFilename, self.mode)\nIOError: [Errno 2] No such file or directory: \'/home/monika/web2py/logs/test.log\'\n'
+p224
+s.
