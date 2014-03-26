@@ -5,19 +5,20 @@ import os
 current_dir=os.getcwd()
 db_conf_path=str(current_dir) + '/testapp/static/db.conf'
 temp_conf_path= str(current_dir) + '/db.conf'
-
+print db_conf_path
+print temp_conf_path
 fh = open(db_conf_path,"r+")
 f = open(temp_conf_path,"w+")
 line=fh.readlines()
 IP_ADDR=str(sys.argv[1])
-
+print IP_ADDR
 data="host_ip:" + str(IP_ADDR)
-
+print data
 for row in line:
-   
+   print row
    if "host_ip" in row:
 	f.write(data)
-        
+        print "yes"
 	f.write("\n")
    else:
 	f.write(row)

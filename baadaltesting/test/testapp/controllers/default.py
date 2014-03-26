@@ -227,7 +227,7 @@ def integration_testing():
     import commands
     form = FORM(  TABLE
                   
-                  (    TR(INPUT(_name='testcase94', _type='checkbox', _value="94"),'Maintain Idompotency'),
+                  (    TR(INPUT(_name='testcase93', _type='checkbox', _value="93"),'Maintain Idompotency'),
                        TR(INPUT(_name='testcase95', _type='checkbox', _value="95"),'VM Performance(Memory)'),
                        TR(INPUT(_name='testcase96', _type='checkbox', _value="96"),'VM Performance(CPU)'),
                        TR(INPUT(_name='testcase97', _type='checkbox', _value="97"),'VM Performance(Network)'),
@@ -282,7 +282,7 @@ def integration_testing():
     if form.process().accepted:
         for i in range(56,100):
             test_case_no=request.vars['testcase'+str(i)]
-            if i<=94:
+            if i<=95:
                 if test_case_no!=None:
                     test_script(test_case_no)
             else :

@@ -373,12 +373,12 @@ def execute_query(sql_query,arg=None):
 def click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id):
     
     path="//*[@href='/baadal/user/settings/"+ str(vm_id) +"']"
-    
+    print path
     time.sleep(30)
     if isElementPresent(driver,xml_child,path):
         q=driver.find_element_by_xpath(path).click()
         
-       
+        print q
         time.sleep(30)
         logger.debug(xml_child.get("value") +': Result:Setting button is working properly') 
     else:
@@ -470,7 +470,7 @@ def op_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
     path="//*[@title='Add User to VM']"
     
     if isElementPresent(driver,xml_child,path):   
-        
+        print "in"
 	time.sleep(20)
         driver.find_element_by_xpath(path).send_keys(Keys.ENTER)
 	time.sleep(10)
@@ -654,7 +654,7 @@ def other_operation_on_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
     xpath=task_path(xml_sub_child)
     
     path="//*[@title='" + str(xpath) + "']"
-    
+    print path
     if isElementPresent(driver,xml_child,path):
         driver.find_element_by_xpath(path).click()
         field_text=message_flash(driver,xml_sub_child,xml_child)
@@ -758,7 +758,7 @@ def snap_result(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name):
 
 #printing result correspondence to snapshot
 def snap_db_result(xml_sub_child,op_name,length_snap, query_snap):
-    
+    print query_snap
     if op_name=="delete_snapshot":
         result="Your delete snapshot request has been queued"
     else:
@@ -796,18 +796,19 @@ def maintain_idompotency(driver,xml_sub_child,xml_child):
     execute_query("FLUSH QUERY CACHE")
     
     for user_name in username_list:#deleting vm from vm_data
+        print user_name
         vm_id=execute_query("select vm_data.id from vm_data,user where user.id=requester_id and (status=2 or status=3 or status=4)and username=%s",(str(user_name))).fetchall()
         if vm_id!=():
             for vid in vm_id:
                 
-                
+                print vid[0]	
                 x=vid[0]
                 vm_nam=execute_query("select vm_name from vm_data where  vm_data.id=%s",(str(x))).fetchall()
             
-                
+                print vm_nam
                 vm_name=vm_nam[0]
                 path="//*[@href='/baadal/user/settings/"+ str(x) +"']"
-    		
+    		print path
     		time.sleep(30)
     		if isElementPresent(driver,xml_child,path):
 		    q=driver.find_element_by_xpath(path).click()
@@ -828,27 +829,42 @@ def maintain_idompotency(driver,xml_sub_child,xml_child):
     driver.find_element_by_partial_link_text("All Pending Requests").click()
     baadal_db.commit()
     for user_name in username_list:#deleting vm from request_queue
-        
+        print user_name
         path="//table[@id='sortTable1']/tbody/tr/td"
         
         if isElementPresent(driver,xml_child,path):
             driver.find_element_by_xpath(path)
             vm_id=execute_query("select request_queue.id from request_queue,user where user.id=requester_id and status!=-1 and username=%s",(str(user_name))).fetchall()
             baadal_db.commit()
-            
+            print vm_id
             if vm_id!=():
 		
                 for vid in vm_id:	
-                    
-                    
+                    print vid[0]
+                    print vid
                     x=vid[0]
                     path="//a[@href='/baadal/admin/reject_request/"+ str(x) + "']"
-                    
+                    print path
                     driver.find_element_by_xpath(path).click()
                     logger.debug(str(user_name) + " VM (" + str(x) + ") has been deleted from Pending request")
                 
                 
-
+    '''driver.find_element_by_partial_link_text("Tasks").click()
+    driver.find_element_by_partial_link_text("Failed Tasks").click()
+    for user_name in username_list:#deleting vm from task_queue_event
+        
+        vm_id=execute_query("select task_queue_event.id from task_queue_event,user where user.id=requester_id and status=4 and username=%s ",(str(user_name))).fetchall()
+        print vm_id
+        print user_name
+        if vm_id!=():
+            for vid in vm_id:	
+                print vid[0]
+                print vid
+                x=vid[0]
+                driver.find_element_by_xpath("//a[@href='/baadal/admin/ignore_task/" + str(x) +"']").click()
+                logger.debug(str(user_name) + " VM (" + str(x) + ") has been deleted from Pending request")'''
+    
+    
     
   
 
@@ -860,7 +876,7 @@ def maintain_idompotency(driver,xml_sub_child,xml_child):
      
 def vm_mode(xml_child,xml_sub_child,driver):
     query_result=execute_query( xml_sub_child.get("query3")).fetchall()
-    
+    print query_result
     baadal_db.commit()
     count=0
     col_count=len(query_result[0])
@@ -872,7 +888,7 @@ def vm_mode(xml_child,xml_sub_child,driver):
         status=query_result[length][2]
         
         if (str(status)==xml_sub_child.get("status")) & (str(username) in username_list):
-            
+            print username
             vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id)
             break
         else:
@@ -955,17 +971,30 @@ def check_user(driver,xml_child,xml_sub_child,vm_name):
 
 def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
     execute_query("FLUSH QUERY CACHE")
-    domain_name=execute_query("select security_domain.name from request_queue,security_domain where  security_domain.id=request_queue.security_domain and  vm_name=%s",(str(vm_name))).fetchone()
-    
-    check_domain=execute_query("select vm_id from security_domain,private_ip_pool where security_domain.vlan=private_ip_pool.vlan and security_domain.name=%s",(str(domain_name))).fetchall()
-    
     if operation_name=="Create VM":
-        if "NULL" in check_domain:
+        domain_name=execute_query("select security_domain.name from request_queue,security_domain where  security_domain.id=request_queue.security_domain and  vm_name=%s",(str(vm_name))).fetchone()
+        print domain_name
+        print domain_name[0]
+        d_name=domain_name[0]
+        check_domain=execute_query("select vm_id from security_domain,private_ip_pool where security_domain.vlan=private_ip_pool.vlan and security_domain.name=%s",(str(d_name))).fetchall()
+        print check_domain
+    
+        count=0
+        for data in check_domain:
+            print data[0]
+            if "None"==str(data[0]):
+                ip_available="yes"
+                count+=1
+                
+            else:
+                ip_available="no"
+        print count
+        if count>0:
             
             check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
         else:
            
-            logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(domain_name) + ".")
+            logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(d_name) + ".")
             return 0
     else:
         check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
@@ -977,7 +1006,7 @@ def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
     
     
 def check_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
-    
+    print operation_name
     if operation_name!="Delete VM":
         current_time=datetime.datetime.now()
         break_pt_time=current_time + datetime.timedelta(seconds=220) 
@@ -1026,7 +1055,7 @@ def get_task_start_time(driver,xml_sub_child,xml_child,vm_name,operation_name):
     query_result=execute_query(xml_sub_child.get("task_query"),(vm_nam,vm_oprtn)).fetchone()  
     
     baadal_db.commit()
-    
+    print  query_result
     task_start_time=query_result[1]
     return task_start_time
        
@@ -1222,7 +1251,7 @@ def	isInput_add(driver, xml_sub_child,xml_child):
     path=xml_sub_child.get("user_id")
     if isElementPresent(driver,xml_child,path):
     	field = driver.find_element_by_id()
-    	
+    	print "in1"
     	field.send_keys(xml_sub_child.get("user_id_data"))
     return
 
@@ -1330,10 +1359,10 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
            
             if field_text!="":
                 count=count+1
-        
+        print count
         
         total=length_row*length
-        
+        print total
         if ((str(total)==str(count))) :
             for col in field:
                 field_text=col.text
@@ -1434,7 +1463,7 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
 
 def faculty_vm_status(owner_name_db,owner_name_screen,xml_child):
 	user_name=xml_child[0].text
-	
+	print user_name
 	if owner_name_screen==str(owner_name_db):
 		result="Approve  |  Reject | Edit"
 	else:
@@ -1537,12 +1566,12 @@ def isCheckTable(driver, xml_parent, xml_child, xml_sub_child):
     count=0
     for col in field:
 		field_text=col.text 
-		 
+		print field_text  
 		if field_text!="":
 			count=count+1
 			
     total=length_row*length
-    
+    print total
     if (str(total)==str(count)):
         for header in field:
             host_ip=query_result[table][0]
@@ -1609,9 +1638,10 @@ def isCheckdata(driver,xml_parent, xml_child, xml_sub_child,vm_name):
         field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
         if  xml_sub_child.get("data")=="integeration":
             vm_nam=str(vm_name)
+            print vm_name
             execute_query("FLUSH QUERY CACHE")
             query_result=execute_query(xml_sub_child.get("query3"),(vm_nam)).fetchone()
-            
+            print  query_result
             baadal_db.commit()
             db_conn=db_connection()
             cur=db_conn.cursor()
@@ -1621,12 +1651,13 @@ def isCheckdata(driver,xml_parent, xml_child, xml_sub_child,vm_name):
             
 	    
             result=query_result[0]
-                        
+            print result
+            
             
         else:
             execute_query("FLUSH QUERY CACHE")
             query_result=execute_query(xml_sub_child.get("query3")).fetchone()
-            
+            print  query_result
             db_conn=db_connection()
             cur=db_conn.cursor()
             cur.execute(xml_sub_child.get("query3")) 
@@ -1634,7 +1665,8 @@ def isCheckdata(driver,xml_parent, xml_child, xml_sub_child,vm_name):
             cur.close()
                 
             result=query_result[0]
-                       
+            print result
+            
         for a in field:
             row=a.text
             op_id=xml_sub_child.get("id")
@@ -1668,6 +1700,7 @@ def check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result):
     request=xml_sub_child.get("click")
     
     
+    print "//*[@href='/baadal/" + str(op_id) + "/" +str(request)+ "/" + str(result) + "']"
     driver.find_element_by_xpath("//*[@href='/baadal/"+ str(op_id) +"/"+str(request)+"/"+str(result) +"']").click()
     result=xml_sub_child.get("print_data")
     field_text=message_flash(driver,xml_sub_child,xml_child)

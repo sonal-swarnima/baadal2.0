@@ -973,15 +973,27 @@ def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
     execute_query("FLUSH QUERY CACHE")
     domain_name=execute_query("select security_domain.name from request_queue,security_domain where  security_domain.id=request_queue.security_domain and  vm_name=%s",(str(vm_name))).fetchone()
     print domain_name
-    check_domain=execute_query("select vm_id from security_domain,private_ip_pool where security_domain.vlan=private_ip_pool.vlan and security_domain.name=%s",(str(domain_name))).fetchall()
+    print domain_name[0]
+    d_name=domain_name[0]
+    check_domain=execute_query("select vm_id from security_domain,private_ip_pool where security_domain.vlan=private_ip_pool.vlan and security_domain.name=%s",(str(d_name))).fetchall()
     print check_domain
     if operation_name=="Create VM":
-        if "NULL" in check_domain:
+        count=0
+        for data in check_domain:
+            print data[0]
+            if "None"==str(data[0]):
+                ip_available="yes"
+                count+=1
+                
+            else:
+                ip_available="no"
+        print count
+        if count>0:
             
             check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
         else:
            
-            logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(domain_name) + ".")
+            logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(d_name) + ".")
             return 0
     else:
         check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)

@@ -66,7 +66,7 @@ def data():
 def unit_testing():
     import commands
     form = FORM(  TABLE
-        (  TR(INPUT(_name='testcase55', _type='checkbox', _value="54"),'All'),
+        (  TR(INPUT(_name='testcase54', _type='checkbox', _value="54"),'All'),
            TR(INPUT(_name='testcase1', _type='checkbox', _value="1"),'Login'),
            TR(INPUT(_name='testcase2', _type='checkbox', _value="2"),'Configure System: Add Host'),
            TR(INPUT(_name='testcase3', _type='checkbox', _value="3"),'Configure System: Add Template'),
@@ -227,7 +227,7 @@ def integration_testing():
     import commands
     form = FORM(  TABLE
                   
-                  (    TR(INPUT(_name='testcase94', _type='checkbox', _value="94"),'Maintain Idompotency'),
+                  (    TR(INPUT(_name='testcase93', _type='checkbox', _value="93"),'Maintain Idompotency'),
                        TR(INPUT(_name='testcase95', _type='checkbox', _value="95"),'VM Performance(Memory)'),
                        TR(INPUT(_name='testcase96', _type='checkbox', _value="96"),'VM Performance(CPU)'),
                        TR(INPUT(_name='testcase97', _type='checkbox', _value="97"),'VM Performance(Network)'),
