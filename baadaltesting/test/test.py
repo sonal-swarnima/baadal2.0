@@ -10,8 +10,8 @@ display.start()
 # you will not see the browser.
 driver = webdriver.Firefox()
 driver.implicitly_wait(10)
-driver.get('http://127.0.0.1:8000/newapp/default/unit_testing')
-driver.find_element_by_xpath("//input[@value='65']").click()
+driver.get('http://127.0.0.1:8000/testapp/')
+driver.find_element_by_xpath("//input[@value='3']").click()
 driver.find_element_by_xpath("//input[@type='submit']").click()
 
 

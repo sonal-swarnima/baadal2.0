@@ -160,7 +160,7 @@ def index():
             if request.vars['testcase2']!=None:
                 redirect(URL('integration_testing'))
             if request.vars['testcase3']!=None:
-                 for j in range(1,94):
+                 for j in range(1,95):
                         test_case_no=str(j)
                         test_script(test_case_no)
             if request.vars['testcase4']!=None:

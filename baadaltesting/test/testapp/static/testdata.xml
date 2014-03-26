@@ -606,7 +606,7 @@
 		<down_key type="scroll">Keys.PAGE_DOWN</down_key>
 		<configure type="href">Configure Security Domain</configure>
 		<host_list type="table"   >//div[@class='web2py_htmltable']/table/tbody/tr/td</host_list>
-	</test_case1>-->
+	</test_case1>
 	<test_case2 value="Checking for empty fields(Domain name)">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
@@ -647,7 +647,7 @@
 		
 	</test_case2>
 	
-	
+	-->
 	</test_script5>
 
 		
