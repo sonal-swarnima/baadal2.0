@@ -306,7 +306,24 @@
 		<configure_system type="href">Add New Template</configure_system>
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case1>
-   
+    <test_case10 value="Checking for correct inputs">
+		<user_name id="user_username" type="input">badalUFA</user_name>
+		<password id="user_password" type="input">baadal</password>
+		<submit type="submit">//input[@type='submit']</submit>
+		<down_key type="scroll">Keys.PAGE_DOWN</down_key>
+		<configure_system type="href">Configure System</configure_system>
+		<down_key type="scroll">Keys.PAGE_DOWN</down_key>
+		<configure type="href">Configure Template</configure>
+		<configure_system type="href">Add New Template</configure_system>
+		<template_name type="input" id="template_name">ubuntu-1204-desktop-amd64</template_name>
+		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<harddisk type="input" id="template_hdd">25</harddisk>
+		<hddfile type="input" id="template_hdfile">ubuntu-1204-desktop-amd64.qcow2</hddfile>
+       <template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
+		<datastore type="select">//select[@id="template_datastore_id"]/option[@value="1"]</datastore>
+		<add_template type="submit">//input[@type='submit']</add_template>
+	</test_case10>
   <test_case1 value="Checking for Invalid Data in  template name field">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
@@ -606,7 +623,7 @@
 		<down_key type="scroll">Keys.PAGE_DOWN</down_key>
 		<configure type="href">Configure Security Domain</configure>
 		<host_list type="table"   >//div[@class='web2py_htmltable']/table/tbody/tr/td</host_list>
-	</test_case1>-->
+	</test_case1>
 	<test_case2 value="Checking for empty fields(Domain name)">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
@@ -646,7 +663,7 @@
 		<add_datastore type="submit" xpath="//input[@type='submit']" id="check_data" >//input[@type='submit']</add_datastore>
 		
 	</test_case2>
-	
+	-->
 	
 	</test_script5>
 
