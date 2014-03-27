@@ -75,7 +75,7 @@ def get_manage_public_ip_pool_form():
 def private_ip_on_delete(private_ip_pool_id):
     private_ip_data = db.private_ip_pool[private_ip_pool_id]
     if private_ip_data.vlan != HOST_VLAN_ID:
-        remove_dhcp_entry('baadal_vm' + str(private_ip_pool_id), private_ip_data.mac_addr ,private_ip_data.private_ip)
+        remove_dhcp_entry(None, private_ip_data.mac_addr ,private_ip_data.private_ip)
     
 def get_manage_private_ip_pool_form():
     db.private_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
@@ -127,9 +127,9 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
         if(db.private_ip_pool(private_ip=ip_addr)):
             failed += 1
         else:
-            idx = db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
+            db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
             if vlan != HOST_VLAN_ID:
-                dhcp_info_list.append(('baadal_vm'+str(idx), mac_address, ip_addr))
+                dhcp_info_list.append((None, mac_address, ip_addr))
     create_dhcp_bulk_entry(dhcp_info_list)
     return failed
 
@@ -146,8 +146,8 @@ def add_private_ip(ip_pool_id):
                 if not (db.private_ip_pool(mac_addr=mac_address)):break
             #Update generated mac address in DB
             private_ip_pool.update_record(mac_addr=mac_address)
-        ip_name = 'IP_' + private_ip_pool.private_ip.replace(".", '_')
-        create_dhcp_entry(ip_name, mac_address, private_ip_pool.private_ip)
+
+        create_dhcp_entry(None, mac_address, private_ip_pool.private_ip)
 
 
 def get_org_visibility(row):

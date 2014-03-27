@@ -111,8 +111,11 @@ def create_dhcp_bulk_entry(dhcp_info_list):
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = "echo -e  '"
+    
     for dhcp_info in dhcp_info_list:
-        entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(dhcp_info[0], dhcp_info[1], dhcp_info[2])
+        host_name = dhcp_info[0] if dhcp_info[0] != None else ('IP_' + dhcp_info[2].replace(".", '_'))
+        entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(host_name, dhcp_info[1], dhcp_info[2])
+
     entry_cmd += "' >> /etc/dhcp/dhcpd.conf"    
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"
 
@@ -127,6 +130,8 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
 
 #Removes entry from DHCP
 def remove_dhcp_entry(host_name, mac_addr, ip_addr):
+
+    host_name = host_name if host_name != None else ('IP_' + ip_addr.replace(".", '_'))
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
