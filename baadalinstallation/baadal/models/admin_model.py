@@ -146,7 +146,8 @@ def add_private_ip(ip_pool_id):
                 if not (db.private_ip_pool(mac_addr=mac_address)):break
             #Update generated mac address in DB
             private_ip_pool.update_record(mac_addr=mac_address)
-        create_dhcp_entry('baadal_vm'+str(ip_pool_id), mac_address, private_ip_pool.private_ip)
+        ip_name = 'IP_' + private_ip_pool.private_ip.replace(".", '_')
+        create_dhcp_entry(ip_name, mac_address, private_ip_pool.private_ip)
 
 
 def get_org_visibility(row):
@@ -205,7 +206,7 @@ def get_all_pending_requests():
             vm_request['requested_by'] = USER
 
     return requests
-    
+
 def get_all_unregistered_users():
     unregistered_users=db(db.user.registration_key == USER_PENDING_APPROVAL).select()
     return unregistered_users
