@@ -358,7 +358,9 @@ def manage_private_ip_pool():
         if error_message != None:
             session.flash = error_message
             redirect(URL(c='admin', f='manage_private_ip_pool'))
-        
+        else:
+            session.flash = 'Private IP deleted successfully'
+            
     form = get_manage_private_ip_pool_form()
     return dict(form=form)
 

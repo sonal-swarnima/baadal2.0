@@ -42,9 +42,7 @@
                     <td>
                         <div id="user_roles_{{=str(user['id'])}}">
                         	{{for type in type_options:}}  
-                            {{print user['roles']}}
                             {{if type['id'] in set(x for x in user['roles']):}}
-                            {{print("here")}}
                             {{=INPUT(_type='checkbox', _name='roleType', _class='roleType', _value=""+str(type['id']), value=True)}} {{=type['role']}} <br/>
                             	{{else:}}
                         			{{=INPUT(_type='checkbox', _name='roleType', _class='roleType', _value=""+str(type['id']), value=False)}} {{=type['role']}} <br/>
