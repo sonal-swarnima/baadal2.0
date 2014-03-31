@@ -343,7 +343,7 @@ def validate_private_ip_range():
     
     from helper import validate_ip_range
     if validate_ip_range(rangeFrom, rangeTo):
-        failed = add_private_ip_range(rangeFrom, rangeTo, vlan)
+        failed = add_private_ip_range(rangeFrom, rangeTo, int(vlan))
         return str(failed)
     else:
         return '-1'

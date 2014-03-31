@@ -108,6 +108,7 @@ def generate_random_mac():
 # Gets list of tuple containing (host_name, mac_addr, ip_addr)
 def create_dhcp_bulk_entry(dhcp_info_list):
     
+    if len(dhcp_info_list) == 0: return
     config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = "echo -e  '"
