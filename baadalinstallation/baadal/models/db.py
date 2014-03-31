@@ -6,6 +6,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from simplejson import loads, dumps
+from ast import literal_eval
 from helper import get_config_file,get_datetime, IS_MAC_ADDRESS
 from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
 
@@ -35,7 +36,7 @@ mail = Mail()
 mail.settings.server = config.get("MAIL_CONF","mail_server")
 mail.settings.sender = config.get("MAIL_CONF","mail_sender")
 mail.settings.login = config.get("MAIL_CONF","mail_login")
-mail.settings.tls = config.get("MAIL_CONF","mail_server_tls")
+mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
 
 #added to make auth and db objects available in modules 
 from gluon import current  # @Reimport
