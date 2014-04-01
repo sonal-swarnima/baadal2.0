@@ -32,18 +32,19 @@ def host_resources_used(host_id):
     
     return (math.ceil(RAM),math.ceil(CPU))
 
-def set_portgroup_in_vm(domain,portgroup,host_ip):
-    conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
-    dom = conn.lookupByName(domain)
+def set_portgroup_in_vm(domain, portgroup, host_ip):
+    connection_object = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
+    dom = connection_object.lookupByName(domain)
     xml = etree.fromstring(dom.XMLDesc(0))
     source_network_element = xml.find('.//interface/source')
-    logger.debug("source network is "+etree.tostring(source_network_element))
-    source_network_element.set('portgroup',portgroup)
-    logger.debug("source network is "+etree.tostring(source_network_element))
-    domain = conn.defineXML(etree.tostring(xml))
+    logger.debug("source network is " + etree.tostring(source_network_element))
+    source_network_element.set('portgroup', portgroup)
+    logger.debug("source network is " + etree.tostring(source_network_element))
+    domain = connection_object.defineXML(etree.tostring(xml))
     domain.destroy()
     domain.create()
     domain.isActive()
+    connection_object.close()
     
 def get_private_ip_mac(security_domain_id):
     vlans = current.db(current.db.security_domain.id == security_domain_id)._select(current.db.security_domain.vlan)
@@ -318,6 +319,13 @@ def check_if_vm_defined(hostip, vmname):
 # Frees vm properties
 def free_vm_properties(vm_details):
 
+    if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
+        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ hostip +'/system')
+        domain = connection_object.lookupByName(vmname)
+        domain.undefine()
+        connection_object.close()
+                    
+
     if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity):
         shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity)
     return
@@ -420,7 +428,8 @@ def start(parameters):
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.create()
-        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)  
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)
+        connection_object.close()  
         message = vm_details.vm_identity + " is started successfully."
         logger.debug(message) 
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -437,6 +446,7 @@ def suspend(parameters):
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.suspend()
+        connection_object.close()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SUSPENDED)       
         message = vm_details.vm_identity + " is suspended successfully." 
         logger.debug(message)       
@@ -454,6 +464,7 @@ def resume(parameters):
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.resume()
+        connection_object.close()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING) 
         message = vm_details.vm_identity + " is resumed successfully."
         logger.debug(message)
@@ -472,6 +483,7 @@ def destroy(parameters):
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         domain.destroy()
+        connection_object.close()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SHUTDOWN) 
         message = vm_details.vm_identity + " is destroyed successfully."
         logger.debug(message)
@@ -527,6 +539,7 @@ def delete(parameters):
             domain.destroy()
         logger.debug("Starting to delete it...")
         domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
+        connection_object.close()
         message = vm_details.vm_identity + " is deleted successfully."
         logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
@@ -636,6 +649,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         else:
             domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
+        current_host_connection_object.close()
         vm_details.update_record(host_id = destination_host_id)
         current.db.commit()
         
@@ -675,6 +689,7 @@ def snapshot(parameters):
         domain = connection_object.lookupByName(vm_details.vm_identity)
         xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
         domain.snapshotCreateXML(xmlDesc, 0)
+        connection_object.close()
         message = "Snapshotted successfully."
         if snapshot_type != current.SNAPSHOT_USER:
             snapshot_cron = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select().first()
@@ -702,6 +717,7 @@ def revert(parameters):
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         domain.revertToSnapshot(snapshot, 0)
+        connection_object.close()
         message = "Reverted to snapshot successfully."
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -723,6 +739,7 @@ def delete_snapshot(parameters):
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         snapshot.delete(0)
+        connection_object.close()
         message = "Deleted snapshot successfully."
         logger.debug(message)
         current.db(current.db.snapshot.id == snapshotid).delete()
@@ -801,6 +818,7 @@ def edit_vm_config(parameters):
             domain.reboot(0)
             domain.isActive()
 
+        connection_object.close()
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except libvirt.libvirtError,e:
