@@ -51,7 +51,6 @@ def log_vm_event(old_vm_data, task_queue_data):
                                      TASK_TYPE_STOP_VM, 
                                      TASK_TYPE_SUSPEND_VM, 
                                      TASK_TYPE_RESUME_VM, 
-                                     TASK_TYPE_DELETE_VM, 
                                      TASK_TYPE_DESTROY_VM):
         db.vm_event_log.insert(vm_id = vm_data.id,
                                attribute = 'VM Status',
