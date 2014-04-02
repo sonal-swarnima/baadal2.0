@@ -24,7 +24,7 @@
     </thead>
     <tbody>
     {{for vm in hosted_vm:}}
-      <tr>
+      <tr id='Row_{{=vm['id']}}'>
         <td>{{=vm['name']}}</td>
         <td>{{=(vm['owner'])}}</td>
         {{if is_moderator():}}

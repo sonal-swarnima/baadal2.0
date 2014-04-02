@@ -30,7 +30,7 @@
       </thead>
       <tbody>
       {{for pend_request in install_requests:}}
-       <tr>
+       <tr id='Row_{{=pend_request['id']}}'>
             <td>{{=pend_request['requester_name']}}</td>
             <td>{{=pend_request['faculty_name']}}</td>
             <td>{{=pend_request['vm_name']}}</td>

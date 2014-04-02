@@ -23,7 +23,7 @@
     <tbody>
     {{for vm in vmlist:}}
       <form>
-      <tr>
+      <tr id='Row_{{=vm['id']}}'>
         <td>{{=vm['name']}}</td>
         <td>{{=(vm['owner'])}}</td>
         <td>{{=vm['hostip']}}</td>
