@@ -299,6 +299,7 @@ db.define_table('vnc_access',
     Field('vnc_public_port', 'integer', notnull = True),
     Field('vnc_private_port','integer',default = -1),
     Field('duration', 'integer'),
+    Field('status', 'string', length = 15, notnull = True, default = 'inactive'),
     Field('time_requested', 'datetime', default = get_datetime()))
 
 db.define_table('public_ip_pool',
