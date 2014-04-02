@@ -37,7 +37,8 @@ VM_CREATION_SUBJECT = "VM created successfully"
 
 VM_CREATION_BODY="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[requestTime]} is "\
                     "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
-                    "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nRegards,\nBaadal Admin"
+                    "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nDefault credentials for VM:\nUsername:root/baadalvm\nPassword:baadal\n\n"\
+		    "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
 
@@ -94,6 +95,7 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
                        taskType = task_type,
                        requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
         if task_type == TASK_TYPE_CREATE_VM:
+	    cc_addresses = []
             send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
         else:
             subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))

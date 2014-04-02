@@ -295,7 +295,9 @@ db.define_table('vnc_server',
 db.define_table('vnc_access',
     Field('vm_id', db.vm_data),
     Field('vnc_server_id', db.vnc_server,length = 15, notnull = True),
-    Field('vnc_proxy_port', 'integer', notnull = True),
+    Field('host_id', db.host, length = 15, notnull = True),
+    Field('vnc_public_port', 'integer', notnull = True),
+    Field('vnc_private_port','integer',default = -1),
     Field('duration', 'integer'),
     Field('time_requested', 'datetime', default = get_datetime()))
 
