@@ -646,8 +646,9 @@ Rewrite_Apache_Conf()
 		  WSGIPassAuthorization On
 		
 		  <LocationMatch ^/admin>
-                    Order Allow,Deny
+		    Order Deny,Allow
                     Deny from all
+                    Allow from 127.0.0.1
                   </LocationMatch>		
 		  <Directory /home/www-data/web2py>
 		    AllowOverride None
