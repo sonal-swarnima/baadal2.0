@@ -23,7 +23,7 @@
     <tbody>
     {{for vm in vmlist:}}
       <form>
-      <tr id='Row_{{=vm['id']}}'>
+      <tr>
         <td>{{=vm['name']}}</td>
         <td>{{=(vm['owner'])}}</td>
         <td>{{=vm['hostip']}}</td>
@@ -34,7 +34,7 @@
         <td>{{=vm['status']}}</td>
         <td>
 	        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), 
+	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), _id="vm_"+str(vm['id']), 
 	        _title="Settings", 
 	        _alt="Settings")}}
         </td>

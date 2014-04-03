@@ -23,14 +23,13 @@
         <th>RAM</th>
         <th>HDD</th>
         <th>Public IP</th>
-<!--    <th>Ports Enabled</th> -->
         <th>Security Domain</th>
         <th>Action</th>
       </tr> 
       </thead>
       <tbody>
       {{for pend_request in install_requests:}}
-       <tr id='Row_{{=pend_request['id']}}'>
+       <tr>
             <td>{{=pend_request['requester_name']}}</td>
             <td>{{=pend_request['vm_name']}}</td>
             <td>{{=pend_request['vCPUs']}}</td>
@@ -43,15 +42,14 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-<!--        <td>{{#=pend_request['services_enabled']}}</td> -->
             <td>{{=pend_request['security_domain']}}</td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']])), _id="reject_"+str(pend_request['id'])}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
 	           {{else:}}
 	               {{=A('Remind ' + get_full_name(pend_request['owner_id']),_href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -91,11 +89,11 @@
             <td>{{=pend_request['vCPUs']}}</td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
 	           {{else:}}
 	               {{=A('Remind ' + get_full_name(pend_request['owner_id']), _onclick="tab_refresh();", _href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -137,11 +135,11 @@
             <td><b>{{=pend_request['attach_disk']}}</b></td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
 	           {{else:}}
 	               {{=A('Remind ' + get_full_name(pend_request['owner_id']), _onclick="tab_refresh();", _href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
@@ -170,8 +168,6 @@
         <th>New<br/>RAM</th>
         <th>Public<br/>IP</th>
         <th>New<br/>Public IP</th>
-<!--    <th>Ports<br/>Enabled</th> -->
-<!--    <th>New Ports<br/>Enabled</th> -->
         <th>Security<br/>Domain</th>
         <th>New Security<br/>Domain</th>
         <th>Action</th>
@@ -200,17 +196,15 @@
                     <span class="icon-remove"/>
             {{pass}}
             </td>
-<!--        <td>{{#=pend_request['old_services_enabled']}}</td> -->
-<!--        <td><b>{{#=pend_request['services_enabled']}}</b></td> -->
             <td>{{=pend_request['old_security_domain']}}</td>
             <td><b>{{=pend_request['security_domain']}}</b></td>
             <td>
 	           {{if pend_request['owner_id'] == auth.user.id:}}
-	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]))}}
+	               {{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request,f='approve_request',args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]))}}
+	               {{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request,f='reject_request',args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]))}}
+	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
 	           {{else:}}
 	               {{=A('Remind ' + get_full_name(pend_request['owner_id']), _onclick="tab_refresh();", _href=URL(r=request,c='orgadmin', f='remind_faculty', args=[pend_request['id']]))}}
 	           {{pass}}
