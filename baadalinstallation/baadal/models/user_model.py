@@ -104,10 +104,10 @@ def request_vm_validation(form):
     set_configuration_elem(form)
     form.vars.status = get_request_status()
 
-    if (is_moderator() or is_orgadmin() or is_faculty()):
-        form.vars.owner_id = auth.user.id
-    else:
+    if is_vm_user():
         validate_approver(form)
+    else:
+        form.vars.owner_id = auth.user.id
 
     vm_users = request.post_vars.vm_users
     user_list = []
@@ -168,8 +168,8 @@ def get_request_vm_form():
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    if not(is_moderator() or is_orgadmin() or is_faculty()):
-        add_faculty_approver(form)
+    if is_vm_user(): add_faculty_approver(form)
+    
     add_collaborators(form)
     return form
 

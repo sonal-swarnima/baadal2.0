@@ -285,7 +285,7 @@ def _get_configured_logger(name):
         # This logger has no handlers, so we can assume it hasn't yet been configured.
         log_file = os.path.join(current.request.folder,'logs/%s.log'%(name)) # @UndefinedVariable
 #         handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=14)
-        handler = ConcurrentRotatingFileHandler(log_file, maxBytes=1000000, backupCount=5)
+        handler = ConcurrentRotatingFileHandler(log_file, maxBytes=10000000, backupCount=20)
         formatter="%(asctime)s %(levelname)s %(funcName)s():%(lineno)d %(message)s"
         handler.setFormatter(logging.Formatter(formatter))
         handler.setLevel(logging.DEBUG)

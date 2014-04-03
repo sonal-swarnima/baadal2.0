@@ -192,15 +192,19 @@ def process_clone_task(task_event_id, vm_id):
 
 # Handles periodic snapshot task
 # Called when scheduler runs task of type 'snapshot_vm'
-def process_snapshot_vm(snapshot_type):
+def process_snapshot_vm(snapshot_type, vm_id = None):
 
     logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
-    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-    for vm in vms:
-        params={'snapshot_type':snapshot_type}
-        add_vm_task_to_queue(vm.id,TASK_TYPE_SNAPSHOT_VM, params)
-        db.commit()
-        
+
+    if snapshot_type == SNAPSHOT_SYSTEM:
+        params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_id}
+        task[TASK_TYPE_SNAPSHOT_VM](params)
+    else:    
+        vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+        for vm_data in vms:
+            params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id}
+            vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
+          
 # Handles periodic VM sanity check
 # Called when scheduler runs task of type 'vm_sanity'
 def vm_sanity_check():
@@ -216,12 +220,6 @@ def host_sanity_check():
     logger.debug("Starting Host Sanity Check")
     host_status_sanity_check()
 
-# Handles periodic collection of VM utilization data &
-# updation of respective RRD file.
-# def vm_utilization_rrd():
-    
-#     rrd_logger.debug("Starting VM Utilization data collection task")
-#     update_rrd()
     
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler

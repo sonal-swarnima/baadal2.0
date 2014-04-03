@@ -20,7 +20,7 @@ def request_vm():
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         
         send_email_to_requester(form.vars.vm_name)
-        if not(is_moderator() or is_orgadmin() or is_faculty()):
+        if is_vm_user():
             send_remind_faculty_email(form.vars.id)
 
         logger.debug('VM requested successfully')
@@ -60,7 +60,7 @@ def settings():
     vm_info = get_vm_config(vm_id)
     if not vm_info:
         redirect(URL(f='list_my_vm'))
-    if is_moderator() or is_faculty() or is_orgadmin():
+    if not is_vm_user():
         vm_users = get_vm_user_list(vm_id)
     
     vm_operations = get_vm_operations(vm_id)

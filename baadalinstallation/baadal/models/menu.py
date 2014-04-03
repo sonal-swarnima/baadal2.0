@@ -31,7 +31,7 @@ if auth.is_logged_in():
         (T('Mail Admin'), False, URL('user','mail_admin'))
         ]
     
-    if (is_moderator() or is_orgadmin() or is_faculty()):
+    if not is_vm_user():
         response.faculty_menu = [
             (H2('FACULTY MENU'),False, dict(_href='#', _id='menu_faculty')),
             (T('Pending Approvals {'+str(get_pending_requests_count())+'} '), False, URL('faculty','pending_requests'))

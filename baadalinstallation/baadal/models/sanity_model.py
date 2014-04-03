@@ -8,7 +8,7 @@ if 0:
 import libvirt
 from libvirt import *  # @UnusedWildImport
 from lxml import etree
-from helper import execute_remote_cmd, logger
+from helper import execute_remote_cmd, log_exception
 from host_helper import HOST_STATUS_UP, get_host_domains
 
 vm_state_map = {
@@ -43,7 +43,7 @@ def check_vm_sanity():
             for dom in domains:
                 try:
                     domain_name = dom.name()
-                    vm = db(db.vm_data.vm_identity == domain_name).select().first()
+                    vm = db(db.vm_data.vm_identity == domain_name & db.vm_data.status != -1).select().first()
                     vm_state = dom.info()[0]
                     status = vminfo_to_state(vm_state)
                     if(vm):
@@ -67,7 +67,7 @@ def check_vm_sanity():
                             
                         vm_list.append(vm.vm_identity)
                             
-                    elif vm_state != VIR_DOMAIN_SHUTOFF:
+                    elif vm_state != VIR_DOMAIN_CRASHED:
                         vmcheck.append({'host':host.host_name,
                                         'host_id':host.id,
                                         'vmname':dom.name(),
@@ -75,8 +75,8 @@ def check_vm_sanity():
                                         'message':'Orphan, VM is not in database', 
                                         'operation':'Orphan'})#Orphan VMs
 
-                except Exception as e:
-                    logger.error(e)
+                except Exception:
+                    log_exception()
                     if(vm):
                         vmcheck.append({'vmname':vm.vm_name,
                                         'host':'Unknown',
