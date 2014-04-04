@@ -10,6 +10,7 @@ from libvirt import *  # @UnusedWildImport
 from lxml import etree
 from helper import execute_remote_cmd, log_exception
 from host_helper import HOST_STATUS_UP, get_host_domains
+from log_handler import logger
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,
@@ -38,6 +39,7 @@ def check_vm_sanity():
     hosts=db(db.host.status == HOST_STATUS_UP).select()
     for host in hosts:
         try:
+            logger.info('Starting sanity check for host %s' %(host.host_name))
             #Get list of the domains(running and not running) on the hypervisor
             domains = get_host_domains(host.host_ip)
             for dom in domains:
@@ -98,6 +100,7 @@ def check_vm_sanity():
                             'message':'VM not found', 
                             'operation':'Undefined'})
             
+    logger.debug(vmcheck)
     return vmcheck
 
 

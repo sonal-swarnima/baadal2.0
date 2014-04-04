@@ -320,8 +320,8 @@ def check_if_vm_defined(hostip, vmname):
 def free_vm_properties(vm_details):
 
     if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
-        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ hostip +'/system')
-        domain = connection_object.lookupByName(vmname)
+        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
+        domain = connection_object.lookupByName(vm_details.vm_name)
         domain.undefine()
         connection_object.close()
                     
@@ -960,24 +960,30 @@ def attach_extra_disk(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, message)            
 
 def shutdown_baadal():
+    logger.info('Starting Baadal Shutdown')
     vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
     for vm_detail in vms:
         try:
             snapshot({'vm_id':vm_detail.id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
+            logger.debug('Snapshot of %s completed successfully' %(vm_detail.vm_identity))
             suspend({'vm_id':vm_detail.id})
+            logger.debug('%s suspended successfully' %(vm_detail.vm_identity))
         except:
             log_exception()
             pass
     return
 
 def bootup_baadal():
+    logger.info('Starting Baadal Bootup')
     vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
     for vm_detail in vms:
         sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=current.SNAPSHOT_SYSTEM)
         if sys_snapshot:
             try:
                 revert({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+                logger.debug('Snapshot of %s reverted from %s successfully' %(vm_detail.vm_identity, sys_snapshot.snapshot_name))
                 delete_snapshot({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
+                logger.debug('Snapshot %s deleted successfully' %(sys_snapshot.snapshot_name))
             except:
                 log_exception()
                 pass

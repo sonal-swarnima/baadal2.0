@@ -209,15 +209,14 @@ def process_snapshot_vm(snapshot_type, vm_id = None):
 # Called when scheduler runs task of type 'vm_sanity'
 def vm_sanity_check():
 
-    logger.debug("Starting VM Sanity Check")
-    vmcheck = check_vm_sanity()
-    logger.debug(vmcheck) 
+    logger.info("Starting VM Sanity Check")
+    check_vm_sanity()
 
 # Handles periodic Host sanity check
 # Called when scheduler runs task of type 'host_sanity'
 def host_sanity_check():
 
-    logger.debug("Starting Host Sanity Check")
+    logger.info("Starting Host Sanity Check")
     host_status_sanity_check()
 
     

@@ -50,9 +50,9 @@ MAIL_FOOTER = "\n\n\nDisclaimer:: Please do not reply to this email. It correspo
 
 def push_email(to_address, email_subject, email_message, reply_to_address, cc_addresses=[]):
     if config.getboolean("MAIL_CONF","mail_active"):
-	rtn = mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address, cc=cc_addresses)
-	logger.error("ERROR:: " + str(mail.error))
-	logger.info("EMAIL STATUS:: " + str(rtn))
+        rtn = mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address, cc=cc_addresses)
+        logger.error("ERROR:: " + str(mail.error))
+        logger.info("EMAIL STATUS:: " + str(rtn))
 
 
 def send_email(to_address, email_subject, email_template, context, cc_addresses=[]):
@@ -95,7 +95,7 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
                        taskType = task_type,
                        requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
         if task_type == TASK_TYPE_CREATE_VM:
-	    cc_addresses = []
+            cc_addresses = []
             send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
         else:
             subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
