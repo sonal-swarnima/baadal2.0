@@ -10,6 +10,8 @@ function run
   file_run "mkdir -p /baadal/data/vm_migration_data"
   file_run "mkdir -p /baadal/data/vm_rrds"
   file_run "mkdir -p /baadal/data/vm_templates"
+  
+  chmod 757 -R /baadal/data
 
   config_get NETWORK_INTERNAL
   exports_str="/baadal/data $NETWORK_INTERNAL/16(rw,sync,no_root_squash,no_all_squash,subtree_check)\n"
