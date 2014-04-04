@@ -31,12 +31,14 @@ db.define_table('organisation',
 from gluon.tools import Auth
 auth = Auth(db)
 
-from gluon.tools import Mail
-mail = Mail()
-mail.settings.server = config.get("MAIL_CONF","mail_server")
-mail.settings.sender = config.get("MAIL_CONF","mail_sender")
-mail.settings.login = config.get("MAIL_CONF","mail_login")
-mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
+mails_enabled = literal_eval(config.get("MAIL_CONF","mail_active"))
+if(mails_enabled):
+	from gluon.tools import Mail
+	mail = Mail()
+	mail.settings.server = config.get("MAIL_CONF","mail_server")
+	mail.settings.sender = config.get("MAIL_CONF","mail_sender")
+	mail.settings.login = config.get("MAIL_CONF","mail_login")
+	mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
 
 #added to make auth and db objects available in modules 
 from gluon import current  # @Reimport
