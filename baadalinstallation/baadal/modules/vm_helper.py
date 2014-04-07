@@ -160,19 +160,14 @@ def create_vm_image(vm_details, datastore):
         raise Exception("Directory with same name as vmname already exists.")
 
     # Finds the location of template image that the user has requested for its vm.               
-    template = current.db(current.db.template.id == vm_details.template_id).select()[0]
-    template_location = get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + template.hdfile
+    template = current.db.template[vm_details.template_id]
     vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity + '/' + \
                         vm_details.vm_identity + '.qcow2'
             
     # Copies the template image from its location to new vm directory
-    config = get_config_file()
     storage_type = config.get("GENERAL_CONF","storage_type")
 
-    if storage_type == current.STORAGE_NETAPP_NFS:
-        copy_command = 'ndmpcopy ' 
-    else:
-        copy_command = 'cp '
+    copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
         
     logger.debug("Copy in progress when storage type is " + str(storage_type))
     command_to_execute = copy_command + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
@@ -369,7 +364,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
 
 
 def create_NAT_IP_mapping(action, public_ip, private_ip):
-    config = get_config_file()
     nat_ip = config.get("GENERAL_CONF","nat_ip")
     nat_user = config.get("GENERAL_CONF","nat_user")
     nat_script = config.get("GENERAL_CONF","nat_script_path")

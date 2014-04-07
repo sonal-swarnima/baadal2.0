@@ -6,12 +6,15 @@ from gluon.validators import Validator
 from gluon import current
 from log_handler import logger
 
+
 def get_config_file():
 
     import ConfigParser    
     config = ConfigParser.ConfigParser()
     config.read(os.path.join(get_context_path(), 'static/baadalapp.cfg'));
     return config
+
+config = get_config_file()
 
 def get_context_path():
 
@@ -109,7 +112,6 @@ def generate_random_mac():
 def create_dhcp_bulk_entry(dhcp_info_list):
     
     if len(dhcp_info_list) == 0: return
-    config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = "echo -e  '"
     
@@ -133,7 +135,6 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
 def remove_dhcp_entry(host_name, mac_addr, ip_addr):
 
     host_name = host_name if host_name != None else ('IP_' + ip_addr.replace(".", '_'))
-    config = get_config_file()
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"

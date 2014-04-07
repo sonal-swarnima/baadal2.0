@@ -8,7 +8,7 @@ if 0:
 ###################################################################################
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
     remove_dhcp_entry, create_dhcp_bulk_entry
-from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
+from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR
@@ -581,7 +581,8 @@ def updte_host_status(host_id, status):
         else:
             return False
     elif status == HOST_STATUS_MAINTENANCE:
-        put_host_in_maint_mode(host_id)
+        migrate_all_vms_from_host(host_data.host_ip)
+        host_data.update_record(status=HOST_STATUS_MAINTENANCE)
     host_data.update_record(status = status)
     return True
         

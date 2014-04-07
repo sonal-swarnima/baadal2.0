@@ -8,9 +8,7 @@ if 0:
     global mail; mail = gluon.tools.Mail()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_config_file, logger
-
-config = get_config_file()
+from helper import config, logger
 
 #Email templates and subject constants
 REGISTRATION_SUCCESSFUL_SUBJECT = "Baadal Registration Successful"
