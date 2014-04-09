@@ -117,3 +117,12 @@ VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
+
+#nat types
+NAT_TYPE_SOFTWARE = 'software_nat'
+NAT_TYPE_HARDWARE = 'hardware_nat'
+
+#VNC access status
+VNC_ACCESS_STATUS_ACTIVE = 'active'
+VNC_ACCESS_STATUS_INACTIVE = 'inactive'
+

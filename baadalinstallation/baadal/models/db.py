@@ -289,14 +289,9 @@ db.define_table('task_queue_event',
 db.task_queue_event.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.task_queue_event.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
-#TODO: to be modified after networking details have been finalized 
-db.define_table('vnc_server',
-    Field('ip_addr', 'string',length = 15,notnull = True))
-
-#TODO: to be modified after networking details have been finalized 
 db.define_table('vnc_access',
     Field('vm_id', db.vm_data),
-    Field('vnc_server_id', db.vnc_server,length = 15, notnull = True),
+    Field('vnc_server_ip', 'string',length = 15, notnull = True),
     Field('host_id', db.host, length = 15, notnull = True),
     Field('vnc_public_port', 'integer', notnull = True),
     Field('vnc_private_port','integer',default = -1),
