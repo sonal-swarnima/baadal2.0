@@ -314,12 +314,12 @@ def check_if_vm_defined(hostip, vmname):
 # Frees vm properties
 def free_vm_properties(vm_details):
 
-    if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
-        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
-        domain = connection_object.lookupByName(vm_details.vm_name)
-        domain.undefine()
-        connection_object.close()
-                    
+    if vm_details.host_id:
+        if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
+            connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
+            domain = connection_object.lookupByName(vm_details.vm_name)
+            domain.undefine()
+            connection_object.close()
 
     if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity):
         shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity)
