@@ -92,10 +92,12 @@ def choose_mac_ip_vncport(vm_properties):
 def find_new_host(RAM, vCPU):
     hosts = current.db(current.db.host.status == 1).select() 
     for host in hosts:
-        logger.debug("checking host="+host.host_name)
-        (uram, ucpu)=host_resources_used(host.id)
-        logger.debug("uram "+str(uram)+" ucpu "+str(ucpu)+" hram "+ str(host.RAM)+" hcpu "+ str(host.CPUs))
-        if(((host.RAM*1024 - uram) >= RAM) & ((host.CPUs - ucpu) >= vCPU)):
+        logger.debug("Checking host =" + host.host_name)
+        (used_ram, used_cpu) = host_resources_used(host.id)
+        logger.debug("used ram: " + str(used_ram) + " used cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) + " host cpu "+ str(host.CPUs))
+        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
+        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
+        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
             return host.id
 
     #If no suitable host found
@@ -897,9 +899,12 @@ def clone(vmid):
         host = vm_properties['host']
         logger.debug("host is: " + str(host))
         logger.debug("host details are: " + str(host))
-        (uram, ucpu) = host_resources_used(host.id)
-        logger.debug("uram " + str(uram) + " ucpu " + str(ucpu) + " hram " + str(host.RAM) +" hcpu " + str(host.CPUs))
-        if (((host.RAM*1024 - uram) >= cloned_vm_details.RAM) & ((host.CPUs - ucpu) >= cloned_vm_details.vCPU)):
+        (used_ram, used_cpu) = host_resources_used(host.id)
+        logger.debug("uram: " + str(used_ram) + " used_cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) +" host cpu: " + str(host.CPUs))
+        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
+        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
+
+        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
             exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
