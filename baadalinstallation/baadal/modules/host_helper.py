@@ -81,6 +81,48 @@ def host_status_sanity_check():
                 logger.debug("Changing status of " + host.host_name +" to " + str(host_status))
                 host.update_record(status=host_status)
                 current.db.commit()
+#                 if host_status == HOST_STATUS_DOWN:
+#                     respawn_dangling_vms(host.id)
+
+#Respawn the VMs if the host is unexpectedly down 
+def respawn_dangling_vms(host_id):
+    
+    vms = current.db(current.db.vm_data.host_id == host_id).select(current.db.vm_data.ALL)
+    vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/%s/%s.qcow2'
+    for vm_data in vms:
+        
+        logger.debug('Re-spawning VM ' + vm_data.vm_identity)
+        #Create a copy of existing image and rename it with '_old' suffix
+        storage_type = config.get("GENERAL_CONF","storage_type")
+        copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
+            
+        ds_image_location = vm_data.datastore_id.path + get_constant('vms') + '/%s/%s.qcow2'
+        command_to_execute = copy_command + ds_image_location%(vm_data.vm_identity, vm_data.vm_identity) + \
+                                ' ' + ds_image_location%(vm_data.vm_identity, vm_data.vm_identity+'_old')
+
+        exec_command_on_host(vm_data.datastore_id.ds_ip, 
+                             vm_data.datastore_id.username, 
+                             command_to_execute, 
+                             vm_data.datastore_id.password)
+        logger.debug('Backup copy of the VM image cretaed successfully.')
+        
+        vm_properties = {}
+        vm_properties['host'] = find_new_host(vm_data.RAM, vm_data.vCPU)
+        vm_properties['ram'] = vm_data.RAM
+        vm_properties['vcpus'] = vm_data.vCPU
+        vm_properties['mac_addr'] = vm_data.mac_addr
+        vm_properties['vnc_port'] = vm_data.vnc_port
+        vm_properties['template'] = current.db.template[vm_data.template_id]
+        vm_properties['vlan_name'] = current.db(current.db.private_ip_pool.private_ip == vm_data.private_ip).select()[0].vlan.name
+
+        # Re-spawn the VM on new host
+        launch_vm_on_host(vm_data, vm_image_location%(vm_data.vm_identity, vm_data.vm_identity), vm_properties)
+        vm_data.update_record(host_id = vm_properties['host'])
+        
+        #Find the most recent snapshot of the given VM; revert to the snapshot
+        recent_snapshot = current.db(current.db.snapshot.vm_id == vm_data.id).select(orderby = ~current.db.snapshot.timestamp)[0]
+        logger.debug('Reverting VM %s to snapshot %s' %(vm_data.vm_identity, recent_snapshot.snapshot_name))
+        revert(dict(vm_id = vm_data.id, snapshot_id = recent_snapshot.id))
 
 # Establishes a read only remote connection to libvirtd
 # Finds out all domains running and not running
@@ -112,87 +154,59 @@ def has_running_vm(host_ip):
             if(dom.info()[0] != VIR_DOMAIN_SHUTOFF):
                 found=True
     except:
-        logger.exception('Exception: ')
+        log_exception()
     return found
 
-#Move all dead vms of this host to the host first in list of hosts
-def move_all_dead_vms(host_ip):
-
-    logger.debug("\nMoving all dead vms of this host "+host_ip+"\n-----------------------------------\n")
-    if not check_host_status(host_ip):
-        logger.debug("\nHost is down\n")
-        return
-    if(has_running_vm(host_ip)):
-        logger.debug("All the vms on this host are not Off")
-        return
-    host1 = current.db.host(status=HOST_STATUS_UP)
-
-    try:
-        domains = get_host_domains(host_ip)
-        for dom in domains:
-            logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
-            vm_details = current.db.vm_data(vm_identity=dom.name())
-            migrate_domain(vm_details['id'], host1['id'])
-        logger.debug("All the vms moved Successfully. Host is empty")
-        logger.debug(commands.getstatusoutput("ssh root@"+host_ip+" virsh list --all"))
-    except:
-        logger.exception('Exception: ')
-    return
 
 #Save Power, turn off extra hosts and turn on if required
 def host_power_operation():
     logger.debug("\nIn host power operation function\n-----------------------------------\n")
     livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
-    masterhost = livehosts[0].ip
+    masterhost = livehosts[0].host_ip
     freehosts=[]
     try:
-        for host in livehosts:
-            if not has_running_vm(host.ip):
-                freehosts.append(host.ip)
+        for host_data in livehosts:
+            if not has_running_vm(host_data.host_ip):
+                freehosts.append(host_data.host_ip)
         freehostscount = len(freehosts)
         if(freehostscount == 2):
             logger.debug("Everything is Balanced. Green Cloud :)")
         elif(freehostscount < 2):
             logger.debug("Urgently needed "+str(2-freehostscount)+" more live hosts.")
-            newhosts = current.db(current.db.host.status==0).select()[0:(2-freehostscount)] #Select only Shutoff hosts
-            for host in newhosts:
-                logger.debug("Sending magic packet to "+host.host_name)
-                commands.getstatusoutput("ssh root@"+masterhost+" wakeonlan "+str(host.mac))
+            newhosts = current.db(current.db.host.status == HOST_STATUS_DOWN).select()[0:(2-freehostscount)] #Select only Shutoff hosts
+            for host_data in newhosts:
+                logger.debug("Sending magic packet to "+host_data.host_name)
+                commands.getstatusoutput("ssh root@"+masterhost+" wakeonlan "+str(host_data.mac_addr))
         elif(freehosts > 2):
             logger.debug("Sending shutdown signal to total "+str(freehostscount-2)+" no. of host(s)")
             extrahosts=freehosts[2:]
-            for host in extrahosts:
+            for host_data in extrahosts:
                 logger.debug("Moving any dead vms to first running host")
-                move_all_dead_vms(host)
-                logger.debug("Sending kill signal to "+host)
-                commands.getstatusoutput("ssh root@"+host+" shutdown -h now")
-                host.update_record(status=HOST_STATUS_DOWN)
+                migrate_all_vms_from_host(host_data.host_ip)
+                logger.debug("Sending kill signal to " + host_data.host_ip)
+                commands.getstatusoutput("ssh root@" + host_data.host_ip + " shutdown -h now")
+                host_data.update_record(status=HOST_STATUS_DOWN)
     except:
-        logger.exception('Exception: ')
+        log_exception()
     return
 
-#Put the host in maintenance mode, migrate all running vms and redefine dead ones
-def put_host_in_maint_mode(host_id):
-
-    host_data = current.db.host[host_id]
-    host_data.update_record(status=HOST_STATUS_MAINTENANCE)
-    host1 = current.db.host(status=HOST_STATUS_UP)
+#Migrate all running vms and redefine dead ones
+def migrate_all_vms_from_host(host_ip):
 
     try:
-        domains = get_host_domains(host_data.host_ip)
+        domains = get_host_domains(host_ip)
         for dom in domains:
             vm_details = current.db.vm_data(vm_identity=dom.name())
             if vm_details:
                 if dom.info()[0] == VIR_DOMAIN_SHUTOFF:    #If the vm is in Off state, move it to host1
-                    logger.debug("Moving "+str(dom.name())+" to "+host1['host_name'])
+                    logger.debug("Moving "+str(dom.name())+" to another host")
                     add_migrate_task_to_queue(vm_details['id'])
-                elif dom.info()[0] == VIR_DOMAIN_RUNNING:
-                    logger.debug("Inserting migrate request for running vm "+str(dom.name())+" to appropriate host in queue")
+                elif dom.info()[0] in (VIR_DOMAIN_PAUSED, VIR_DOMAIN_RUNNING):
+                    logger.debug("Moving running vm "+str(dom.name())+" to appropriate host in queue")
                     add_migrate_task_to_queue(vm_details['id'], live_migration=True)
         
-        move_all_dead_vms(host_data.host_ip)
     except:
-        logger.exception('Exception: ')
+        log_exception()
     return
 
 #Add migrate task to task_queue

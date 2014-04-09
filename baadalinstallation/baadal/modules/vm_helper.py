@@ -92,10 +92,12 @@ def choose_mac_ip_vncport(vm_properties):
 def find_new_host(RAM, vCPU):
     hosts = current.db(current.db.host.status == 1).select() 
     for host in hosts:
-        logger.debug("checking host="+host.host_name)
-        (uram, ucpu)=host_resources_used(host.id)
-        logger.debug("uram "+str(uram)+" ucpu "+str(ucpu)+" hram "+ str(host.RAM)+" hcpu "+ str(host.CPUs))
-        if(((host.RAM*1024 - uram) >= RAM) & ((host.CPUs - ucpu) >= vCPU)):
+        logger.debug("Checking host =" + host.host_name)
+        (used_ram, used_cpu) = host_resources_used(host.id)
+        logger.debug("used ram: " + str(used_ram) + " used cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) + " host cpu "+ str(host.CPUs))
+        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
+        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
+        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
             return host.id
 
     #If no suitable host found
@@ -160,19 +162,14 @@ def create_vm_image(vm_details, datastore):
         raise Exception("Directory with same name as vmname already exists.")
 
     # Finds the location of template image that the user has requested for its vm.               
-    template = current.db(current.db.template.id == vm_details.template_id).select()[0]
-    template_location = get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + template.hdfile
+    template = current.db.template[vm_details.template_id]
     vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity + '/' + \
                         vm_details.vm_identity + '.qcow2'
             
     # Copies the template image from its location to new vm directory
-    config = get_config_file()
     storage_type = config.get("GENERAL_CONF","storage_type")
 
-    if storage_type == current.STORAGE_NETAPP_NFS:
-        copy_command = 'ndmpcopy ' 
-    else:
-        copy_command = 'cp '
+    copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
         
     logger.debug("Copy in progress when storage type is " + str(storage_type))
     command_to_execute = copy_command + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
@@ -319,12 +316,12 @@ def check_if_vm_defined(hostip, vmname):
 # Frees vm properties
 def free_vm_properties(vm_details):
 
-    if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
-        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
-        domain = connection_object.lookupByName(vm_details.vm_name)
-        domain.undefine()
-        connection_object.close()
-                    
+    if vm_details.host_id:
+        if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
+            connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
+            domain = connection_object.lookupByName(vm_details.vm_name)
+            domain.undefine()
+            connection_object.close()
 
     if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity):
         shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity)
@@ -369,7 +366,6 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
 
 
 def create_NAT_IP_mapping(action, public_ip, private_ip):
-    config = get_config_file()
     nat_ip = config.get("GENERAL_CONF","nat_ip")
     nat_user = config.get("GENERAL_CONF","nat_user")
     nat_script = config.get("GENERAL_CONF","nat_script_path")
@@ -903,9 +899,12 @@ def clone(vmid):
         host = vm_properties['host']
         logger.debug("host is: " + str(host))
         logger.debug("host details are: " + str(host))
-        (uram, ucpu) = host_resources_used(host.id)
-        logger.debug("uram " + str(uram) + " ucpu " + str(ucpu) + " hram " + str(host.RAM) +" hcpu " + str(host.CPUs))
-        if (((host.RAM*1024 - uram) >= cloned_vm_details.RAM) & ((host.CPUs - ucpu) >= cloned_vm_details.vCPU)):
+        (used_ram, used_cpu) = host_resources_used(host.id)
+        logger.debug("uram: " + str(used_ram) + " used_cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) +" host cpu: " + str(host.CPUs))
+        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
+        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
+
+        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
             exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)

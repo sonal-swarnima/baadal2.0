@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 from gluon import current
-from helper import get_config_file, logger
+from helper import config, logger
 
-config = get_config_file()
 AUTH_TYPE_LDAP = 'ldap'
 AUTH_TYPE_DB = 'db'
 
