@@ -7,6 +7,11 @@ from gluon import current
 from log_handler import logger
 
 
+def get_context_path():
+
+    ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
+    return ctx_path
+
 def get_config_file():
 
     import ConfigParser    
@@ -15,11 +20,6 @@ def get_config_file():
     return config
 
 config = get_config_file()
-
-def get_context_path():
-
-    ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
-    return ctx_path
 
 def get_datetime():
     import datetime
