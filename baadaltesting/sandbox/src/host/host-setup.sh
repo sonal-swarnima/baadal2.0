@@ -1,6 +1,7 @@
 function run
 {  
   check_root
+  config_get HOST_INTERFACE
 
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
