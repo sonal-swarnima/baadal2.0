@@ -2,17 +2,17 @@ from helper import get_config_file, logger
 
 config = get_config_file()
 
-def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1, private_port=-1 ):
+def create_mapping( vm_data_id, destination_ip, source_ip = None , source_port=-1, destination_port=-1, duration=-1 ):
     import paramiko
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
         nat_ip = config.get("GENERAL_CONF", "nat_ip")
         nat_user = config.get("GENERAL_CONF", "nat_user")
-        if public_port == -1 and private_port == -1:
-	    check_existence = db(db.vm_data.public.ip == public_ip & db.vm_data.private_ip == private_ip).select()
+        if source_port == -1 and destination_port == -1:
+	    check_existence = db(db.vm_data.public.ip == source_ip & db.vm_data.private_ip == destination_ip).select()
 	    if check_existence != None:
-		db.vm_data.update_or_insert(db.vm_data.id == vm_data_id, public_ip = public_ip)
-		db.public_ip_pool.update_or_insert(db.public_ip_pool.public_ip == public_ip, vm_id=vm_data_id)
+		db.vm_data.update_or_insert(db.vm_data.id == vm_data_id, public_ip = source_ip)
+		db.public_ip_pool.update_or_insert(db.public_ip_pool.public_ip == source_ip, vm_id=vm_data_id)
 	        ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 	        ssh.connect(nat_ip, username=nat_user)
@@ -20,13 +20,13 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 		stdin = channel.makefile('wb')
 		stdout = channel.makefile('rb')
 		
-		private_ip_octets = private_ip.split('.')
-		interfaces_entry_command = "echo -e 'auto eth0:%s.%s\niface eth0:%s.%s inet static\n\taddress %s' >> /etc/network/interfaces" %(private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], public_ip)
-		interfaces_command = "ifconfig eth0:%s.%s %s up" %(private_ip_octets[2], private_ip_octets[3], public_ip)
-		iptables_command = "iptables -t nat -I PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -I POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(public_ip, private_ip, private_ip, public_ip)
+		destination_ip_octets = destination_ip.split('.')
+		interfaces_entry_command = "echo -e 'auto eth0:%s.%s\niface eth0:%s.%s inet static\n\taddress %s' >> /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], source_ip)
+		interfaces_command = "ifconfig eth0:%s.%s %s up" %(destination_ip_octets[2], destination_ip_octets[3], source_ip)
+		iptables_command = "iptables -t nat -I PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -I POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(source_ip, destination_ip, destination_ip, source_ip)
 		stdin.write('''
 			%s
-			%s
+			%sdestination
 			%s
 			/etc/init.d/iptables-persistent restart
 			exit
@@ -38,16 +38,18 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 	    else:
 		logger.debug("public IP already assigned to some other VM in the DB. Please check and try again!")
 	else:
-	    if private_port == -1:
-		private_port = public_port
-	    host_id = db(db.host.host_ip == private_ip).select(id)
-	    check_existence = db(db.vnc_access.vnc_server_ip == public_ip & db.vnc_access.host_id == host_id & db.vnc_access.vnc_public_port == public_port & db.vnc_access.vnc_private_port == private_port).select()
+	    if destination_port == -1:
+		destination_port = source_port
+	    if source_ip == None:
+		source_ip = config.get("GENERAL_CONF", "vnc_ip")
+	    host_id = db(db.host.host_ip == destination_ip).select(id)
+	    check_existence = db(db.vnc_access.vnc_server_ip == source_ip & db.vnc_access.host_id == host_id & db.vnc_access.vnc_source_port == source_port & db.vnc_access.vnc_destination_port == destination_port).select()
 	    if check_existence != None:
 		if duration == -1:
 		    duration = 30
-		db.vnc_access.insert(vm_id = vm_data_id, host_id = host_id, vnc_server_id = vnc_server_id, vnc_public_port = public_port, vnc_private_port = private_port, duration = duration, status = VNC_ACCESS_STATUS_ACTIVE)
-		public_ip_octets = public_ip.split('.')
-		interfaces_alias = "%s%s%s" %(public_ip_octets[1], public_ip_octets[2], public_ip_octets[3])
+		db.vnc_access.insert(vm_id = vm_data_id, host_id = host_id, vnc_server_ip = source_ip, vnc_source_port = source_port, vnc_destination_port = destination_port, duration = duration, status = VNC_ACCESS_STATUS_ACTIVE)
+		source_ip_octets = source_ip.split('.')
+		interfaces_alias = "%s%s%s" %(source_ip_octets[1], source_ip_octets[2], source_ip_octets[3])
 		ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 	        ssh.connect(nat_ip, username=nat_user)
@@ -55,7 +57,7 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 		stdin = channel.makefile('wb')
 		stdout = channel.makefile('rb')
 
-		iptables_command = "iptables -I PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -I FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(public_ip, public_port,  private_ip, private_port, private_ip, private_port)
+		iptables_command = "iptables -I PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -I FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(source_ip, source_port,  destination_ip, destination_port, destination_ip, destination_port)
 		stdin.write('''
 			ip_present=$(ifconfig | grep %s)
 			if test -z "$ip_present"; then
@@ -65,7 +67,7 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 			%s
 			/etc/init.d/iptables-persistent restart
 			exit
-		''' %(public_ip, interfaces_alias, interfaces_alias, public_ip, interfaces_alias, public_ip iptables_command))
+		''' %(source_ip, interfaces_alias, interfaces_alias, source_ip, interfaces_alias, source_ip iptables_command))
 		logger.debug(stdout.read())
 		stdout.close()
 		stdin.close()
@@ -78,17 +80,17 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 	logger.debug("NAT type is not supported")
 
 
-def remove_mapping(public_ip, private_ip,  vm_data_id, public_port=-1, private_port=-1):
+def remove_mapping(vm_data_id, destination_ip, source_ip = None, source_port=-1, destination_port=-1):
     import paramiko
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
         nat_ip = config.get("GENERAL_CONF", "nat_ip")
         nat_user = config.get("GENERAL_CONF", "nat_user")
-        if public_port == -1 and private_port == -1:
-	    private_ip_octets = private_ip.split('.')
-	    interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces" %(private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3])
-	    interfaces_command = "ifconfig eth0:%s.%S down" %(private_ip_octets[2], private_ip_octets[3])
-	    iptables_command = "iptables -t nat -D PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -D POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(public_ip, private_ip, private_ip, public_ip)
+        if source_port == -1 and destination_port == -1:
+	    destination_ip_octets = destination_ip.split('.')
+	    interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3])
+	    interfaces_command = "ifconfig eth0:%s.%S down" %(destination_ip_octets[2], destination_ip_octets[3])
+	    iptables_command = "iptables -t nat -D PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -D POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(source_ip, destination_ip, destination_ip, source_ip)
 
 	    ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -112,9 +114,11 @@ def remove_mapping(public_ip, private_ip,  vm_data_id, public_port=-1, private_p
 	    db.vm_data.update_or_insert(db.vm_data.id==vm_data_id, public_ip = PUBLIC_IP_NOT_ASSIGNED)
 	    
 	else:
-	    if private_port == -1:
-		private_port = public_port
-	    iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(public_ip, public_port,  private_ip, private_port, private_ip, private_port)
+	    if destination_port == -1:
+		destination_port = source_port
+	    if source_ip == None:
+		source_ip = config.get("GENERAL_CONF", "vnc_ip")
+	    iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(source_ip, source_port,  destination_ip, destination_port, destination_ip, destination_port)
 	    ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 	    ssh.connect(nat_ip, username=nat_user)
@@ -147,7 +151,7 @@ def clear_all_nat_mappings():
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
 
-    public_ips_mapping = db(db.vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED).select(private_ip, public_ip)
+    public_ip_mappings = db(db.vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED).select(private_ip, public_ip)
     for mapping in public_ip_mappings:
 	logger.debug('Removing private to public IP mapping for private IP: %s and public IP:%s' %(mapping['private_ip'],mapping['public_ip']))
 	private_ip_octets = mapping['private_ip'].split('.')
@@ -170,3 +174,26 @@ def clear_all_nat_mappings():
     stdout.close()
     stdin.close()
     ssh.close()
+
+def clear_all_timedout_vnc_mappings():
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(nat_ip, username=nat_user)
+    channel = ssh.invoke_shell()
+    stdin = channel.makefile('wb')
+    stdout = channel.makefile('rb')
+
+    timedout_vnc_mappings = db(get_datetime()-db.vnc_access.time_requested >= db.vnc_access.duration).select(id,vm_id, vnc_server_ip, host_id, vnc_source_port, vnc_destination_port)
+    for mapping in timedout_vnc_mappings:
+	logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping[vm_id], mapping[host_id], mapping[vnc_server_ip], mapping[vnc_source_port], mapping[vnc_destination_port]))
+	host_ip=db(db.host.id == mapping['host_id']).select(host_ip)
+	iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(mapping[vnc_server_ip], mapping[vnc_source_port],  host_ip, mapping[vnc_destination_port], host_ip, mapping[vnc_destination_port])
+	stdin.write('''
+		%s
+	''' %(iptables_command))
+	db.vnc_access.update_or_insert(db.vnc_access.id == mapping['id'], status = VNC_ACCESS_STATUS_INACTIVE)
+    logger.debug(stdout.read())
+    stdout.close()
+    stdin.close()
+    ssh.close()
+
