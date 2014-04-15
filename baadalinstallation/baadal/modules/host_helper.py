@@ -39,7 +39,7 @@ def get_host_mac_address(host_ip):
 def get_host_cpu(host_ip):
     command = "grep -c processor /proc/cpuinfo"
     ret = execute_remote_cmd(host_ip, 'root',command)
-    return int(ret)/2
+    return int(ret)
     
 
 def get_host_ram(host_ip):
@@ -81,8 +81,8 @@ def host_status_sanity_check():
                 logger.debug("Changing status of " + host.host_name +" to " + str(host_status))
                 host.update_record(status=host_status)
                 current.db.commit()
-#                 if host_status == HOST_STATUS_DOWN:
-#                     respawn_dangling_vms(host.id)
+                if host_status == HOST_STATUS_DOWN:
+                    respawn_dangling_vms(host.id)
 
 #Respawn the VMs if the host is unexpectedly down 
 def respawn_dangling_vms(host_id):

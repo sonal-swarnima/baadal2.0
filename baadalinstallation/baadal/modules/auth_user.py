@@ -79,12 +79,12 @@ def fetch_ldap_user(username):
                                     user_info['last_name'] = name_lst[1]
                                 elif len(name_lst) > 2:
                                     user_info['last_name'] = vals[0][vals[0].index(' '):].lstrip()
-                            if k == 'altEmail':
-                                if vals[0] != 'none':
-                                    user_info['email'] = vals[0]
+#                             if k == 'altEmail':
+#                                 if vals[0] != 'none':
+#                                     user_info['email'] = vals[0]
  
 #TODO: find role and organisation from ldap and set in db accordingly (current iitd ldap does not support this feature entirely) 
-                                    
+        user_info['email'] = username + EMAIL_DOMAIN                                    
         user_info['roles'] = fetch_user_role(username)
         # If user has super admin rights; it is added to separate organization
         if current.ADMIN in user_info['roles']:

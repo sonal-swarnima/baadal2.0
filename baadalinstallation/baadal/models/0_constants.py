@@ -126,3 +126,5 @@ NAT_TYPE_HARDWARE = 'hardware_nat'
 VNC_ACCESS_STATUS_ACTIVE = 'active'
 VNC_ACCESS_STATUS_INACTIVE = 'inactive'
 
+EMAIL_DOMAIN = '@cse.iitd.ac.in'
+

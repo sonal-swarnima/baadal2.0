@@ -97,7 +97,7 @@ def log_vm_event(old_vm_data, task_queue_data):
             
         db.vm_event_log.bulk_insert(data_list)        
 
-# Called when scheduler runs task of type 'vm_task'
+# Invoked when scheduler runs task of type 'vm_task'
 def process_task_queue(task_event_id):
 
     logger.debug("Processing task: " + str(task_event_id))
@@ -136,7 +136,7 @@ def process_task_queue(task_event_id):
         msg = log_exception()
         task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
         
-# Called when scheduler runs task of type 'clone_task'
+# Invoked when scheduler runs task of type 'clone_task'
 def process_clone_task(task_event_id, vm_id):
 
     logger.debug("Processing clone task: " + str(task_event_id))
@@ -190,8 +190,8 @@ def process_clone_task(task_event_id, vm_id):
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=message)
 
 
-# Handles periodic snapshot task
-# Called when scheduler runs task of type 'snapshot_vm'
+# Handles snapshot task
+# Invoked when scheduler runs task of type 'snapshot_vm'
 def process_snapshot_vm(snapshot_type, vm_id = None):
 
     logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
@@ -206,7 +206,7 @@ def process_snapshot_vm(snapshot_type, vm_id = None):
             vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
           
 # Handles periodic VM sanity check
-# Called when scheduler runs task of type 'vm_sanity'
+# Invoked when scheduler runs task of type 'vm_sanity'
 def vm_sanity_check():
 
     logger.info("Starting VM Sanity Check")

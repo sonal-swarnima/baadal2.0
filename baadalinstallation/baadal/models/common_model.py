@@ -345,6 +345,7 @@ def get_vm_operations(vm_id):
                      'edit_vm_config'        : ('user', 'editme.png', 'Edit VM Config'),
                      'show_vm_performance'   : ('user', 'performance.jpg', 'Check VM Performance'),
                      'vm_history'            : ('user', 'history.png', 'Show VM History'),
+                     'grant_vnc'             : ('user', 'vnc.jpg', 'Grant VNC Access'),
                      'confirm_vm_deletion()' : ( None, 'delete.png', 'Delete this virtual machine'),
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM')}
@@ -371,7 +372,7 @@ def get_vm_operations(vm_id):
                 if (db(db.host.id > 0).count() >= 2):
                     valid_operations.extend(['migrate_vm'])
 
-        valid_operations.extend(['vm_history'])
+        valid_operations.extend(['grant_vnc', 'vm_history'])
         
         link_disabled = True if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM) else False
         for valid_operation in valid_operations:
