@@ -711,7 +711,7 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
 	rm -rf $TFTP_DIR/pxelinux.cfg
         mkdir $TFTP_DIR/pxelinux.cfg
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
-        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ksdevice=bootif ks=http://$CONTROLLER_IP/ks.cfg --\n\tIPAPPEND 2\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
 

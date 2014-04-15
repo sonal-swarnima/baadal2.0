@@ -320,6 +320,7 @@ def free_vm_properties(vm_details):
         if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
             connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
             domain = connection_object.lookupByName(vm_details.vm_name)
+            domain.destroy()
             domain.undefine()
             connection_object.close()
 

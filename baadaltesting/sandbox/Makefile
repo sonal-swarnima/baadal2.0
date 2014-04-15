@@ -180,7 +180,7 @@ controller: $(BIN_CONTROLLER)
 	@ sudo $<
 
 controller-setup: $(BIN_CONTROLLER_SETUP)
-	@ sudo DNS=$$DNS $<
+	@ sudo DNS=$$DNS CONTROLLER_INTERFACE=$$INTERFACE $<
   
 filer: $(BIN_FILER)
 	@ sudo $<
@@ -199,7 +199,7 @@ host: $(BIN_HOST)
 	sudo HOST_ID=$(HOST_ID) $<
 
 host-setup: $(BIN_HOST_SETUP)
-	@ sudo $<
+	@ sudo HOST_INTERFACE=$$INTERFACE $<
   
 switch: $(BIN_SWITCH)
 	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL INTERFACE=$$INTERFACE DNS=$$DNS $<
