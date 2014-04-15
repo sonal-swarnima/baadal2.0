@@ -64,7 +64,7 @@ function confirm_vm_deletion(){
     <table id="vm_users">
         <tr>
       {{for user in vmusers:}}
-            <td>{{=(str(user.first_name) + " " + str(user.last_name))}}</td>
+            <td id="{{=user.id}}">{{=(str(user.first_name) + " " + str(user.last_name))}}</td>
             <td>
                 <a alt="Remove the user permissions" title="Remove the user permissions" href="{{=URL(request.application, 'admin','delete_user_vm', args=[vminfo['id'], user.id])}}" style="text-decoration:none;color:black;"><b>X<b/>
                 </a>
@@ -95,7 +95,7 @@ function confirm_vm_deletion(){
         <h2 class = "title"> Snapshot(s) </h2>
         <table id="vm_snaps">          
                      {{for snapshot in vmsnapshots:}}
-                     <tr>
+                     <tr id="{{=snapshot['id']}}">
                          <td>{{=snapshot['type']}}</td>
                          <td>{{=snapshot['name']}}</td>
                          <td>{{=snapshot['revert']}}</td>

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ =['add_faculty_approver', 'add_orhan_vm', 'add_private_ip', 'add_private_ip_range', 'add_public_ip_range', 
+__all__ =['add_faculty_approver', 'add_orphan_vm', 'add_private_ip', 'add_private_ip_range', 'add_public_ip_range', 
 			'add_user_vm_access', 'add_vm_task_to_queue', 'add_vm_users', 'approve_vm_request', 'check_delete_private_ip', 
 			'check_delete_security_domain', 'check_faculty', 'check_host_sanity', 'check_moderator', 'check_orgadmin', 
 			'check_snapshot_limit', 'check_vm_owner', 'check_vm_resource', 'check_vm_sanity', 'configure_host_by_mac', 
@@ -26,13 +26,14 @@ __all__ =['add_faculty_approver', 'add_orhan_vm', 'add_private_ip', 'add_private
 			'send_email_to_approver', 'send_email_to_requester', 'send_email_to_vm_user', 'send_remind_faculty_email', 
 			'send_remind_orgadmin_email', 'set_configuration_elem', 'specify_user_roles', 'update_task_ignore', 
 			'update_task_retry', 'update_vm_lock', 'updte_host_status', 'validate_user', 'verify_vm_request', 'vm_has_snapshots', 
-			'is_moderator', 'is_orgadmin', 'is_faculty']
+			'is_moderator', 'is_orgadmin', 'is_faculty', 'grant_vnc_access', 'create_mapping', 'clear_all_timedout_vnc_mappings']
 
 if 0:
     from admin_model import *
     from common_model import *    
     from faculty_model import *
     from mail_handler import *
+    from nat_mapper import *
     from orgadmin_model import *    
     from sanity_model import *    
     from task_scheduler import *

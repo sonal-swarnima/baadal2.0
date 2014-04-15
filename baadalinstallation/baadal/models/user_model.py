@@ -359,3 +359,14 @@ def get_vm_history(vm_id):
                    'timestamp' : vm_log.timestamp}
         vm_history.append(element)
     return vm_history
+
+
+def grant_vnc_access(vm_id):
+    active_vnc = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).count()
+    if active_vnc > 0:
+        msg = 'VNC access already granted. Please check your mail for further details.'
+    else:
+        create_mapping(vm_id, None)
+        msg = 'VNC access granted. Please check your mail for further details.'
+    return msg
+

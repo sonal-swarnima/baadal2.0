@@ -92,8 +92,8 @@ current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 
-VM_RAM_SET = (256, 512,1024,2048,4096,8192)
-VM_vCPU_SET = (1,2,4,8)
+VM_RAM_SET = (256, 512,1024,2048,4096,8192,16384)
+VM_vCPU_SET = (1,2,4,8,16)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
 NAME_ERROR_MESSAGE = 'Name should start with alphanumeric and can only contain letters, numbers, dash and underscore'
@@ -113,7 +113,8 @@ BAADAL_STATUS_DOWN='down'
 BAADAL_STATUS_DOWN_IN_PROGRESS='down-progress'
 
 # List of valid CPU and RAM combination
-VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(8,16)]
+VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(8,16),(16,16)]
+
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
@@ -125,4 +126,6 @@ NAT_TYPE_HARDWARE = 'hardware_nat'
 #VNC access status
 VNC_ACCESS_STATUS_ACTIVE = 'active'
 VNC_ACCESS_STATUS_INACTIVE = 'inactive'
+
+EMAIL_DOMAIN = '@cse.iitd.ac.in'
 
