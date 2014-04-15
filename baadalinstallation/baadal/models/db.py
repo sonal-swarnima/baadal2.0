@@ -14,7 +14,7 @@ from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
 
 db_type = config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
-db = DAL(conn_str)
+db = DAL(conn_str,fake_migrate_all=True)
 
 db.define_table('constants',
     Field('name', 'string', length = 255, notnull = True, unique = True),
@@ -23,7 +23,7 @@ db.define_table('constants',
 db.define_table('organisation',
     Field('name', 'string', length = 255, notnull = True, unique = True),
     Field('details', 'string', length = 255),
-    Field('public_ip', 'string',length = 15), 
+    Field('public_ip', 'string',length = 15),
     Field('admin_mailid', 'string', length = 50),
     format = '%(details)s')
 
@@ -38,7 +38,7 @@ if config.getboolean("MAIL_CONF","mail_active"):
     mail.settings.login = config.get("MAIL_CONF","mail_login")
     mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
 
-#added to make auth and db objects available in modules 
+#added to make auth and db objects available in modules
 from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
@@ -98,7 +98,7 @@ auth.define_tables(username = True)
 if current.auth_type == AUTH_TYPE_LDAP :
     from gluon.contrib.login_methods.pam_auth import pam_auth
     auth.settings.login_methods = [pam_auth()]
-    auth.settings.login_onaccept = [login_ldap_callback]  
+    auth.settings.login_onaccept = [login_ldap_callback]
 else:
     auth.settings.login_onaccept = [login_callback]
     auth.settings.registration_requires_approval = True
