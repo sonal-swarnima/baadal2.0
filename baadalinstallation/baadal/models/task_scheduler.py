@@ -11,7 +11,6 @@ from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
 from log_handler import *
 import time
-import memcache
 
 from gluon import current
 current.cache = cache
