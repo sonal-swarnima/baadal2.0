@@ -224,6 +224,10 @@ def host_sanity_check():
     logger.info("Starting Host Sanity Check")
     host_status_sanity_check()
 
+def check_vnc_access():
+    logger.info("Starting Clear all timedout VNC Mappings")
+    clear_all_timedout_vnc_mappings()
+
 
 # Handles periodic collection of VM utilization data &
 # updation of respective RRD file.
@@ -235,11 +239,13 @@ def vm_utilization_rrd():
     except Exception as e:
         rrd_logger.debug("ERROR OCCURED: %s" % e)
     
+# Defining scheduler tasks
 from gluon.scheduler import Scheduler
 vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue, 
                                         clone_task=process_clone_task,
                                         snapshot_vm=process_snapshot_vm,
                                         vm_sanity=vm_sanity_check,
+                                        vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
                                         vm_util_rrd=vm_utilization_rrd))
 

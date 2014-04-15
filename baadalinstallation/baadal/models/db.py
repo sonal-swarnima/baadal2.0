@@ -289,7 +289,7 @@ db.task_queue_event.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.task_queue_event.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
 db.define_table('vnc_access',
-    Field('vm_id', db.vm_data, unique = True),
+    Field('vm_id', db.vm_data),
     Field('vnc_server_ip', 'string',length = 15, notnull = True),
     Field('host_id', db.host, length = 15, notnull = True),
     Field('vnc_source_port', 'integer', notnull = True),
