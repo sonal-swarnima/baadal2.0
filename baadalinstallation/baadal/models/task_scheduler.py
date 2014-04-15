@@ -8,7 +8,13 @@ if 0:
 from helper import get_datetime, log_exception, logger
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
-# from vm_utilization import update_rrd
+from vm_utilization import update_rrd
+from log_handler import *
+import time
+import memcache
+
+from gluon import current
+current.cache = cache
 
 UUID_SNAPSHOT_DAILY = 'scheduler-uuid-snapshot-daily'
 UUID_SNAPSHOT_WEEKLY = 'scheduler-uuid-snapshot-weekly'
@@ -97,7 +103,7 @@ def log_vm_event(old_vm_data, task_queue_data):
             
         db.vm_event_log.bulk_insert(data_list)        
 
-# Called when scheduler runs task of type 'vm_task'
+# Invoked when scheduler runs task of type 'vm_task'
 def process_task_queue(task_event_id):
 
     logger.debug("Processing task: " + str(task_event_id))
@@ -136,7 +142,7 @@ def process_task_queue(task_event_id):
         msg = log_exception()
         task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
         
-# Called when scheduler runs task of type 'clone_task'
+# Invoked when scheduler runs task of type 'clone_task'
 def process_clone_task(task_event_id, vm_id):
 
     logger.debug("Processing clone task: " + str(task_event_id))
@@ -190,8 +196,8 @@ def process_clone_task(task_event_id, vm_id):
         task_event.update_record(status=TASK_QUEUE_STATUS_FAILED, message=message)
 
 
-# Handles periodic snapshot task
-# Called when scheduler runs task of type 'snapshot_vm'
+# Handles snapshot task
+# Invoked when scheduler runs task of type 'snapshot_vm'
 def process_snapshot_vm(snapshot_type, vm_id = None):
 
     logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
@@ -206,7 +212,7 @@ def process_snapshot_vm(snapshot_type, vm_id = None):
             vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
           
 # Handles periodic VM sanity check
-# Called when scheduler runs task of type 'vm_sanity'
+# Invoked when scheduler runs task of type 'vm_sanity'
 def vm_sanity_check():
 
     logger.info("Starting VM Sanity Check")
@@ -219,14 +225,25 @@ def host_sanity_check():
     logger.info("Starting Host Sanity Check")
     host_status_sanity_check()
 
+
+# Handles periodic collection of VM utilization data &
+# updation of respective RRD file.
+def vm_utilization_rrd():
     
-# Defining scheduler tasks
+    try:
+        update_rrd()
+ 
+    except Exception as e:
+        rrd_logger.debug("ERROR OCCURED: %s" % e)
+    
 from gluon.scheduler import Scheduler
 vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue, 
                                         clone_task=process_clone_task,
                                         snapshot_vm=process_snapshot_vm,
                                         vm_sanity=vm_sanity_check,
-                                        host_sanity=host_sanity_check))
+                                        host_sanity=host_sanity_check,
+                                        vm_util_rrd=vm_utilization_rrd))
+
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
 
@@ -268,10 +285,9 @@ vm_scheduler.queue_task('host_sanity',
                     timeout = 5 * MINUTES,
                     uuid = UUID_HOST_SANITY_CHECK)
 
-# vm_scheduler.queue_task('vm_util_rrd', 
-#                     repeats = 0, # run indefinitely
-#                     start_time = request.now, 
-#                     period = 5 * MINUTES, # every 5 minutes
-#                     timeout = 5 * MINUTES,
-#                     uuid = UUID_VM_UTIL_RRD)
-
+vm_scheduler.queue_task('vm_util_rrd', 
+                     repeats = 0, # run indefinitely
+                     start_time = request.now, 
+                     period = 6 * MINUTES, # every 5 minutes
+                     timeout = 6 * MINUTES,
+                     uuid = UUID_VM_UTIL_RRD)

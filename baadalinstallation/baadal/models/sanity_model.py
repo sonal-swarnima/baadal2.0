@@ -104,7 +104,7 @@ def check_vm_sanity():
     return vmcheck
 
 
-def add_orhan_vm(vm_name, host_id):
+def add_orphan_vm(vm_name, host_id):
 
     host_details = db.host[host_id]
     connection_object = libvirt.openReadOnly("qemu+ssh://root@" + host_details.host_ip + "/system")

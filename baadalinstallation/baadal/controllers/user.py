@@ -257,3 +257,12 @@ def vm_history():
     vm_id = request.args[0]
     vm_history = get_vm_history(vm_id)        
     return dict(vm_id = vm_id, vm_history = vm_history)
+
+
+@check_vm_owner
+@handle_exception       
+def grant_vnc():
+
+    vm_id = request.args[0]
+    session.flash = grant_vnc_access(vm_id)
+

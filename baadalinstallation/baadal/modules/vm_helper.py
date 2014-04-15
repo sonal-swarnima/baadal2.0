@@ -137,7 +137,7 @@ def exec_command_on_host(machine_ip, user_name, command, password=None):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(machine_ip, username = user_name, password = password)
-        stdin,stdout,stderr = ssh.exec_command(command)
+        stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         logger.debug(stdout.readlines())
         install_error_message = stderr.readlines()
         if (stdout.channel.recv_exit_status()) == 1:
@@ -905,7 +905,7 @@ def clone(vmid):
         host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
         host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
 
-        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
+        if((( host_ram_after_25_percent_overcommitment - used_ram) >= host.RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= host.CPUs)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
             exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
@@ -959,32 +959,3 @@ def attach_extra_disk(parameters):
         message = log_exception()
         return (current.TASK_QUEUE_STATUS_FAILED, message)            
 
-def shutdown_baadal():
-    logger.info('Starting Baadal Shutdown')
-    vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
-    for vm_detail in vms:
-        try:
-            snapshot({'vm_id':vm_detail.id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
-            logger.debug('Snapshot of %s completed successfully' %(vm_detail.vm_identity))
-            suspend({'vm_id':vm_detail.id})
-            logger.debug('%s suspended successfully' %(vm_detail.vm_identity))
-        except:
-            log_exception()
-            pass
-    return
-
-def bootup_baadal():
-    logger.info('Starting Baadal Bootup')
-    vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED, current.VM_STATUS_SHUTDOWN)).select()
-    for vm_detail in vms:
-        sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=current.SNAPSHOT_SYSTEM)
-        if sys_snapshot:
-            try:
-                revert({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
-                logger.debug('Snapshot of %s reverted from %s successfully' %(vm_detail.vm_identity, sys_snapshot.snapshot_name))
-                delete_snapshot({'vm_id':vm_detail.id, 'snapshot_id':sys_snapshot['id']})
-                logger.debug('Snapshot %s deleted successfully' %(sys_snapshot.snapshot_name))
-            except:
-                log_exception()
-                pass
-    return

@@ -8,8 +8,8 @@ if 0:
 ###################################################################################
 from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN, \
     HOST_STATUS_MAINTENANCE
-from helper import get_constant, update_constant
-from vm_helper import shutdown_baadal, bootup_baadal
+from helper import get_constant
+from maintenance import shutdown_baadal, bootup_baadal
 from vm_utilization import VM_UTIL_24_HOURS
 
 @check_moderator
@@ -263,7 +263,7 @@ def sync_vm():
     if task == 'Delete_Orphan':
         delete_orhan_vm(vm_name, host_id)
     elif task == 'Add_Orphan':
-        add_orhan_vm(vm_name, host_id)
+        add_orphan_vm(vm_name, host_id)
     elif task == 'Delete_VM_Info':
         delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
@@ -426,13 +426,9 @@ def baadal_status():
 @check_moderator
 @handle_exception   
 def start_shutdown():
-    update_constant('baadal_status', BAADAL_STATUS_DOWN_IN_PROGRESS)
     shutdown_baadal()
-    update_constant('baadal_status', BAADAL_STATUS_DOWN)
     
 @check_moderator
 @handle_exception   
 def start_bootup():
-    update_constant('baadal_status', BAADAL_STATUS_UP_IN_PROGRESS)
     bootup_baadal()
-    update_constant('baadal_status', BAADAL_STATUS_UP)
