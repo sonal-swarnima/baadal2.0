@@ -46,6 +46,8 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 		if duration == -1:
 		    duration = 30
 		db.vnc_access.insert(vm_id = vm_data_id, host_id = host_id, vnc_server_id = vnc_server_id, vnc_public_port = public_port, vnc_private_port = private_port, duration = duration, status = VNC_ACCESS_STATUS_ACTIVE)
+		public_ip_octets = public_ip.split('.')
+		interfaces_alias = "%s%s%s" %(public_ip_octets[1], public_ip_octets[2], public_ip_octets[3])
 		ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 	        ssh.connect(nat_ip, username=nat_user)
@@ -55,10 +57,15 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 
 		iptables_command = "iptables -I PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -I FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(public_ip, public_port,  private_ip, private_port, private_ip, private_port)
 		stdin.write('''
+			ip_present=$(ifconfig | grep %s)
+			if test -z "$ip_present"; then
+			    echo -e "auto eth0:%s\niface eth0:%s inet static\n\taddress %s"
+			    ifconfig eth0:%s %s up
+			fi
 			%s
 			/etc/init.d/iptables-persistent restart
 			exit
-		''' %(iptables_command))
+		''' %(public_ip, interfaces_alias, interfaces_alias, public_ip, interfaces_alias, public_ip iptables_command))
 		logger.debug(stdout.read())
 		stdout.close()
 		stdin.close()
