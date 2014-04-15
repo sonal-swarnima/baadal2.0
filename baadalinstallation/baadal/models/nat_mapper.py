@@ -40,7 +40,7 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 	else:
 	    if private_port == -1:
 		private_port = public_port
-	    host_id = db(db.host.host_ip = private_ip).select(id)
+	    host_id = db(db.host.host_ip == private_ip).select(id)
 	    check_existence = db(db.vnc_access.vnc_server_ip == public_ip & db.vnc_access.host_id == host_id & db.vnc_access.vnc_public_port == public_port & db.vnc_access.vnc_private_port == private_port).select()
 	    if check_existence != None:
 		if duration == -1:
@@ -64,9 +64,9 @@ def create_mapping(public_ip, private_ip,vm_data_id, duration=-1, public_port=-1
 		stdin.close()
 		ssh.close()
 	
-    else if nat_type == NAT_TYPE_HARDWARE:
+    elif nat_type == NAT_TYPE_HARDWARE:
 	# This function is to be implemented
-	logger.debug("No implementation for NAT type hardware)
+	logger.debug("No implementation for NAT type hardware")
     else:
 	logger.debug("NAT type is not supported")
 
@@ -126,9 +126,9 @@ def remove_mapping(public_ip, private_ip,  vm_data_id, public_port=-1, private_p
 	    ssh.close()
 	    db.vnc_access.update_or_insert(db.vnc_access.vm_id == vm_data_id, status = VNC_ACCESS_STATUS_INACTIVE)
 
-    else if nat_type == NAT_TYPE_HARDWARE:
+    elif nat_type == NAT_TYPE_HARDWARE:
 	#This function is to be implemented
-	logger.debug("No implementation for NAT type hardware)
+	logger.debug("No implementation for NAT type hardware")
     else:
 	logger.debug("NAT type is not supported")
 
