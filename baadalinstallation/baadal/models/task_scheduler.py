@@ -2,15 +2,14 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import db,request
+    from gluon import db,request, cache
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception, logger
+from helper import get_datetime, log_exception
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
-from log_handler import *
-import time
+from log_handler import logger, rrd_logger
 
 from gluon import current
 current.cache = cache
@@ -21,6 +20,7 @@ UUID_SNAPSHOT_MONTHLY = 'scheduler-uuid-snapshot-monthly'
 UUID_VM_SANITY_CHECK = 'scheduler-uuid-vm-sanity-check'
 UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
 UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
+UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
 
 task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_START_VM                :    start,
@@ -218,12 +218,14 @@ def vm_sanity_check():
     check_vm_sanity()
 
 # Handles periodic Host sanity check
-# Called when scheduler runs task of type 'host_sanity'
+# Invoked when scheduler runs task of type 'host_sanity'
 def host_sanity_check():
 
     logger.info("Starting Host Sanity Check")
     host_status_sanity_check()
 
+# Clears all timed out VNC Mappings
+# Invoked when scheduler runs task of type 'vnc_access'
 def check_vnc_access():
     logger.info("Starting Clear all timedout VNC Mappings")
     clear_all_timedout_vnc_mappings()
@@ -296,3 +298,10 @@ vm_scheduler.queue_task('vm_util_rrd',
                      period = 6 * MINUTES, # every 5 minutes
                      timeout = 6 * MINUTES,
                      uuid = UUID_VM_UTIL_RRD)
+
+vm_scheduler.queue_task('vnc_access', 
+                     repeats = 0, # run indefinitely
+                     start_time = request.now, 
+                     period = 5 * MINUTES, # every 5 minutes
+                     timeout = 5 * MINUTES,
+                     uuid = UUID_VNC_ACCESS)
