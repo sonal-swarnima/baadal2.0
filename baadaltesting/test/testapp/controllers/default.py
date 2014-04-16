@@ -17,7 +17,7 @@ def user():
     http://..../[app]/default/user/profile
     http://..../[app]/default/user/retrieve_password
     http://..../[app]/default/user/change_password
-    http://..../[app]/default/user/manage_users (requires membership in 
+    http://..../[app]/default/user/manage_users (requires membership in
     use @auth.requires_login()
         @auth.requires_membership('group name')
         @auth.requires_permission('read','table name',record_id)
@@ -60,9 +60,9 @@ def data():
       LOAD('default','data.load',args='tables',ajax=True,user_signature=True)
     """
     return dict(form=crud())
-    
-    
-    
+
+
+
 def unit_testing():
     import commands
     form = FORM(  TABLE
@@ -79,10 +79,10 @@ def unit_testing():
            TR(INPUT(_name='testcase10', _type='checkbox', _value="10"),'My Failed Taskss'),
            TR(INPUT(_name='testcase11', _type='checkbox', _value="11"),'Pending Faculty-Level VM Approvals(Install VM)'),
            TR(INPUT(_name='testcase12', _type='checkbox', _value="12"),'Pending Faculty-Level VM Approvals(Clone VM)'),
-           TR(INPUT(_name='testcase13', _type='checkbox', _value="13"),'Pending Faculty-Level VM Approvals(Attach Disk)'), 
+           TR(INPUT(_name='testcase13', _type='checkbox', _value="13"),'Pending Faculty-Level VM Approvals(Attach Disk)'),
            TR(INPUT(_name='testcase14', _type='checkbox', _value="14"),'Pending Org-Level VM Approvals(Install VM)'),
            TR(INPUT(_name='testcase15', _type='checkbox', _value="15"),'Pending Org-Level VM Approvals(Clone VM)'),
-           TR(INPUT(_name='testcase16', _type='checkbox', _value="16"),'Pending Org-Level VM Approvals(Attach Disk)'), 
+           TR(INPUT(_name='testcase16', _type='checkbox', _value="16"),'Pending Org-Level VM Approvals(Attach Disk)'),
            TR(INPUT(_name='testcase17', _type='checkbox', _value="17"),'List All Org-Level VMs',),
            TR(INPUT(_name='testcase18', _type='checkbox', _value="18"),'All VMs'),
            TR(INPUT(_name='testcase19', _type='checkbox', _value="19"),'Host and VMs',),
@@ -99,7 +99,7 @@ def unit_testing():
            TR(INPUT(_name='testcase30', _type='checkbox', _value="30"),'Take VM snapshot   (Paused )'),
            TR(INPUT(_name='testcase32', _type='checkbox', _value="31"),'Migrate VM(Paused)'),
            TR(INPUT(_name='testcase32', _type='checkbox', _value="32"),'Unpause VM   (Paused )'),
-           TR(INPUT(_name='testcase33', _type='checkbox', _value="33"),'Add User to VM  (Paused )'), 
+           TR(INPUT(_name='testcase33', _type='checkbox', _value="33"),'Add User to VM  (Paused )'),
 	       TR(INPUT(_name='testcase34', _type='checkbox', _value="34"),'Delete Addtional User   (Paused )'),
            TR(INPUT(_name='testcase35', _type='checkbox', _value="35"),'Forcefully power off VM   (Paused)'),
            TR(INPUT(_name='testcase36', _type='checkbox', _value="36"),'Delete Snapshot    (Paused )'),
@@ -110,13 +110,13 @@ def unit_testing():
            TR(INPUT(_name='testcase41', _type='checkbox', _value="41"),'Migrate VM(Shutdown)'),
            TR(INPUT(_name='testcase42', _type='checkbox', _value="42"),'Take VM snapshot   (Shutdown )'),
            TR(INPUT(_name='testcase43', _type='checkbox', _value="43"),'Delete VM   (Shutdown )'),
-           TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Sanity Table'), 
+           TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Sanity Table'),
            TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Pending User VM Requests(Install VM)'),
            TR(INPUT(_name='testcase46', _type='checkbox', _value="46"),'Pending User VM Requests(Clone VM)'),
            TR(INPUT(_name='testcase47', _type='checkbox', _value="47"),'Pending User VM Requests(Attach Disk)'),
            TR(INPUT(_name='testcase93', _type='checkbox', _value="93"),'Maintain Idompotency'),
-           
-           
+
+
            BR(),
            TR(INPUT(_type='submit',_value='submit'))
           )
@@ -125,7 +125,7 @@ def unit_testing():
         for i in range(1,95):
             test_case_no=request.vars['testcase'+str(i)]
             if test_case_no!=None:
-                
+
                 print test_case_no
                 if test_case_no=="54":
                     for j in range(1,55):
@@ -133,22 +133,23 @@ def unit_testing():
                         test_script(test_case_no)
                 else:
                     test_script(test_case_no)
-        
+
     elif form.errors:
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill the form'
     return dict(form=form)
-    
+
 
 def index():
-   
+
         import commands
         form = FORM( TABLE
                   (  TR(INPUT(_name='testcase1', _type='radio', _value="1"),'Unit Testing'),
                      TR(INPUT(_name='testcase2', _type='radio', _value="2"),'Integration Testing'),
                      TR(INPUT(_name='testcase3', _type='radio', _value="3"),'All'),
                      TR(INPUT(_name='testcase4', _type='radio', _value="4"),'Network Testing'),
+                     TR(INPUT(_name='testcase5', _type='radio', _value="5"),'Fault Tolerance Testing'),
                      BR(),
                      TR(INPUT(_type='submit',_value='submit'))
                   )
@@ -165,6 +166,8 @@ def index():
                         test_script(test_case_no)
             if request.vars['testcase4']!=None:
                 redirect(URL('network_testing'))
+            if request.vars['testcase5']!=None:
+                redirect(URL('fault_tolerance_testing')
         elif form.errors:
             response.flash = 'form has errors'
         else:
@@ -173,15 +176,15 @@ def index():
 
 
 def network_testing():
-   
+
     import commands
     form = FORM(TABLE
-             (   
-              
+             (
+
     TR(INPUT(_name='testcase98', _type='checkbox', _value="98"),'Packages Install on Host '),
-   
+
      TR(INPUT(_name='testcase99', _type='checkbox', _value="99"),'Packages Install on Baadal '),
-    
+
     TR(INPUT(_name='testcase80', _type='checkbox', _value="80"),'VM status on Host '),
     BR(),
     TR(INPUT(_type='submit',_value='submit'))
@@ -191,26 +194,26 @@ def network_testing():
         if request.vars['testcase98']!=None:
             packages_install_test(98)
         if request.vars['testcase99']!=None:
-            packages_install_host(99) 
+            packages_install_host(99)
         if request.vars['testcase80']!=None:
-            check_stat_on_host()    
+            check_stat_on_host()
     elif form.errors:
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill the form'
     return dict(form=form)
-    
-    
-def stress_testing(): 
+
+
+def stress_testing():
 
     import commands
     form = FORM(  TABLE
-        (   TR(INPUT(_name='testcase0', _type='checkbox', _value="0"),'All'), 
+        (   TR(INPUT(_name='testcase0', _type='checkbox', _value="0"),'All'),
             BR(),
             TR(INPUT(_type='submit',_value='submit'))
         )
         )
-              
+
     if form.process().accepted:
         test_case_no=request.vars['testcase0']
         if test_case_no!=None:
@@ -220,12 +223,12 @@ def stress_testing():
     else:
         response.flash = 'please fill the form'
     return dict(form=form)
-    
-   
-def integration_testing(): 
+
+
+def integration_testing():
     import commands
     form = FORM(  TABLE
-                  
+
                   (    TR(INPUT(_name='testcase93', _type='checkbox', _value="93"),'Maintain Idompotency'),
                        TR(INPUT(_name='testcase95', _type='checkbox', _value="95"),'VM Performance(Memory)'),
                        TR(INPUT(_name='testcase96', _type='checkbox', _value="96"),'VM Performance(CPU)'),
@@ -236,7 +239,7 @@ def integration_testing():
                        TR(INPUT(_name='testcase57', _type='checkbox', _value="57"),'User Request VM(Approved by Faculty and Rejected by org-admin)'),
                        TR(INPUT(_name='testcase58', _type='checkbox', _value="58"),'User Request VM(Approved by Faculty,org-admin and Rejected by admin)'),
                        TR(INPUT(_name='testcase59', _type='checkbox', _value="59"),'User Request VM(Rejected by Faculty )'),
-#                             
+#
                   #     TR(INPUT(_name='testcase60', _type='checkbox', _value="60"),'Take VM snapshot    (Running )'),
                    #    TR(INPUT(_name='testcase61', _type='checkbox', _value="61"),'Pause VM   (Running )'),
                     #   TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Add User to VM   (Running )'),
@@ -262,18 +265,18 @@ def integration_testing():
                        # TR(INPUT(_name='testcase71', _type='checkbox', _value="71"), 'Org-Admin Request VM(Rejected by admin)'),
                        #TR(INPUT(_name='testcase109', _type='checkbox', _value="109"),'User Request Attach Disk(Approved by Faculty and Rejected by org-admin)'),
                       #TR(INPUT(_name='testcase108', _type='checkbox', _value="108"),'User Request Attach Disk(Approved by Faculty,org-admin and Rejected by admin)'),
-                      # TR(INPUT(_name='testcase110', _type='checkbox', _value="110"),'User Request Attach Disk(Rejected by Faculty )'),            
+                      # TR(INPUT(_name='testcase110', _type='checkbox', _value="110"),'User Request Attach Disk(Rejected by Faculty )'),
                      # TR(INPUT(_name='testcase105', _type='checkbox', _value="105"),'Org-Admin  Attach Disk(Approved by admin)'),
-                   # TR(INPUT(_name='testcase106', _type='checkbox', _value="106"), 'Org-Admin Attach Disk(Rejected by admin)'),                    
-                     
+                   # TR(INPUT(_name='testcase106', _type='checkbox', _value="106"), 'Org-Admin Attach Disk(Rejected by admin)'),
+
                    # TR(INPUT(_name='testcase102', _type='checkbox', _value="102"),'User Request Clone VM(Approved by Faculty and Rejected by org-admin)'),
                    #   TR(INPUT(_name='testcase112', _type='checkbox', _value="112"),'User Request Clone VM(Rejected by Faculty )'),
-                   
+
                   #   TR(INPUT(_name='testcase118', _type='checkbox', _value="118"),'User Request Clone VM(Approved by Faculty,org-admin,admin)'),
                 #   TR(INPUT(_name='testcase119', _type='checkbox', _value="119"),'User Request Clone VM(Approved by Faculty and Rejected by org-admin)'),
                  #     TR(INPUT(_name='testcase120', _type='checkbox', _value="120"),'User Request Clone VM(Approved by Faculty,org-admin and Rejected by admin)'),
                   #    TR(INPUT(_name='testcase121', _type='checkbox', _value="121"),'User Request Edit VM Config(Rejected by Faculty )'),
-                   
+
                       BR(),
                       TR(INPUT(_type='submit',_value='submit'))
             )
@@ -287,9 +290,25 @@ def integration_testing():
             else :
                 if test_case_no!=None:
                     graph_test(test_case_no)
-            
+
     elif form.errors:
         response.flash = 'form has errors'
     else:
         response.flash = 'please fill the form'
+    return dict(form=form)
+
+def fault_tolerance_testing():
+    import commands
+    form = FORM ( TABLE (
+              TR(INPUT(_name='testcase_fault_tolerance_001', _type='checkbox', _value="testcase_fault_tolerance_001"),'Kill Host (Shutdown)'),
+              BR(),
+              TR(INPUT(_type='submit',_value='submit'))
+            ) )
+
+    if form.process().accepted:
+      response.flash = 'yo'
+    elif form.errors:
+      response.flash = 'form has errors'
+    else:
+      response.flash = 'please fill the form'
     return dict(form=form)
