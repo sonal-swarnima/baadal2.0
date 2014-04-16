@@ -366,7 +366,7 @@ def grant_vnc_access(vm_id):
     if active_vnc > 0:
         msg = 'VNC access already granted. Please check your mail for further details.'
     else:
-        create_mapping(vm_id, None)
+        create_vnc_mapping_in_nat(vm_id)
         msg = 'VNC access granted. Please check your mail for further details.'
     return msg
 
