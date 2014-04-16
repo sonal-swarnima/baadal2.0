@@ -10,7 +10,6 @@ import paramiko
 
 def create_mapping( vm_data_id, destination_ip, source_ip = None , source_port=-1, destination_port=-1, duration=-1 ):
 
-    logger.debug("%s %s %s %s %s %s" %(vm_data_id, destination_ip, source_ip, source_port, destination_port, duration))
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
         nat_ip = config.get("GENERAL_CONF", "nat_ip")
@@ -49,6 +48,7 @@ def create_mapping( vm_data_id, destination_ip, source_ip = None , source_port=-
             vm_data = db.vm_data[vm_data_id]
             host_id = vm_data.host_id  
             check_existence = db(db.vnc_access.vnc_server_ip == source_ip and db.vnc_access.host_id == host_id and db.vnc_access.vnc_source_port == source_port and db.vnc_access.vnc_destination_port == destination_port).select()
+
             if check_existence != None:
                 db.vnc_access.insert(vm_id = vm_data_id, host_id = host_id, vnc_server_ip = source_ip, vnc_source_port = source_port, vnc_destination_port = destination_port, duration = duration, status = VNC_ACCESS_STATUS_ACTIVE)
                 source_ip_octets = source_ip.split('.')

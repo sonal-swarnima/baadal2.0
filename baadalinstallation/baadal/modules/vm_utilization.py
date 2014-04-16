@@ -158,12 +158,12 @@ def fetch_rrd_data(vm_identity, period=VM_UTIL_24_HOURS):
 #         time_info = rrd_ret[0]
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2]
-        cpu_idx = fld_info.index('cpuusage')
-        mem_idx = fld_info.index('memory')
-        dskr_idx = fld_info.index('diskr')
-        dskw_idx = fld_info.index('diskw')
-        nwr_idx = fld_info.index('nwr')
-        nww_idx = fld_info.index('nww')
+        cpu_idx = fld_info.index('cpu')
+        mem_idx = fld_info.index('ram')
+        dskr_idx = fld_info.index('dr')
+        dskw_idx = fld_info.index('dw')
+        nwr_idx = fld_info.index('tx')
+        nww_idx = fld_info.index('tw')
         
         for row in data_info:
             if row[cpu_idx] != None: cpu_data.append(float(row[cpu_idx])) 
