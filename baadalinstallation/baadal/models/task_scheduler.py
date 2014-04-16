@@ -296,7 +296,7 @@ vm_scheduler.queue_task('vm_util_rrd',
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 6 * MINUTES, # every 5 minutes
-                     timeout = 6 * MINUTES,
+                     timeout = 12  * MINUTES,
                      uuid = UUID_VM_UTIL_RRD)
 
 vm_scheduler.queue_task('vnc_access', 
@@ -305,3 +305,4 @@ vm_scheduler.queue_task('vnc_access',
                      period = 5 * MINUTES, # every 5 minutes
                      timeout = 5 * MINUTES,
                      uuid = UUID_VNC_ACCESS)
+
