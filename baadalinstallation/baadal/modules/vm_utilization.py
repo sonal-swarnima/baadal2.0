@@ -334,7 +334,7 @@ def update_rrd():
 
                         if dom_obj.ID() in active_dom_ids:
 
-                            dom_stats = get_dom_resource_usage(dom_obj, host_ip)
+                            #dom_stats = get_dom_resource_usage(dom_obj, host_ip)
                             usage = get_actual_usage(dom_obj, host_ip)
                             rrd_logger.debug(usage)
                             ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, usage['cpu'], usage['ram'], usage['dr'], usage['dw'], usage['tx'], usage['tw']))
