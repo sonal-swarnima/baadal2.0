@@ -232,7 +232,7 @@ def get_dom_nw_usage(dom_obj):
 
     rrd_logger.info("%s%s" % (rx, tx))
 
-    return [nwr, nww] #returned value in Bytes by default
+    return [rx, tx] #returned value in Bytes by default
 
 def get_dom_disk_usage(dom_obj):
 
