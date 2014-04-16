@@ -221,8 +221,8 @@ def get_dom_mem_usage(dom_name, host):
 def get_dom_nw_usage(dom_obj):
 
     tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
-    nwr = 0
-    nww = 0
+    rx = 0
+    tx = 0
 
     for target in tree.findall("devices/interface/target"):
         device = target.get("dev")
