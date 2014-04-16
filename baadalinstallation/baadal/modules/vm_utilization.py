@@ -287,8 +287,8 @@ def get_actual_usage(dom_obj, host_ip):
     #cal usage
     usage = {'ram'      : dom_stats['memory']/float(1024)} #ram in MB usage
     usage.update({'cpu' : (dom_stats['cputime'] - prev_dom_stats['cputime'])/(float(prev_dom_stats['cpus'])*10000000*STEP)}) #percent cpu usage
-    usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['nwr'])/float(1024)}) #in KBytes
-    usage.update({'tw'  : (dom_stats['rx'] - prev_dom_stats['nww'])/float(1024)}) #in KBytes
+    usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['tx'])/float(1024)}) #in KBytes
+    usage.update({'tw'  : (dom_stats['rx'] - prev_dom_stats['rx'])/float(1024)}) #in KBytes
     usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])/float(1024)}) #in KBytes
     usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])/float(1024)}) #in KBytes
 
