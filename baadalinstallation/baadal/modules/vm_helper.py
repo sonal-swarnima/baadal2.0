@@ -91,14 +91,18 @@ def choose_mac_ip_vncport(vm_properties):
 #Returns all the host running vms of particular run level
 def find_new_host(RAM, vCPU):
     hosts = current.db(current.db.host.status == 1).select() 
-    for host in hosts:
+    while hosts:
+        host = random.choice(hosts)
         logger.debug("Checking host =" + host.host_name)
         (used_ram, used_cpu) = host_resources_used(host.id)
         logger.debug("used ram: " + str(used_ram) + " used cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) + " host cpu "+ str(host.CPUs))
-        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
-        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
+        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 2)
+        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 2)
+
         if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
             return host.id
+        else:
+            hosts.remove(host)
 
     #If no suitable host found
     raise Exception("No active host is available for a new vm.")
@@ -902,8 +906,8 @@ def clone(vmid):
         logger.debug("host details are: " + str(host))
         (used_ram, used_cpu) = host_resources_used(host.id)
         logger.debug("uram: " + str(used_ram) + " used_cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) +" host cpu: " + str(host.CPUs))
-        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 1.25)
-        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 1.25)
+        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 2)
+        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 2)
 
         if((( host_ram_after_25_percent_overcommitment - used_ram) >= host.RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= host.CPUs)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
