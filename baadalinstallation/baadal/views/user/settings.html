@@ -30,7 +30,6 @@ function confirm_vm_deletion(){
             <th>OS Type</th>
             <th>Private IP</th>
             <th>Public IP</th>
-<!--        <th>Services Enabled</th> -->
             <th>Security Domain</th>
             <th>Status</th>
         </tr>
@@ -42,15 +41,17 @@ function confirm_vm_deletion(){
             <td>{{=vminfo['ostype']}}</td>
             <td>{{=vminfo['private_ip']}}</td>
             <td>{{=vminfo['public_ip']}}</td>
-<!--        <td>{{#=vminfo['services_enabled']}}</td> -->
             <td>{{=vminfo['security_domain']}}</td>
             <td>{{=vminfo['status']}}</td>
         </tr>
     </table>    
     </div>
     {{if is_moderator():}}
-    <p><strong>Host: </strong>{{=vminfo['host']}}<br/>
-    <strong>VNC: </strong>{{=vminfo['vnc']}}</p>
+	    <p><strong>Host: </strong>{{=vminfo['host']}}</p>
+    {{pass}}
+    {{if 'vnc_ip' in vminfo :}}<p>
+	    <strong>VNC IP: </strong>{{=vminfo['vnc_ip']}}<br/>
+	    <strong>VNC Port: </strong>{{=vminfo['vnc_port']}}</p>
     {{pass}}
  <p><strong>Purpose :</strong> {{=vminfo['purpose']}}</p>
 

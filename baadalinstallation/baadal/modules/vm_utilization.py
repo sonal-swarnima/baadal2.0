@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-import shutil, os, time, rrdtool, libvirt, re
-
-import helper
+import time, rrdtool
 
 from xml.etree import ElementTree
-
-from gluon import IMG, URL, current
-
-from helper import get_constant, get_context_path
 from log_handler import rrd_logger
-from host_helper import *
+from host_helper import *  # @UnusedWildImport
 
 VM_UTIL_24_HOURS = 1
 VM_UTIL_ONE_WEEK = 2
@@ -202,7 +196,6 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
-    import paramiko
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(host, username='root', password='')
