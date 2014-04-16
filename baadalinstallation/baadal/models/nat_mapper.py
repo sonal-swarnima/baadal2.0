@@ -8,7 +8,7 @@ if 0:
 from helper import logger, config, get_datetime
 import paramiko
 
-def create_mapping( vm_data_id, destination_ip, source_ip = None , source_port=-1, destination_port=-1, duration=-1 ):
+def create_mapping( vm_data_id, destination_ip, source_ip , source_port=-1, destination_port=-1, duration=-1 ):
 
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
@@ -194,7 +194,7 @@ def clear_all_timedout_vnc_mappings():
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
 
-    timedout_vnc_mappings = db(get_datetime()-db.vnc_access.time_requested >= db.vnc_access.duration).select(db.vnc_access.ALL)
+    timedout_vnc_mappings = db(((get_datetime()-db.vnc_access.time_requested).seconds/60) >= db.vnc_access.duration).select(db.vnc_access.ALL)
     for mapping in timedout_vnc_mappings:
         logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping['vm_id'], mapping['host_id'], mapping['vnc_server_ip'], mapping['vnc_source_port'], mapping['vnc_destination_port']))
         host_ip=db(db.host.id == mapping['host_id']).select(db.host.host_ip)
