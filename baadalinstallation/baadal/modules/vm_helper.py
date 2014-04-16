@@ -784,14 +784,14 @@ def edit_vm_config(parameters):
 
         if 'vcpus' in parameters:
             new_vcpus = int(parameters['vcpus'])
-            domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_AFFECT_CONFIG)
+            domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_VCPU_MAXIMUM)
             message += "Edited vCPU successfully."
             current.db(current.db.vm_data.id == vm_id).update(vCPU = new_vcpus)
 
         if 'ram' in parameters:
             new_ram = int(parameters['ram']) * 1024
             logger.debug(str(new_ram))
-            domain.setMemoryFlags(new_ram, VIR_DOMAIN_AFFECT_CONFIG|VIR_DOMAIN_MEM_MAXIMUM)
+            domain.setMaxMemory(new_ram)
             message +=  " And edited RAM successfully."
             current.db(current.db.vm_data.id == vm_id).update(RAM = int(parameters['ram']))
             
