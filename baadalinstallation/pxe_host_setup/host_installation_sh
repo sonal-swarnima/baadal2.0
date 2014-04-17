@@ -23,8 +23,6 @@ Network_Setup()
   apt-get -y install linux-headers-generic
 
   make openvswitch | tee ~/.openvswitch.install.log
-  /usr/sbin/ovs-vswitchd &
-  sed -i -e "s@exit 0\$@/usr/sbin/ovs-vswitchd\nexit 0@" /etc/rc.local
   make host-setup
 
   cd -
