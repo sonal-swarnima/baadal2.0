@@ -265,4 +265,5 @@ def grant_vnc():
 
     vm_id = request.args[0]
     session.flash = grant_vnc_access(vm_id)
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 

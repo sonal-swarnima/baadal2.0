@@ -200,36 +200,48 @@ def process_clone_task(task_event_id, vm_id):
 def process_snapshot_vm(snapshot_type, vm_id = None):
 
     logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
-
-    if snapshot_type == SNAPSHOT_SYSTEM:
-        params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_id}
-        task[TASK_TYPE_SNAPSHOT_VM](params)
-    else:    
-        vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-        for vm_data in vms:
-            params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id}
-            vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
+    try:
+        if snapshot_type == SNAPSHOT_SYSTEM:
+            params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_id}
+            task[TASK_TYPE_SNAPSHOT_VM](params)
+        else:    
+            vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+            for vm_data in vms:
+                params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id}
+                vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
+    except:
+        log_exception()
+        pass
           
 # Handles periodic VM sanity check
 # Invoked when scheduler runs task of type 'vm_sanity'
 def vm_sanity_check():
-
     logger.info("Starting VM Sanity Check")
-    check_vm_sanity()
+    try:
+        check_vm_sanity()
+    except:
+        log_exception()
+        pass
 
 # Handles periodic Host sanity check
 # Invoked when scheduler runs task of type 'host_sanity'
 def host_sanity_check():
-
     logger.info("Starting Host Sanity Check")
-    host_status_sanity_check()
+    try:
+        host_status_sanity_check()
+    except:
+        log_exception()
+        pass
 
 # Clears all timed out VNC Mappings
 # Invoked when scheduler runs task of type 'vnc_access'
 def check_vnc_access():
     logger.info("Starting Clear all timedout VNC Mappings")
-    clear_all_timedout_vnc_mappings()
-
+    try:
+        clear_all_timedout_vnc_mappings()
+    except:
+        log_exception()
+        pass
 
 # Handles periodic collection of VM utilization data &
 # updation of respective RRD file.

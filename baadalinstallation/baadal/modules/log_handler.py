@@ -48,7 +48,7 @@ class ConcurrentRotatingFileHandler(BaseRotatingHandler):
     exceed the given size.
     """
     def __init__(self, filename, mode='a', maxBytes=0, backupCount=0,
-                 encoding=None, debug=True, supress_abs_warn=False):
+                 encoding=None, debug=True):
         """
         Open the specified file and use it as the stream for logging.
 
@@ -109,11 +109,6 @@ class ConcurrentRotatingFileHandler(BaseRotatingHandler):
             if FORCE_ABSOLUTE_PATH or \
                not os.path.split(filename)[0]:
                 filename = os.path.abspath(filename)
-            elif not supress_abs_warn:
-                from warnings import warn
-                warn("The given 'filename' should be an absolute path.  If your "
-                     "application calls os.chdir(), your logs may get messed up. "
-                     "Use 'supress_abs_warn=True' to hide this message.")
         try:
             BaseRotatingHandler.__init__(self, filename, mode, encoding)
         except TypeError: # Due to a different logging release without encoding support  (Python 2.4.1 and earlier?)

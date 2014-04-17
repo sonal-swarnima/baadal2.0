@@ -1,16 +1,10 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-import shutil, os, time, rrdtool, libvirt, re
-
-import helper
+import time, rrdtool
 
 from xml.etree import ElementTree
-
-from gluon import IMG, URL, current
-
-from helper import get_constant, get_context_path
 from log_handler import rrd_logger
-from host_helper import *
+from host_helper import *  # @UnusedWildImport
 
 VM_UTIL_24_HOURS = 1
 VM_UTIL_ONE_WEEK = 2
@@ -78,8 +72,8 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
         if graph_type == 'nw':
             ds1 = 'DEF:nwr=' + vm_name + '.rrd:tx:' + consolidation
             ds2 = 'DEF:nww=' + vm_name + '.rrd:tw:' + consolidation
-            line1 = 'LINE1:nwr#0000FF:Receive'
-            line2 = 'LINE1:nww#FF7410:Transmit'
+            line1 = 'LINE1:nwr#0000FF:Transmit'
+            line2 = 'LINE1:nww#FF7410:Receive'
 
         elif graph_type == 'disk':
             ds1 = 'DEF:diskr=' + vm_name + '.rrd:dr:' + consolidation
@@ -202,7 +196,6 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
-    import paramiko
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(host, username='root', password='')
@@ -221,18 +214,18 @@ def get_dom_mem_usage(dom_name, host):
 def get_dom_nw_usage(dom_obj):
 
     tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
-    nwr = 0
-    nww = 0
+    rx = 0
+    tx = 0
 
     for target in tree.findall("devices/interface/target"):
         device = target.get("dev")
         stats  = dom_obj.interfaceStats(device)
-        nwr   += stats[0]
-        nww   += stats[4]
+        rx   += stats[0]
+        tx   += stats[4]
 
-    rrd_logger.info("%s%s" % (nwr, nww))
+    rrd_logger.info("%s%s" % (rx, tx))
 
-    return [nwr, nww] #returned value in Bytes by default
+    return [rx, tx] #returned value in Bytes by default
 
 def get_dom_disk_usage(dom_obj):
 
@@ -261,8 +254,8 @@ def get_current_dom_resource_usage(dom, host_ip):
     dom_nw_usage   = get_dom_nw_usage(dom)
     dom_disk_usage = get_dom_disk_usage(dom)
 
-    dom_stats =      {'nwr'     : dom_nw_usage[0]}
-    dom_stats.update({'nww'     : dom_nw_usage[1]})
+    dom_stats =      {'rx'     : dom_nw_usage[0]}
+    dom_stats.update({'tx'     : dom_nw_usage[1]})
     dom_stats.update({'diskr'   : dom_disk_usage[0]})
     dom_stats.update({'diskw'   : dom_disk_usage[1]})
     dom_stats.update({'memory'  : dom_memusage})
@@ -287,8 +280,8 @@ def get_actual_usage(dom_obj, host_ip):
     #cal usage
     usage = {'ram'      : dom_stats['memory']/float(1024)} #ram in MB usage
     usage.update({'cpu' : (dom_stats['cputime'] - prev_dom_stats['cputime'])/(float(prev_dom_stats['cpus'])*10000000*STEP)}) #percent cpu usage
-    usage.update({'tx'  : (dom_stats['nwr'] - prev_dom_stats['nwr'])/float(1024)}) #in KBytes
-    usage.update({'tw'  : (dom_stats['nww'] - prev_dom_stats['nww'])/float(1024)}) #in KBytes
+    usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['tx'])/float(1024)}) #in KBytes
+    usage.update({'tw'  : (dom_stats['rx'] - prev_dom_stats['rx'])/float(1024)}) #in KBytes
     usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])/float(1024)}) #in KBytes
     usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])/float(1024)}) #in KBytes
 
@@ -334,7 +327,7 @@ def update_rrd():
 
                         if dom_obj.ID() in active_dom_ids:
 
-                            dom_stats = get_dom_resource_usage(dom_obj, host_ip)
+                            #dom_stats = get_dom_resource_usage(dom_obj, host_ip)
                             usage = get_actual_usage(dom_obj, host_ip)
                             rrd_logger.debug(usage)
                             ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, usage['cpu'], usage['ram'], usage['dr'], usage['dw'], usage['tx'], usage['tw']))
