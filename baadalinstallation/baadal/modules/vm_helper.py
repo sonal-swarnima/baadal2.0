@@ -319,17 +319,24 @@ def check_if_vm_defined(hostip, vmname):
         return False
 
 # Frees vm properties
-def free_vm_properties(vm_details):
+def free_vm_properties(vm_details, vm_properties = None):
 
-    if vm_details.host_id:
-        if check_if_vm_defined(vm_details.host_id.host_ip, vm_details.vm_name):
-            connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ vm_details.host_id.host_ip +'/system')
-            domain = connection_object.lookupByName(vm_details.vm_name)
+    logger.debug("VM installation fails..Starting to free vm properties")
+
+    if vm_properties:
+        host_ip_of_vm = current.db.host[vm_properties['host']].host_ip
+        logger.debug("Host IP of vm is " + str(host_ip_of_vm))
+        if check_if_vm_defined(host_ip_of_vm, vm_details.vm_identity):
+            connection_object = libvirt.open('qemu+ssh://root@'+ host_ip_of_vm +'/system')
+            domain = connection_object.lookupByName(vm_details.vm_identity)
+            logger.debug("Starting to delete vm from host..")
             domain.destroy()
             domain.undefine()
             connection_object.close()
+            logger.debug("VM deleted.")
 
     if os.path.exists (get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity):
+        logger.debug("Starting to delete vm directory.")
         shutil.rmtree(get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity)
     return
     
@@ -408,7 +415,7 @@ def install(parameters):
             etype, value, tb = sys.exc_info()
             message = ''.join(traceback.format_exception(etype, value, tb, 10))
             logger.error("Exception " + message)
-            free_vm_properties(vm_details)
+            free_vm_properties(vm_details, vm_properties)
             return (current.TASK_QUEUE_STATUS_FAILED, str(value))
 
 # Starts a vm
@@ -532,6 +539,8 @@ def delete(parameters):
         logger.debug("Starting to delete it...")
         domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
         connection_object.close()
+        if vm_details.public_ip:
+            create_NAT_IP_mapping('remove', vm_details.public_ip, vm_details.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
         logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
