@@ -326,9 +326,9 @@ def free_vm_properties(vm_details, vm_properties = None):
     if vm_properties:
         host_ip_of_vm = current.db.host[vm_properties['host']].host_ip
         logger.debug("Host IP of vm is " + str(host_ip_of_vm))
-        if check_if_vm_defined(host_ip_of_vm, vm_details.vm_name):
-            connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ host_ip_of_vm +'/system')
-            domain = connection_object.lookupByName(vm_details.vm_name)
+        if check_if_vm_defined(host_ip_of_vm, vm_details.vm_identity):
+            connection_object = libvirt.open('qemu+ssh://root@'+ host_ip_of_vm +'/system')
+            domain = connection_object.lookupByName(vm_details.vm_identity)
             logger.debug("Starting to delete vm from host..")
             domain.destroy()
             domain.undefine()
