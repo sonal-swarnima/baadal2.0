@@ -10,6 +10,8 @@ if 0:
 ###################################################################################
 from auth_user import fetch_ldap_user, create_or_update_user, AUTH_TYPE_LDAP
 from log_handler import logger
+from helper import log_exception
+from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
 
 def get_my_requests():
     
@@ -369,7 +371,25 @@ def grant_vnc_access(vm_id):
     if active_vnc > 0:
         msg = 'VNC access already granted. Please check your mail for further details.'
     else:
-        create_vnc_mapping_in_nat(vm_id)
-        msg = 'VNC access granted. Please check your mail for further details.'
+        try:
+            create_vnc_mapping_in_nat(vm_id)
+            vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
+            if vnc_info:
+                vm_users = []
+                for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
+                    vm_users.append(user['user_id'])
+
+                send_email_vnc_access_granted(vm_users, 
+                                              vnc_info[0].vnc_server_ip, 
+                                              vnc_info[0].vnc_source_port, 
+                                              vnc_info[0].vm_id.vm_name, 
+                                              vnc_info[0].time_requested)
+            else: 
+                raise
+            msg = 'VNC access granted. Please check your mail for further details.'
+        except:
+            msg = 'Some Error Occurred. Please try later'
+            log_exception()
+            pass
     return msg
 

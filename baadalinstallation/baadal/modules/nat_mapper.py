@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    from gluon import db
-    from applications.baadal.models import *  # @UnusedWildImport
-###################################################################################
 from helper import logger, config
 from datetime import datetime
 import paramiko
+from gluon import current
 
-def create_mapping( vm_data_id, destination_ip, source_ip , source_port=-1, destination_port=-1, duration=-1 ):
+#nat types
+NAT_TYPE_SOFTWARE = 'software_nat'
+NAT_TYPE_HARDWARE = 'hardware_nat'
+
+#VNC access status
+VNC_ACCESS_STATUS_ACTIVE = 'active'
+VNC_ACCESS_STATUS_INACTIVE = 'inactive'
+
+def create_mapping(db, vm_data_id, destination_ip, source_ip , source_port=-1, destination_port=-1, duration=-1 ):
 
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
@@ -85,7 +89,7 @@ def create_mapping( vm_data_id, destination_ip, source_ip , source_port=-1, dest
         logger.debug("NAT type is not supported")
 
 
-def remove_mapping(vm_data_id, destination_ip, source_ip = None, source_port=-1, destination_port=-1):
+def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port=-1, destination_port=-1):
 
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
@@ -146,7 +150,7 @@ def remove_mapping(vm_data_id, destination_ip, source_ip = None, source_port=-1,
     else:
         logger.debug("NAT type is not supported")
 
-def clear_all_nat_mappings():
+def clear_all_nat_mappings(db):
 
     nat_ip = config.get("GENERAL_CONF", "nat_ip")
     nat_user = config.get("GENERAL_CONF", "nat_user")
@@ -195,14 +199,14 @@ def clear_all_timedout_vnc_mappings():
     stdin = channel.makefile('wb')
     stdout = channel.makefile('rb')
 
-    vnc_mappings = db(db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE).select(db.vnc_access.ALL)
+    vnc_mappings = current.db(current.db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE).select(current.db.vnc_access.ALL)
     if vnc_mappings != None:
         for mapping in vnc_mappings:
-	    if mapping.time_requested != None:
+            if mapping.time_requested != None:
                 time_difference = (datetime.now() - mapping.time_requested).seconds/60
-	        if time_difference >= mapping.duration:
+                if time_difference >= mapping.duration:
                     logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping['vm_id'], mapping['host_id'], mapping['vnc_server_ip'], mapping['vnc_source_port'], mapping['vnc_destination_port']))
-                    host_ip=db(db.host.id == mapping['host_id']).select(db.host.host_ip)
+                    host_ip=current.db(current.db.host.id == mapping['host_id']).select(current.db.host.host_ip)
                     iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(mapping['vnc_server_ip'], mapping['vnc_source_port'],  host_ip, mapping['vnc_destination_port'], host_ip, mapping['vnc_destination_port'])
                     stdin.write('''
                         %s
@@ -210,8 +214,8 @@ def clear_all_timedout_vnc_mappings():
                         /etc/init.d/iptables-persistent reload
                         exit
                     ''' %(iptables_command))
-                    db(db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
-    db.commit()
+                    current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
+    current.db.commit()
     logger.debug("Done clearing vnc mappings")    
     logger.debug(stdout.read())
     stdout.close()
@@ -219,7 +223,7 @@ def clear_all_timedout_vnc_mappings():
     ssh.close()
 
 def create_vnc_mapping_in_nat(vm_data_id, destination_ip = None, source_ip = None, destination_port = -1, source_port = -1, duration = -1):
-    vm_data = db.vm_data[vm_data_id]
+    vm_data = current.db.vm_data[vm_data_id]
     if destination_ip == None:
         destination_ip = vm_data.host_id.host_ip
     if source_ip == None:
@@ -230,17 +234,17 @@ def create_vnc_mapping_in_nat(vm_data_id, destination_ip = None, source_ip = Non
         source_port = vm_data.vnc_port
     if duration == -1:
         duration = 30
-    create_mapping(vm_data_id, destination_ip, source_ip, source_port, destination_port, duration)
+    create_mapping(current.db, vm_data_id, destination_ip, source_ip, source_port, destination_port, duration)
 
 
 def create_public_ip_mapping_in_nat(vm_data_id, source_ip, destination_ip = None):
-    vm_data = db.vm_data[vm_data_id]
     if destination_ip == None:
+        vm_data = current.db.vm_data[vm_data_id]
         destination_ip = vm_data.private_ip
-    create_mapping(vm_data_id, destination_ip, source_ip)
+    create_mapping(current.db, vm_data_id, destination_ip, source_ip)
     
 def remove_vnc_mapping_from_nat(vm_data_id, destination_ip = None, source_ip = None, destination_port = -1, source_port = -1, duration  = -1):
-    vm_data = db.vm_data[vm_data_id]
+    vm_data = current.db.vm_data[vm_data_id]
     if destination_ip ==None:
         destination_ip = vm_data.host_id.host_ip
     if source_ip == None:
@@ -249,11 +253,11 @@ def remove_vnc_mapping_from_nat(vm_data_id, destination_ip = None, source_ip = N
         destination_port = vm_data.vnc_port
     if source_port == -1:
         source_port = vm_data.vnc_port
-    remove_mapping(vm_data_id, destination_ip, source_ip, source_port, destination_port)
+    remove_mapping(current.db, vm_data_id, destination_ip, source_ip, source_port, destination_port)
     
 def remove_public_ip_mapping_from_nat(vm_data_id, source_ip, destination_ip = None):
-    vm_data = db.vm_data[vm_data_id]
     if destination_ip == None:
+        vm_data = current.db.vm_data[vm_data_id]
         destination_ip = vm_data.private_ip
-    remove_mapping(vm_data_id, destination_ip, source_ip)
+    remove_mapping(current.db, vm_data_id, destination_ip, source_ip)
 

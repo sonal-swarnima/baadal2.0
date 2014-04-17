@@ -197,18 +197,19 @@ def process_clone_task(task_event_id, vm_id):
 
 # Handles snapshot task
 # Invoked when scheduler runs task of type 'snapshot_vm'
-def process_snapshot_vm(snapshot_type, vm_id = None):
+def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
 
     logger.debug("Processing rolling snapshot task: " + str(snapshot_type))
     try:
         if snapshot_type == SNAPSHOT_SYSTEM:
-            params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_id}
+            params={'snapshot_type' : frequency, 'vm_id' : vm_id}
             task[TASK_TYPE_SNAPSHOT_VM](params)
         else:    
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
             for vm_data in vms:
-                params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id}
+                params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}
                 vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
+        current.db.commit()
     except:
         log_exception()
         pass
