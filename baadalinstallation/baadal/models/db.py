@@ -175,7 +175,6 @@ db.define_table('vm_data',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
-    Field('enable_service', 'list:string'),
     Field('security_domain', db.security_domain),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
@@ -189,7 +188,6 @@ db.define_table('request_queue',
     Field('attach_disk', 'integer', label='Disk Size(GB)'),
     Field('vCPU', 'integer', label='CPUs'),
     Field('template_id', db.template),
-    Field('enable_service', 'list:string'),
     Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
     Field('security_domain', db.security_domain, label='Security Domain'),
     Field('requester_id',db.user, label='Requester'),
@@ -202,9 +200,8 @@ db.define_table('request_queue',
 
 db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
 db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
+db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
-db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
-db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)

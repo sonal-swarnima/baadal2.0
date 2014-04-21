@@ -399,7 +399,7 @@ def get_vm_snapshots(vm_id):
     vm_snapshots_list = []
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
 
-        snapshot_dict = {}
+        snapshot_dict = {'id' : snapshot.id}
         snapshot_type = {SNAPSHOT_USER    : 'User',
                          SNAPSHOT_DAILY   : 'Daily',
                          SNAPSHOT_WEEKLY  : 'Weekly',

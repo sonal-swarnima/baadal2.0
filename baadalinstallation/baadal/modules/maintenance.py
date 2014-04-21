@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    from gluon import *  # @UnusedWildImport
-###################################################################################
+
 from log_handler import logger
 from vm_helper import snapshot, suspend, revert, delete_snapshot
 from helper import log_exception, update_constant
 from threading import Thread
 from Queue import Queue
+from gluon import current
 
 THREAD_POOL_COUNT = 5
 

@@ -26,7 +26,8 @@ __all__ =['add_faculty_approver', 'add_orphan_vm', 'add_private_ip', 'add_privat
 			'send_email_to_approver', 'send_email_to_requester', 'send_email_to_vm_user', 'send_remind_faculty_email', 
 			'send_remind_orgadmin_email', 'set_configuration_elem', 'specify_user_roles', 'update_task_ignore', 
 			'update_task_retry', 'update_vm_lock', 'updte_host_status', 'validate_user', 'verify_vm_request', 'vm_has_snapshots', 
-			'is_moderator', 'is_orgadmin', 'is_faculty', 'grant_vnc_access', 'create_mapping', 'clear_all_timedout_vnc_mappings']
+			'is_moderator', 'is_orgadmin', 'is_faculty', 'grant_vnc_access', 'clear_all_timedout_vnc_mappings',
+			'send_email_vnc_access_granted']
 
 if 0:
     from admin_model import *

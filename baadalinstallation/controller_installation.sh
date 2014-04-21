@@ -408,7 +408,9 @@ Setup_Baadalapp()
 
         sed -i -e 's/storage_type=/'"storage_type=$STORAGE_TYPE"'/g' $baadalapp_config_path
 
-        sed -i -e 's@nat_script_path=@'"nat_script_path=$MAPPER_FILE_PATH"'@g' $baadalapp_config_path
+        sed -i -e 's/nat_type=/nat_type='"$NAT_TYPE"'/g' $baadalapp_config_path
+
+	sed -i -e 's/vnc_ip=/vnc_ip='"$VNC_IP"'/g' $baadalapp_config_path
 
         sed -i -e 's/'"$DB_TYPE"'_db=/'"$DB_TYPE"'_db='"$DB_NAME"'/g' $baadalapp_config_path
 

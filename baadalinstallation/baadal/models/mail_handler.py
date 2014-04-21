@@ -36,12 +36,18 @@ VM_CREATION_SUBJECT = "VM created successfully"
 VM_CREATION_BODY="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[requestTime]} is "\
                     "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
                     "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nDefault credentials for VM:\nUsername:root/baadalvm\nPassword:baadal\n\n"\
-		    "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
+                    "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
 
 TASK_COMPLETE_BODY="Dear {0[userName]},\n\nThe '{0[taskType]}' task for VM({0[vmName]}) requested on {0[requestTime]} is complete."\
                     "\n\nRegards,\nBaadal Admin "
+
+VNC_ACCESS_SUBJECT="VNC Access to your VM activated"
+
+VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was activated on {0[requestTime]}. Details follow:\n"\
+                "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
+                "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
 MAIL_FOOTER = "\n\n\nDisclaimer:: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
              "If you have any queries, send an email to {0[adminEmail]}."
@@ -99,6 +105,17 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
             subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
             send_email(user_info[1], subject, TASK_COMPLETE_BODY, context, cc_addresses)
         
+
+def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_time):
+    for vm_user in vm_users:
+        user_info = get_user_details(vm_user)
+        context = dict(vmName = vm_name, 
+                       userName = user_info[0],
+                       vncIP = vnc_ip,
+                       vncPort = vnc_port,
+                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+        send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
+    
 
 def send_email_to_admin(email_subject, email_message, email_type):
     if email_type == 'report_bug':
