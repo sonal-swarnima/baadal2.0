@@ -47,7 +47,7 @@
 	           {{if pend_request['owner_id'] == auth.user.id:}}
 	               {{=A('Approve',_href=URL(r=request,f='approve_request',args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
-	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']])), _id="reject_"+str(pend_request['id'])}}
+	               {{=A('Reject',_href=URL(r=request,f='reject_request',args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 	             &nbsp;|&nbsp;
 	               {{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
 	           {{else:}}
