@@ -121,7 +121,8 @@ def test_script(test_case_no):
                         	attack_disk(driver,xml_sub_child,xml_child,vm_name,operation_name)#checking for data in table
                         
                         elif field_type=="idompotent":
-                            maintain_idompotency(driver,xml_sub_child,xml_child)				          				          				
+                             maintain_idompotency(driver,xml_sub_child,xml_child)				          				          				
+			     #vm_list(driver)
                     	else:
                         	logging.debug("report problem") #logging the report
                     	if k==39:
@@ -144,26 +145,33 @@ def graph_test(test_case_no):
     
     root = xml_connect()
     i=int(test_case_no)
+    
     xml_sub_child=root[i-1][0][0]
     xml_child=root[i-1][0]   
-    ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))   
-    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_init_data"))
+   
+    ssh.connect("10.208.21.67", username="root", password="baadalcse_blade_FEB2014")   
+    stdin, stdout, stderr =ssh.exec_command("cd /mnt/datastore/vm_rrds/;rrdtool fetch IITD_badalUFA_test1.rrd MIN -s -300s -e now")
+
     initial_data=stdout.readlines()
     
     current_time=datetime.datetime.now()
-   
     ini_data=str(initial_data[2])
     init_data=ini_data.split()
-    ssh.connect("10.208.21.113", username="root", password="baadal_test")   
+    
+    ssh.connect("10.208.21.85", username="root", password="test_baadal")   
     stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_run_prgrm"))
     data=stdout.readlines()
-    time.sleep(600)    
-    ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))  
-    stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_finl_data"))
+    time.sleep(60)   
+    ssh.connect("10.208.21.67", username="root", password="baadalcse_blade_FEB2014")   
+    stdin, stdout, stderr =ssh.exec_command("cd /mnt/datastore/vm_rrds/;rrdtool fetch IITD_badalUFA_test1.rrd MIN -s -300s -e now")
     final_data=stdout.readlines()
     fin_data=str(final_data[2])
     finl_data=fin_data.split()
+
+    print "finl_data" + str(finl_data)
+    print "init_data" + str(init_data)
     print_graph_result(finl_data,init_data,xml_child)
+    
     
 def print_graph_result(finl_data,init_data,xml_child):
     logger.debug(xml_child.get("value") +" Initial_data:"+ str(init_data))
@@ -212,6 +220,7 @@ def packages_install_test(test_case_no):
         else:
             logger.debug(xml_child.get("value") +': '+pkg +" :software has not installed properly") 
  
+    return
                                                                                                                                                                         
 
                                          
@@ -223,13 +232,13 @@ def check_stat_on_host():
     cursor1=db.cursor()
     cursor1.execute("select vm_name,vm_data.status,host_id from vm_data join host where host.id=vm_data.host_id and host_ip='10.208.21.70'")
     output=cursor1.fetchall()
-    datas=str(output)
-    lists=datas.split("), (")
+    data1=str(output)
+    lists=data1.split("), (")
     col_count=len(lists)
     
     for i in range(0,col_count):
-        datass=lists[i].split(",")
-        newstr = datass[0].replace("'", "")
+        data1s=lists[i].split(",")
+        newstr = data1s[0].replace("'", "")
         if i==0:
             newstr=newstr.replace("((","")
         for id in conn.listDomainsID():
@@ -239,8 +248,8 @@ def check_stat_on_host():
                 print newstr
                 print 'Name =  %s' % dom.name()
                 print 'State = %d' % infos[0]
-                print datass[1]
-                if (((datass[1]==" 5L") & (infos[0]==1)) | ((datass[1]==" 6L") & (infos[0]==3))):
+                print data1s[1]
+                if (((data1s[1]==" 5L") & (infos[0]==1)) | ((data1s[1]==" 6L") & (infos[0]==3))):
                     print "yes"                                           
  
 #################################################################################################################
@@ -368,23 +377,115 @@ def execute_query(sql_query,arg=None):
 
     return cursor
 
+def total_element(driver,xml_sub_child,xml_child,path):
+     field=driver.find_elements_by_xpath(path)
+     count=0
+     for element in field:
+	count+=1
+     
+     return count
+  
+
+
+
+def vm_list(xml_child,xml_sub_child,driver):
+    data1=[]
+    path_col="//table[@id='listallvm']/tbody/tr/td"
+    path_row="//table[@id='listallvm']/tbody/tr"
+    path_header="//table[@id='listallvm']/thead/tr/th"
+    
+	
+    if isTablePresent(driver,xml_child,path_col):
+        countc=0
+        c_count=0
+        r_count=0
+        select_row=0
+        header_field=driver.find_elements_by_xpath(path_header)
+        count=0
+        for hdata in header_field:
+            if hdata.text=="Name":
+                vm_name_no=count
+            if hdata.text=="Owner":
+                user_name_no=count
+            if hdata.text=="Status":
+                status_no=count
+            count+=1
+        col_count=count
+        field=driver.find_elements_by_xpath(path_col)
+    
+        
+        for data in field:
+            
+            if c_count%col_count==vm_name_no:
+                vm_name=data.text
+                
+            if c_count%col_count==user_name_no:
+                if data.text in username_list:
+                    user_name=data.text
+                    select_row=1
+                    
+            if c_count%col_count==status_no:
+                status=data.text
+                
+            
+            if (c_count%col_count==col_count-1):
+                
+	        if select_row:
+		
+                    if (str(status)==xml_sub_child.get("status")):
+                        field_data=driver.find_elements_by_xpath(path_row)
+
+                        vm_id=data.get_attribute("id")
+                        
+                        countc+=1
+                        break
+                        
+                    
+            c_count+=1
+            
+           
+    if countc==0:
+        logger.debug("No user of testing User.Please Create a VM!!!!")
+        vm_name=""
+        vm_id=""
+    data1.insert(0,vm_id)
+    data1.insert(1,vm_name)
+   
+    return data1
+
+def total_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    vm_user_list=[]
+    
+    click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)
+    path="//table[@id='vm_users']/tbody/tr/td"
+    if isTablePresent(driver,xml_child,path):
+	field=driver.find_elements_by_xpath(path)
+	count=0
+	for user in field:
+	     vm_user_list.insert(count,user.text)
+	     count+=1
+    
+    return vm_user_list
+
+
 
 #perform action on setting button of vm's
 def click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id):
     
-    path="//*[@href='/baadal/user/settings/"+ str(vm_id) +"']"
-    print path
+    path="//*[@href='/user/settings/"+ str(vm_id) +"']"
     time.sleep(30)
     if isElementPresent(driver,xml_child,path):
+
         q=driver.find_element_by_xpath(path).click()
-        
-        print q
+
         time.sleep(30)
         logger.debug(xml_child.get("value") +': Result:Setting button is working properly') 
+        
     else:
         logger.debug(xml_child.get("value") +': Result:Setting button is not working properly')
+        
+    return 
     
-    return
     
     
 #open dialogbox when error occurs in falied tasks            
@@ -411,13 +512,14 @@ def add_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
     status=isElementPresent(driver,xml_child,value)
     
     if status==1:
-        logger.error(xml_child.get("value")  + "User is already VM user")
-        user=0
+        logger.error(xml_child.get("value")  + " :User is already VM user")
+        
     else:
         val=xml_sub_child.get("add_button")
         isButton_add(driver, xml_sub_child,val,xml_child)
-        user=1
-    return user
+       
+   
+    return status
 
        
 
@@ -425,12 +527,15 @@ def add_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
 #getting snapshot id of a VM
 
 def get_snapshot_id(driver,xml_sub_child,xml_child,vm_name):
-    query_result=execute_query( xml_sub_child.get("query_snap_id"),(str(vm_name))).fetchone()
-    baadal_db.commit()
-    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_snap"))
-    for t in field:
-        if str(query_result[1]) in t.text:
-            snap_id=query_result[0]
+    snap_data=driver.find_elements_by_xpath("//table[@id='vm_snaps']/tbody/tr")
+    select_row=0
+    snap_id=0
+    total_count=3
+    for row in snap_data:
+	row_data=row.text.split()
+        if "User"==row_data[0]:
+	    snap_id=row.get_attribute("id")
+	    
     return snap_id
 
 
@@ -450,70 +555,79 @@ def attack_disk(driver,xml_sub_child,xml_child,vm_name,operation_name):
         click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
     return
           
+
         
 #getting user id of a user access to a VM                        
 def get_user_id(driver,xml_sub_child,xml_child,vm_name):
-    query_result=execute_query( xml_sub_child.get("query_user_id"),(str(vm_name))).fetchone()
-    baadal_db.commit()
-    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_user"))
-    for t in field:
-        if str(query_result[1]) in t.text:
-            user_id=query_result[0]
-            logger.debug("user_id :" + " " + str(user_id))
+    path="//table[@id='vm_users']/tbody/tr/td"    
+    if isElementPresent(driver,xml_child,path):   
+        user_data=driver.find_elements_by_xpath(path)
+    	select_row=0
+    	user_id=0
+    	for col in user_data:
+	    user_id=col.get_attribute("id")
+	    
+	    break
+	    
     return user_id
+
 
 
 
 #performing add_user operation on vm
 def op_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
     op_name=xml_sub_child.get("op")  
-    path="//*[@title='Add User to VM']"
+    path="//table[@id='vm_ops']/tbody/tr/td/a[@title='Add User to VM']"
     
+    limit=0
     if isElementPresent(driver,xml_child,path):   
-        print "in"
-	time.sleep(20)
-        driver.find_element_by_xpath(path).send_keys(Keys.ENTER)
-	time.sleep(10)
+        
+        time.sleep(20)
+        driver.find_element_by_xpath(path).click()
+        time.sleep(10)
         if add_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
             if xml_sub_child.get("op_typ")!="cancel_user":
+		
                 field_text=message_flash(driver,xml_sub_child,xml_child)
                 result=message_in_db(xml_sub_child)
                 print_result(field_text,result,xml_child)
             	if xml_sub_child.get("name") in vm_mode_type:
               		check_user_table(driver,xml_sub_child,xml_child,vm_name,vm_id)
-    return
+    return limit
+
+
 
 #checking whether username is in vm_users table or not
 def  check_user_table(driver,xml_sub_child,xml_child,vm_name,vm_id):
-    username=xml_sub_child.get("user_id_data")
-    query_length=execute_query( xml_sub_child.get("query5"),(str(vm_name))).fetchone()
-    baadal_db.commit()
-    length=len(query_length)
-    query_result=execute_query("select concat(user.first_name,' ',user.last_name) as user_name from user where username=%s",(str(username))).fetchone()
-    baadal_db.commit()
+    username=xml_sub_child.get("user_name")
     path="//table[@id='vm_users']/tbody/tr"
     if isElementPresent(driver,xml_child,path):
         field=driver.find_elements_by_xpath(path)
-        count=0
 	check_len=0
+	total_col=driver.find_elements_by_xpath("//table[@id='vm_users']/tbody/tr/td")
+	
 	for data in field:
-	    if query_result[0] in data.text:
-            
+	    if username in data.text:
 		logger.debug("User name is added to VM")
-		count=1
-		check_len+=1
-    	if check_len==length:
-    		if count==0:
-    		    logger.errot(xml_child.get("value")  + "Error ")    
+		check_len=1
+    	if check_len==0:
+	    logger.error(xml_child.get("value")  + "Error ")    
     return
+
+
     
 #list of vm mode 
 vm_mode_type=['vm_running_Setting_intgrtn','vm_paused_Setting_integrtn','vm_shutdown_Setting_integrtn']
 
 
+
+
+
 #performing delete operation on vm
 
 def op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):   
+    limit=0
+    
     op_name=xml_sub_child.get("op")  
     path=xml_sub_child.get("title")  
     if isTablePresent(driver,xml_child,path):         
@@ -523,77 +637,89 @@ def op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
     	field_text=message_flash(driver,xml_sub_child,xml_child)
     	result=message_in_db(xml_sub_child)
     	print_result(field_text,result,xml_child)
-    	if xml_sub_child.get("name") in vm_mode_type:
-        	operation_name=op_list[op_name]
-        	check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)  
+ 
     else:
 	logger.debug("No element exist")          
 
-    return
+    return limit
+
+
 
 #performing snapshot operation on vm
 def op_snap_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    limit=0
+    snap=1
     op_name=xml_sub_child.get("op") 
     if op_name=="snapshot": 
-    	
         path="//a[@title='Take VM snapshot']"
     else:
-    	
         path=xml_sub_child.get("xpath_snap")
-    
     if isElementPresent(driver,xml_child,path): 
-        
+	result=snap_result(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name)
+	
         if op_name=="snapshot":
-            
-            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(op_name) +"/"+ str(vm_id) + "']").click()
+            driver.find_element_by_xpath(path).click()
         else:
-            
             snapshot_id=get_snapshot_id(driver,xml_sub_child,xml_child,vm_name) 
-            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(op_name) +"/"+ str(vm_id) +"/"+ str(snapshot_id) + "']").click()
-        result=snap_result(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name)
-        if  (result=="Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot.") | (result=="Snapshot request already in queue.") | (result==""):
+	    if snapshot_id:
+                 driver.find_element_by_xpath("//*[@href='/user/"+ str(op_name) +"/"+ str(vm_id) +"/"+ str(snapshot_id) + "']").click()
+            else:
+		logger.debug("No snapshot present")
+		snap=0
+	
+        if  (result=="Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot.") | (result=="Snapshot request already in queue.") | (result=="") | (snap==0):
             logger.debug(result )
+	    limit=0
         else:
-            if xml_sub_child.get("name")in vm_mode_type:
-                operation_name=op_list[op_name]
-                check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)   
+            limit=1
     else:
-    	logger.debug(xml_child.get("value") + ":Table does not exists")     
-    return
-    
+    	logger.debug(xml_child.get("value") + ":Table does not exists")  
+
+      
+    return limit
+
+
 
 #performing  delete add_user operation on vm
 def op_del_user_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
+    limit=0
     op_name=xml_sub_child.get("op") 
+    
     path=xml_sub_child.get("xpath_user")
     if isElementPresent(driver,xml_child,path):  
         user_id=get_user_id(driver,xml_sub_child,xml_child,vm_name) 
+	
         driver.find_element_by_xpath("//*[@href='/baadal/admin/"+ str(op_name) +"/"+ str(vm_id) +"/"+ str(user_id) + "']").click()
         result="User access is eradicated."
         field_text=message_flash(driver,xml_sub_child,xml_child)
-        print_result(field_text,result,xml_child)
+        print_result(field_text,result,xml_child)   
         if xml_sub_child.get("name") in vm_mode_type:
             check_delete_user(driver,user_id,op_name,xml_child,xml_sub_child)
     else:
     	logger.debug(xml_child.get("value") + ":Table does not exists") 
-    return
+    return limit
             
+
+
 
 #checking whether user access removed for a vm or not                        
 def  check_delete_user(driver,user_id,op_name,xml_child,xml_sub_child):
     operation_name=op_list[op_name]
-    user_name=execute_query("select concat(first_name,' ',last_name) as user_name from user where id=%s",(str(user_id))).fetchone()
-    baadal_db.commit()
     path=xml_sub_child.get("xpath_user")
+    user_absent=1
     if isTablePresent(driver,xml_child,path):
-        user_table=driver.find_element_by_xpath(path)
-        if user_name[0] in user_table.text:
-            logger.error(xml_child.get("value")  + "User has not been deleted")
-        else:
+        user_table=driver.find_elements_by_xpath("//table[@id='vm_users']/tbody/tr/td")
+	for user in user_table:
+            if user.get_attribute("id")==user_id:
+                logger.error(xml_child.get("value")  + "User has not been deleted")
+	        user_absent=0
+        if user_absent:
             logger.debug(xml_child.get("value")  + "User access is eradicated")
     else:
         logger.debug("User access is eradicated")
     return
+
+
 #performing attach disk operation on vm
 def op_attach_disk(driver,xml_sub_child,xml_child,vm_name,vm_id):
     op_name=xml_sub_child.get("op")   
@@ -610,66 +736,98 @@ def op_attach_disk(driver,xml_sub_child,xml_child,vm_name,vm_id):
     else:
 	logger.debug("No element exist")
 
+
+def check_status_of_vm(driver,xml_sub_child,xml_child):
+    c_count=0
+    path_col="//table[@id='configuration']/tbody/tr/td"
+    path_header="//table[@id='configuration']/tbody/tr/th"
+    if isTablePresent(driver,xml_child,path_col):
+        field_header=driver.find_elements_by_xpath(path_header)
+        counth=0
+        for h_data in field_header:
+            if h_data.text=="Status":
+                status_f_no=counth
+            counth+=1
+        col_count=counth
+        field=driver.find_elements_by_xpath(path_col)
+	
+        for data in field:
+	    if c_count%col_count==status_f_no:
+                status=data.text
+	    c_count+=1
+	
+    return status
+
+
+
 #performing migrate operation on vm
 def op_migrate_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
     op_name=xml_sub_child.get("op")
-    path="//*[@href='/admin/"+ str(op_name) +"/"+ str(vm_id) +"']"
+    limit=0
+    op_name=xml_sub_child.get("op")
+    operation_name=op_list[op_name]
+    operation_name
+    path="//a[@title='Migrate this virtual machine']"
     if isElementPresent(driver,xml_child,path):
-        driver.find_element_by_xpath("//*[@href='/admin/"+ str(op_name) +"/"+ str(vm_id) +"']").click()
-        query_snap=execute_query(xml_sub_child.get("query_snapshot"),str(vm_id)).fetchall()
-        baadal_db.commit()
-        length_snap=len(query_snap)
+        vm_user_list=total_user(driver,xml_sub_child,xml_child,vm_name,vm_id)
+	total=check_pendingtasks_table(driver,xml_sub_child,xml_child,vm_name,operation_name,vm_user_list)
+        driver.find_element_by_partial_link_text("All VMs").click()
+	click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id) 
+	status=check_status_of_vm(driver,xml_sub_child,xml_child)
+	driver.find_element_by_xpath("//a[@title='Migrate this virtual machine']").click()
+	driver.find_element_by_xpath("//input[@value='Migrate']").click()
+	
         
-        if length_snap!=0:
-            result="Cannot migrate a vm with snapshot(s)"
-            field_text=message_flash(driver,xml_sub_child,xml_child)
-            print_result(field_text,result,xml_child)
-        else:
-            driver.find_element_by_xpath("//input[@value='Migrate']").click()
-            query_status=execute_query("select status from vm_data where id=%s",str(vm_id)).fetchone()
-            baadal_db.commit()
             
-            if query_status[0]=="2":
-                result="Your VM is already running. Kindly turn it off and then retry!!!"
-                field_text=message_flash(driver,xml_sub_child,xml_child)
-                print_result(field_text,result,xml_child)
-            else:
-                result="Your task has been queued. please check your task list for status. "
-                field_text=message_flash(driver,xml_sub_child,xml_child)
-                print_result(field_text,result,xml_child)
-            if xml_sub_child.get("name")in vm_mode_type:
-                operation_name=op_list[op_name]
-                check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+	if status=="Running":
+	    result="Your VM is already running. Kindly turn it off and then retry!!!"
+	    field_text=message_flash(driver,xml_sub_child,xml_child)
+            print_result(field_text,result,xml_child)
+	elif total:
+	    result="Your request already in the queue"
+	    field_text=message_flash(driver,xml_sub_child,xml_child)
+            print_result(field_text,result,xml_child)
+	else:
+           result="Your task has been queued. please check your task list for status. "
+           field_text=message_flash(driver,xml_sub_child,xml_child)
+           print_result(field_text,result,xml_child)
+           limit=1
     else:
         logger.debug("Migrate operation could not performed because no host is available.Please do host up then again try this operation")
-    return
+    return limit
         
 #performing   operation on vm        
 def other_operation_on_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
     op_name=xml_sub_child.get("op")
-    task_typ=op_list[op_name]
-    query_result=execute_query("select status from task_queue_event where (status=1 or status=2) and task_type=%s and vm_id=%s",(str(task_typ),str(vm_id))).fetchall()
+    operation_name=op_list[op_name]
+    operation_name
     
-    baadal_db.commit()
     xpath=task_path(xml_sub_child)
     
     path="//*[@title='" + str(xpath) + "']"
-    print path
+    
     if isElementPresent(driver,xml_child,path):
+	vm_user_list=total_user(driver,xml_sub_child,xml_child,vm_name,vm_id)
+	total=check_pendingtasks_table(driver,xml_sub_child,xml_child,vm_name,operation_name,vm_user_list)
+	driver.find_element_by_partial_link_text("All VMs").click()
+	click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id) 
         driver.find_element_by_xpath(path).click()
         field_text=message_flash(driver,xml_sub_child,xml_child)
-        result=message_in_db(xml_sub_child)
+	
+	if total==[]:
+            result=message_in_db(xml_sub_child)
+	    limit=1
+	else:
+	    result="Your request already in the queue"
+	    limit=0
         print_result(field_text,result,xml_child)
-        if xml_sub_child.get("name") in vm_mode_type:
-            operation_name=op_list[op_name]
-            check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
-        else:
-            field_text=message_flash(driver,xml_sub_child,xml_child)
-            result=op_list[op_name] + " request already in queue."
-            print_result(field_text,result,xml_child)
+	
+        
     else:
         logger.debug(xml_child.get("value") + ":Table does not exists") 
-	return
+	limit=0
+	
+    return limit
 
 #performing  edit vm configuration
 def op_edit_vm_conf(driver,xml_sub_child,xml_child,vm_name,vm_id):
@@ -701,25 +859,29 @@ def task_path(xml_sub_child):
         
 	
 #selecting operation to be perform    
-def click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id):   
-    op_name=xml_sub_child.get("op")               
+def click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id): 
+    
+    
+    op_name=xml_sub_child.get("op")    
+    
+   
     if op_name=="user_details":
-        op_user(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        limit=op_user(driver,xml_sub_child,xml_child,vm_name,vm_id)
     elif op_name=="Delete":
-        op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        limit=op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
     elif op_name in {"revert_to_snapshot","delete_snapshot","snapshot"}:         
-        op_snap_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        limit=op_snap_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
     elif op_name=="delete_user_vm": 
-        op_del_user_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        limit=op_del_user_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
     elif op_name in {"attach_extra_disk","clone_vm"}:
         op_attach_disk(driver,xml_sub_child,xml_child,vm_name,vm_id)
     elif op_name=="edit_vm_config":
         op_edit_vm_conf(driver,xml_sub_child,xml_child,vm_name,vm_id)
     elif op_name=="migrate_vm":
-        op_migrate_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)  
+        limit=op_migrate_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)  
     else:
-        other_operation_on_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
-    return 
+        limit=other_operation_on_vm(driver,xml_sub_child,xml_child,vm_name,vm_id)
+    return limit
     
 # list of operation to be performed     
 op_list={'revert_to_snapshot':0,'delete_snapshot':1,'snapshot':'Snapshot VM','pause_machine':'Suspend VM','Delete':'Delete VM','shutdown_machine':'Stop VM','destroy_machine':'Destroy VM','start_machine':'Start VM','user_details':'Add User','attach_extra_disk':"Attach Disk",'clone_vm':'Clone ','delete_user_vm':'Delete User','adjrunlevel':'Adjust Run Level','edit_vm_config':'Edit VM Config','resume_machine':'Resume VM','migrate_vm':'Migrate VM'}
@@ -742,33 +904,131 @@ def message_flash(driver,xml_sub_child,xml_child):
     field_text=path.text
     return field_text
 
+def total_snap(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name):
+    total_user_snap=0
+    total_snap=0
+    snap_data=driver.find_elements_by_xpath("//table[@id='vm_snaps']/tbody/tr")
+    for row in snap_data:
+        s_row=row.text.split()
+        user=s_row[0]
+        if "User"==user:
+            total_user_snap+=1
+	total_snap+=1
+    
+    if op_name=="Migrate VM":
+	total=total_snap
+    else:
+	total=total_user_snap
+    return total
+
+
 #checking snapshot
 def snap_result(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name):
-    query_result=execute_query("select * from task_queue_event where task_type='Snapshot VM'  and  vm_name=%s and requester_id!=-1" ,(str(vm_name))).fetchall()
+    op_name=xml_sub_child.get("op")   
+    operation_name=op_list[op_name]
+
+    vm_user_list=total_user(driver,xml_sub_child,xml_child,vm_name,vm_id)
+    l_snap=check_pendingtasks_table(driver,xml_sub_child,xml_child,vm_name,operation_name,vm_user_list)
     
-    query_snap=execute_query(xml_sub_child.get("query_snap"),str(vm_id)).fetchall()
-    baadal_db.commit()
+    length_snap=len(l_snap)
     
-    length_snap=len(query_result)
-    
-    result=snap_db_result(xml_sub_child,op_name,length_snap, query_snap)
+    driver.find_element_by_partial_link_text("All VMs").click()
+    click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)    
+    total_user_snap=total_snap(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name)
+    result=snap_db_result(xml_sub_child,op_name,length_snap, total_user_snap)
     field_text=message_flash(driver,xml_sub_child,xml_child)
     print_result(field_text,result,xml_child)
     return result
 
+
+
+def check_pendingtasks_table(driver,xml_sub_child,xml_child,vm_name,operation_name,vm_user_list):
+    task_table_name="Pending Task"
+    driver.find_element_by_partial_link_text("Tasks").click()
+    path_row="//table[@id='pendingtasks']/tbody/tr"
+    path_col="//table[@id='pendingtasks']/tbody/tr/td"
+    path_header="//table[@id='pendingtasks']/tbody/tr/th"
+
+    data1=[]
+
+
+    if isTablePresent(driver,xml_child,path_col):
+        countp=0
+        c_count=0
+        vm_name_s=""
+        select_row=0
+        field_header=driver.find_elements_by_xpath(path_header)
+        counth=0
+        for h_data in field_header:
+            if h_data.text=="Task":
+                task_f_no=counth
+            if h_data.text=="VM":
+                vm_f_no=counth
+            if h_data.text=="Requested By":
+                requester_f_no=counth
+            if h_data.text=="Request Time":
+                request_f_no=counth
+            counth+=1
+        col_count=counth
+	
+        field=driver.find_elements_by_xpath(path_col)
+	
+	
+        for data in field:
+	    
+            if c_count%col_count==task_f_no:
+                op_name_sc=data.text
+		
+            if c_count%col_count==vm_f_no:
+                vm_name_s=data.text
+		
+            if c_count%col_count==requester_f_no:
+		 if data.text in vm_user_list:
+                    #user_name_s=data.text
+		 #usernm=usrnm_list[xml_child[0].text]
+            	 #if usernm==data.text:
+		    
+		     user_name_s=data.text
+		     select_row=1
+	    
+            	    
+            if (c_count%col_count==request_f_no):
+                start_time_s=data.text
+	    	
+	    
+            if (select_row) & (c_count%col_count==(col_count-1)):
+                if (str(vm_name)==str(vm_name_s)) & (str(operation_name)==str(op_name_sc)):
+                    data1.append([])
+		    data1[-1].append(start_time_s)
+                    data1[-1].append(user_name_s)
+		    data1[-1].append(task_table_name)
+		    
+                    countp+=1
+            c_count+=1
+	    
+    else:
+        countp=0
+	 
+    
+    
+    return data1
+
+
 #printing result correspondence to snapshot
-def snap_db_result(xml_sub_child,op_name,length_snap, query_snap):
-    print query_snap
+def snap_db_result(xml_sub_child,op_name,length_snap, total_user_snap):
+    
     if op_name=="delete_snapshot":
         result="Your delete snapshot request has been queued"
     else:
-        if str(length_snap)==xml_sub_child.get("max"):
+        if str(total_user_snap)==xml_sub_child.get("max"):
             result="Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
-        elif query_snap!=():
+        elif length_snap:
             result="Snapshot request already in queue."
+	if str(total_user_snap)==str(0):
+	     result="No VM snapshot exists to perform this operation"
         else :
-            if op_name=="revert_to_snapshot":
-                result="Your revert to snapshot request has been queued"
+            if (op_name=="revert_to_snapshot") & (total_user_snap>0):
+		result="Your revert to snapshot request has been queued"
             else:
                 result="Your request to snapshot VM has been queued"
     return result
@@ -790,132 +1050,338 @@ def graph_test_mode(xml_child,xml_sub_child,driver,vm_name,vm_id):
     
     print_graph(finl_data,xml_child)
 
-username_list=["badalUF","badalUA","badalUO","badalUFA","badalUFO","badalUOA","badalUFOA","badalU"]
+#username_list=["BadalUF UF","Badal UA","Badal UO","Badal UFA","Badal UFO","Badal UOA","BadalUFOA UFOA","BadalU U"]
+#usrnm_list={"badalUF":"BadalUF UF","badalUA":"Badal UA","badalUO":"Badal UO","badalUFA":"Badal UFA","badalUFO":"Badal UFO","badalUOA":"Badal UOA","badalUFOA":"BadalUFOA UFOA","badalU":"BadalU U"}
+
+username_list=["BadalUF UF","Badal UA","Badal UO","Badal UFO","Badal UOA","BadalUFOA UFOA","BadalU U"]
+usrnm_list={"badalUF":"BadalUF UF","badalUA":"Badal UA","badalUO":"Badal UO","badalUFO":"Badal UFO","badalUOA":"Badal UOA","badalUFOA":"BadalUFOA UFOA","badalU":"BadalU U"}
+
+def total_vm(driver,xml_sub_child,xml_child):
+    counth=0
+    user_vm=0
+    field=driver.find_elements_by_xpath("//table[@id='listallvm']/thead/tr/th")
+    for data in field:
+	
+	if data.text=="Owner":
+	    requester_no=counth
+	counth+=1
+   
+    path="//table[@id='listallvm']/tbody/tr/td"+ "["+ str(requester_no+1) +"]"
+   
+    field=driver.find_elements_by_xpath(path)
+    for user in field:
+	for username in username_list:
+	    if username==user.text:
+		             
+   	        user_vm+=1
+    return user_vm
+
 
 def maintain_idompotency(driver,xml_sub_child,xml_child):
     execute_query("FLUSH QUERY CACHE")
-    
-    for user_name in username_list:#deleting vm from vm_data
-        print user_name
-        vm_id=execute_query("select vm_data.id from vm_data,user where user.id=requester_id and (status=2 or status=3 or status=4)and username=%s",(str(user_name))).fetchall()
-        if vm_id!=():
-            for vid in vm_id:
-                
-                print vid[0]	
-                x=vid[0]
-                vm_nam=execute_query("select vm_name from vm_data where  vm_data.id=%s",(str(x))).fetchall()
-            
-                print vm_nam
-                vm_name=vm_nam[0]
-                path="//*[@href='/baadal/user/settings/"+ str(x) +"']"
-    		print path
-    		time.sleep(30)
-    		if isElementPresent(driver,xml_child,path):
-		    q=driver.find_element_by_xpath(path).click()
-                    path="//a[@title='Delete this virtual machine']"
-		
-                    if isElementPresent(driver,xml_child,path): 
-			driver.find_element_by_xpath(path).click() 
-			click_on_dialogbox(driver)
-			click_on_dialogbox(driver)
-			logger.debug(str(user_name) + " VM (" + str(x) + ") has been deleted from Pending request") 
-                    #operation_name="Delete VM"
-                    #vm_name=execute_query("select vm_name from vm_data where id=%s",(str(id))).fetchone()
-                    #check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
-		    driver.find_element_by_partial_link_text("All VMs").click()
+    deletevm_from_pending_request_table(driver,xml_sub_child,xml_child)
+    delete_vm_from_allvms(driver,xml_sub_child,xml_child)
+    return
 
-    
-    
+
+    '''driver.find_element_by_partial_link_text("All VMs").click()
+    total=total_vm(driver,xml_sub_child,xml_child)
+    for i in range(0,total):#deleting vm from vm_data
+        data=vm_list(xml_child,xml_sub_child,driver)
+    	
+    	if data!=['', '']:
+            vm_id=data[0][3:]
+            vm_name=data[1][0:]
+        
+            path="//*[@href='/baadal/user/settings/"+ str(vm_id) +"']"
+    	
+    	    time.sleep(30)
+    	    if isElementPresent(driver,xml_child,path):
+	       q=driver.find_element_by_xpath(path).click()
+	       path="//a[@title='Delete this virtual machine']"
+		
+	       if isElementPresent(driver,xml_child,path): 
+		   driver.find_element_by_xpath(path).click() 
+		   click_on_dialogbox(driver)
+		   click_on_dialogbox(driver)
+		   logger.debug(str(user_name) + " VM (" + str(vm_name) + ") has been deleted from Pending request") 
+                    
+		   driver.find_element_by_partial_link_text("All VMs").click()'''
+
+def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
+    vm_exist=0
+    driver.find_element_by_partial_link_text("All VMs").click()
+    path="//table[@id='listallvm']/tbody/tr/td"
+    counth=0
+    user_vm=0
+    select_row=0 
+    col_count=0
+    user_present=0
+    if isElementPresent(driver,xml_child,path):
+        field=driver.find_elements_by_xpath("//table[@id='listallvm']/thead/tr/th")  
+        for data in field:
+            if data.text=="Owner":
+		requester_col_no=counth
+		
+            counth+=1
+        
+        total_col=counth
+	
+        field=driver.find_elements_by_xpath("//table[@id='listallvm']/tbody/tr/td[2]")  
+        for data in field:
+	         for username in username_list:
+		         if username==data.text:
+		             
+   		             user_present+=1
+		
+       
+        for x in range(0,user_present):
+	    
+            driver.refresh()
+	    
+            field_data=driver.find_elements_by_xpath("//table[@id='listallvm']/tbody/tr/td")
+	   
+            for user in field_data:
+                
+                if (col_count%total_col==requester_col_no):
+                    for username in username_list:
+                        if username==user.text:
+                            user_name=user.text
+                            select_row=1   
+			   
+                if col_count%total_col==(total_col-1) :
+                    if select_row:
+                        vm_id=user.get_attribute("id")
+         	        
+                        path="//*[@href='/user/settings/"+ str(vm_id[3:]) +"']"
+    	
+			time.sleep(30)
+    	    		if isElementPresent(driver,xml_child,path):
+	       		    q=driver.find_element_by_xpath(path).click()
+	       		    path="//a[@title='Delete this virtual machine']"
+		
+	       		    if isElementPresent(driver,xml_child,path): 
+		   		driver.find_element_by_xpath(path).click() 
+		   		click_on_dialogbox(driver)
+		   		click_on_dialogbox(driver)
+		   		logger.debug(str(user_name) + " VM (" + str(vm_id[3:]) + ") has been deleted from All VMs table") 
+                    		select_row=0
+				col_count=0
+				vm_exist=1
+				driver.find_element_by_partial_link_text("All VMs").click()
+				driver.refresh()
+				time.sleep(10)
+				break
+		   
+                col_count+=1
+	if vm_exist==0:
+	    logger.debug("No VM exists to perform Delete Pending request!!!")
+    return
+
+ 
+def check_vm_in_pending_request_table(driver,xml_sub_child,xml_child,vm_name):
     driver.find_element_by_partial_link_text("All Pending Requests").click()
-    baadal_db.commit()
-    for user_name in username_list:#deleting vm from request_queue
-        print user_name
-        path="//table[@id='sortTable1']/tbody/tr/td"
+    path="//table[@id='sortTable1']/tbody/tr/td"
+    counth=0
+    user_vm=0
+    select_row=0 
+    col_count=0
+    if isElementPresent(driver,xml_child,path):
+        field=driver.find_elements_by_xpath("//table[@id='sortTable1']/thead/tr/th")  
+        for data in field:
+            counth+=1
         
-        if isElementPresent(driver,xml_child,path):
-            driver.find_element_by_xpath(path)
-            vm_id=execute_query("select request_queue.id from request_queue,user where user.id=requester_id and status!=-1 and username=%s",(str(user_name))).fetchall()
-            baadal_db.commit()
-            print vm_id
-            if vm_id!=():
+        total_col=counth
+        field=driver.find_elements_by_xpath(path)
+       
+        for data in field:
+            
+            if data.text==xml_child[0].text:
+                select_row=1   
+            if col_count%total_col==(total_col-1) & (select_row):
+                vm_id=user.get_attribute("id")
+            col_count+=1
+    else:
+        vm_id=0
+    return vm_id
+
+
+
+def deletevm_from_pending_request_table(driver,xml_sub_child,xml_child):    
+    vm_exist=0
+    driver.find_element_by_partial_link_text("All Pending Requests").click()
+    path="//table[@id='sortTable1']/tbody/tr/td"
+    counth=0
+    user_vm=0
+    select_row=0 
+    col_count=0
+    user_present=0
+    if isElementPresent(driver,xml_child,path):
+        field=driver.find_elements_by_xpath("//table[@id='sortTable1']/thead/tr/th")  
+        for data in field:
+            if data.text=="Requested By":
+		         requester_col_no=counth
 		
-                for vid in vm_id:	
-                    print vid[0]
-                    print vid
-                    x=vid[0]
-                    path="//a[@href='/baadal/admin/reject_request/"+ str(x) + "']"
-                    print path
-                    driver.find_element_by_xpath(path).click()
-                    logger.debug(str(user_name) + " VM (" + str(x) + ") has been deleted from Pending request")
-                
-                
-    '''driver.find_element_by_partial_link_text("Tasks").click()
-    driver.find_element_by_partial_link_text("Failed Tasks").click()
-    for user_name in username_list:#deleting vm from task_queue_event
+            counth+=1
         
-        vm_id=execute_query("select task_queue_event.id from task_queue_event,user where user.id=requester_id and status=4 and username=%s ",(str(user_name))).fetchall()
-        print vm_id
-        print user_name
-        if vm_id!=():
-            for vid in vm_id:	
-                print vid[0]
-                print vid
-                x=vid[0]
-                driver.find_element_by_xpath("//a[@href='/baadal/admin/ignore_task/" + str(x) +"']").click()
-                logger.debug(str(user_name) + " VM (" + str(x) + ") has been deleted from Pending request")'''
-    
-    
-    
-  
-
-
-
-	       
+        total_col=counth
+        field=driver.find_elements_by_xpath("//table[@id='sortTable1']/tbody/tr/td[1]")  
+        for data in field:
+	         for username in username_list:
+		         if username==data.text:
+		             
+   		             user_present+=1
+		
+       
+        for x in range(0,user_present):
+	    
+            driver.refresh()
+	    
+            field_data=driver.find_elements_by_xpath("//table[@id='sortTable1']/tbody/tr/td")
+	    
+            for user in field_data:
+                
+                if (col_count%total_col==requester_col_no):
+                    for username in username_list:
+                        if username==user.text:
+                            user_name=user.text
+                            select_row=1   
+			 
+	    
+                if col_count%total_col==(total_col-1) :
+                    if select_row:
+                        vm_id=user.get_attribute("id")
+         	      
+                        path="//a[@href='/baadal/admin/reject_request/"+ str(vm_id[7:]) + "']"
+                    
+                        driver.find_element_by_xpath(path).click()
+                        logger.debug(str(user_name) + " VM (" + str(vm_id[7:]) + ") has been deleted from Pending request")
+			select_row=0
+			col_count=0
+			vm_exist=1
+			break
+                col_count+=1
+	if vm_exist==0:
+	    logger.debug("No VM exists to perform Delete Pending request!!!")
     return
 
      
 def vm_mode(xml_child,xml_sub_child,driver):
-    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
-    print query_result
-    baadal_db.commit()
-    count=0
-    col_count=len(query_result[0])
-    row_count=len(query_result)
-    for length in range(0,(row_count)):
-        username=query_result[length][3]
-        vm_id=query_result[length][1]
-        vm_name=query_result[length][0]
-        status=query_result[length][2]
-        
-        if (str(status)==xml_sub_child.get("status")) & (str(username) in username_list):
-            print username
-            vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id)
-            break
-        else:
-            count+=1
-            
-    if row_count==count: 
-        logger.debug(xml_sub_child.get("print_mode"))
-			
-       
+    data=vm_list(xml_child,xml_sub_child,driver)
+   
+    if data!=['', '']:
+        vm_id=data[0][3:]
+        vm_name=data[1][0:]
+        vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id)
+    else:       
+        logger.debug(xml_sub_child.get("print_mode")) 
     return
     
-    
+def perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name):
+    check_pendingtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    task_value=check_completedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    check_failedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name)
+    return task_value
+
+
 def vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id):
     if xml_sub_child.get("task")=="graph":
         graph_test_mode(xml_child,xml_sub_child,driver,vm_name,vm_id)
         click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)
     else:
+        op_name=xml_sub_child.get("op")    
+        operation_name=op_list[op_name]
+	task_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
+	driver.find_element_by_partial_link_text("All VMs").click()
         click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)
-        
-        if xml_sub_child.get("name") in {"vm_running_Setting_intgrtn","vm_running_Setting"}:
-            check_snapshot(vm_name,driver,xml_child,xml_sub_child)
-            check_user(driver,xml_child,xml_sub_child,vm_name)
-            
-        click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
+        limit=click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
+	
+	if limit:
+            time_to_check_in_tasktable()
+	    task_n_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
+	    compare_task_table(driver,xml_sub_child,xml_child,vm_name,operation_name,task_value,task_n_value)
     return
 
+
+
+def time_to_check_in_tasktable():
+    current_time=datetime.datetime.now()
+    break_pt_time=current_time + datetime.timedelta(seconds=220) 
+    print datetime.datetime.now()
+    print break_pt_time 
+    time.sleep(60)
+    return 
+
+ 
+
+def compare_task_table(driver,xml_sub_child,xml_child,vm_name,operation_name,task_value,task_n_value):
+	
+	value_present=1
+	for value in task_n_value:
+	    
+	    
+	    for value1 in task_value:
+		
+		if (value[0]==value1[0]) & (value[1]==value1[1]):
+		    value_present=0
+		    break
+	    if value_present:
+			print value
+            print value[2]
+	
+		
+	logger.debug("Your Request is in "+ str(value[2]))
+	if value[2]=="Failed Tasks":
+	    start_time=value[0]
+	   
+	    check_in_failed_task_table(driver,xml_sub_child,xml_child,vm_name,operation_name,start_time)     
+   
+
+
+
+def check_in_failed_task_table(driver,xml_sub_child,xml_child,vm_name,operation_name,start_time):
+    for h_data in field_header:
+        if h_data.text=="Task":
+            task_f_no=counth
+        if h_data.text=="VM":
+            vm_f_no=counth
+        if h_data.text=="Requested By":
+            requester_f_no=counth
+        if h_data.text=="Request Time":
+            request_f_no=counth
+        if h_data.text=="Error":
+            error_f_no=counth
+        counth+=1
+    col_count=counth
+    field=driver.find_elements_by_xpath(path_col)
+	
+    row_count=0       
+    for data in field:
+        if c_count%col_count==task_f_no:
+            op_name_sc=data.text
+        if c_count%col_count==vm_f_no:
+            vm_name_s=data.text
+        if c_count%col_count==requester_f_no:
+            if xml_child[0].text==data.text:
+               
+                user_name_s=data.text 	    
+        if (c_count%col_count==request_f_no):
+            start_time_s=data.text
+        if (c_count%col_count==(col_count-1)) & (vm_name==vm_name_sc) & (operation_name==op_name_sc) & (start_time_s==start_time):
+            
+            error_message=open_error_page(driver,xml_parent,xml_child,"Error",row_count)
+            
+            break
+        if (c_count%col_count==(col_count-1)):
+            row_count+=1   
+            
+        
+        c_count+=1
+
+    return
 # Checking data on front end and in back end                                            
+
+
                                                
 def result_setting_page(field,query_result,driver,xml_child,xml_sub_child):
     i=0
@@ -938,13 +1404,13 @@ def check_snapshot(vm_name,driver,xml_child,xml_sub_child):
     	vm_nam=str(vm_name)
         query_result=execute_query(xml_sub_child.get("query4"),(vm_nam)).fetchall()
         baadal_db.commit()
-        total_snap=len(query_result)
+        total_user_snap=len(query_result)
         field=driver.find_elements_by_xpath(path)
         result_setting_page(field,query_result,driver,xml_child,xml_sub_child)
-        return total_snap
+        return total_user_snap
     else :
-        total_snap=""
-        return total_snap
+        total_user_snap=""
+        return total_user_snap
         
  
 #Checking data in User table         
@@ -972,152 +1438,177 @@ def check_user(driver,xml_child,xml_sub_child,vm_name):
 def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
     execute_query("FLUSH QUERY CACHE")
     if operation_name=="Create VM":
-        domain_name=execute_query("select security_domain.name from request_queue,security_domain where  security_domain.id=request_queue.security_domain and  vm_name=%s",(str(vm_name))).fetchone()
-        print domain_name
-        print domain_name[0]
-        d_name=domain_name[0]
-        check_domain=execute_query("select vm_id from security_domain,private_ip_pool where security_domain.vlan=private_ip_pool.vlan and security_domain.name=%s",(str(d_name))).fetchall()
-        print check_domain
-    
-        count=0
-        for data in check_domain:
-            print data[0]
-            if "None"==str(data[0]):
-                ip_available="yes"
-                count+=1
-                
-            else:
-                ip_available="no"
-        print count
-        if count>0:
+        field=driver.find_elements_by_xpath("//table/thead/tr/td")
+	counth=0
+	for data in field:
+	    if data.text=="Name":
+		s_name=counth
+	    if data.text=="Type":
+		vlan=counth
+	    counth+=1
+	
+        field=driver.find_elements_by_xpath("//table/tbody/tr"+str([s_name]))
+	count=0
+        for data in field:
             
-            check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+            if data.text==xml_child[5].text:
+                vlan_name=driver.find_elements_by_xpath("//table/tbody/tr"+str([vlan])+ "/td" +str(count))
+                
+            count+=1  
+
+	field=driver.find_elements_by_partial_link_text("Configure System")
+	field=driver.find_elements_by_partial_link_text("Configure Private IP Pool")
+	field=driver.find_elements_by_xpath("//table/thead/tr/td")
+	counth=0
+	for data in field:
+	    if data.text=="Name":
+		vlan=counth
+	    if data.text=="Type":
+		IP_assgn=counth
+	    counth+=1
+        field=driver.find_elements_by_xpath("//table/tbody/tr"+str([vlan]))
+	count=0
+	ip_available=0
+        for data in field:
+            
+            if data.text==xml_child[5].text:
+                ip_assign=driver.find_elements_by_xpath("//table/tbody/tr"+str([IP_assgn])+ "/td" +str(count))
+                
+		if ip_assign.text=="Not Assign":
+		     logger.debug("Availabe")
+		     ip_available=1
+		     break
+            count+=1  
+
+           
+        if ip_available:
+            
+            data1=check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
         else:
            
             logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(d_name) + ".")
             return 0
     else:
-        check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+       
+        data1=check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
         
-        
+    
+    if task_value!="":
+        o=task_value.split(" ")
+	n=data1.split(" ")
+	
+	
     return
 
 
-    
-    
-def check_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
-    print operation_name
-    if operation_name!="Delete VM":
-        current_time=datetime.datetime.now()
-        break_pt_time=current_time + datetime.timedelta(seconds=220) 
-        print datetime.datetime.now()
-        print break_pt_time 
-        time.sleep(200)
-        count=1
-        while(count):
-            if(datetime.datetime.now()<=break_pt_time):
-                datas=check_vm_in_pending_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
-            
-                if datas!="":
-                    vm_in_pending=datas[0]
-                    if vm_in_pending!="1":
-                        vm_in_complted=check_vm_in_completed_task(driver,xml_child,xml_sub_child,vm_name,operation_name)
-                        if vm_in_complted==1:
-                            logger.debug("VM is in Completed Task Table!!!")
-                            count=0
-                            return 1
-                        else:
-                            vm_in_failed=check_vm_in_failed_task(driver,xml_child,xml_sub_child,vm_name,operation_name)
-                            if vm_in_failed==1:
-                                vm_nam=str(vm_name)
-                                vm_oprtn=str(operation_name)
-                                logger.debug("VM is in Failed Task Table!!!")
-                                error=execute_query("select message from task_queue_event where vm_name=%s and task_type=%s",(vm_nam,vm_oprtn)).fetchone()
-                                count=0
-                                logger.debug("Your VM has not created.Please Check it!!!Its in failed task table!!!")
-                                logger.debug("Reason for failed task :" + str(error))
-                            
-                                return 2  
-                            else:
-                                logger.debug("VM does not exist in any table,please check it!!!")
-                    else:
-                        count=0
-        if (vm_in_pending=="1"):
-            logger.error(xml_child.get("value")  + "VM is in Pending Task Table!!!")    
-            logger.debug("Your Request has not been approved.Please Check it!!!Its in pending task table!!!Either Scheduler is not working or Host is down!!!")
-            return 0
-#retrieving task_start_time
-       
-def get_task_start_time(driver,xml_sub_child,xml_child,vm_name,operation_name):
-    vm_nam=str(vm_name)
-    vm_oprtn=str(operation_name)
-    execute_query("FLUSH QUERY CACHE")
-    query_result=execute_query(xml_sub_child.get("task_query"),(vm_nam,vm_oprtn)).fetchone()  
-    
-    baadal_db.commit()
-    print  query_result
-    task_start_time=query_result[1]
-    return task_start_time
-       
-#Checking data in Pending task table    
-    
-def check_vm_in_pending_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
-    datas=""
-    if xml_sub_child.get("id")=="clone_vm":
-        driver.find_element_by_partial_link_text("My Tasks").click()
+
+def check_pendingtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name):
+    task_table_name="Pending Task"
+    driver.find_element_by_partial_link_text("Tasks").click()
+    path_row="//table[@id='pendingtasks']/tbody/tr"
+    path_col="//table[@id='pendingtasks']/tbody/tr/td"
+    path_header="//table[@id='pendingtasks']/tbody/tr/th"
+    pcount=check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_table_name,path_row,path_col,path_header)
+    return pcount
+
+task_data=[]
+
+def check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_table_name,path_row,path_col,path_header):
+    if isTablePresent(driver,xml_child,path_col):
+        countp=0
+        c_count=0
+        vm_name_s=""
+        select_row=0
+        field_header=driver.find_elements_by_xpath(path_header)
+        counth=0
+        for h_data in field_header:
+            if h_data.text=="Task":
+                task_f_no=counth
+            if h_data.text=="VM":
+                vm_f_no=counth
+            if h_data.text=="Requested By":
+                requester_f_no=counth
+            if h_data.text=="Request Time":
+                request_f_no=counth
+            counth+=1
+        col_count=counth
+	
+        field=driver.find_elements_by_xpath(path_col)
+	
+	
+        for data in field:
+	    
+            if c_count%col_count==task_f_no:
+                op_name_sc=data.text
+		
+            if c_count%col_count==vm_f_no:
+                vm_name_s=data.text
+		
+            if c_count%col_count==requester_f_no:
+
+                #if data.text in vm_user_list:
+                 #   user_name_s=data.text
+		 
+		 usernm=usrnm_list[xml_child[0].text]
+            	 if usernm==data.text:
+		     
+		     user_name_s=data.text
+		     select_row=1
+	    
+            	    
+            if (c_count%col_count==request_f_no):
+                start_time_s=data.text
+	    	
+            if (select_row) & (c_count%col_count==(col_count-1)):
+                if (str(vm_name)==str(vm_name_s)) & (str(operation_name)==str(op_name_sc)):
+                    task_data.append([])
+		    task_data[-1].append(start_time_s)
+                    task_data[-1].append(user_name_s)
+		    task_data[-1].append(task_table_name)
+		    
+                    countp+=1
+            c_count+=1
+	    
     else:
-        driver.find_element_by_partial_link_text("Tasks").click()
-    path="//table[@id='pendingtasks']/tbody/tr"
-    vm_in_pending=0
-    
-    if isTablePresent(driver,xml_child,path):
-    	task_start_time=get_task_start_time(driver,xml_sub_child,xml_child,vm_name,operation_name)
-        field=driver.find_elements_by_xpath(path)
-        for x in field:          
-            if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text): 
-                           
-                vm_in_pending=1
-              
-            datas=str(vm_in_pending)+ " " +str(task_start_time) 
+        countp=0
+	
+    if countp==0:
+	logger.debug("No operation exists in" +str(task_table_name) +" table!!!!!")
     else:
-    	datas=str(vm_in_pending)
-    return datas
+	logger.debug(str(countp) + " same operation exists in " +str(task_table_name) +"  table!!!")
+    
+    return task_data
 
 
 
-#Checking data in Completed task table                      
-def check_vm_in_completed_task(driver,xml_child,xml_sub_child,vm_name,operation_name):
-    vm_in_complted=0
-    path="//table[@id='completedtasks']/tbody/tr"
-    if isTablePresent(driver,xml_child,path):
-        task_start_time=get_task_start_time(driver,xml_sub_child,xml_child,vm_name,operation_name)
-        driver.find_element_by_partial_link_text("Completed Tasks").click()
-        field=driver.find_elements_by_xpath(path)
-        vm_in_complted=0
-        vm_nam=str(vm_name)
-        for x in field:
-            if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text):
-                logger.debug("Your request is Completed!!!!")
-                vm_in_complted=1
-    return vm_in_complted
-                
-
-#Checking data in Failed task table  		
-def check_vm_in_failed_task(driver,xml_child,xml_sub_child,vm_name,operation_name):
-    vm_in_failed=0
-    path="//table[@id='failedtasks']/tbody/tr"
-    if isTablePresent(driver,xml_child,path):
-        task_start_time=get_task_start_time(driver,xml_sub_child,xml_child,vm_name,operation_name)
-        driver.find_element_by_partial_link_text("Failed Tasks").click()
-        field=driver.find_elements_by_xpath("//table[@id='failedtasks']/tbody/tr")
-        vm_in_failed=0
-        for x in field:
-            if (vm_name in x.text) & (operation_name in x.text)  & (str(task_start_time) in x.text):
-                logger.error(xml_child.get("value")  + "Your request is Failed!!!!")
-                vm_in_failed=1       
-    return vm_in_failed
 
 
+def check_completedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name):
+    task_table_name="Completed Task"
+    driver.find_element_by_partial_link_text("Tasks").click()
+    driver.find_element_by_partial_link_text("Completed Tasks").click()
+    path_row="//table[@id='completedtasks']/tbody/tr"
+    path_col="//table[@id='completedtasks']/tbody/tr/td"
+    path_header="//table[@id='completedtasks']/tbody/tr/th"
+    ccount=check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_table_name,path_row,path_col,path_header)
+    return ccount
+
+
+
+
+
+def check_failedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name):
+    task_table_name="Failed Task"
+    driver.find_element_by_partial_link_text("Failed Tasks").click()
+    path_row="//table[@id='failedtasks']/tbody/tr"
+    path_col="//table[@id='failedtasks']/tbody/tr/td"
+    path_header="//table[@id='failedtasks']/tbody/tr/th"
+    fcount=check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_table_name,path_row,path_col,path_header)
+    return fcount
+    
+       
+ 
+     
 
 #checking data in attach_disk table
 
@@ -1249,10 +1740,10 @@ def isInput(driver, xml_sub_child):
 
 def	isInput_add(driver, xml_sub_child,xml_child):
     path=xml_sub_child.get("user_id")
-    if isElementPresent(driver,xml_child,path):
-    	field = driver.find_element_by_id()
-    	print "in1"
-    	field.send_keys(xml_sub_child.get("user_id_data"))
+    
+    field = driver.find_element_by_id(path)
+    
+    field.send_keys(xml_sub_child.get("user_id_data"))
     return
 
 def isReadOnly(driver, xml_parent,xml_child,xml_sub_child):
@@ -1359,10 +1850,9 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
            
             if field_text!="":
                 count=count+1
-        print count
         
         total=length_row*length
-        print total
+        
         if ((str(total)==str(count))) :
             for col in field:
                 field_text=col.text
@@ -1380,7 +1870,7 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
                     elif (col_count%int(length)==7) & ( (xml_parent.get("name")==status_list[22]) |  (xml_parent.get("name")==status_list[20])):
                     	status=query_result[row_count][col_count]
                         result=admin_vm_status(status)
-                        print result
+                        
                         print_result(field_text,result,xml_child)
                     
                     elif ((col_count%int(length)==3) & ( (xml_parent.get("name")==status_list[14]) | (xml_parent.get("name")==status_list[15]) | (xml_parent.get("name")==status_list[21]) | (xml_parent.get("name")==status_list[16]) | (xml_parent.get("name")==status_list[17]))) | (col_count%int(length)==4) & ((xml_parent.get("name")==status_list[4]) | (xml_parent.get("name")==status_list[7]) | (xml_parent.get("name")==status_list[6]) | (xml_parent.get("name")==status_list[5]) | (xml_parent.get("name")==status_list[11])) | ((col_count%int(length)==5) & (
@@ -1426,16 +1916,15 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
                     elif ((col_count%int(length)==6) & (xml_parent.get("name")==status_list[14])) | ( (col_count%int(length)==7) & (xml_parent.get("name")==status_list[21])):
                         owner_name_db=query_result[row_count][col_count]
                         owner_name_screen=xml_child[0].text
-                        print owner_name_db
-                        print owner_name_screen
+                        
                         result=faculty_vm_status(owner_name_db,owner_name_screen,xml_child)
                         print_result(field_text,result,xml_child)     
                     
                     elif (col_count%int(length)==6) & ((xml_parent.get("name")==status_list[15]) | (xml_parent.get("name")==status_list[16]) ) | ((col_count%int(length)==7) &  (xml_parent.get("name")==status_list[17])):
                     	status=query_result[row_count][col_count]
-                        print status
+                        
                     	result=org_task_status(status,xml_child)
-                        print result
+                        
                     	print_result(field_text,result,xml_child)
                         
                     elif (col_count%int(length)==1) & (xml_parent.get("name")==status_list[12]):
@@ -1463,7 +1952,7 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
 
 def faculty_vm_status(owner_name_db,owner_name_screen,xml_child):
 	user_name=xml_child[0].text
-	print user_name
+	
 	if owner_name_screen==str(owner_name_db):
 		result="Approve  |  Reject | Edit"
 	else:
@@ -1566,7 +2055,7 @@ def isCheckTable(driver, xml_parent, xml_child, xml_sub_child):
     count=0
     for col in field:
 		field_text=col.text 
-		print field_text  
+		
 		if field_text!="":
 			count=count+1
 			
@@ -1638,11 +2127,10 @@ def isCheckdata(driver,xml_parent, xml_child, xml_sub_child,vm_name):
         field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
         if  xml_sub_child.get("data")=="integeration":
             vm_nam=str(vm_name)
-            print vm_name
+            
             execute_query("FLUSH QUERY CACHE")
             query_result=execute_query(xml_sub_child.get("query3"),(vm_nam)).fetchone()
-            print  query_result
-            baadal_db.commit()
+            
             db_conn=db_connection()
             cur=db_conn.cursor()
             cur.execute(xml_sub_child.get("query3"),(vm_nam))
@@ -1651,26 +2139,14 @@ def isCheckdata(driver,xml_parent, xml_child, xml_sub_child,vm_name):
             
 	    
             result=query_result[0]
-            print result
             
             
         else:
-            execute_query("FLUSH QUERY CACHE")
-            query_result=execute_query(xml_sub_child.get("query3")).fetchone()
-            print  query_result
-            db_conn=db_connection()
-            cur=db_conn.cursor()
-            cur.execute(xml_sub_child.get("query3")) 
-            
-            cur.close()
-                
-            result=query_result[0]
-            print result
-            
+            result=check_vm_in_pending_request_table(driver,xml_sub_child,xml_child,vm_name)
         for a in field:
             row=a.text
             op_id=xml_sub_child.get("id")
-            if vm_name!="":
+            if vm_name!="" & (result):
             	
                 if ("Approve  |  Reject  |  Edit" in row) :
                     
@@ -1700,7 +2176,7 @@ def check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result):
     request=xml_sub_child.get("click")
     
     
-    print "//*[@href='/baadal/" + str(op_id) + "/" +str(request)+ "/" + str(result) + "']"
+    
     driver.find_element_by_xpath("//*[@href='/baadal/"+ str(op_id) +"/"+str(request)+"/"+str(result) +"']").click()
     result=xml_sub_child.get("print_data")
     field_text=message_flash(driver,xml_sub_child,xml_child)
@@ -1711,7 +2187,7 @@ def check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result):
 def isSanityCheck(driver, xml_parent, xml_child, xml_sub_child):
   
     field=driver.find_elements_by_xpath("//div[@id='sanity_check_table']/table/tbody/tr/td")
-#print field.text
+
     row_count=0
     col_count=0
     host_name=[]
