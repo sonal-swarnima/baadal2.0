@@ -71,7 +71,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
                 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds, line, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
 
     else:
 
@@ -91,7 +91,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6")
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6")
 
 
     graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
