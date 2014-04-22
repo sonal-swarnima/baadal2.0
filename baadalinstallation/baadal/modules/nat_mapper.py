@@ -30,14 +30,17 @@ def create_mapping(db, vm_data_id, destination_ip, source_ip , source_port=-1, d
         nat_ip = config.get("GENERAL_CONF", "nat_ip")
         nat_user = config.get("GENERAL_CONF", "nat_user")
         if source_port == -1 & destination_port == -1:
+            logger.debug("Adding public ip %s private ip %s mapping on NAT" %(source_ip, destination_ip))
             # Check that the mapping does not exist already
-            check_existence = db(db.vm_data.public_ip == source_ip and db.vm_data.private_ip == destination_ip).select()
+            check_existence = db(db.vm_data.public_ip == source_ip).select()
             if check_existence != None:
                 # Update entries in DB
+                logger.debug("Updating DB")
                 db(db.vm_data.id == vm_data_id).update(public_ip = source_ip)
                 db(db.public_ip_pool.public_ip == source_ip).update(vm_id=vm_data_id)
 
                 # Create SSH session to execute all commands on NAT box
+                logger.debug("Creating SSH session on NAT box %s" %(nat_ip))
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(nat_ip, username=nat_user)
@@ -66,17 +69,20 @@ def create_mapping(db, vm_data_id, destination_ip, source_ip , source_port=-1, d
         else:
             vm_data = db.vm_data[vm_data_id]
             host_id = vm_data.host_id  
+            logger.debug("Creating VNC mapping on NAT box for public IP %s host IP %s public VNC port %s private VNC port %s duration %s" %(source_ip, destination_ip, source_port, destination_port, duration))
             # Check for active VNC access
             check_existence = db(db.vnc_access.vnc_server_ip == source_ip and db.vnc_access.host_id == host_id and db.vnc_access.vnc_source_port == source_port and db.vnc_access.vnc_destination_port == destination_port and db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE).select()
 
             # Try granting new VNC access if missing
             if check_existence != None:
                 # Updating DB
+                logger.debug("Updating DB")
                 db.vnc_access.insert(vm_id = vm_data_id, host_id = host_id, vnc_server_ip = source_ip, vnc_source_port = source_port, vnc_destination_port = destination_port, duration = duration, status = VNC_ACCESS_STATUS_ACTIVE)
                 source_ip_octets = source_ip.split('.')
                 interfaces_alias = "%s%s%s" %(source_ip_octets[1], source_ip_octets[2], source_ip_octets[3])
 
                 # Create SSH session to execute all commands on NAT box.
+                logger.debug("Creating SSH session on NAT box %s" %(nat_ip))
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(nat_ip, username=nat_user)
@@ -124,12 +130,14 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
         nat_user = config.get("GENERAL_CONF", "nat_user")
         # source_port and destination_port are -1 when function is called for removing public IP - private IP mapping
         if source_port == -1 and destination_port == -1:
+            logger.debug("Removing mapping for public IP: %s and private IP: %s" %(source_ip, destination_ip))
             destination_ip_octets = destination_ip.split('.')
-            interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3])
-            interfaces_command = "ifconfig eth0:%s.%S down" %(destination_ip_octets[2], destination_ip_octets[3])
+            interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], source_ip)
+            interfaces_command = "ifconfig eth0:%s.%s down" %(destination_ip_octets[2], destination_ip_octets[3])
             iptables_command = "iptables -t nat -D PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -D POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(source_ip, destination_ip, destination_ip, source_ip)
 
             # Create single SSh session to execute all commands on NAT box
+            logger.debug("Creating ssh connection to NAT machine %s" %(nat_ip))
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(nat_ip, username=nat_user)
@@ -137,6 +145,7 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
             stdin = channel.makefile('wb')
             stdout = channel.makefile('rb')
 
+            logger.debug("Executing commands on NAT machine %s\n%s\n%s" %(interfaces_entry_command, interfaces_command, iptables_command))
             stdin.write('''
                 %s
                 %s
@@ -151,12 +160,16 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
             ssh.close()
 
             # Update DB 
-            db(db.vm_data.id==vm_data_id).update(public_ip = PUBLIC_IP_NOT_ASSIGNED)
+            logger.debug("Updating DB")
+            db(db.vm_data.id==vm_data_id).update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
             db(db.public_ip_pool.public_ip == souce_ip).update(vm_id = NULL)
 
         else:
+            logger.debug("Removing VNC mapping from NAT for public IP %s host IP %s public VNC port %s private VNC port %s duration %s" %(source_ip, destination_ip, source_port, destination_port, duration))
             iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(source_ip, source_port,  destination_ip, destination_port, destination_ip, destination_port)
+
             # Create single SSh session to execute all commands on NAT box
+            logger.debug("Creating ssh connection to NAT machine %s" %(nat_ip))
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(nat_ip, username=nat_user)
@@ -176,6 +189,7 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
             ssh.close()
 
             # Update DB
+            logger.debug("Updating DB")
             db(db.vnc_access.vm_id == vm_data_id).update(status = VNC_ACCESS_STATUS_INACTIVE)
 
     elif nat_type == NAT_TYPE_HARDWARE:
@@ -189,6 +203,7 @@ def clear_all_nat_mappings(db):
     nat_type = config.get("GENERAL_CONF", "nat_type")
     if nat_type == NAT_TYPE_SOFTWARE:
 
+        logger.debug("Clearing all NAT mappings")
         nat_ip = config.get("GENERAL_CONF", "nat_ip")
         nat_user = config.get("GENERAL_CONF", "nat_user")
     
@@ -226,6 +241,12 @@ def clear_all_nat_mappings(db):
         stdout.close()
         stdin.close()
         ssh.close()
+
+        # Updating DB
+        logger.debug("Flushing all public Ip - private IP mappings and VNC mappings from DB")
+        db.vm_data.update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
+        db.public_ip_pool.update(vm_id = NULL)
+        db.vnc_access.update(status = VNC_ACCESS_STATUS_INACTIVE)
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
         logger.debug("No implementation for NAT type hardware")
@@ -241,7 +262,8 @@ def clear_all_timedout_vnc_mappings():
 
         nat_ip = config.get("GENERAL_CONF", "nat_ip")
         nat_user = config.get("GENERAL_CONF", "nat_user")
-        
+       
+        logger.debug("Clearing all timed out VNC mappings from NAT box %s" %(nat_ip)) 
         # Create single SSH session to execute all commands on the NAT box    
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -270,6 +292,7 @@ def clear_all_timedout_vnc_mappings():
                         ''' %(iptables_command))
                         # Update DB for each VNC access
                         current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
+        logger.debug("Updating DB")
         current.db.commit()
         logger.debug("Done clearing vnc mappings")    
         logger.debug(stdout.read())
