@@ -412,11 +412,8 @@ def install(parameters):
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:            
-            etype, value, tb = sys.exc_info()
-            message = ''.join(traceback.format_exception(etype, value, tb, 10))
-            logger.error("Exception " + message)
             free_vm_properties(vm_details, vm_properties)
-            return (current.TASK_QUEUE_STATUS_FAILED, str(value))
+            return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Starts a vm
 def start(parameters):
@@ -432,9 +429,8 @@ def start(parameters):
         message = vm_details.vm_identity + " is started successfully."
         logger.debug(message) 
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Suspends a vm
 def suspend(parameters):
@@ -450,9 +446,8 @@ def suspend(parameters):
         message = vm_details.vm_identity + " is suspended successfully." 
         logger.debug(message)       
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Resumes a vm
 def resume(parameters):
@@ -468,9 +463,8 @@ def resume(parameters):
         message = vm_details.vm_identity + " is resumed successfully."
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Destroys a vm forcefully
 def destroy(parameters):
@@ -487,9 +481,8 @@ def destroy(parameters):
         message = vm_details.vm_identity + " is destroyed successfully."
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Function to clean up database after vm deletion
 def clean_up_database_after_vm_deletion(vm_details):
@@ -547,9 +540,8 @@ def delete(parameters):
         current.db(current.db.vm_data.id == vm_id).delete()
         current.db.commit()
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Migrate domain with snapshots
 def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags):
@@ -659,11 +651,9 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
         message = vm_details.vm_identity + " is migrated successfully."
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        logger.debug(" Exception caused...vm details are : " + str(vm_details))
+    except:
         undo_migration(vm_details, domain_snapshots_list, current_snapshot_name)
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)        
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
  
 
 # Migrates a vm to a new host
@@ -701,9 +691,8 @@ def snapshot(parameters):
         current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message) 
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Reverts to snapshot
 def revert(parameters):
@@ -722,9 +711,8 @@ def revert(parameters):
         message = "Reverted to snapshot successfully."
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Deletes a snapshot
 def delete_snapshot(parameters):
@@ -745,9 +733,8 @@ def delete_snapshot(parameters):
         logger.debug(message)
         current.db(current.db.snapshot.id == snapshotid).delete()
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 
 def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
@@ -822,9 +809,8 @@ def edit_vm_config(parameters):
         connection_object.close()
         logger.debug(message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
-    except libvirt.libvirtError,e:
-        message = e.get_error_message()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 def get_clone_properties(vm_details, cloned_vm_details):
 
@@ -935,11 +921,8 @@ def clone(vmid):
         else:
             raise Exception("Host resources exhausted. Migrate the host vms and then try.")        
     except:
-        etype, value, tb = sys.exc_info()
-        message = ''.join(traceback.format_exception(etype, value, tb, 10))
-        logger.error("Exception " + message)
         free_vm_properties(cloned_vm_details)
-        return (current.TASK_QUEUE_STATUS_FAILED, str(value)) 
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Attaches extra disk to VM
 def attach_extra_disk(parameters):
@@ -960,6 +943,5 @@ def attach_extra_disk(parameters):
             logger.debug(message)
             return (current.TASK_QUEUE_STATUS_FAILED, message) 
     except:
-        message = log_exception()
-        return (current.TASK_QUEUE_STATUS_FAILED, message)            
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 

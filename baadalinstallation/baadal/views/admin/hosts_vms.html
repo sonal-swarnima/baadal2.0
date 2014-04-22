@@ -2,7 +2,7 @@
   {{for vmhosts in hostvmlist:}}
     <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}GB, vCPUs= {{=vmhosts['cpus']}}]</h2>
     <div class="TABLE">
-    <table id="table_{{=vmhosts['hostIP'].replace('.','_')}}">
+    <table id="host_{{=vmhosts['hostIP'].replace('.','_')}}">
       <tr>
         <th>Name</th>
         <th>Owner</th>              

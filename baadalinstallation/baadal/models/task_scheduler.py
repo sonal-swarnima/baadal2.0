@@ -9,6 +9,7 @@ from helper import get_datetime, log_exception
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
+from nat_mapper import clear_all_timedout_vnc_mappings
 from log_handler import logger, rrd_logger
 
 from gluon import current
