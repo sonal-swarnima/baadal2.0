@@ -142,7 +142,7 @@ def unit_testing():
     
 
 def index():
-    try:
+   
         import commands
         form = FORM( TABLE
                   (  TR(INPUT(_name='testcase1', _type='radio', _value="1"),'Unit Testing'),
@@ -170,8 +170,6 @@ def index():
         else:
             response.flash = 'please fill the form'
         return dict(form=form)
-    except Exception as e:
-        print e
 
 
 def network_testing():
@@ -283,7 +281,7 @@ def integration_testing():
     if form.process().accepted:
         for i in range(56,100):
             test_case_no=request.vars['testcase'+str(i)]
-            if i<=95:
+            if i<=94:
                 if test_case_no!=None:
                     test_script(test_case_no)
             else :

@@ -14,7 +14,8 @@ from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
 
 db_type = config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
-db = DAL(conn_str,fake_migrate_all=True)
+#db = DAL(conn_str,fake_migrate_all=True)
+db = DAL(conn_str)
 
 db.define_table('constants',
     Field('name', 'string', length = 255, notnull = True, unique = True),

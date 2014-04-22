@@ -236,28 +236,28 @@ def integration_testing():
                        TR(INPUT(_name='testcase57', _type='checkbox', _value="57"),'User Request VM(Approved by Faculty and Rejected by org-admin)'),
                        TR(INPUT(_name='testcase58', _type='checkbox', _value="58"),'User Request VM(Approved by Faculty,org-admin and Rejected by admin)'),
                        TR(INPUT(_name='testcase59', _type='checkbox', _value="59"),'User Request VM(Rejected by Faculty )'),
-                              
-                       TR(INPUT(_name='testcase60', _type='checkbox', _value="60"),'Take VM snapshot    (Running )'),
-                       TR(INPUT(_name='testcase61', _type='checkbox', _value="61"),'Pause VM   (Running )'),
-                       TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Add User to VM   (Running )'),
-                       TR(INPUT(_name='testcase65', _type='checkbox', _value="65"),'Delete VM    (Running)'),
-                       TR(INPUT(_name='testcase64', _type='checkbox', _value="64"),'Gracefully shut down VM    (Running )'),
-                       TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Forcefully power off VM   (Running )'),
-                       TR(INPUT(_name='testcase66', _type='checkbox', _value="66") ,'Migrate VM   (Running )'),
-                       TR(INPUT(_name='testcase67', _type='checkbox', _value="67"),'Take VM snapshot   (Paused )'),
-                       TR(INPUT(_name='testcase68', _type='checkbox', _value="68"),'Unpause VM   (Paused )'),
-                       TR(INPUT(_name='testcase69', _type='checkbox', _value="69"),'Add User to VM  (Paused )'),
-                       TR(INPUT(_name='testcase75', _type='checkbox', _value="75"),'Delete VM   (Paused )'),
-                       TR(INPUT(_name='testcase71', _type='checkbox', _value="71"),'Forcefully power off VM   (Paused)'),
-                       TR(INPUT(_name='testcase70', _type='checkbox', _value="70"),'Migrate VM   (Paused )'),
-                       TR(INPUT(_name='testcase72', _type='checkbox', _value="72"),'Delete Add User  (Paused )'),
-                       TR(INPUT(_name='testcase73', _type='checkbox', _value="73"),'Revert Snapshot  (Paused )'),
-                       TR(INPUT(_name='testcase74', _type='checkbox', _value="74"),'Delete snapshot   (Paused )'),
-                       TR(INPUT(_name='testcase76', _type='checkbox', _value="76"),'Turn on VM   (Shutdown )'),
-                       TR(INPUT(_name='testcase77', _type='checkbox', _value="77"),'Add User to VM  (Shutdown)'),
-                       TR(INPUT(_name='testcase80', _type='checkbox', _value="80"),'Delete VM   (Shutdown )'),
-                       TR(INPUT(_name='testcase78', _type='checkbox', _value="78"),'Take VM snapshot   (Shutdown )'),
-                       TR(INPUT(_name='testcase79', _type='checkbox', _value="79"),'Migrate VM   (Shutdown )'),
+#                             
+                  #     TR(INPUT(_name='testcase60', _type='checkbox', _value="60"),'Take VM snapshot    (Running )'),
+                   #    TR(INPUT(_name='testcase61', _type='checkbox', _value="61"),'Pause VM   (Running )'),
+                    #   TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Add User to VM   (Running )'),
+                     #  TR(INPUT(_name='testcase65', _type='checkbox', _value="65"),'Delete VM    (Running)'),
+                      # TR(INPUT(_name='testcase64', _type='checkbox', _value="64"),'Gracefully shut down VM    (Running )'),
+                      # TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Forcefully power off VM   (Running )'),
+                      # TR(INPUT(_name='testcase66', _type='checkbox', _value="66") ,'Migrate VM   (Running )'),
+                       #TR(INPUT(_name='testcase67', _type='checkbox', _value="67"),'Take VM snapshot   (Paused )'),
+                       #TR(INPUT(_name='testcase68', _type='checkbox', _value="68"),'Unpause VM   (Paused )'),
+                       #TR(INPUT(_name='testcase69', _type='checkbox', _value="69"),'Add User to VM  (Paused )'),
+                       #TR(INPUT(_name='testcase75', _type='checkbox', _value="75"),'Delete VM   (Paused )'),
+                       #TR(INPUT(_name='testcase71', _type='checkbox', _value="71"),'Forcefully power off VM   (Paused)'),
+                       #TR(INPUT(_name='testcase70', _type='checkbox', _value="70"),'Migrate VM   (Paused )'),
+                       #TR(INPUT(_name='testcase72', _type='checkbox', _value="72"),'Delete Add User  (Paused )'),
+                       #TR(INPUT(_name='testcase73', _type='checkbox', _value="73"),'Revert Snapshot  (Paused )'),
+                      # TR(INPUT(_name='testcase74', _type='checkbox', _value="74"),'Delete snapshot   (Paused )'),
+                      # TR(INPUT(_name='testcase76', _type='checkbox', _value="76"),'Turn on VM   (Shutdown )'),
+                      # TR(INPUT(_name='testcase77', _type='checkbox', _value="77"),'Add User to VM  (Shutdown)'),
+                       #TR(INPUT(_name='testcase80', _type='checkbox', _value="80"),'Delete VM   (Shutdown )'),
+                      # TR(INPUT(_name='testcase78', _type='checkbox', _value="78"),'Take VM snapshot   (Shutdown )'),
+                       #TR(INPUT(_name='testcase79', _type='checkbox', _value="79"),'Migrate VM   (Shutdown )'),
                        #TR(INPUT(_name='testcase107', _type='checkbox', _value="107"),'User Request Attach Disk(Approved by Faculty,org-admin,admin)'),
                        # TR(INPUT(_name='testcase71', _type='checkbox', _value="71"), 'Org-Admin Request VM(Rejected by admin)'),
                        #TR(INPUT(_name='testcase109', _type='checkbox', _value="109"),'User Request Attach Disk(Approved by Faculty and Rejected by org-admin)'),
@@ -281,7 +281,7 @@ def integration_testing():
     if form.process().accepted:
         for i in range(56,100):
             test_case_no=request.vars['testcase'+str(i)]
-            if i<=95:
+            if i<=94:
                 if test_case_no!=None:
                     test_script(test_case_no)
             else :
