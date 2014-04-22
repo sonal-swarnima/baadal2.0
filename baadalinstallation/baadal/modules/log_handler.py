@@ -93,16 +93,6 @@ class ConcurrentRotatingFileHandler(BaseRotatingHandler):
         application call os.chdir() then subsequent log files could be created
         in the wrong directory.
         """
-        # The question of absolute paths: I'm not sure what the 'right thing' is
-        # to do here. RotatingFileHander simply ignores this possibility. I was
-        # going call os.path.abspath(), but that potentially limits uses. For
-        # example, on Linux (any posix system?) you can rename a directory of a
-        # running app, and the app wouldn't notice as long as it only opens new
-        # files using relative paths. But since that's not a "normal" thing to
-        # do, and having an app call os.chdir() is a much more likely scenario
-        # that should be supported. For the moment, we are just going to warn
-        # the user if they provide a relative path and do some other voodoo
-        # logic that you'll just have to review for yourself.
         
         # if the given filename contains no path, we make an absolute path
         if not os.path.isabs(filename):

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-from helper import logger, config
-from datetime import datetime
+from helper import logger, config, get_datetime
 import paramiko
 from gluon import current
 
@@ -162,10 +161,10 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
             # Update DB 
             logger.debug("Updating DB")
             db(db.vm_data.id==vm_data_id).update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
-            db(db.public_ip_pool.public_ip == souce_ip).update(vm_id = NULL)
+            db(db.public_ip_pool.public_ip == source_ip).update(vm_id = None)
 
         else:
-            logger.debug("Removing VNC mapping from NAT for public IP %s host IP %s public VNC port %s private VNC port %s duration %s" %(source_ip, destination_ip, source_port, destination_port, duration))
+            logger.debug("Removing VNC mapping from NAT for public IP %s host IP %s public VNC port %s private VNC port %s" %(source_ip, destination_ip, source_port, destination_port))
             iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(source_ip, source_port,  destination_ip, destination_port, destination_ip, destination_port)
 
             # Create single SSh session to execute all commands on NAT box
@@ -245,7 +244,7 @@ def clear_all_nat_mappings(db):
         # Updating DB
         logger.debug("Flushing all public Ip - private IP mappings and VNC mappings from DB")
         db.vm_data.update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
-        db.public_ip_pool.update(vm_id = NULL)
+        db.public_ip_pool.update(vm_id = None)
         db.vnc_access.update(status = VNC_ACCESS_STATUS_INACTIVE)
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
@@ -278,7 +277,7 @@ def clear_all_timedout_vnc_mappings():
             # Delete the VNC mapping from NAT if the duration of access has past its requested time duration
             for mapping in vnc_mappings:
                 if mapping.time_requested != None:
-                    time_difference = (datetime.now() - mapping.time_requested).seconds/60
+                    time_difference = (get_datetime() - mapping.time_requested).seconds/60
                     if time_difference >= mapping.duration:
                         logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping['vm_id'], mapping['host_id'], mapping['vnc_server_ip'], mapping['vnc_source_port'], mapping['vnc_destination_port']))
                         host_ip=current.db(current.db.host.id == mapping['host_id']).select(current.db.host.host_ip)
