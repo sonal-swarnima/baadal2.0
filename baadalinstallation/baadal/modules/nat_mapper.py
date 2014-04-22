@@ -132,7 +132,7 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
         if source_port == -1 and destination_port == -1:
             logger.debug("Removing mapping for public IP: %s and private IP: %s" %(source_ip, destination_ip))
             destination_ip_octets = destination_ip.split('.')
-            interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], source_ip)
+            interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g}' /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], source_ip)
             interfaces_command = "ifconfig eth0:%s.%s down" %(destination_ip_octets[2], destination_ip_octets[3])
             iptables_command = "iptables -t nat -D PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -D POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(source_ip, destination_ip, destination_ip, source_ip)
 
@@ -162,7 +162,8 @@ def remove_mapping(db, vm_data_id, destination_ip, source_ip = None, source_port
             # Update DB 
             logger.debug("Updating DB")
             db(db.vm_data.id==vm_data_id).update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
-            db(db.public_ip_pool.public_ip == souce_ip).update(vm_id = NULL)
+            db(db.public_ip_pool.public_ip == source_ip).update(vm_id = NULL)
+            db.commit()
 
         else:
             logger.debug("Removing VNC mapping from NAT for public IP %s host IP %s public VNC port %s private VNC port %s duration %s" %(source_ip, destination_ip, source_port, destination_port, duration))
