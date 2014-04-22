@@ -115,6 +115,7 @@ BAADAL_STATUS_DOWN_IN_PROGRESS='down-progress'
 # List of valid CPU and RAM combination
 VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(8,16),(16,16)]
 
+MAX_VNC_ALLOWED_IN_A_DAY = 10
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
