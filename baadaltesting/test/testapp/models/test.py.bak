@@ -4,6 +4,7 @@ import thread
 import paramiko
 import logging
 import datetime
+import random
 import logging.config
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -50,12 +51,14 @@ def test_script(test_case_no):
     root = xml_connect()
     num=int(test_case_no)
     vm_status=1
+    vm_status1=1
+    
     if root[num-1].get("id")==test_case_no:
-        
+        temp=1
         i=num-1
         vm_name=""  
         for j in xrange(0,len(root[i])):
-        	
+            temp_value=1
             driver = webdriver.Firefox()#connect to selenium server
             driver.implicitly_wait(10)
             page_present=driver.get(baadal_path) #url of the page to be hit 
@@ -63,6 +66,7 @@ def test_script(test_case_no):
             	driver.find_element_by_link_text(root.get("href")).click()
             	image=0
             	for k in xrange(0,len(root[i][j])):
+		    print "temp_value" + str(k) + str(temp_value)
                     if vm_status:
                         field_type=root[i][j][k].get("type")
                         xml_parent=root[i]
@@ -91,8 +95,9 @@ def test_script(test_case_no):
                             isHref(driver,xml_sub_child,xml_child)#clicking on the hyper link
                     
                     	elif field_type=="select":
-                        	isSelect(driver,xml_sub_child)# selecting from dropdown menu
-                    
+				
+                        	temp=isSelect(driver,xml_sub_child,temp_value)# selecting from dropdown menu
+                    		print "tempfin"+ str(temp)
                     	elif field_type=="sanity_table":
                         	isSanityCheck(driver, xml_parent, xml_child, xml_sub_child)# checking for data in  sanity table
 			 	
@@ -119,7 +124,6 @@ def test_script(test_case_no):
                     	elif field_type=="attach_disk":
                         	operation_name=xml_sub_child.text
                         	attack_disk(driver,xml_sub_child,xml_child,vm_name,operation_name)#checking for data in table
-                        
                         elif field_type=="idompotent":
                              maintain_idompotency(driver,xml_sub_child,xml_child)				          				          				
 			     #vm_list(driver)
@@ -129,9 +133,12 @@ def test_script(test_case_no):
                             vm_status=vm_status1
                     	if k==5:
                         	vm_name=vm_name1
+			if k==5:
+			    temp_value=temp
+			    print temp_value
+
             	driver.close()#disconnect from server        
-                
-                	
+
             else:
                 logger.debug("Cannot connect to controller.Please check controller")
 
@@ -471,12 +478,15 @@ def total_user(driver,xml_sub_child,xml_child,vm_name,vm_id):
 
 #perform action on setting button of vm's
 def click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id):
-    
+    print vm_id
+    field=driver.find_element_by_xpath("//table/tbody/tr/td[@id='vm_"+str(vm_id)+"']/a")
+    ref=field.get_attribute("href")
+    print ref
     path="//*[@href='/user/settings/"+ str(vm_id) +"']"
     time.sleep(30)
-    if isElementPresent(driver,xml_child,path):
+    if isElementPresent(driver,xml_child,ref):
 
-        q=driver.find_element_by_xpath(path).click()
+        q=driver.find_element_by_xpath(ref).click()
 
         time.sleep(30)
         logger.debug(xml_child.get("value") +': Result:Setting button is working properly') 
@@ -639,7 +649,7 @@ def op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
     	print_result(field_text,result,xml_child)
  
     else:
-	logger.debug("No element exist")          
+	logger.debug("This functionality is disabled")          
 
     return limit
 
@@ -673,7 +683,7 @@ def op_snap_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
         else:
             limit=1
     else:
-    	logger.debug(xml_child.get("value") + ":Table does not exists")  
+    	logger.debug(xml_child.get("value") + ":This functioality is Disabled")  
 
       
     return limit
@@ -696,14 +706,14 @@ def op_del_user_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
         if xml_sub_child.get("name") in vm_mode_type:
             check_delete_user(driver,user_id,op_name,xml_child,xml_sub_child)
     else:
-    	logger.debug(xml_child.get("value") + ":Table does not exists") 
+    	logger.debug(xml_child.get("value") + ":This VM has been deleted and its in pending task table,So this functionality has been disabled !!!!!!") 
     return limit
             
 
 
 
 #checking whether user access removed for a vm or not                        
-def  check_delete_user(driver,user_id,op_name,xml_child,xml_sub_child):
+def check_delete_user(driver,user_id,op_name,xml_child,xml_sub_child):
     operation_name=op_list[op_name]
     path=xml_sub_child.get("xpath_user")
     user_absent=1
@@ -824,7 +834,7 @@ def other_operation_on_vm(driver,xml_sub_child,xml_child,vm_name,vm_id):
 	
         
     else:
-        logger.debug(xml_child.get("value") + ":Table does not exists") 
+        logger.debug(xml_child.get("value") + ":This VM has been deleted and its in pending task table,So this functionality has been disabled !!!!!!") 
 	limit=0
 	
     return limit
@@ -1051,10 +1061,10 @@ def graph_test_mode(xml_child,xml_sub_child,driver,vm_name,vm_id):
     print_graph(finl_data,xml_child)
 
 #username_list=["BadalUF UF","Badal UA","Badal UO","Badal UFA","Badal UFO","Badal UOA","BadalUFOA UFOA","BadalU U"]
-#usrnm_list={"badalUF":"BadalUF UF","badalUA":"Badal UA","badalUO":"Badal UO","badalUFA":"Badal UFA","badalUFO":"Badal UFO","badalUOA":"Badal UOA","badalUFOA":"BadalUFOA UFOA","badalU":"BadalU U"}
+usrnm_list={"badalUF":"BadalUF UF","badalUA":"Badal UA","badalUO":"Badal UO","badalUFA":"Badal UFA","badalUFO":"Badal UFO","badalUOA":"Badal UOA","badalUFOA":"BadalUFOA UFOA","badalU":"BadalU U"}
 
 username_list=["BadalUF UF","Badal UA","Badal UO","Badal UFO","Badal UOA","BadalUFOA UFOA","BadalU U"]
-usrnm_list={"badalUF":"BadalUF UF","badalUA":"Badal UA","badalUO":"Badal UO","badalUFO":"Badal UFO","badalUOA":"Badal UOA","badalUFOA":"BadalUFOA UFOA","badalU":"BadalU U"}
+#usrnm_list={"badalUA":"Badal UA","badalUO":"Badal UO","badalUFO":"Badal UFO","badalUOA":"Badal UOA","badalUFOA":"BadalUFOA UFOA","badalU":"BadalU U"}
 
 def total_vm(driver,xml_sub_child,xml_child):
     counth=0
@@ -1084,29 +1094,7 @@ def maintain_idompotency(driver,xml_sub_child,xml_child):
     return
 
 
-    '''driver.find_element_by_partial_link_text("All VMs").click()
-    total=total_vm(driver,xml_sub_child,xml_child)
-    for i in range(0,total):#deleting vm from vm_data
-        data=vm_list(xml_child,xml_sub_child,driver)
-    	
-    	if data!=['', '']:
-            vm_id=data[0][3:]
-            vm_name=data[1][0:]
-        
-            path="//*[@href='/baadal/user/settings/"+ str(vm_id) +"']"
-    	
-    	    time.sleep(30)
-    	    if isElementPresent(driver,xml_child,path):
-	       q=driver.find_element_by_xpath(path).click()
-	       path="//a[@title='Delete this virtual machine']"
-		
-	       if isElementPresent(driver,xml_child,path): 
-		   driver.find_element_by_xpath(path).click() 
-		   click_on_dialogbox(driver)
-		   click_on_dialogbox(driver)
-		   logger.debug(str(user_name) + " VM (" + str(vm_name) + ") has been deleted from Pending request") 
-                    
-		   driver.find_element_by_partial_link_text("All VMs").click()'''
+    
 
 def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
     vm_exist=0
@@ -1117,6 +1105,7 @@ def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
     select_row=0 
     col_count=0
     user_present=0
+    print "qwerty"
     if isElementPresent(driver,xml_child,path):
         field=driver.find_elements_by_xpath("//table[@id='listallvm']/thead/tr/th")  
         for data in field:
@@ -1126,7 +1115,7 @@ def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
             counth+=1
         
         total_col=counth
-	
+	print total_col
         field=driver.find_elements_by_xpath("//table[@id='listallvm']/tbody/tr/td[2]")  
         for data in field:
 	         for username in username_list:
@@ -1136,13 +1125,13 @@ def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
 		
        
         for x in range(0,user_present):
-	    
+	    print x
             driver.refresh()
 	    
             field_data=driver.find_elements_by_xpath("//table[@id='listallvm']/tbody/tr/td")
 	   
             for user in field_data:
-                
+       
                 if (col_count%total_col==requester_col_no):
                     for username in username_list:
                         if username==user.text:
@@ -1155,23 +1144,34 @@ def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
          	        
                         path="//*[@href='/user/settings/"+ str(vm_id[3:]) +"']"
     	
-			time.sleep(30)
-    	    		if isElementPresent(driver,xml_child,path):
-	       		    q=driver.find_element_by_xpath(path).click()
-	       		    path="//a[@title='Delete this virtual machine']"
+                        time.sleep(30)
+                        if isElementPresent(driver,xml_child,path):
+                            q=driver.find_element_by_xpath(path).click()
+                            path="//a[@title='Delete this virtual machine']"
 		
-	       		    if isElementPresent(driver,xml_child,path): 
-		   		driver.find_element_by_xpath(path).click() 
-		   		click_on_dialogbox(driver)
-		   		click_on_dialogbox(driver)
-		   		logger.debug(str(user_name) + " VM (" + str(vm_id[3:]) + ") has been deleted from All VMs table") 
-                    		select_row=0
-				col_count=0
-				vm_exist=1
-				driver.find_element_by_partial_link_text("All VMs").click()
-				driver.refresh()
-				time.sleep(10)
-				break
+                            if isElementPresent(driver,xml_child,path): 
+                                try:
+                                    driver.find_element_by_xpath(path).click() 
+                                    e_present=1
+                                except:
+                                    e_present=0
+                                if e_present:
+                                    click_on_dialogbox(driver)
+                                    click_on_dialogbox(driver)
+                                    logger.debug(str(user_name) + " VM (" + str(vm_id[3:]) + ") has been deleted from All VMs table") 
+                                    select_row=0
+                                    col_count=0
+                                    vm_exist=1
+                                    driver.find_element_by_link_text("All VMs").click()
+                                    driver.refresh()
+                                    time.sleep(10)
+                                    break
+		
+                                else:
+                                    logger.debug("This VM already has been deleted!!!")
+			else:
+			    print "element"
+                    
 		   
                 col_count+=1
 	if vm_exist==0:
@@ -1179,32 +1179,6 @@ def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
     return
 
  
-def check_vm_in_pending_request_table(driver,xml_sub_child,xml_child,vm_name):
-    driver.find_element_by_partial_link_text("All Pending Requests").click()
-    path="//table[@id='sortTable1']/tbody/tr/td"
-    counth=0
-    user_vm=0
-    select_row=0 
-    col_count=0
-    if isElementPresent(driver,xml_child,path):
-        field=driver.find_elements_by_xpath("//table[@id='sortTable1']/thead/tr/th")  
-        for data in field:
-            counth+=1
-        
-        total_col=counth
-        field=driver.find_elements_by_xpath(path)
-       
-        for data in field:
-            if data.text==vm_name:
-              print data.text   
-            if data.text==xml_child[0].text:
-                select_row=1   
-            if col_count%total_col==(total_col-1) & (select_row):
-                vm_id=user.get_attribute("id")
-            col_count+=1
-    else:
-        vm_id=0
-    return vm_id
 
 
 
@@ -1292,15 +1266,16 @@ def vm_mode_op(xml_child,xml_sub_child,driver,vm_name,vm_id):
     else:
         op_name=xml_sub_child.get("op")    
         operation_name=op_list[op_name]
-	task_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
-	driver.find_element_by_partial_link_text("All VMs").click()
-        click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)
-        limit=click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
+	task_value=check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
+	if task_value!=["No"]:
+	    driver.find_element_by_partial_link_text("All VMs").click()
+            click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id)
+            limit=click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id)
 	
-	if limit:
-            time_to_check_in_tasktable()
-	    task_n_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
-	    compare_task_table(driver,xml_sub_child,xml_child,vm_name,operation_name,task_value,task_n_value)
+	    if limit:
+                time_to_check_in_tasktable()
+	        task_n_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
+	    	compare_task_table(driver,xml_sub_child,xml_child,vm_name,operation_name,task_value,task_n_value)
     return
 
 
@@ -1431,75 +1406,103 @@ def check_user(driver,xml_child,xml_sub_child,vm_name):
     	logger.debug(xml_child.get("value") + ":Table does not exists") 
 
       
+'''check_security_domain():
+   driver.find_element_by_partial_link_text("Configure System").click()
+        driver.find_element_by_partial_link_text("Configure Security Domain").click()
+        field=driver.find_elements_by_xpath("//table/thead/tr/th")
+        counth=0
+	
+        for data in field:
+            if data.text=="Name":
+                s_domain_no=counth
+            if data.text=="Vlan":
+                vlan_no=counth
+            counth+=1
+        t_col=counth
+	
+        field=driver.find_elements_by_xpath("//table/tbody/tr/td")
+        print field
+        select_row=0
+        col_count=0
+        for data in field:            
+            if col_count%t_col==s_domain_no:
+                print data.text
+            if data.text=="Research":
+                select_row=1
+            if col_count%t_col==vlan_no:
+                print data.text
+                vlan_name=data.text
+            if col_count%t_col==t_col-1:
+                if select_row:
+                    print vlan_name
+                    break   
+            col_count+=1  
 
-   
+        print vlan_name
+        driver.find_element_by_partial_link_text("Configure Private IP Pool").click()
+        field=driver.find_elements_by_xpath("//table/thead/tr/th")
+        counth=0
+        for data in field:
+            if data.text=="Assigned to":
+                IP_assgn=counth
+            if data.text=="Vlan":
+                vlan_no=counth
+            counth+=1
+        t_col=counth
+        total_row=driver.find_elements_by_xpath("//div[@class='web2py_paginator  ']/ul/li")
+        count=0
+	for data in total_row:
+	    print data.text
+	    count+=1
+	print count
+	ip_available=0
+        for i in range(0,count):
+            field=driver.find_elements_by_xpath("//table/tbody/tr/td")
+            col_count=0
+            select_row=0
+	    
+            for data in field:
+            	
+                if col_count%t_col==vlan_no:
+                    if data.text==xml_child[5].text:
+                        d_name=data.text
+                        select_row=1
+                if col_count%t_col==IP_assgn:
+                    ip_assign=data.text
+                if col_count%t_col==t_col-1:
+                    if select_row:
+                        if ip_assign=="Unassigned":
+                            logger.debug("Availabe")
+                            ip_available=1
+                            break
+                col_count+=1  
+            if ip_available:
+                print ip_available
+                break
+	    else:
+		print i
+		print count
+		if i<count-1:
+		    page_no=i+2
+		    print page_no
+		    driver.find_element_by_link_text(str(page_no)).click()
+           
+        if ip_available:
+            
+            data1=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
+        else:
+           
+            logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(d_name) + ".")
+            data1=["NO"]
+   '''
 
 #Checking data in task table
 
 def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name):
-    execute_query("FLUSH QUERY CACHE")
-    if operation_name=="Create VM":
-        field=driver.find_elements_by_xpath("//table/thead/tr/td")
-	counth=0
-	for data in field:
-	    if data.text=="Name":
-		s_name=counth
-	    if data.text=="Type":
-		vlan=counth
-	    counth+=1
-	
-        field=driver.find_elements_by_xpath("//table/tbody/tr"+str([s_name]))
-	count=0
-        for data in field:
-            
-            if data.text==xml_child[5].text:
-                vlan_name=driver.find_elements_by_xpath("//table/tbody/tr"+str([vlan])+ "/td" +str(count))
-                
-            count+=1  
 
-	field=driver.find_elements_by_partial_link_text("Configure System")
-	field=driver.find_elements_by_partial_link_text("Configure Private IP Pool")
-	field=driver.find_elements_by_xpath("//table/thead/tr/td")
-	counth=0
-	for data in field:
-	    if data.text=="Name":
-		vlan=counth
-	    if data.text=="Type":
-		IP_assgn=counth
-	    counth+=1
-        field=driver.find_elements_by_xpath("//table/tbody/tr"+str([vlan]))
-	count=0
-	ip_available=0
-        for data in field:
-            
-            if data.text==xml_child[5].text:
-                ip_assign=driver.find_elements_by_xpath("//table/tbody/tr"+str([IP_assgn])+ "/td" +str(count))
-                
-		if ip_assign.text=="Not Assign":
-		     logger.debug("Availabe")
-		     ip_available=1
-		     break
-            count+=1  
-
-           
-        if ip_available:
-            
-            data1=check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
-        else:
-           
-            logger.debug(xml_child.get("value")  + ": No Private IP available in " + str(d_name) + ".")
-            return 0
-    else:
-       
-        data1=check_task(driver,xml_sub_child,xml_child,vm_name,operation_name)
-        
-    
-    if task_value!="":
-        o=task_value.split(" ")
-	n=data1.split(" ")
-	
-	
-    return
+    data1=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name)
+ 
+    return data1
 
 
 
@@ -1581,7 +1584,68 @@ def check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_t
     return task_data
 
 
+def check_vm_in_pending_request_table(driver,xml_sub_child,xml_child,vm_name):
+    
+    path="//table[@id='sortTable1']/tbody/tr/td"
+    counth=0
+    user_vm=0
+    select_row=0 
+    col_count=0
+    s_row=0
+    ref=0
+    if isElementPresent(driver,xml_child,path):
+        field=driver.find_elements_by_xpath("//table[@id='sortTable1']/thead/tr/th")  
+        for data in field:
+	    if data.text=="VM Name":
+		vm_no=counth
+	    if data.text=="Requested By":
+		user_no=counth
+            counth+=1
+        
+        total_col=counth
+        field=driver.find_elements_by_xpath(path)
+        print vm_no
+	print user_no
+        for data in field:
+	    print data.text
+            if col_count%total_col==vm_no:
+		
+		if data.text==vm_name:
+		    s_row=1
+	      
+	    if col_count%total_col==user_no:
+		print xml_child[0].text
+		try:
+        	    driver.find_element_by_partial_link_text("ORG-ADMIN MENU") 
+		    path=1       
+                except :	
+        	    path=0
+		if path:
+		    if xml_child[0].text=="BabalU U":
+		        usernm=usrnm_list[xml_child[10].text]
+		    else:
+		        usernm=usrnm_list[xml_child[0].text]
+		else:
+		    usernm=usrnm_list[xml_child[0].text]
+                if data.text==usernm:
+		    print data.text
+                    select_row=1   
+		    
+			
+		   
+            if col_count%total_col==(total_col-1) :
+ 	        if select_row :
+		    if s_row:
+                        value=data.get_attribute("id")
+		        vm_id=value[7:]
+			print vm_id
+		        field=driver.find_element_by_xpath("//table/tbody/tr/td/a[@id='accept_"+str(vm_id)+"']").click()
 
+		        ref=1
+		        break
+            col_count+=1
+    
+    return ref
 
 
 def check_completedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name):
@@ -1739,6 +1803,7 @@ def isInput(driver, xml_sub_child):
             field.send_keys(str(current_time))	
     return current_time
 
+
 def	isInput_add(driver, xml_sub_child,xml_child):
     path=xml_sub_child.get("user_id")
     
@@ -1746,6 +1811,8 @@ def	isInput_add(driver, xml_sub_child,xml_child):
     
     field.send_keys(xml_sub_child.get("user_id_data"))
     return
+
+
 
 def isReadOnly(driver, xml_parent,xml_child,xml_sub_child):
     current_time=datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -1760,12 +1827,16 @@ def isReadOnly(driver, xml_parent,xml_child,xml_sub_child):
         logger.debug(xml_child.get("value")  +': Result:empty') #logging the report
     return 
 
+
+
 def isWait( driver, xml_parent, xml_child, xml_sub_child):
     if xml_sub_child.get("id")=="wait":
         time.sleep(300)
     else:
         time.sleep(3)
     return
+
+
 
 def isSubmit( driver, xml_parent, xml_child, xml_sub_child):
     driver.find_element_by_xpath(xml_sub_child.text).click()
@@ -1780,7 +1851,8 @@ def isSubmit( driver, xml_parent, xml_child, xml_sub_child):
             logger.debug(str(xml_child.get("value")) +": Incorrect data")
     return
 	
-			
+
+    
 def isButton_add(driver, xml_sub_child,value,xml_child):
     if isElementPresent(driver,xml_child,value):
     	driver.find_element_by_xpath(value).click()
@@ -1788,16 +1860,19 @@ def isButton_add(driver, xml_sub_child,value,xml_child):
     return
 
 
+
 def isClear(driver,xml_sub_child) :
-	driver.find_element_by_id(xml_sub_child.get("id")).clear()	
-	return
+    driver.find_element_by_id(xml_sub_child.get("id")).clear()	
+    return
 	
 def isScroll(driver, xml_sub_child):
 	field=driver.find_element_by_tag_name("html")
 	field.send_keys(xml_sub_child.text)
 	driver.execute_script("window.scrollBy(0,200)", "")
 	return
-	
+
+
+
 def isHref(driver, xml_sub_child,xml_child):
     driver.find_element_by_partial_link_text(xml_sub_child.text).click()
     if xml_sub_child.get("id")=="collaborator":
@@ -1812,9 +1887,37 @@ def isHref(driver, xml_sub_child,xml_child):
             logger.error(xml_child.get("value")  + ": Error in the form")
 	return
 
-def isSelect(driver, xml_sub_child):
-	driver.find_element_by_xpath(xml_sub_child.text).click()
-	return
+
+
+def isSelect(driver, xml_sub_child,temp):
+	list=[]
+	print "in"
+	print temp
+	if xml_sub_child.get("select_name")=="configuration":
+	    
+	    path=xml_sub_child.text +str(temp)+ "']/option"
+	   
+	else:
+	    
+            path=xml_sub_child.text
+	print path   
+	field=driver.find_elements_by_xpath(path)
+	count=0
+	for data in field:
+	    value=data.get_attribute("value")
+	    list.insert(count,value)
+	    count+=1
+	print list
+	
+	option_value=random.choice(list)
+	print option_value
+	driver.find_element_by_xpath(path + "[@value='" + option_value + "']").click()
+        print "optn_value"+ str(option_value)
+	print "out"
+	if xml_sub_child.get("select_name")=="configuration":
+	    option_value=1
+	return option_value
+
 
 def isImage(driver,xml_child,xml_sub_child,a):	
     if isElementPresent(driver,xml_child,a):
@@ -1822,7 +1925,9 @@ def isImage(driver,xml_child,xml_sub_child,a):
     else:
     	logger.debug(xml_child.get("value") + ":No VM exists.So,to perform this operation please create a VM.")
     return 
-    
+
+
+
 def isTable(driver,xml_parent,xml_child,xml_sub_child):
     status_list={0:"Error",1:"failed_tasks",2:"TRY AGAIN | IGNORE",3:"my_pending_vm",4:"admin_pending_attach_disk",5:"pending_user_install_vm",6:"pending_user_clone_vm",7:"pending_user_attach_disk",8:"pending_user_edit_conf",9:"host_and_vm",10:"Configure_host",11:"admin_pending_clone_vm",12:"admin_pending_install_vm" ,13:'Configure_security',14:'pending_fac_install_vm',15:'pending_org_install_vm',16:'pending_org_clone_vm',17:'pending_org_attach_disk',18:'pending_org_edit_conf',19:"admin_pending_edit_conf" ,20:'list_my_vm',21:'fac_pending_attach_disk',22:'list_all_org_vm',23:'setting'}
     
@@ -2118,71 +2223,31 @@ def isCheckTable(driver, xml_parent, xml_child, xml_sub_child):
     return
 
 
+
+
+
 #approving or rejecting vm operations   
 def isCheckdata(driver,xml_parent, xml_child, xml_sub_child,vm_name):
     
     table_path=xml_sub_child.text
     if isTablePresent(driver,xml_child,table_path):
-    
-    	flag=0
-        field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
-        if  xml_sub_child.get("data")=="integeration":
-            vm_nam=str(vm_name)
-            
-            execute_query("FLUSH QUERY CACHE")
-            query_result=execute_query(xml_sub_child.get("query3"),(vm_nam)).fetchone()
-            
-            db_conn=db_connection()
-            cur=db_conn.cursor()
-            cur.execute(xml_sub_child.get("query3"),(vm_nam))
-            
-            cur.close()
-            
-	    
-            result=query_result[0]
-            
-            
+        ref=check_vm_in_pending_request_table(driver,xml_sub_child,xml_child,vm_name)
+    	if ref:
+	    print "Request approved" 
+                       
         else:
-            result=check_vm_in_pending_request_table(driver,xml_sub_child,xml_child,vm_name)
-        for a in field:
-            row=a.text
-            op_id=xml_sub_child.get("id")
-            if vm_name!="" & (result):
-            	
-                if ("Approve  |  Reject  |  Edit" in row) :
-                    
-                    check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result)
-                    break
-                else:
-                	flag=1
-                if  (op_id=="admin"):
-                    op_id="admin"
-                    check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result)
-                    break
-               
-            else:
-                if ("Approve  |  Reject  |  Edit" in row & str(vm_name) in row) | (op_id=="admin") :
-                
-                    check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result)
-                    break
-                else:
-                	flag=1
-                   
-		if flag:
-			logger.debug("No VM requests available to perform this testing.So,please create a VM before doing this testing.")
+	    logger.debug("No VM requests available to perform this testing.So,please create a VM before doing this testing.")
     return
 
 
-def check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,result):
-    request=xml_sub_child.get("click")
+def check_operation(driver,xml_parent, xml_child, xml_sub_child,op_id,vm_id):
     
-    
-    
-    driver.find_element_by_xpath("//*[@href='/baadal/"+ str(op_id) +"/"+str(request)+"/"+str(result) +"']").click()
+    driver.find_element_by_xpath(ref).click()
     result=xml_sub_child.get("print_data")
     field_text=message_flash(driver,xml_sub_child,xml_child)
     print_result(field_text,result,xml_child)
     return
+
 
 
 def isSanityCheck(driver, xml_parent, xml_child, xml_sub_child):

@@ -114,7 +114,7 @@ def unit_testing():
            TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Pending User VM Requests(Install VM)'),
            TR(INPUT(_name='testcase46', _type='checkbox', _value="46"),'Pending User VM Requests(Clone VM)'),
            TR(INPUT(_name='testcase47', _type='checkbox', _value="47"),'Pending User VM Requests(Attach Disk)'),
-           
+           TR(INPUT(_name='testcase93', _type='checkbox', _value="93"),'Maintain Idompotency'),
            
            
            BR(),
@@ -122,7 +122,7 @@ def unit_testing():
           )
       )
     if form.process().accepted:
-        for i in range(1,55):
+        for i in range(1,95):
             test_case_no=request.vars['testcase'+str(i)]
             if test_case_no!=None:
                 

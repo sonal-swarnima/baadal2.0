@@ -330,12 +330,12 @@
 		<configure type="href">Configure Template</configure>
 		<configure_system type="href">Add New Template</configure_system>
 		<template_name type="input" id="template_name">ubuntu-1204-desktop-amd64</template_name>
-		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
-		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<operating_system type="select">//select[@id="template_os_type"]/option</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option</architecture>
 		<harddisk type="input" id="template_hdd">320</harddisk>
 		<hddfile type="input" id="template_hdfile">ubuntu-1204-desktop-amd64.qcow2</hddfile>
-		<template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
-		<datastore type="select">//select[@id="template_datastore_id"]/option[@value="1"]</datastore>
+		<template_type type="select">//select[@id="template_type"]/option</template_type>
+		<datastore type="select">//select[@id="template_datastore_id"]/option</datastore>
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case3>
 	
@@ -350,12 +350,12 @@
 		<configure type="href">Configure Template</configure>
 		<configure_system type="href">Add New Template</configure_system>
 		<template_name type="input" id="template_name"></template_name>
-		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
-		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<operating_system type="select">//select[@id="template_os_type"]/option</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option</architecture>
 		<harddisk type="input" id="template_hdd">1111111111111111111111111111111111</harddisk>
 		<hddfile type="input" id="template_hdfile">ubuntu-1204-desktop-amd64.qcow2</hddfile>
-		<template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
-		<datastore type="select">//select[@id="template_datastore_id"]/option[@value="1"]</datastore>
+		<template_type type="select">//select[@id="template_type"]/option</template_type>
+		<datastore type="select">//select[@id="template_datastore_id"]/option</datastore>
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case3>
 	
@@ -369,12 +369,12 @@
 		<configure type="href">Configure Template</configure>
 		<configure_system type="href">Add New Template</configure_system>
 		<template_name type="input" id="template_name"></template_name>
-		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
-		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<operating_system type="select">//select[@id="template_os_type"]/option</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option</architecture>
 		<harddisk type="input" id="template_hdd"> </harddisk>
 		<hddfile type="input" id="template_hdfile">ubuntu-1204-desktop-amd64.qcow2</hddfile>
-		<template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
-		<datastore type="select">//select[@id="template_datastore_id"]/option[@value="1"]</datastore>
+		<template_type type="select">//select[@id="template_type"]/option</template_type>
+		<datastore type="select">//select[@id="template_datastore_id"]/option</datastore>
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case3>
 	
@@ -388,12 +388,12 @@
 		<configure type="href">Configure Template</configure>
 		<configure_system type="href">Add New Template</configure_system>
 		<template_name type="input" id="template_name"></template_name>
-		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
-		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<operating_system type="select">//select[@id="template_os_type"]/option</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option</architecture>
 		<harddisk type="input" id="template_hdd">320</harddisk>
 		<hddfile type="input" id="template_hdfile"> </hddfile>
-		<template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
-		<datastore type="select">//select[@id="template_datastore_id"]/option[@value="1"]</datastore>
+		<template_type type="select">//select[@id="template_type"]/option</template_type>
+		<datastore type="select">//select[@id="template_datastore_id"]/option</datastore>
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case3>
 	
@@ -407,11 +407,11 @@
 		<configure type="href">Configure Template</configure>
 		<configure_system type="href">Add New Template</configure_system>
 		<template_name type="input" id="template_name"> </template_name>
-		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
-		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<operating_system type="select">//select[@id="template_os_type"]/option</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option</architecture>
 		<harddisk type="input" id="template_hdd">320</harddisk>
 		<hddfile type="input" id="template_hdfile"></hddfile>
-		<template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
+		<template_type type="select">//select[@id="template_type"]/option</template_type>
 		
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case3>
@@ -425,11 +425,11 @@
 		<configure type="href">Configure Template</configure>
 		<configure_system type="href">Add New Template</configure_system>
 		<template_name type="input" id="template_name"></template_name>
-		<operating_system type="select">//select[@id="template_os_type"]/option[@value="Linux"]</operating_system>
-		<architecture type="select">//select[@id="template_arch"]/option[@value="amd64"]</architecture>
+		<operating_system type="select">//select[@id="template_os_type"]/option</operating_system>
+		<architecture type="select">//select[@id="template_arch"]/option</architecture>
 		<harddisk type="input" id="template_hdd">320</harddisk>
 		<hddfile type="input" id="template_hdfile"></hddfile>
-		<template_type type="select">//select[@id="template_type"]/option[@value="QCOW2"]</template_type>
+		<template_type type="select">//select[@id="template_type"]/option</template_type>
 		
 		<add_template type="submit" xpath="//input[@type='submit']" id="check_data" result="Manage Template">//input[@type='submit']</add_template>
 	</test_case3>
@@ -597,7 +597,7 @@
 
 		
 <test_script5 id="5"  href="Login" xpath="//span[@class='auth_navbar']" query3="  select name,vlan,visible_to_all from security_domain" name="Configure_security">
-<!--<test_case1 value="checking the Security Domain Table">
+<test_case1 value="checking the Security Domain Table">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
 		<submit type="submit">//input[@type='submit']</submit>
@@ -607,7 +607,7 @@
 		<configure type="href">Configure Security Domain</configure>
 		<host_list type="table"   >//div[@class='web2py_htmltable']/table/tbody/tr/td</host_list>
 	</test_case1>
-	<test_case2 value="Checking for empty fields(Domain name)">
+	<!--<test_case2 value="Checking for empty fields(Domain name)">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
 		<submit type="submit">//input[@type='submit']</submit>
@@ -656,17 +656,17 @@
 	
 
 <test_script6 id="6"  href="Login" xpath="//span[@class='auth_navbar']" name="request_vm" >
-	<test_case1 value="Checking for vm name field(Invalid data)">
+<!--	<test_case1 value="Checking for vm name field(Invalid data)">
 			<user_name id="user_username" type="input">badalU</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name">111%)(*^313</vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			
@@ -674,26 +674,19 @@
 			<submit type="submit" xpath="//input[@type='submit']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case1>
 	
-        <test_case2  value="Checking for empty template image">
-			<user_name id="user_username" type="input">badalU</user_name>
-			<password id="user_password" type="input">baadal</password>
-			<submit type="submit">//input[@type='submit']</submit>
-			
-			<req_vm type="href">Request VM</req_vm>
-			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<submit type="submit" xpath="//input[@type='submit']" id="check_data" result="value not in database">//input[@type='submit']</submit>
-		</test_case2>
+      
 
         	<test_case3  value="Checking for empty vm name">
 			<user_name id="user_username" type="input">badalU</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
-			<additional_hdd type="input" id="request_queue_extra_HDD">aaa</additional_hdd>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
+			
+			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
@@ -706,11 +699,11 @@
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name">qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq</vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
@@ -723,11 +716,11 @@
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name">.......................</vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
@@ -735,21 +728,22 @@
 		</test_case5>
 	
 		
-
+-->
 
 		<test_case7  value="Checking for correct data as admin">
 			<user_name id="user_username" type="input">badalUFOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-            		<wait type="wait"></wait>
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
-			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+		        <vm_name type="input" id="request_queue_vm_name"></vm_name>
+			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<submit type="submit"  xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case7>
@@ -760,13 +754,14 @@
 			<submit type="submit">//input[@type='submit']</submit>
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
+			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
-			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit"  xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case8>
 		
@@ -775,13 +770,14 @@
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
-			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
+			
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-		<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+		<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -791,17 +787,17 @@
 			<user_name id="user_username" type="input">badalU</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-            		<wait type="wait"></wait>
+            		
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
        	 		<collaborator type="input" id="collaborator" data="correct_data">badalUFA</collaborator>
        	 		<pending_vm type="href">Add</pending_vm>
-       	 		<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+       	 		<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
        	 		<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
 			<submit type="submit"  xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
@@ -810,16 +806,18 @@
 			<user_name id="user_username" type="input">badalUFOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-            		<wait type="wait"></wait>
+            		
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
        	 <collaborator type="input" id="collaborator" data="wrong_data">ssaria</collaborator>
        	 	<pending_vm type="href">Add</pending_vm>
        	 	
@@ -829,18 +827,19 @@
 			<user_name id="user_username" type="input">badalUFOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-            		<wait type="wait"></wait>
+            		
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
        	 		<collaborator type="input" id="collaborator" data="correct_data">badalUF</collaborator>
        	 		<pending_vm type="href">Add</pending_vm>
-       	 		<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+       	 		<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
        	 		<pending_vm type="href">Remove</pending_vm>
        	 		
 			<submit type="submit"  xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
@@ -852,11 +851,11 @@
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
             		<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
             		<additional_hdd type="input" id="request_queue_extra_HDD">aaaaaaaa</additional_hdd>
-            		<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+            		<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
@@ -871,15 +870,15 @@
 			<req_vm type="href">Request VM</req_vm>
 
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
            
             		<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
             		<additional_hdd type="input" id="request_queue_extra_HDD">??????........,,,</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
                		 <submit type="submit" xpath="//input[@type='submit']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case14>
 
@@ -892,15 +891,15 @@
 			<req_vm type="href">Request VM</req_vm>
 
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
            
             		<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
             		<additional_hdd type="input" id="request_queue_extra_HDD"> </additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
                		 <submit type="submit" xpath="//input[@type='submit']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case15>
 	
@@ -910,13 +909,13 @@
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">......</faculty_approver>
 			<list_vm type="href">Verify</list_vm>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit" xpath="//input[@type='submit']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case16>
 
@@ -925,15 +924,16 @@
 			<user_name id="user_username" type="input">badalUO</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-            		<wait type="wait"></wait>
+            		
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
-			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+			<vm_name type="input" id="request_queue_vm_name"></vm_name>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
        			<submit type="submit" xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case17>
 		
@@ -944,12 +944,13 @@
 			<submit type="submit">//input[@type='submit']</submit>
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
-			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+			<vm_name type="input" id="request_queue_vm_name"></vm_name>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit"  xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case18>
 
@@ -958,15 +959,16 @@
 			<user_name id="user_username" type="input">badalUFA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-	                <wait type="wait"></wait>
+	               
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
-			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+			<vm_name type="input" id="request_queue_vm_name"></vm_name>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit" xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case19>
 		
@@ -975,15 +977,16 @@
 			<user_name id="user_username" type="input">badalUFO</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-            		<wait type="wait"></wait>
+            		
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
-			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
-			<!--<conf_id type="select">//select[@name='configuration_1']/option[@value="1,1,10"]</conf_id>-->
+			
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+			<vm_name type="input" id="request_queue_vm_name"></vm_name>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
-			<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+			<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit" xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
 		</test_case20>
 		
@@ -2469,12 +2472,12 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
             		<list_vm type="href">Verify</list_vm>
-            		<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="4"]</security_domain>
+            		<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit">//input[@type='submit']</submit>
 			<list_vm type="href">My VMs</list_vm>
 			
@@ -2517,12 +2520,12 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
           		  <list_vm type="href">Verify</list_vm>
-            		<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+            		<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit">//input[@type='submit']</submit>
 			<list_vm type="href">My VMs</list_vm>
 			
@@ -2556,13 +2559,13 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
             		<list_vm type="href">Verify</list_vm>
-           		 <security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+           		 <security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit">//input[@type='submit']</submit>
 			<list_vm type="href">My VMs</list_vm>
 			
@@ -2605,12 +2608,12 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
 			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
           		  <list_vm type="href">Verify</list_vm>
-           		 <security_domain type="select">//select[@id='request_queue_security_domain']/option[@value="5"]</security_domain>
+           		 <security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
 			<submit type="submit">//input[@type='submit']</submit>
 			<list_vm type="href">My VMs</list_vm>
 			
@@ -2948,7 +2951,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3038,7 +3041,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<user_menu type="href">USER MENU</user_menu>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -3086,7 +3089,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3165,7 +3168,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3243,7 +3246,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3319,7 +3322,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3393,7 +3396,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3463,7 +3466,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3526,7 +3529,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3601,7 +3604,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3677,7 +3680,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3754,7 +3757,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3832,7 +3835,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
@@ -3902,7 +3905,7 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
 			<submit type="submit">//input[@type='submit']</submit>
 			<req_vm type="href">Request VM</req_vm>
 			<vm_name type="input" id="request_queue_vm_name"></vm_name>
-			<templet_id type="select">//select[@id='request_queue_template_id']/option[@value="1"]</templet_id>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
 			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
 			<purpose type="input" id="request_queue_purpose">testing</purpose>
 			<faculty_approver type="input" id="faculty_user">badalUF</faculty_approver>
