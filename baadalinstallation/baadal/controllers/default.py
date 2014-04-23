@@ -9,6 +9,7 @@ if 0:
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
 from helper import get_constant
+from maintenance import BAADAL_STATUS_UP
 
 def user():
     """

@@ -9,7 +9,7 @@ import sys, math, shutil, paramiko, traceback, libvirt
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
-from nat_mapper import create_public_ip_mapping_in_nat, remove_public_ip_mapping_from_nat
+from nat_mapper import create_mapping, remove_mapping
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():
@@ -402,7 +402,7 @@ def install(parameters):
             assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
 
             if vm_properties['public_ip_req']:
-                create_public_ip_mapping_in_nat(vmid, vm_properties['public_ip'], vm_properties['private_ip'])
+                create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
 
             # Update database after vm installation
             update_db_after_vm_installation(vm_details, vm_properties) 
@@ -747,8 +747,8 @@ def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
     
     # update NAT IP mapping, if public IP present
     if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
-        remove_public_ip_mapping_from_nat(vm_details.id, vm_details.public_ip, vm_details.private_ip)
-        create_public_ip_mapping_in_nat(vm_details.id, vm_details.public_ip, private_ip_info[0])
+        remove_mapping(vm_details.public_ip, vm_details.private_ip)
+        create_mapping(vm_details.public_ip, private_ip_info[0])
     
     # update vm_data, private_ip_pool
     current.db(current.db.private_ip_pool.private_ip == vm_details.private_ip).update(vm_id = None)
@@ -787,7 +787,7 @@ def edit_vm_config(parameters):
             if enable_public_ip:
                 public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
                 if public_ip_pool:
-                    create_public_ip_mapping_in_nat(vm_details, public_ip_pool.public_ip, vm_details.private_ip)
+                    create_mapping(public_ip_pool.public_ip, vm_details.private_ip)
                     current.db.public_ip_pool[public_ip_pool.id] = dict(vm_id=vm_id)
                     current.db.vm_data[vm_id] = dict(public_ip=public_ip_pool.public_ip)
                     message += "Edited Public IP successfully."
@@ -795,7 +795,7 @@ def edit_vm_config(parameters):
                 else:
                     raise Exception("Available Public IPs are exhausted.")
             else:
-                remove_public_ip_mapping_from_nat(vm_details.id, vm_details.public_ip, vm_details.private_ip)
+                remove_mapping(vm_details.public_ip, vm_details.private_ip)
                 current.db(current.db.public_ip_pool.public_ip == vm_details.public_ip).update(vm_id = None)
                 current.db.vm_data[vm_id] = dict(public_ip=current.PUBLIC_IP_NOT_ASSIGNED)
         

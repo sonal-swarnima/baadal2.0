@@ -2,13 +2,19 @@
 ###################################################################################
 
 from log_handler import logger
-from vm_helper import snapshot, suspend, revert, delete_snapshot
+from vm_helper import snapshot, destroy, revert, delete_snapshot
 from helper import log_exception, update_constant
 from threading import Thread
 from Queue import Queue
 from gluon import current
 
 THREAD_POOL_COUNT = 5
+
+BAADAL_STATUS_UP='up'
+BAADAL_STATUS_UP_IN_PROGRESS='up-progress'
+BAADAL_STATUS_DOWN='down'
+BAADAL_STATUS_DOWN_IN_PROGRESS='down-progress'
+SNAPSHOT_SYSTEM=6
 
 
 class Worker(Thread):
@@ -45,11 +51,11 @@ class ThreadPool:
         
 
 
-def snapshot_and_suspend(vm_id, vm_identity):
+def snapshot_and_destroy(vm_id, vm_identity):
     try:
-        snapshot({'vm_id':vm_id, 'snapshot_type':current.SNAPSHOT_SYSTEM})
+        snapshot({'vm_id':vm_id, 'snapshot_type':SNAPSHOT_SYSTEM})
         logger.debug('Snapshot of %s completed successfully' %(vm_identity))
-        suspend({'vm_id':vm_id})
+        destroy({'vm_id':vm_id})
         logger.debug('%s suspended successfully' %(vm_identity))
     except:
         log_exception()
@@ -62,12 +68,13 @@ def shutdown_baadal():
 #TBD: send_shut_down_mail()
     vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED)).select()
     
-    pool = ThreadPool(THREAD_POOL_COUNT)
+#     pool = ThreadPool(THREAD_POOL_COUNT)
 
     for vm_detail in vms:
-        pool.add_task(snapshot_and_suspend, vm_detail.id, vm_detail.vm_identity)
+        snapshot_and_destroy(vm_detail.id, vm_detail.vm_identity)
+#         pool.add_task(snapshot_and_suspend, vm_detail.id, vm_detail.vm_identity)
 
-    pool.wait_completion()    
+#     pool.wait_completion()    
     update_constant('baadal_status', BAADAL_STATUS_DOWN)
     current.db.commit()
 
@@ -77,12 +84,13 @@ def shutdown_host(host_id_list):
     vms = current.db(current.db.vm_data.status.belongs(current.VM_STATUS_RUNNING, current.VM_STATUS_SUSPENDED) & 
                      current.db.vm_data.host_id.belongs(host_id_list)).select()
     
-    pool = ThreadPool(THREAD_POOL_COUNT)
+#     pool = ThreadPool(THREAD_POOL_COUNT)
 
     for vm_detail in vms:
-        pool.add_task(snapshot_and_suspend, vm_detail.id, vm_detail.vm_identity)
+        snapshot_and_destroy(vm_detail.id, vm_detail.vm_identity)
+#         pool.add_task(snapshot_and_suspend, vm_detail.id, vm_detail.vm_identity)
 
-    pool.wait_completion()    
+#     pool.wait_completion()    
 
 
 def revert_and_delete_snapshot(vm_id, vm_identity, snapshot_id, snapshot_name):
@@ -100,15 +108,16 @@ def bootup_baadal():
     update_constant('baadal_status', BAADAL_STATUS_UP_IN_PROGRESS)
     current.db.commit()
 
-    pool = ThreadPool(THREAD_POOL_COUNT)
+#     pool = ThreadPool(THREAD_POOL_COUNT)
     
     vms = current.db(~current.db.vm_data.status.belongs(current.VM_STATUS_UNKNOWN, current.VM_STATUS_IN_QUEUE)).select()
     for vm_detail in vms:
-        sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=current.SNAPSHOT_SYSTEM)
+        sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=SNAPSHOT_SYSTEM)
         if sys_snapshot:
-            pool.add_task(revert_and_delete_snapshot, vm_detail.id, vm_detail.vm_identity, sys_snapshot.id, sys_snapshot.snapshot_name)
+            revert_and_delete_snapshot(vm_detail.id, vm_detail.vm_identity, sys_snapshot.id, sys_snapshot.snapshot_name)
+#             pool.add_task(revert_and_delete_snapshot, vm_detail.id, vm_detail.vm_identity, sys_snapshot.id, sys_snapshot.snapshot_name)
 
-    pool.wait_completion()    
+#     pool.wait_completion()    
     update_constant('baadal_status', BAADAL_STATUS_UP)
     current.db.commit()
 
@@ -116,13 +125,14 @@ def bootup_baadal():
 def bootup_host(host_id_list):
     logger.info('Starting Host Bootup')
 
-    pool = ThreadPool(THREAD_POOL_COUNT)
+#     pool = ThreadPool(THREAD_POOL_COUNT)
     
     vms = current.db(~current.db.vm_data.status.belongs(current.VM_STATUS_UNKNOWN, current.VM_STATUS_IN_QUEUE) & 
                      current.db.vm_data.host_id.belongs(host_id_list)).select()
     for vm_detail in vms:
-        sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=current.SNAPSHOT_SYSTEM)
+        sys_snapshot = current.db.snapshot(vm_id=vm_detail.id, type=SNAPSHOT_SYSTEM)
         if sys_snapshot:
-            pool.add_task(revert_and_delete_snapshot, vm_detail.id, vm_detail.vm_identity, sys_snapshot.id, sys_snapshot.snapshot_name)
+            revert_and_delete_snapshot(vm_detail.id, vm_detail.vm_identity, sys_snapshot.id, sys_snapshot.snapshot_name)
+#             pool.add_task(revert_and_delete_snapshot, vm_detail.id, vm_detail.vm_identity, sys_snapshot.id, sys_snapshot.snapshot_name)
 
-    pool.wait_completion()    
+#     pool.wait_completion()    

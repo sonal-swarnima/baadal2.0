@@ -2,6 +2,7 @@
 ###################################################################################
 
 import os, re, random
+import paramiko
 from gluon.validators import Validator
 from gluon import current
 from log_handler import logger
@@ -39,11 +40,8 @@ def update_constant(constant_name, constant_value):
 def execute_remote_cmd(machine_ip, user_name, command, password=None):
 
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
-
     output = None
     try:
-        import paramiko
-    
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(machine_ip, username = user_name, password = password)
@@ -56,6 +54,34 @@ def execute_remote_cmd(machine_ip, user_name, command, password=None):
     except paramiko.SSHException:
         log_exception()
         raise
+    finally:
+        if ssh:
+            ssh.close()
+    
+    return output
+
+#Executes command on remote machine using paramiko SSHClient
+def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
+
+    logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+    output = None
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(machine_ip, username=user_name)
+        channel = ssh.invoke_shell()
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('rb')
+        
+        stdin.write(command)
+
+        if (stdout.channel.recv_exit_status()) == 1:
+            raise Exception("Exception while executing remote command %s on %s" %(command, machine_ip))
+        output = stdout.read()
+        stdout.close()
+        stdin.close()
+    except paramiko.SSHException:
+        log_exception()
     finally:
         if ssh:
             ssh.close()

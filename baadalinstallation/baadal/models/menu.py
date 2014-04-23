@@ -9,6 +9,7 @@ if 0:
 ###################################################################################
 from helper import get_constant
 from auth_user import is_auth_type_db
+from maintenance import BAADAL_STATUS_UP, BAADAL_STATUS_DOWN, BAADAL_STATUS_UP_IN_PROGRESS, BAADAL_STATUS_DOWN_IN_PROGRESS
 
 response.title = request.application
 response.google_analytics_id = None

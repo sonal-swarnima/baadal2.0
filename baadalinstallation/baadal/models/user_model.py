@@ -378,6 +378,7 @@ def grant_vnc_access(vm_id):
         else:
             try:
                 create_vnc_mapping_in_nat(vm_id)
+                
                 vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
                 if vnc_info:
                     vm_users = []

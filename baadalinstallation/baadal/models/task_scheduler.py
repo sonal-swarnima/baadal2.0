@@ -248,6 +248,7 @@ def check_vnc_access():
 # Handles periodic collection of VM utilization data &
 # updation of respective RRD file.
 def vm_utilization_rrd():
+    logger.info("Starting data collection of VM utilization")
     
     try:
         update_rrd()
