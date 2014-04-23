@@ -532,7 +532,7 @@ def delete(parameters):
         logger.debug("Starting to delete it...")
         domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
         connection_object.close()
-        if vm_details.public_ip:
+        if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
             create_NAT_IP_mapping('remove', vm_details.public_ip, vm_details.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
         logger.debug(message)
