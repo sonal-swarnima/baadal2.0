@@ -72,21 +72,23 @@ def send_email(to_address, email_subject, email_template, context, cc_addresses=
 def send_email_to_approver(approver_id, requester_id, request_type, request_time):
 
     approver_info = get_user_details(approver_id)
-    requester_name = get_full_name(requester_id)
-    context = dict(approverName = approver_info[0], 
-                   userName = requester_name, 
-                   requestType = request_type, 
-                   requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
-    send_email(approver_info[1], APPROVAL_REMINDER_SUBJECT, APPROVAL_REMINDER_BODY, context)
+    if approver_info[1] != None:
+        requester_name = get_full_name(requester_id)
+        context = dict(approverName = approver_info[0], 
+                       userName = requester_name, 
+                       requestType = request_type, 
+                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+        send_email(approver_info[1], APPROVAL_REMINDER_SUBJECT, APPROVAL_REMINDER_BODY, context)
 
 
 def send_email_to_requester(vm_name):
 
     user_info = get_user_details(auth.user.id)
-    context = dict(vmName = vm_name, 
-                   userName = user_info[0])
-
-    send_email(user_info[1], VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
+    if user_info[1] != None:
+        context = dict(vmName = vm_name, 
+                       userName = user_info[0])
+    
+        send_email(user_info[1], VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
     
 def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
 
@@ -94,27 +96,29 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
     cc_addresses.append(config.get("MAIL_CONF","mail_admin_request"))
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
-        context = dict(vmName = vm_name, 
-                       userName = user_info[0],
-                       taskType = task_type,
-                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
-        if task_type == TASK_TYPE_CREATE_VM:
-            cc_addresses = []
-            send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
-        else:
-            subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
-            send_email(user_info[1], subject, TASK_COMPLETE_BODY, context, cc_addresses)
+        if user_info[1] != None:
+            context = dict(vmName = vm_name, 
+                           userName = user_info[0],
+                           taskType = task_type,
+                           requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+            if task_type == TASK_TYPE_CREATE_VM:
+                cc_addresses = []
+                send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
+            else:
+                subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
+                send_email(user_info[1], subject, TASK_COMPLETE_BODY, context, cc_addresses)
         
 
 def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_time):
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
-        context = dict(vmName = vm_name, 
-                       userName = user_info[0],
-                       vncIP = vnc_ip,
-                       vncPort = vnc_port,
-                       requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
-        send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
+        if user_info[1] != None:
+            context = dict(vmName = vm_name, 
+                           userName = user_info[0],
+                           vncIP = vnc_ip,
+                           vncPort = vnc_port,
+                           requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+            send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
     
 
 def send_email_to_admin(email_subject, email_message, email_type):
@@ -130,12 +134,14 @@ def send_email_to_admin(email_subject, email_message, email_type):
 
 def send_email_on_successful_registration(user_id):
     user_info = get_user_details(user_id)
-    context = dict(userName = user_info[0],
-                    loginName = user_info[2])
-    send_email(user_info[1], REGISTRATION_SUCCESSFUL_SUBJECT, REGISTRATION_SUCCESSFUL_BODY, context)
+    if user_info[1] != None:
+        context = dict(userName = user_info[0],
+                        loginName = user_info[2])
+        send_email(user_info[1], REGISTRATION_SUCCESSFUL_SUBJECT, REGISTRATION_SUCCESSFUL_BODY, context)
     
 def send_email_on_registration_denied(user_id):
     user_info = get_user_details(user_id)
-    context = dict(userName = user_info[0],
-                    supportMail = config.get("MAIL_CONF","mail_admin_request"))
-    send_email(user_info[1], REGISTRATION_DENIED_SUBJECT, REGISTRATION_DENIED_BODY, context)
+    if user_info[1] != None:
+        context = dict(userName = user_info[0],
+                        supportMail = config.get("MAIL_CONF","mail_admin_request"))
+        send_email(user_info[1], REGISTRATION_DENIED_SUBJECT, REGISTRATION_DENIED_BODY, context)

@@ -66,6 +66,7 @@ db.define_table(
     Field('password', 'password', length = 512, readable = False, label = 'Password'), # required
     Field('organisation_id', db.organisation, label = 'Organisation'),
     Field('block_user', 'boolean', default = False, notnull = True, writable = False, readable = False),
+    Field('mail_subscribed', 'boolean', default = True, notnull = True),
     Field('registration_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('reset_password_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('registration_id', length = 512, writable = False, readable = False, default = ''),

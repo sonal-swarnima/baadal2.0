@@ -191,7 +191,10 @@ def get_user_details(user_id):
     else:
         user = db.user[user_id]
         if user :
-            return ((user.first_name + ' ' + user.last_name), user.email, user.username)
+            username = user.first_name + ' ' + user.last_name
+            email = user.email if user.mail_subscribed else None
+ 
+            return (username, email, user.username)
         else:
             return (None, None, None)
 
