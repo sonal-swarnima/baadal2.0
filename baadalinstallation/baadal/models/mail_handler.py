@@ -49,7 +49,7 @@ VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was ac
                 "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
                 "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
-MAIL_FOOTER = "\n\n\nDisclaimer:: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
+MAIL_FOOTER = "\n\n\nNOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
              "If you have any queries, send an email to {0[adminEmail]}."
 
 def push_email(to_address, email_subject, email_message, reply_to_address, cc_addresses=[]):

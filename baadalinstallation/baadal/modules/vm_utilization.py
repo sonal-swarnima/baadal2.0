@@ -5,6 +5,7 @@ import time, rrdtool
 from xml.etree import ElementTree
 from log_handler import rrd_logger
 from host_helper import *  # @UnusedWildImport
+from gluon import *
 
 VM_UTIL_24_HOURS = 1
 VM_UTIL_ONE_WEEK = 2
