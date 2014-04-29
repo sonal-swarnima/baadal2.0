@@ -135,7 +135,8 @@ def process_task_queue(task_event_id):
             if 'request_id' in task_queue_data.parameters:
                 del db.request_queue[task_queue_data.parameters['request_id']]
             
-            send_task_complete_mail(task_event_data)
+            if task_event_data.task_type != TASK_TYPE_MIGRATE_VM:
+                send_task_complete_mail(task_event_data)
         
         db.commit()
     except:

@@ -103,8 +103,8 @@ def find_new_host(RAM, vCPU):
         if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
             return host.id
         else:
-            hosts.remove(host)
-
+            hosts.as_list(True,False).remove(host)
+            
     #If no suitable host found
     raise Exception("No active host is available for a new vm.")
     
@@ -168,8 +168,19 @@ def create_vm_image(vm_details, datastore):
 
     # Finds the location of template image that the user has requested for its vm.               
     template = current.db.template[vm_details.template_id]
+    template_location = get_constant('vmfiles_path') + '/' + get_constant('templates_dir') + '/' + template.hdfile
     vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/' + vm_details.vm_identity + '/' + \
                         vm_details.vm_identity + '.qcow2'
+
+    rc = os.system("cp %s %s" % (template_location, vm_image_location))
+
+    if rc != 0:
+        logger.error("Copy not successful")
+        raise Exception("Copy not successful")
+    else:
+        logger.debug("Copied successfully")
+
+    """
             
     # Copies the template image from its location to new vm directory
     storage_type = config.get("GENERAL_CONF","storage_type")
@@ -182,6 +193,7 @@ def create_vm_image(vm_details, datastore):
                          vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
     exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
     logger.debug("Copied successfully.")
+    """
 
     return (template, vm_image_location)
 
