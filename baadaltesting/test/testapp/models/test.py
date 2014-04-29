@@ -20,11 +20,6 @@ from selenium.webdriver.common.keys import Keys
 import sys
 import time
 
-from pyvirtualdisplay import Display
-display = Display(visible=0, size=(800, 600))
-display.start()
-
-
 #creating a logger for logging the records
 logger = logging.getLogger("web2py.app.testapp")
 
@@ -261,139 +256,71 @@ def check_stat_on_host():
 
 
 
-def test_script(test_script):
+def test_sanity(test_script):
 
     root = xml_connect()
 
     for i in root.findall(test_script):
 
-      for j in xrange(0,len(i)):
+        for j in xrange(0,len(i)):
 
-        driver = webdriver.Firefox()
-        driver.implicily_wait(10)
-        page_present = driver.get(baadal_path)
+            driver = webdriver.Firefox()
+            driver.implicily_wait(10)
+            page_present = driver.get(baadal_path)
 
-        if page_present != "None": #TODO: Why is None a string?
+            if page_present != "None": #TODO: Why is None a string?
 
-          driver.find_element_by_link_text(root.get("href")).click()
+                  driver.find_element_by_link_text(root.get("href")).click()
 
-          variables[]
-          host_data[]
-          vm_data[]
+                  variables[]
+                  host_data[]
+                  vm_data[]
 
-          for k in xrange(0,len(i[j])):
+                  for k in xrange(0,len(i[j])):
 
-            field_type = i[j][k].get("type")
-            xml_parent = i
-            xml_child = i[j]
-            xml_sub_child = i[j][k]
+                    field_type = i[j][k].get("type")
+                    xml_parent = i
+                    xml_child = i[j]
+                    xml_sub_child = i[j][k]
 
-            if field_type == "input": #checking for text fields
-              isInput(driver,xml_sub_child)
+                    if field_type == "input": #checking for text fields
+                        isInput(driver,xml_sub_child)
 
-            elif field_type == "submit": #checking for submit button
-              time.sleep(3)
-              isSubmit(driver,xml_parent,xml_child,xml_sub_child)
+                    elif field_type == "submit": #checking for submit button
+                        time.sleep(3)
+                        isSubmit(driver,xml_parent,xml_child,xml_sub_child)
 
-            elif field_type=="scroll": #scrolling the page up/down
-             	isScroll(driver,xml_sub_child)
+                    elif field_type=="scroll": #scrolling the page up/down
+                        isScroll(driver,xml_sub_child)
 
-            elif field_type == "href": #clicking on the hyper link
-              isHref(driver,xml_sub_child,xml_child)
+                    elif field_type == "href": #clicking on the hyper link
+                        isHref(driver,xml_sub_child,xml_child)
 
-            elif field_type == "table_host_select"
-              host_data = table_host_select(driver,xml_parent,xml_child,xml_sub_child)
+                    elif field_type == "table_host_select"
+                        host_data = table_host_select(driver,xml_parent,xml_child,xml_sub_child)
 
-           	elif field_type == "table_rows":#cheking for host table
-              variables = table_host_rows(driver, xml_parent, xml_child, xml_sub_child, host_data)
+                    elif field_type == "table_rows": #cheking for host table
+                        variables = table_host_rows(driver, xml_parent, xml_child, xml_sub_child, host_data)
 
-            elif filed_type == "table_host_vms":
-              vm_data = table_host_vms(driver, xml_parent, xml_child, xml_sub_child, variables)
+                    elif field_type == "table_host_vms":
+                        vm_data = table_host_vms(driver, xml_parent, xml_child, xml_sub_child, variables)
 
+                    elif field_type == "exec":
+                        exec_ssh(driver, xml_parent, xml_child, xml_sub_child, host_data)
 
-    if root[num-1].get("id")==test_case_no:
+                    elif field_type == "wait":
+                        wait(driver, xml_parent, xml_child, xml_sub_child)
 
-        i=num-1
-        vm_name=""
-        for j in xrange(0,len(root[i])):
+                    elif field_type == "find_vm":
+                        success = find_vm(driver, xml_parent, xml_child, xml_sub_child)
 
-            driver = webdriver.Firefox()#connect to selenium server
-            driver.implicitly_wait(10)
-            page_present=driver.get(baadal_path) #url of the page to be hit
-            if page_present!="None":
-            	driver.find_element_by_link_text(root.get("href")).click()
-            	image=0
-            	for k in xrange(0,len(root[i][j])):
-                    if vm_status:
-                        field_type=root[i][j][k].get("type")
-                        xml_parent=root[i]
-                        xml_child=root[i][j]
-                        xml_sub_child=root[i][j][k]
-
-                    	if field_type=="input": #checking for text fields
-                        	vm_name1=isInput(driver,xml_sub_child)
-
-                    	elif field_type=="read_only": #checking for submit button
-                        	isReadOnly(driver, xml_parent,xml_child,xml_sub_child)
-
-                    	elif field_type=="submit": #checking for submit button
-                        	time.sleep(3)
-
-                        	isSubmit(driver, xml_parent,xml_child,xml_sub_child)
-
-
-                    	elif field_type=="scroll":#scrolling the page up/down
-                        	isScroll(driver,xml_sub_child)
-
-                    	elif field_type=="clear":#Clearing text from textarea
-                        	isClear(driver,xml_sub_child)
-
-                        elif field_type=="href":
-                            isHref(driver,xml_sub_child,xml_child)#clicking on the hyper link
-
-                    	elif field_type=="select":
-                        	isSelect(driver,xml_sub_child)# selecting from dropdown menu
-
-                    	elif field_type=="sanity_table":
-                        	isSanityCheck(driver, xml_parent, xml_child, xml_sub_child)# checking for data in  sanity table
-
-                    	elif field_type=="table":
-                        	isTable(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
-
-                    	elif field_type=="img":#checking for setting image
-                        	table_path=xml_sub_child.get("path")
-                        	vm_name2=isImage(driver,xml_child,xml_sub_child,table_path)
-
-                    	elif field_type=="check_tables":#cheking for host table
-                        	isCheckTable(driver,xml_parent,xml_child,xml_sub_child)
-
-                    	elif field_type=="wait":
-                        	isWait(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
-
-                    	elif field_type=="check_data":
-                        	isCheckdata(driver,xml_parent,xml_child,xml_sub_child,vm_name)#checking for data in table
-
-                    	elif field_type=="task_table":
-                         	operation_name=xml_sub_child.text
-                         	vm_status1=check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name)#checking for data in table
-
-                    	elif field_type=="attach_disk":
-                        	operation_name=xml_sub_child.text
-                        	attack_disk(driver,xml_sub_child,xml_child,vm_name,operation_name)#checking for data in table
-
-                        elif field_type=="idompotent":
-                            maintain_idompotency(driver,xml_sub_child,xml_child)
-                    	else:
-                        	logging.debug("report problem") #logging the report
-                    	if k==39:
-                            vm_status=vm_status1
-                    	if k==5:
-                        	vm_name=vm_name1
-            	driver.close()#disconnect from server
-
+                    else:
+                        logging.debug("report problem") #logging the report
 
             else:
-                logger.debug("Cannot connect to controller.Please check controller")
+                  logger.debug("Cannot connect to controller.Please check controller")
+
+            driver.close()
 
 
 
@@ -2414,4 +2341,24 @@ def isSanityCheck(driver, xml_parent, xml_child, xml_sub_child):
     conn_host(host_name,vm_status,vm_name,message,total_vm)
 
 
-display.stop()
+def table_host_select(driver, xml_parent, xml_child, xml_sub_child):
+    logger.debug("table_host_select")
+    return []
+
+def table_host_rows(driver, xml_parent, xml_child, xml_sub_child, host_data):
+    logger.debug("table_host_rows")
+    return []
+
+def table_host_vms(driver, xml_parent, xml_child, xml_sub_child, variables):
+    logger.debug("table_host_vms")
+    return []
+
+def exec_ssh(driver, xml_parent, xml_child, xml_sub_child, host_data):
+    logger.debug("exec_ssh")
+
+def wait(driver, xml_parent, xml_child, xml_sub_child):
+    logger.debug("wait")
+
+def find_vm(driver, xml_parent, xml_child, xml_sub_child):
+    logger.debug("find_vm")
+    return true

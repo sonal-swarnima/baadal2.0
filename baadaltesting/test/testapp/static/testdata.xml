@@ -4050,7 +4050,15 @@ task="graph" cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch " cmd_f
                   <submit type="submit">//input[@type='submit']</submit>
                   <key type="scroll">Keys.PAGE_DOWN</key>
                   <host_vm type="href">Host and VMs</host_vm>
-                  <table type="table_rows" path="//h2[@class='title']">//div[@class='TABLE']/table/tbody/tr/td</table>
+                  <table type="table_host_select"></table>
+                  <table type="table_host_rows" path="//h2[@class='title']">//div[@class='TABLE']/table/tbody/tr/td</table>
+                  <table type="table_host_vms"></table>
+                  <ssh type="exec">shutdown -h now</ssh>
+                  <test_exec type="wait">15000</ssh>
+                  <configure type="href">Sanity Check</configure>
+                  <test_exec type="wait">60000</ssh>
+                  <host_vm type="href">Host and VMs</host_vm>
+                  <host_vm type="find_vm"></host_vm>
                 </test_case1>
               </testscript_sanity_1>
 

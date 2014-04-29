@@ -308,8 +308,6 @@ def sanity_testing():
     if form.process().accepted:
       if request.vars('testscript_sanity_1') != None:
         test_sanity(request.vars('testscript_sanity_1'))
-        :w
-        :w
     elif form.errors:
       response.flash = 'form has errors'
     else:

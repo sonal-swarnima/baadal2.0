@@ -18,7 +18,7 @@ def check_host_status(host_ip):
             return HOST_STATUS_UP
         else:
             return HOST_STATUS_DOWN
-    else: 
+    else:
         return HOST_STATUS_DOWN
 
 def is_host_available(host_ip):
@@ -40,7 +40,7 @@ def get_host_cpu(host_ip):
     command = "grep -c processor /proc/cpuinfo"
     ret = execute_remote_cmd(host_ip, 'root',command)
     return int(ret)
-    
+
 
 def get_host_ram(host_ip):
     command = "cat /proc/meminfo | grep MemTotal"
@@ -72,7 +72,7 @@ def check_host_service_status(host_ip):
         logger.error("Critical: OVS switch is not running on host " + host_ip)
         return False
     return True
-    
+
 def host_status_sanity_check():
     for host in current.db().select(current.db.host.ALL):
         if host.status != HOST_STATUS_MAINTENANCE:
@@ -84,28 +84,28 @@ def host_status_sanity_check():
                 if host_status == HOST_STATUS_DOWN:
                     respawn_dangling_vms(host.id)
 
-#Respawn the VMs if the host is unexpectedly down 
+#Respawn the VMs if the host is unexpectedly down
 def respawn_dangling_vms(host_id):
-    
+
     vms = current.db(current.db.vm_data.host_id == host_id).select(current.db.vm_data.ALL)
     vm_image_location = get_constant('vmfiles_path') + get_constant('vms') + '/%s/%s.qcow2'
     for vm_data in vms:
-        
+
         logger.debug('Re-spawning VM ' + vm_data.vm_identity)
         #Create a copy of existing image and rename it with '_old' suffix
         storage_type = config.get("GENERAL_CONF","storage_type")
         copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
-            
+
         ds_image_location = vm_data.datastore_id.path + get_constant('vms') + '/%s/%s.qcow2'
         command_to_execute = copy_command + ds_image_location%(vm_data.vm_identity, vm_data.vm_identity) + \
                                 ' ' + ds_image_location%(vm_data.vm_identity, vm_data.vm_identity+'_old')
 
-        exec_command_on_host(vm_data.datastore_id.ds_ip, 
-                             vm_data.datastore_id.username, 
-                             command_to_execute, 
+        exec_command_on_host(vm_data.datastore_id.ds_ip,
+                             vm_data.datastore_id.username,
+                             command_to_execute,
                              vm_data.datastore_id.password)
         logger.debug('Backup copy of the VM image cretaed successfully.')
-        
+
         vm_properties = {}
         vm_properties['host'] = find_new_host(vm_data.RAM, vm_data.vCPU)
         vm_properties['ram'] = vm_data.RAM
@@ -118,7 +118,7 @@ def respawn_dangling_vms(host_id):
         # Re-spawn the VM on new host
         launch_vm_on_host(vm_data, vm_image_location%(vm_data.vm_identity, vm_data.vm_identity), vm_properties)
         vm_data.update_record(host_id = vm_properties['host'])
-        
+
         #Find the most recent snapshot of the given VM; revert to the snapshot
         recent_snapshot = current.db(current.db.snapshot.vm_id == vm_data.id).select(orderby = ~current.db.snapshot.timestamp)[0]
         logger.debug('Reverting VM %s to snapshot %s' %(vm_data.vm_identity, recent_snapshot.snapshot_name))
@@ -132,7 +132,7 @@ def get_host_domains(host_ip):
         domains=[]
         for domain_id in conn.listDomainsID():
             domains.append(conn.lookupByID(domain_id))
-        
+
         for name in conn.listDefinedDomains():
             domains.append(conn.lookupByName(name))
 
@@ -190,6 +190,18 @@ def host_power_operation():
         log_exception()
     return
 
+#Power up the host using wakeonlan
+#TODO - Check if this works. Send powerup from host_power_operation
+def host_power_up(host_mac):
+    logger.debug("Powering up host with MAC " + host_mac)
+    try:
+      livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
+      masterhost = livehosts[0].host_ip
+      commands.getstatusoutput("ssh root@" + masterhost + " wakeonlan " + host_mac)
+    except:
+      log_exception()
+    return
+
 #Migrate all running vms and redefine dead ones
 def migrate_all_vms_from_host(host_ip):
 
@@ -204,29 +216,29 @@ def migrate_all_vms_from_host(host_ip):
                 elif dom.info()[0] in (VIR_DOMAIN_PAUSED, VIR_DOMAIN_RUNNING):
                     logger.debug("Moving running vm "+str(dom.name())+" to appropriate host in queue")
                     add_migrate_task_to_queue(vm_details['id'], live_migration=True)
-        
+
     except:
         log_exception()
     return
 
 #Add migrate task to task_queue
 def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=False):
-    
+
     params={'vm_id' : vm_id}
     if dest_host_id:
         params.update({'destination_host' : None})
     if live_migration:
         params.update({'live_migration' : True})
     current.db.task_queue.insert(task_type='Migrate VM',
-                         vm_id=vm_id, 
+                         vm_id=vm_id,
                          requester_id=-1,
-                         parameters=params, 
-                         priority=1,  
+                         parameters=params,
+                         priority=1,
                          status=1)
 
 # Delete Orphan VM
 def delete_orhan_vm(vm_name, host_id):
-    
+
     host_details = current.db.host[host_id]
     connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip + "/system")
     domain = connection_object.lookupByName(vm_name)
@@ -239,7 +251,7 @@ def delete_orhan_vm(vm_name, host_id):
             VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA)
 
     logger.debug(vm_name + " is deleted successfully.")
-    
+
 def get_active_hosts():
-    
+
     return current.db(current.db.host.status == HOST_STATUS_UP).select(current.db.host.ALL)
