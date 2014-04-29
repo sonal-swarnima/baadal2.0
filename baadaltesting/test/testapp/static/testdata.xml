@@ -4041,5 +4041,17 @@ op="migrate_vm"   query_snapshot="select * from snapshot where vm_id=%s "   prin
         <data type="img" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" query3="SELECT vm_name,id,status FROM vm_data WHERE  status=7 OR status=5 OR status=6  order by request_time DESC " query4="select * from task_queue_event where task_type='Snapshot VM'  and  vm_name=%s" query5="select concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s" query6="select vm_data.vm_name,vm_data.HDD,vm_data.RAM,vm_data.vCPU,os_type,private_ip,public_ip,security_domain.name,vm_data.status from vm_data,template,security_domain where security_domain.id=vm_data.security_domain and vm_data.datastore_id=template.datastore_id and vm_name=%s" xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr"   max="3" op="destroy_machine"
 task="graph" cmd_init_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch " cmd_finl_data="cd /mnt/testdatastore/vm_rrds/;rrdtool fetch " cmd=".rrd MIN -s -600s -e now" cmd_run_prgrm="python /home/baadalvm/Desktop/data/network.py" print_mode="No VM exists of testing user,So Please Start a VM of testing user before doing this testing" status="5" other_status1="6" other_status2="7"></data>
                 </test_case1>
-          </test_script100>
+              </test_script100>
+
+              <testscript_sanity_1>
+                <test_case1 value="Shutting down host and running sanity check to check VM migration">
+                  <user_name id="user_username" type="input">Admin</user_name>
+                  <password id="user_password" type="input">baadal</password>
+                  <submit type="submit">//input[@type='submit']</submit>
+                  <key type="scroll">Keys.PAGE_DOWN</key>
+                  <host_vm type="href">Host and VMs</host_vm>
+                  <table type="table_rows" path="//h2[@class='title']">//div[@class='TABLE']/table/tbody/tr/td</table>
+                </test_case1>
+              </testscript_sanity_1>
+
 	</test_scripts>

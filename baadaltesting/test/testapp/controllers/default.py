@@ -297,16 +297,19 @@ def integration_testing():
         response.flash = 'please fill the form'
     return dict(form=form)
 
-def fault_tolerance_testing():
+def sanity_testing():
     import commands
     form = FORM ( TABLE (
-              TR(INPUT(_name='testcase_fault_tolerance_001', _type='checkbox', _value="testcase_fault_tolerance_001"),'Kill Host (Shutdown)'),
+              TR(INPUT(_name='testscript_sanity_1', _type='checkbox', _value="testscript_sanity_1"),'Kill Host (Shutdown)'),
               BR(),
               TR(INPUT(_type='submit',_value='submit'))
             ) )
 
     if form.process().accepted:
-      response.flash = 'yo'
+      if request.vars('testscript_sanity_1') != None:
+        test_sanity(request.vars('testscript_sanity_1'))
+        :w
+        :w
     elif form.errors:
       response.flash = 'form has errors'
     else:
