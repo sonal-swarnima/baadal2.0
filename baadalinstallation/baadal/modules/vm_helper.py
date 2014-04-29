@@ -384,6 +384,7 @@ def install(parameters):
         vmid = parameters['vm_id']
         logger.debug("In install function...")
         vm_details = current.db.vm_data[vmid]
+        vm_properties = None
 
         try:
             # Fetches vm details from vm_data table
@@ -411,8 +412,9 @@ def install(parameters):
 
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
-        except:            
-            free_vm_properties(vm_details, vm_properties)
+        except:
+            if vm_properties != None:         
+                free_vm_properties(vm_details, vm_properties)
             return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Starts a vm

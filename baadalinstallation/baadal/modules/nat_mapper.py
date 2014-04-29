@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-from helper import logger, config, get_datetime, execute_remote_bulk_cmd
+from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception
 import paramiko
 from gluon import current
 
@@ -76,9 +76,9 @@ def create_mapping(source_ip , destination_ip, source_port = -1, destination_por
 
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
-        logger.debug("No implementation for NAT type hardware")
+        raise Exception("No implementation for NAT type hardware")
     else:
-        logger.debug("NAT type is not supported")
+        raise Exception("NAT type is not supported")
 
 
 """Function to remove mapping from NAT
@@ -125,9 +125,9 @@ def remove_mapping(source_ip, destination_ip, source_port=-1, destination_port=-
 
     elif nat_type == NAT_TYPE_HARDWARE:
         #This function is to be implemented
-        logger.debug("No implementation for NAT type hardware")
+        raise Exception("No implementation for NAT type hardware")
     else:
-        logger.debug("NAT type is not supported")
+        raise Exception("NAT type is not supported")
 
 # Function to flush all mappings from NAT
 def clear_all_nat_mappings(db):
@@ -180,9 +180,9 @@ def clear_all_nat_mappings(db):
         db.vnc_access.update(status = VNC_ACCESS_STATUS_INACTIVE)
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
-        logger.debug("No implementation for NAT type hardware")
+        raise Exception("No implementation for NAT type hardware")
     else:
-        logger.debug("NAT type is not supported")
+        raise Exception("NAT type is not supported")
         
 
 # Function to delete all timed-out VNC mappings from NAT
@@ -233,26 +233,33 @@ def create_vnc_mapping_in_nat(vm_id):
     duration = 30 * 60 #30 minutes
     host_ip = vm_data.host_id.host_ip
     vnc_port = vm_data.vnc_port
-    current.db.vnc_access[0] = dict(vm_id = vm_id,
+    
+    vnc_id = current.db.vnc_access.insert(vm_id = vm_id,
                                     host_id = vm_data.host_id, 
                                     vnc_server_ip = vnc_host_ip, 
                                     vnc_source_port = vnc_port, 
                                     vnc_destination_port = vnc_port, 
                                     duration = duration, 
-                                    status = VNC_ACCESS_STATUS_ACTIVE)
+                                    status = VNC_ACCESS_STATUS_INACTIVE)
     
-    create_mapping(vnc_host_ip, host_ip, vnc_port, vnc_port, duration)
+    try:
+        create_mapping(vnc_host_ip, host_ip, vnc_port, vnc_port, duration)
+        current.db.vnc_access[vnc_id] = dict(status = VNC_ACCESS_STATUS_ACTIVE)
+    except:
+        log_exception()
 
 
 # Function to create mapping in NAT for public IP - private IP
 def create_public_ip_mapping_in_nat(vm_id):
     
     vm_data = current.db.vm_data[vm_id]
-    create_mapping(vm_data.public_ip, vm_data.private_ip)
-    
-    # Update DB 
-    logger.debug("Updating DB")
-    current.db(current.db.public_ip_pool.public_ip == vm_data.public_ip).update(vm_id = vm_id)
+    try:
+        create_mapping(vm_data.public_ip, vm_data.private_ip)
+        
+        logger.debug("Updating DB")
+        current.db(current.db.public_ip_pool.public_ip == vm_data.public_ip).update(vm_id = vm_id)
+    except:
+        log_exception()
     
 # Function to remove mapping for VNC access from NAT
 def remove_vnc_mapping_from_nat(vm_id):
@@ -261,18 +268,23 @@ def remove_vnc_mapping_from_nat(vm_id):
     host_ip = vm_data.host_id.host_ip
     vnc_port = vm_data.vnc_port
 
-    remove_mapping(vnc_host_ip, host_ip, vnc_port, vnc_port)
-    # Update DB
-    logger.debug("Updating DB")
-    current.db(current.db.vnc_access.vm_id == vm_id).update(status = VNC_ACCESS_STATUS_INACTIVE)
+    try:
+        remove_mapping(vnc_host_ip, host_ip, vnc_port, vnc_port)
+        logger.debug("Updating DB")
+        current.db(current.db.vnc_access.vm_id == vm_id).update(status = VNC_ACCESS_STATUS_INACTIVE)
+    except:
+        log_exception()
     
 # Function to remove public IP - private IP mapping from NAT
 def remove_public_ip_mapping_from_nat(vm_id):
     
     vm_data = current.db.vm_data[vm_id]
-    remove_mapping(vm_data.public_ip, vm_data.private_ip)
-    
-    # Update DB 
-    logger.debug("Updating DB")
-    current.db(current.db.public_ip_pool.public_ip == vm_data.public_ip).update(vm_id = None)
-    vm_data.update_record(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
+    try:
+        remove_mapping(vm_data.public_ip, vm_data.private_ip)
+        
+        # Update DB 
+        logger.debug("Updating DB")
+        current.db(current.db.public_ip_pool.public_ip == vm_data.public_ip).update(vm_id = None)
+        vm_data.update_record(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
+    except:
+        log_exception()

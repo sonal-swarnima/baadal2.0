@@ -373,7 +373,7 @@ def grant_vnc_access(vm_id):
         msg = 'VNC access already granted. Please check your mail for further details.'
     else:
         vnc_count = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.time_requested > (get_datetime() - timedelta(days=1)))).count()
-        if vnc_count > MAX_VNC_ALLOWED_IN_A_DAY :
+        if vnc_count >= MAX_VNC_ALLOWED_IN_A_DAY :
             msg = 'VNC request has exceeded limit.'
         else:
             try:
