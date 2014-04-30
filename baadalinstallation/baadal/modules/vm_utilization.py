@@ -56,7 +56,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
         if graph_type == 'ram':
             ds = 'DEF:ram=' + vm_name + '.rrd:ram:' + consolidation
             line = 'LINE1:ram#0000FF:Memory'
-            graph_type += " (KiloBytes)"
+            graph_type += " (Bytes/Sec)"
             upper_limit = ""
         elif graph_type == 'cpu':
             ds = 'DEF:cpu=' + vm_name + '.rrd:cpu:' + consolidation
@@ -82,7 +82,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
             line1 = 'LINE1:diskr#0000FF:DiskRead'
             line2 = 'LINE1:diskw#FF7410:DiskWrite'
 
-        graph_type += " (KiloBytes)"
+        graph_type += " (Bytes/Sec)"
 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2, "-l 0")
 
@@ -208,7 +208,7 @@ def get_dom_mem_usage(dom_name, host):
     ssh.close()
 
     if len(output) == 2:
-        return (int(re.split('\s+', output[0])[5])) #returned memory in KBytes by default
+        return (int(re.split('\s+', output[0])[5]))*1024 #returned memory in Bytes by default
     else:
         rrd_logger.warn("Unable to fetch memory usage details for dom %s" % (dom_name))
 
@@ -279,12 +279,12 @@ def get_actual_usage(dom_obj, host_ip):
     rrd_logger.debug(prev_dom_stats)
         
     #cal usage
-    usage = {'ram'      : dom_stats['memory']/float(1024)} #ram in MB usage
+    usage = {'ram'      : dom_stats['memory']} #ram in Bytes usage
     usage.update({'cpu' : (dom_stats['cputime'] - prev_dom_stats['cputime'])/(float(prev_dom_stats['cpus'])*10000000*STEP)}) #percent cpu usage
-    usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['tx'])/float(1024)}) #in KBytes
-    usage.update({'tw'  : (dom_stats['rx'] - prev_dom_stats['rx'])/float(1024)}) #in KBytes
-    usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])/float(1024)}) #in KBytes
-    usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])/float(1024)}) #in KBytes
+    usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['tx'])}) #in KBytes
+    usage.update({'tw'  : (dom_stats['rx'] - prev_dom_stats['rx'])}) #in KBytes
+    usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])}) #in KBytes
+    usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])}) #in KBytes
 
     current.cache.disk.clear(str(dom_name))
 
