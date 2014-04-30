@@ -195,34 +195,36 @@ def clear_all_timedout_vnc_mappings():
         logger.debug("Clearing all timed out VNC mappings from NAT box %s" %(nat_ip)) 
 
         # Get all active VNC mappings from DB
-        vnc_mappings = current.db(current.db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE).select(current.db.vnc_access.ALL)
-        if vnc_mappings != None:
+        vnc_mappings = current.db((current.db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE) & 
+                                  (current.db.vnc_access.expiry_time < get_datetime())).select()
+        if (vnc_mappings != None) & (len(vnc_mappings) != 0):
             # Delete the VNC mapping from NAT if the duration of access has past its requested time duration
             command = ''
             for mapping in vnc_mappings:
-                if mapping.time_requested != None:
-                    time_difference = (get_datetime() - mapping.time_requested).seconds
-                    if time_difference >= mapping.duration:
-                        logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping['vm_id'], mapping['host_id'], mapping['vnc_server_ip'], mapping['vnc_source_port'], mapping['vnc_destination_port']))
-                        host_ip=current.db(current.db.host.id == mapping['host_id']).select(current.db.host.host_ip)
-                        # Delete rules from iptables on NAT box
-                        iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(mapping['vnc_server_ip'], mapping['vnc_source_port'],  host_ip, mapping['vnc_destination_port'], host_ip, mapping['vnc_destination_port'])
-                        command += '''
-                            %s
-                            /etc/init.d/iptables-persistent save
-                            /etc/init.d/iptables-persistent reload
-                            exit
-                        ''' %(iptables_command)
-                        # Update DB for each VNC access
-                        current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
-        current.db.commit()
-        execute_remote_bulk_cmd(nat_ip, nat_user, command)
+                logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping.vm_id, mapping.host_id, mapping.vnc_server_ip, mapping.vnc_source_port, mapping.vnc_destination_port))
+                host_ip = mapping.host_id.host_ip
+                # Delete rules from iptables on NAT box
+                command += '''
+                iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s
+                iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT''' %(mapping.vnc_server_ip, mapping.vnc_source_port, host_ip, mapping.vnc_destination_port, host_ip, mapping.vnc_destination_port)
+
+                # Update DB for each VNC access
+                current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
+
+            command += '''
+                /etc/init.d/iptables-persistent save
+                /etc/init.d/iptables-persistent reload
+                exit
+            ''' 
+
+            current.db.commit()
+            execute_remote_bulk_cmd(nat_ip, nat_user, command)
         logger.debug("Done clearing vnc mappings")    
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
-        logger.debug("No implementation for NAT type hardware")
+        raise Exception("No implementation for NAT type hardware")
     else:
-        logger.debug("NAT type is not supported")
+        raise Exception("NAT type is not supported")
 
 
 # Function to create mapping in NAT for VNC access
@@ -288,3 +290,4 @@ def remove_public_ip_mapping_from_nat(vm_id):
         vm_data.update_record(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
     except:
         log_exception()
+

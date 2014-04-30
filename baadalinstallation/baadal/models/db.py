@@ -9,6 +9,7 @@ from simplejson import loads, dumps
 from ast import literal_eval
 from helper import config,get_datetime, IS_MAC_ADDRESS
 from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
+from datetime import timedelta
 
 #### Connection Pooling of Db is also possible
 
@@ -295,7 +296,8 @@ db.define_table('vnc_access',
     Field('vnc_destination_port','integer',default = -1),
     Field('duration', 'integer'),
     Field('status', 'string', length = 15, notnull = True, default = 'inactive'),
-    Field('time_requested', 'datetime', default = get_datetime()))
+    Field('time_requested', 'datetime', default = get_datetime()),
+    Field('expiry_time', compute=lambda r: r['time_requested']+ timedelta(seconds=r['duration'])))
 
 db.define_table('public_ip_pool',
     Field('public_ip', 'string', length = 15, notnull = True, unique = True),
