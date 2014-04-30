@@ -195,9 +195,8 @@ def host_power_operation():
 def host_power_up(host_mac):
     logger.debug("Powering up host with MAC " + host_mac)
     try:
-      livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
-      masterhost = livehosts[0].host_ip
-      commands.getstatusoutput("ssh root@" + masterhost + " wakeonlan " + host_mac)
+      output = commands.getstatusoutput("ssh root@localhost etherwake -i baadal-br-int " + host_mac)
+      logger.debug("Power up : " + str(output[0]) + " : " + output[1])
     except:
       log_exception()
     return

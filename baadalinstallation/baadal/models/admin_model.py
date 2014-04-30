@@ -585,7 +585,7 @@ def updte_host_status(host_id, status):
                     return False
                 break
             host_power_up(str(host_data.mac_addr))
-            time.sleep(15000)
+            time.sleep(15)
     elif status == HOST_STATUS_MAINTENANCE:
         migrate_all_vms_from_host(host_data.host_ip)
         host_data.update_record(status=HOST_STATUS_MAINTENANCE)
