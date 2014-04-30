@@ -293,6 +293,57 @@ def get_actual_usage(dom_obj, host_ip):
    
     return usage 
 
+def get_host_cpu_usage(host_ip):
+
+    command = "iostat -c | sed '1,2d'"
+    command_output = execute_remote_cmd(host_ip, 'root', command)
+    cpu_stats = re.split('\s+', command_output[1])
+    rrd_logger.info("CPU stats of host %s is %s" % ( host_ip, (cpu_stats[1] + cpu_stats[2] + cpu_stats[3])))
+    return (float(cpu_stats[1]) + float(cpu_stats[2]) + float(cpu_stats[3]))
+
+def get_host_disk_usage(host_ip):
+
+    command = "iostat -d | sed '1,2d'"
+    command_output = execute_remote_cmd(host_ip, 'root', command)
+    disk_stats = re.split('\s+', command_output[1])
+    rrd_logger.info("Disk stats of host %s is dr: %s dw: %s" % (host_ip, disk_stats[2], disk_stats[3]))  
+    return [disk_stats[2], disk_stats[3]]
+
+def get_host_mem_usage(host_ip):
+
+    command = "top -b -n1 | grep 'Mem'"
+    command_output = execute_remote_cmd(host_ip, 'root', command)
+    mem_stats = re.split('\s+', command_output[0])[3]
+    used_mem_in_kb = int(mem_stats[:-1])
+    rrd_logger.info("Mem stats of host %s is %s" % (host_ip, used_mem_in_kb))
+    return used_mem_in_kb
+
+def get_host_nw_usage(host_ip):
+
+    command = "ifconfig eth0 | grep 'RX bytes:'"
+    command_output = execute_remote_cmd(host_ip, 'root', command)
+    nw_stats = re.split('\s+', command_output[0])
+    rx = int(re.split(':', nw_stats[2])[1])
+    tx = int(re.split(':', nw_stats[6])[1])
+    rrd_logger.info("Disk stats of host %s is rx: %s tx: %s" % (host_ip, rx, tx))
+    return [rx, tx]
+
+def get_host_resources_usage(host_ip):
+
+    host_cpu_usage = get_host_cpu_usage(host_ip)
+    host_disk_usage = get_host_disk_usage(host_ip)
+    host_mem_usage = get_host_mem_usage(host_ip)
+    host_nw_usage = get_host_nw_usage(host_ip)
+
+    host_usage = {'cpu' : host_cpu_usage} #percent cpu usage
+    host_usage.update({'dr' : host_disk_usage[0]*1024}) #Bytes/s
+    host_usage.update({'dw' : host_disk_usage[1]*1024})
+    host_usage.update({'ram' : host_mem_usage*1024}) #Bytes
+    host_usage.update({'rx' : host_nw_usage[0]}) #in Bytes
+    host_usage.update({'tx' : host_nw_usage[1]}) #in Bytes
+
+    rrd_logger.info("Host %s stats:  %s" % (host_ip, host_usage))
+    return host_usage
 
 #@handle_exception
 def update_rrd():
