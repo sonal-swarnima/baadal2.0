@@ -100,7 +100,7 @@ def find_new_host(RAM, vCPU):
         host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 2)
         host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 2)
 
-        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU)):
+        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU) & (vCPU < host.CPUs)):
             return host.id
         else:
             hosts.as_list(True,False).remove(host)
@@ -786,13 +786,15 @@ def edit_vm_config(parameters):
         if 'vcpus' in parameters:
             new_vcpus = int(parameters['vcpus'])
             domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_VCPU_MAXIMUM)
+            domain.setVcpusFlags(new_vcpus, VIR_DOMAIN_AFFECT_CONFIG)
             message += "Edited vCPU successfully."
             current.db(current.db.vm_data.id == vm_id).update(vCPU = new_vcpus)
 
         if 'ram' in parameters:
             new_ram = int(parameters['ram']) * 1024
             logger.debug(str(new_ram))
-            domain.setMaxMemory(new_ram)
+            domain.setMemoryFlags(new_ram, VIR_DOMAIN_MEM_MAXIMUM)
+            domain.setMemoryFlags(new_ram, VIR_DOMAIN_AFFECT_CONFIG)
             message +=  " And edited RAM successfully."
             current.db(current.db.vm_data.id == vm_id).update(RAM = int(parameters['ram']))
             
@@ -906,10 +908,15 @@ def clone(vmid):
         logger.debug("host details are: " + str(host))
         (used_ram, used_cpu) = host_resources_used(host.id)
         logger.debug("uram: " + str(used_ram) + " used_cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) +" host cpu: " + str(host.CPUs))
-        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 2)
-        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 2)
+        host_ram_after_200_percent_overcommitment = math.floor((host.RAM * 1024) * 2)
+        host_cpu_after_200_percent_overcommitment = math.floor(host.CPUs * 2)
+        logger.debug("host_ram_after_200_percent_overcommitment in MB " + str(host_ram_after_200_percent_overcommitment))
+        logger.debug("host_cpu_after_200_percent_overcommitment " + str(host_cpu_after_200_percent_overcommitment))
+        logger.debug("Available RAM on host: %s, Requested RAM: %s" % ((host_ram_after_200_percent_overcommitment - used_ram), vm_details.RAM))
+        logger.debug("Available CPUs on host: %s, Requested CPU: %s " % ((host_cpu_after_200_percent_overcommitment - used_cpu), vm_details.vCPU))
+        
 
-        if((( host_ram_after_25_percent_overcommitment - used_ram) >= host.RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= host.CPUs)):
+        if((( host_ram_after_200_percent_overcommitment - used_ram) >= vm_details.RAM) & ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vm_details.vCPU) & (vm_details.vCPU < host.CPUs)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
             exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
