@@ -45,7 +45,9 @@ def check_vm_sanity():
             for dom in domains:
                 try:
                     domain_name = dom.name()
-                    vm = db((db.vm_data.vm_identity == domain_name) & (db.vm_data.status != -1)).select().first()
+                    vm = db((db.vm_data.vm_identity == domain_name) & 
+                            (db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN))).select().first()
+                    
                     vm_state = dom.info()[0]
                     status = vminfo_to_state(vm_state)
                     if(vm):
