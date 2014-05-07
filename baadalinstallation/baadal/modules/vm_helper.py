@@ -5,7 +5,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
 ###################################################################################
 
-import sys, math, shutil, paramiko, traceback, libvirt
+import sys, math, shutil, paramiko, traceback, libvirt, os
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
@@ -689,22 +689,34 @@ def snapshot(parameters):
     snapshot_type = parameters['snapshot_type']
     try:
         vm_details = current.db.vm_data[vm_id]
-        snapshot_name = get_datetime().strftime("%I:%M%p_%B%d,%Y")
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
-        xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
-        domain.snapshotCreateXML(xmlDesc, 0)
-        connection_object.close()
-        message = "Snapshotted successfully."
-        if snapshot_type != current.SNAPSHOT_USER:
-            snapshot_cron = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select().first()
-            #Delete the existing Daily/Monthly/Yearly snapshot
-            if snapshot_cron:
-                logger.debug(snapshot_cron)
-                delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
-        current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
-        logger.debug(message)
-        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+
+        vm_ip = str(vm_details.private_ip)
+
+        response = os.system("ping -c 1 " + vm_ip)
+
+        if response == 0:
+
+            snapshot_name = get_datetime().strftime("%I:%M%p_%B%d,%Y")
+            connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+            domain = connection_object.lookupByName(vm_details.vm_identity)
+            xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
+            domain.snapshotCreateXML(xmlDesc, 0)
+            connection_object.close()
+            message = "Snapshotted successfully."
+            if snapshot_type != current.SNAPSHOT_USER:
+                snapshot_cron = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select().first()
+                #Delete the existing Daily/Monthly/Yearly snapshot
+                if snapshot_cron:
+                    logger.debug(snapshot_cron)
+                    delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
+            current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
+            logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+
+        else:
+                
+            logger.error("Unable to ping VM before snapshoting: %s" % (vm_ip))
+
     except:
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 

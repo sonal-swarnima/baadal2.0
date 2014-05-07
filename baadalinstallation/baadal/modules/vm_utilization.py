@@ -197,12 +197,8 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(host, username='root', password='')
     cmd = "ps aux | grep '\-name " + dom_name + " ' | grep kvm"
-    stdin, stdout, stderr = ssh.exec_command(cmd)
-    output = stdout.readlines()
+    output = execute_remote_cmd(host, "root", cmd)
     output.sort(key=len, reverse=True)
 
     ssh.close()
