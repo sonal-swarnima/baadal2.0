@@ -212,9 +212,8 @@ def migrate_all_vms_from_host(host_ip):
 #Add migrate task to task_queue
 def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=False):
     
-    params={'vm_id' : vm_id}
-    if dest_host_id:
-        params.update({'destination_host' : None})
+    params={'vm_id' : vm_id, 'destination_host' : dest_host_id}
+
     if live_migration:
         params.update({'live_migration' : True})
     current.db.task_queue.insert(task_type='Migrate VM',
