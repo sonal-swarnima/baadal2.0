@@ -5,23 +5,16 @@ if 0:
     from gluon import db,request, cache
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception
+from helper import get_datetime, log_exception, is_pingable
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
-from vm_utilization import update_rrd
+from vm_utilization import update_vm_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
 from log_handler import logger, rrd_logger
+from host_helper import HOST_STATUS_UP
 
 from gluon import current
 current.cache = cache
-
-UUID_SNAPSHOT_DAILY = 'scheduler-uuid-snapshot-daily'
-UUID_SNAPSHOT_WEEKLY = 'scheduler-uuid-snapshot-weekly'
-UUID_SNAPSHOT_MONTHLY = 'scheduler-uuid-snapshot-monthly'
-UUID_VM_SANITY_CHECK = 'scheduler-uuid-vm-sanity-check'
-UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
-UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
-UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
 
 task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_START_VM                :    start,
@@ -248,13 +241,21 @@ def check_vnc_access():
 
 # Handles periodic collection of VM utilization data &
 # updation of respective RRD file.
-def vm_utilization_rrd():
+def vm_utilization_rrd(host_ip):
     logger.info("Starting data collection of VM utilization")
     
     try:
-        update_rrd()
+
+        if is_pingable(host_ip):
+
+            update_rrd(host_ip)
+ 
+        else:
+
+            rrd_logger.error("UNABLE TO UPDATE RRDs for host : %s" % (host_ip))
  
     except Exception as e:
+
         rrd_logger.debug("ERROR OCCURED: %s" % e)
     
 # Defining scheduler tasks
@@ -308,12 +309,18 @@ vm_scheduler.queue_task('host_sanity',
                     timeout = 5 * MINUTES,
                     uuid = UUID_HOST_SANITY_CHECK)
 
-vm_scheduler.queue_task('vm_util_rrd', 
+
+active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
+
+for host in active_host_list:
+
+    vm_scheduler.queue_task('vm_util_rrd', 
+                     pvars = dict(host_ip = host),
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 6 * MINUTES, # every 5 minutes
                      timeout = 12  * MINUTES,
-                     uuid = UUID_VM_UTIL_RRD)
+                     uuid = UUID_VM_UTIL_RRD + "-" + str(host))
 
 vm_scheduler.queue_task('vnc_access', 
                      repeats = 0, # run indefinitely

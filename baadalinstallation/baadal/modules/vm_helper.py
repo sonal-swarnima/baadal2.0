@@ -688,13 +688,10 @@ def snapshot(parameters):
     vm_id = parameters['vm_id']
     snapshot_type = parameters['snapshot_type']
     try:
+
         vm_details = current.db.vm_data[vm_id]
 
-        vm_ip = str(vm_details.private_ip)
-
-        response = os.system("ping -c 1 " + vm_ip)
-
-        if response == 0:
+        if is_pingable(str(vm_details.private_ip)):
 
             snapshot_name = get_datetime().strftime("%I:%M%p_%B%d,%Y")
             connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
@@ -715,7 +712,7 @@ def snapshot(parameters):
 
         else:
                 
-            logger.error("Unable to ping VM before snapshoting: %s" % (vm_ip))
+            logger.error("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip))
 
     except:
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
