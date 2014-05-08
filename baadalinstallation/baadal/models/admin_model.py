@@ -335,7 +335,14 @@ def enqueue_vm_request(request_id):
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 
 
-def delete_user_vm_access(vm_id,user_id) :    
+def delete_user_vm_access(vm_id, user_id) :
+
+    vm_data = db.vm_data[vm_id]
+    if vm_data.owner_id == user_id:
+        vm_data.update_record(owner_id = -1)
+    if vm_data.requester_id == user_id:
+        vm_data.update_record(requester_id = -1)
+
     db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()  
 
 

@@ -157,8 +157,8 @@ def add_user_to_vm():
 def delete_user_vm():
     vm_id=request.args[0]
     user_id=request.args[1]
-    delete_user_vm_access(vm_id,user_id)    			
-    session.flash = 'User access is eradicated.'
+    delete_user_vm_access(int(vm_id), int(user_id))    			
+    session.flash = 'User access for the VM is removed.'
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_moderator
