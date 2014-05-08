@@ -178,6 +178,12 @@ def log_exception(message=None):
     logger.error(trace)
     return trace
 
+def is_pingable(ip):
+
+    response = os.system("ping -c 1 %" % (ip))
+    
+    return not(response)
+
 
 class IS_MAC_ADDRESS(Validator):
     

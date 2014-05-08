@@ -15,9 +15,9 @@ VM_UTIL_ONE_YEAR = 4
 STEP         = 360
 TIME_DIFF_MS = 700
 
-def get_rrd_file(vm_name):
+def get_rrd_file(identity):
 
-    rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + vm_name + ".rrd"
+    rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + identity + ".rrd"
     return rrd_file
 
 def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
@@ -86,7 +86,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6")
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6" )
 
 
     graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
@@ -316,7 +316,7 @@ def get_host_mem_usage(host_ip):
 
 def get_host_nw_usage(host_ip):
 
-    command = "ifconfig eth0 | grep 'RX bytes:'"
+    command = "ifconfig baadal-br-int | grep 'RX bytes:'"
     command_output = execute_remote_cmd(host_ip, 'root', command)
     nw_stats = re.split('\s+', command_output[0])
     rx = int(re.split(':', nw_stats[2])[1])
@@ -341,17 +341,51 @@ def get_host_resources_usage(host_ip):
     rrd_logger.info("Host %s stats:  %s" % (host_ip, host_usage))
     return host_usage
 
-#@handle_exception
-def update_rrd():
 
-    active_host_list = current.db(current.db.host.status == HOST_STATUS_UP).select(current.db.host.host_ip)
-    rrd_logger.debug(active_host_list)
+def update_host_rrd(host_ip):
 
-    for host in active_host_list:
+    try:
+   
+        rrd_file = get_rrd_file(host_ip.replace(".","_"))
+
+        if not (os.path.exists(rrd_file)):
+
+            rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
+            rrd_logger.warn("Creating new RRD file")
+            create_rrd(rrd_file)
+       
+        else:
+
+            host_stats = get_host_resources_usage(host_ip)
+            ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['tw']))
+ 
+    except Exception, e:
+ 
+        rrd_logger.exception("Error occured while creating/updating rrd for host: %s" % (host_ip))
+        rrd_logger.error(e)
+        pass
+
+
+@handle_exception
+def update_rrd(host_ip):
+
+        rrd_logger.debug("Starting RRD updation for VMs on host: %s" % (host_ip))
+
+        #UPDATE HOST RRD
+        rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
+        rrd_logger.debug(time.ctime())
+        update_host_rrd(host_ip)
+        rrd_logger.debug(time.ctime())
+
+        #UPDATE VM RRD
+
+        rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
 
         hypervisor_conn = None
+        dom_name = None
+
         try:
-            host_ip = host['host_ip']
+
             hypervisor_conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
             rrd_logger.debug(hypervisor_conn.getHostname())
 
@@ -360,6 +394,7 @@ def update_rrd():
 
             for dom_obj in all_dom_objs:
 
+                dom_name = dom_obj.name()
                 rrd_file = get_rrd_file(dom_obj.name())
 
                 if not (os.path.exists(rrd_file)):
@@ -375,7 +410,6 @@ def update_rrd():
 
                         if dom_obj.ID() in active_dom_ids:
 
-                            #dom_stats = get_dom_resource_usage(dom_obj, host_ip)
                             usage = get_actual_usage(dom_obj, host_ip)
                             rrd_logger.debug(usage)
                             ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, usage['cpu'], usage['ram'], usage['dr'], usage['dw'], usage['tx'], usage['tw']))
@@ -388,10 +422,12 @@ def update_rrd():
 
                         rrd_logger.exception(e)
                         pass
+            rrd_logger.debug(time.ctime())
 
         except:
 
-            rrd_logger.exception("Error occured while creating/updating rrd or host.")
+            rrd_logger.exception("Error occured while creating/updating rrd for VM : %s" % (dom_name))
+            dom_name = None
             pass
 
         finally:
@@ -399,4 +435,3 @@ def update_rrd():
             if hypervisor_conn:
                 hypervisor_conn.close()
 
- 
