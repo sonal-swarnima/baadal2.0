@@ -203,19 +203,17 @@ def migrate_all_vms_from_host(host_ip):
                     add_migrate_task_to_queue(vm_details['id'])
                 elif dom.info()[0] in (VIR_DOMAIN_PAUSED, VIR_DOMAIN_RUNNING):
                     logger.debug("Moving running vm "+str(dom.name())+" to appropriate host in queue")
-                    add_migrate_task_to_queue(vm_details['id'], live_migration=True)
+                    add_migrate_task_to_queue(vm_details['id'], live_migration="on")
         
     except:
         log_exception()
     return
 
 #Add migrate task to task_queue
-def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=False):
+def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=None):
     
-    params={'vm_id' : vm_id, 'destination_host' : dest_host_id}
+    params={'vm_id' : vm_id, 'destination_host' : dest_host_id, 'live_migration' : live_migration}
 
-    if live_migration:
-        params.update({'live_migration' : True})
     current.db.task_queue.insert(task_type='Migrate VM',
                          vm_id=vm_id, 
                          requester_id=-1,

@@ -270,7 +270,8 @@ def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_dis
         domain.attachDevice(xmlDescription)
         xmlfile = domain.XMLDesc(0)
         domain = connection_object.defineXML(xmlfile)
-        domain.reboot(0)
+        domain.destroy()
+        domain.create()
         domain.isActive()
         logger.debug("The disk has been attached successfully.")
         connection_object.close()
@@ -935,7 +936,7 @@ def clone(vmid):
 
             try:
                 new_host_id_for_cloned_vm = find_new_host(cloned_vm_details.RAM, cloned_vm_details.vCPU)
-                if new_host_id_for_cloned_vm != cloned_vm_details.host_id:
+                if new_host_id_for_cloned_vm != host.id:
                     if migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm):
                         message += "Found new host and migrated successfully."
                     else:
