@@ -111,9 +111,10 @@ def unit_testing():
            TR(INPUT(_name='testcase42', _type='checkbox', _value="42"),'Take VM snapshot   (Shutdown )'),
            TR(INPUT(_name='testcase43', _type='checkbox', _value="43"),'Delete VM   (Shutdown )'),
            TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Sanity Table'), 
-           TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Pending User VM Requests(Install VM)'),
-           TR(INPUT(_name='testcase46', _type='checkbox', _value="46"),'Pending User VM Requests(Clone VM)'),
-           TR(INPUT(_name='testcase47', _type='checkbox', _value="47"),'Pending User VM Requests(Attach Disk)'),
+           #TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Pending User VM Requests(Install VM)'),
+           #TR(INPUT(_name='testcase46', _type='checkbox', _value="46"),'Pending User VM Requests(Clone VM)'),
+           #TR(INPUT(_name='testcase47', _type='checkbox', _value="47"),'Pending User VM Requests(Attach Disk)'),
+           TR(INPUT(_name='testcase48', _type='checkbox', _value="48"),'Create VM'),
            TR(INPUT(_name='testcase93', _type='checkbox', _value="93"),'Maintain Idompotency'),
            
            

@@ -1,0 +1,841 @@
+(dp1
+S'output'
+p2
+S'<class \'selenium.common.exceptions.NoSuchElementException\'> Message: u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\' ; Stacktrace: \n    at <anonymous> (file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:8904)\n    at <anonymous> (file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:396) '
+p3
+sS'layer'
+p4
+S'/home/nalini/Desktop/web2py/applications/testapp/controllers/default.py'
+p5
+sS'code'
+p6
+S'# -*- coding: utf-8 -*-\n# this file is released under public domain and you can use without limitations\n\n#########################################################################\n## This is a sample controller\n## - index is the default action of any application\n## - user is required for authentication and authorization\n## - download is for downloading files uploaded in the db (does streaming)\n## - call exposes all registered services (none by default)\n#########################################################################\ndef user():\n    """\n    exposes:\n    http://..../[app]/default/user/login\n    http://..../[app]/default/user/logout\n    http://..../[app]/default/user/register\n    http://..../[app]/default/user/profile\n    http://..../[app]/default/user/retrieve_password\n    http://..../[app]/default/user/change_password\n    http://..../[app]/default/user/manage_users (requires membership in \n    use @auth.requires_login()\n        @auth.requires_membership(\'group name\')\n        @auth.requires_permission(\'read\',\'table name\',record_id)\n    to decorate functions that need access control\n    """\n    return dict(form=auth())\n\n#@cache.action()\ndef download():\n    """\n    allows downloading of uploaded files\n    http://..../[app]/default/download/[filename]\n    """\n    return response.download(request, db)\n\n\ndef call():\n    """\n    exposes services. for example:\n    http://..../[app]/default/call/jsonrpc\n    decorate with @services.jsonrpc the functions to expose\n    supports xml, json, xmlrpc, jsonrpc, amfrpc, rss, csv\n    """\n    return service()\n\n\n@auth.requires_signature()\ndef data():\n    """\n    http://..../[app]/default/data/tables\n    http://..../[app]/default/data/create/[table]\n    http://..../[app]/default/data/read/[table]/[id]\n    http://..../[app]/default/data/update/[table]/[id]\n    http://..../[app]/default/data/delete/[table]/[id]\n    http://..../[app]/default/data/select/[table]\n    http://..../[app]/default/data/search/[table]\n    but URLs must be signed, i.e. linked with\n      A(\'table\',_href=URL(\'data/tables\',user_signature=True))\n    or with the signed load operator\n      LOAD(\'default\',\'data.load\',args=\'tables\',ajax=True,user_signature=True)\n    """\n    return dict(form=crud())\n    \n    \n    \ndef unit_testing():\n    import commands\n    form = FORM(  TABLE\n        (  TR(INPUT(_name=\'testcase54\', _type=\'checkbox\', _value="54"),\'All\'),\n           TR(INPUT(_name=\'testcase1\', _type=\'checkbox\', _value="1"),\'Login\'),\n           TR(INPUT(_name=\'testcase2\', _type=\'checkbox\', _value="2"),\'Configure System: Add Host\'),\n           TR(INPUT(_name=\'testcase3\', _type=\'checkbox\', _value="3"),\'Configure System: Add Template\'),\n           TR(INPUT(_name=\'testcase4\', _type=\'checkbox\', _value="4"),\'Configure System: Add Datastore\'),\n           TR(INPUT(_name=\'testcase5\', _type=\'checkbox\', _value="5"),\'Configure System:Add Security Domain\'),\n           TR(INPUT(_name=\'testcase6\', _type=\'checkbox\', _value="6"),\'Request VM\'),\n           TR(INPUT(_name=\'testcase7\', _type=\'checkbox\', _value="7"),\'My VMs\'),\n           TR(INPUT(_name=\'testcase8\', _type=\'checkbox\', _value="8"),\'My Pending Tasks\'),\n           TR(INPUT(_name=\'testcase9\', _type=\'checkbox\', _value="9"),\'My Completed Tasks\'),\n           TR(INPUT(_name=\'testcase10\', _type=\'checkbox\', _value="10"),\'My Failed Taskss\'),\n           TR(INPUT(_name=\'testcase11\', _type=\'checkbox\', _value="11"),\'Pending Faculty-Level VM Approvals(Install VM)\'),\n           TR(INPUT(_name=\'testcase12\', _type=\'checkbox\', _value="12"),\'Pending Faculty-Level VM Approvals(Clone VM)\'),\n           TR(INPUT(_name=\'testcase13\', _type=\'checkbox\', _value="13"),\'Pending Faculty-Level VM Approvals(Attach Disk)\'), \n           TR(INPUT(_name=\'testcase14\', _type=\'checkbox\', _value="14"),\'Pending Org-Level VM Approvals(Install VM)\'),\n           TR(INPUT(_name=\'testcase15\', _type=\'checkbox\', _value="15"),\'Pending Org-Level VM Approvals(Clone VM)\'),\n           TR(INPUT(_name=\'testcase16\', _type=\'checkbox\', _value="16"),\'Pending Org-Level VM Approvals(Attach Disk)\'), \n           TR(INPUT(_name=\'testcase17\', _type=\'checkbox\', _value="17"),\'List All Org-Level VMs\',),\n           TR(INPUT(_name=\'testcase18\', _type=\'checkbox\', _value="18"),\'All VMs\'),\n           TR(INPUT(_name=\'testcase19\', _type=\'checkbox\', _value="19"),\'Host and VMs\',),\n           TR(INPUT(_name=\'testcase20\', _type=\'checkbox\', _value="20"),\'Pending Tasks\'),\n           TR(INPUT(_name=\'testcase21\', _type=\'checkbox\', _value="21"),\'Completed Tasks\'),\n           TR(INPUT(_name=\'testcase22\', _type=\'checkbox\', _value="22"),\'Failed Tasks\'),\n           TR(INPUT(_name=\'testcase23\', _type=\'checkbox\', _value="23"),\'Take VM snapshot    (Running )\'),\n           TR(INPUT(_name=\'testcase24\', _type=\'checkbox\', _value="24"),\'Pause VM    (Running )\'),\n           TR(INPUT(_name=\'testcase25\', _type=\'checkbox\', _value="25"),\'Add User to VM   (Running )\'),\n           TR(INPUT(_name=\'testcase26\', _type=\'checkbox\', _value="26"),\'Gracefully shut down VM    (Running )\'),\n           TR(INPUT(_name=\'testcase27\', _type=\'checkbox\', _value="27"),\'Forcefully power off VM   (Running )\'),\n           TR(INPUT(_name=\'testcase28\', _type=\'checkbox\', _value="28"),\'Migrate VM(Running)\'),\n           TR(INPUT(_name=\'testcase29\', _type=\'checkbox\', _value="29"),\'Delete VM    (Running)\'),\n           TR(INPUT(_name=\'testcase30\', _type=\'checkbox\', _value="30"),\'Take VM snapshot   (Paused )\'),\n           TR(INPUT(_name=\'testcase32\', _type=\'checkbox\', _value="31"),\'Migrate VM(Paused)\'),\n           TR(INPUT(_name=\'testcase32\', _type=\'checkbox\', _value="32"),\'Unpause VM   (Paused )\'),\n           TR(INPUT(_name=\'testcase33\', _type=\'checkbox\', _value="33"),\'Add User to VM  (Paused )\'), \n\t       TR(INPUT(_name=\'testcase34\', _type=\'checkbox\', _value="34"),\'Delete Addtional User   (Paused )\'),\n           TR(INPUT(_name=\'testcase35\', _type=\'checkbox\', _value="35"),\'Forcefully power off VM   (Paused)\'),\n           TR(INPUT(_name=\'testcase36\', _type=\'checkbox\', _value="36"),\'Delete Snapshot    (Paused )\'),\n           TR(INPUT(_name=\'testcase37\', _type=\'checkbox\', _value="37"),\'Revert Snapshot    (Paused )\'),\n           TR(INPUT(_name=\'testcase38\', _type=\'checkbox\', _value="38"),\'Delete VM   (Paused )\'),\n           TR(INPUT(_name=\'testcase39\', _type=\'checkbox\', _value="39"),\'Turn on VM   (Shutdown )\'),\n           TR(INPUT(_name=\'testcase40\', _type=\'checkbox\', _value="40"),\'Add User to VM  (Shutdown)\'),\n           TR(INPUT(_name=\'testcase41\', _type=\'checkbox\', _value="41"),\'Migrate VM(Shutdown)\'),\n           TR(INPUT(_name=\'testcase42\', _type=\'checkbox\', _value="42"),\'Take VM snapshot   (Shutdown )\'),\n           TR(INPUT(_name=\'testcase43\', _type=\'checkbox\', _value="43"),\'Delete VM   (Shutdown )\'),\n           TR(INPUT(_name=\'testcase44\', _type=\'checkbox\', _value="44"),\'Sanity Table\'), \n           TR(INPUT(_name=\'testcase45\', _type=\'checkbox\', _value="45"),\'Pending User VM Requests(Install VM)\'),\n           TR(INPUT(_name=\'testcase46\', _type=\'checkbox\', _value="46"),\'Pending User VM Requests(Clone VM)\'),\n           TR(INPUT(_name=\'testcase47\', _type=\'checkbox\', _value="47"),\'Pending User VM Requests(Attach Disk)\'),\n           TR(INPUT(_name=\'testcase93\', _type=\'checkbox\', _value="93"),\'Maintain Idompotency\'),\n           \n           \n           BR(),\n           TR(INPUT(_type=\'submit\',_value=\'submit\'))\n          )\n      )\n    if form.process().accepted:\n        for i in range(1,95):\n            test_case_no=request.vars[\'testcase\'+str(i)]\n            if test_case_no!=None:\n                \n                print test_case_no\n                if test_case_no=="54":\n                    for j in range(1,55):\n                        test_case_no=str(j)\n                        test_script(test_case_no)\n                else:\n                    test_script(test_case_no)\n        \n    elif form.errors:\n        response.flash = \'form has errors\'\n    else:\n        response.flash = \'please fill the form\'\n    return dict(form=form)\n    \n\ndef index():\n   \n        import commands\n        form = FORM( TABLE\n                  (  TR(INPUT(_name=\'testcase1\', _type=\'radio\', _value="1"),\'Unit Testing\'),\n                     TR(INPUT(_name=\'testcase2\', _type=\'radio\', _value="2"),\'Integration Testing\'),\n                     TR(INPUT(_name=\'testcase3\', _type=\'radio\', _value="3"),\'All\'),\n                     TR(INPUT(_name=\'testcase4\', _type=\'radio\', _value="4"),\'Network Testing\'),\n                     BR(),\n                     TR(INPUT(_type=\'submit\',_value=\'submit\'))\n                  )\n                )\n        if form.process().accepted:\n            if request.vars[\'testcase1\']!=None:\n                print "unit testing"\n                redirect(URL(\'unit_testing\'))\n            if request.vars[\'testcase2\']!=None:\n                redirect(URL(\'integration_testing\'))\n            if request.vars[\'testcase3\']!=None:\n                 for j in range(1,94):\n                        test_case_no=str(j)\n                        test_script(test_case_no)\n            if request.vars[\'testcase4\']!=None:\n                redirect(URL(\'network_testing\'))\n        elif form.errors:\n            response.flash = \'form has errors\'\n        else:\n            response.flash = \'please fill the form\'\n        return dict(form=form)\n\n\ndef network_testing():\n   \n    import commands\n    form = FORM(TABLE\n             (   \n              \n    TR(INPUT(_name=\'testcase98\', _type=\'checkbox\', _value="98"),\'Packages Install on Host \'),\n   \n     TR(INPUT(_name=\'testcase99\', _type=\'checkbox\', _value="99"),\'Packages Install on Baadal \'),\n    \n    TR(INPUT(_name=\'testcase80\', _type=\'checkbox\', _value="80"),\'VM status on Host \'),\n    BR(),\n    TR(INPUT(_type=\'submit\',_value=\'submit\'))\n            )\n            )\n    if form.process().accepted:\n        if request.vars[\'testcase98\']!=None:\n            packages_install_test(98)\n        if request.vars[\'testcase99\']!=None:\n            packages_install_host(99) \n        if request.vars[\'testcase80\']!=None:\n            check_stat_on_host()    \n    elif form.errors:\n        response.flash = \'form has errors\'\n    else:\n        response.flash = \'please fill the form\'\n    return dict(form=form)\n    \n    \ndef stress_testing(): \n\n    import commands\n    form = FORM(  TABLE\n        (   TR(INPUT(_name=\'testcase0\', _type=\'checkbox\', _value="0"),\'All\'), \n            BR(),\n            TR(INPUT(_type=\'submit\',_value=\'submit\'))\n        )\n        )\n              \n    if form.process().accepted:\n        test_case_no=request.vars[\'testcase0\']\n        if test_case_no!=None:\n            stress_test_script()\n    elif form.errors:\n        response.flash = \'form has errors\'\n    else:\n        response.flash = \'please fill the form\'\n    return dict(form=form)\n    \n   \ndef integration_testing(): \n    import commands\n    form = FORM(  TABLE\n                  \n                  (    TR(INPUT(_name=\'testcase93\', _type=\'checkbox\', _value="93"),\'Maintain Idompotency\'),\n                       TR(INPUT(_name=\'testcase95\', _type=\'checkbox\', _value="95"),\'VM Performance(Memory)\'),\n                       TR(INPUT(_name=\'testcase96\', _type=\'checkbox\', _value="96"),\'VM Performance(CPU)\'),\n                       TR(INPUT(_name=\'testcase97\', _type=\'checkbox\', _value="97"),\'VM Performance(Network)\'),\n                       TR(INPUT(_name=\'testcase98\', _type=\'checkbox\', _value="98"),\'VM Performance(Disk)\'),\n                       TR(INPUT(_name=\'testcase99\', _type=\'checkbox\', _value="99"),\'VM Performance   (Shutdown )\'),\n                       TR(INPUT(_name=\'testcase56\', _type=\'checkbox\', _value="56"),\'User Request VM(Approved by Faculty,org-admin,admin)\'),\n                       TR(INPUT(_name=\'testcase57\', _type=\'checkbox\', _value="57"),\'User Request VM(Approved by Faculty and Rejected by org-admin)\'),\n                       TR(INPUT(_name=\'testcase58\', _type=\'checkbox\', _value="58"),\'User Request VM(Approved by Faculty,org-admin and Rejected by admin)\'),\n                       TR(INPUT(_name=\'testcase59\', _type=\'checkbox\', _value="59"),\'User Request VM(Rejected by Faculty )\'),\n#                             \n                  #     TR(INPUT(_name=\'testcase60\', _type=\'checkbox\', _value="60"),\'Take VM snapshot    (Running )\'),\n                   #    TR(INPUT(_name=\'testcase61\', _type=\'checkbox\', _value="61"),\'Pause VM   (Running )\'),\n                    #   TR(INPUT(_name=\'testcase62\', _type=\'checkbox\', _value="62"),\'Add User to VM   (Running )\'),\n                     #  TR(INPUT(_name=\'testcase65\', _type=\'checkbox\', _value="65"),\'Delete VM    (Running)\'),\n                      # TR(INPUT(_name=\'testcase64\', _type=\'checkbox\', _value="64"),\'Gracefully shut down VM    (Running )\'),\n                      # TR(INPUT(_name=\'testcase63\', _type=\'checkbox\', _value="63"),\'Forcefully power off VM   (Running )\'),\n                      # TR(INPUT(_name=\'testcase66\', _type=\'checkbox\', _value="66") ,\'Migrate VM   (Running )\'),\n                       #TR(INPUT(_name=\'testcase67\', _type=\'checkbox\', _value="67"),\'Take VM snapshot   (Paused )\'),\n                       #TR(INPUT(_name=\'testcase68\', _type=\'checkbox\', _value="68"),\'Unpause VM   (Paused )\'),\n                       #TR(INPUT(_name=\'testcase69\', _type=\'checkbox\', _value="69"),\'Add User to VM  (Paused )\'),\n                       #TR(INPUT(_name=\'testcase75\', _type=\'checkbox\', _value="75"),\'Delete VM   (Paused )\'),\n                       #TR(INPUT(_name=\'testcase71\', _type=\'checkbox\', _value="71"),\'Forcefully power off VM   (Paused)\'),\n                       #TR(INPUT(_name=\'testcase70\', _type=\'checkbox\', _value="70"),\'Migrate VM   (Paused )\'),\n                       #TR(INPUT(_name=\'testcase72\', _type=\'checkbox\', _value="72"),\'Delete Add User  (Paused )\'),\n                       #TR(INPUT(_name=\'testcase73\', _type=\'checkbox\', _value="73"),\'Revert Snapshot  (Paused )\'),\n                      # TR(INPUT(_name=\'testcase74\', _type=\'checkbox\', _value="74"),\'Delete snapshot   (Paused )\'),\n                      # TR(INPUT(_name=\'testcase76\', _type=\'checkbox\', _value="76"),\'Turn on VM   (Shutdown )\'),\n                      # TR(INPUT(_name=\'testcase77\', _type=\'checkbox\', _value="77"),\'Add User to VM  (Shutdown)\'),\n                       #TR(INPUT(_name=\'testcase80\', _type=\'checkbox\', _value="80"),\'Delete VM   (Shutdown )\'),\n                      # TR(INPUT(_name=\'testcase78\', _type=\'checkbox\', _value="78"),\'Take VM snapshot   (Shutdown )\'),\n                       #TR(INPUT(_name=\'testcase79\', _type=\'checkbox\', _value="79"),\'Migrate VM   (Shutdown )\'),\n                       #TR(INPUT(_name=\'testcase107\', _type=\'checkbox\', _value="107"),\'User Request Attach Disk(Approved by Faculty,org-admin,admin)\'),\n                       # TR(INPUT(_name=\'testcase71\', _type=\'checkbox\', _value="71"), \'Org-Admin Request VM(Rejected by admin)\'),\n                       #TR(INPUT(_name=\'testcase109\', _type=\'checkbox\', _value="109"),\'User Request Attach Disk(Approved by Faculty and Rejected by org-admin)\'),\n                      #TR(INPUT(_name=\'testcase108\', _type=\'checkbox\', _value="108"),\'User Request Attach Disk(Approved by Faculty,org-admin and Rejected by admin)\'),\n                      # TR(INPUT(_name=\'testcase110\', _type=\'checkbox\', _value="110"),\'User Request Attach Disk(Rejected by Faculty )\'),            \n                     # TR(INPUT(_name=\'testcase105\', _type=\'checkbox\', _value="105"),\'Org-Admin  Attach Disk(Approved by admin)\'),\n                   # TR(INPUT(_name=\'testcase106\', _type=\'checkbox\', _value="106"), \'Org-Admin Attach Disk(Rejected by admin)\'),                    \n                     \n                   # TR(INPUT(_name=\'testcase102\', _type=\'checkbox\', _value="102"),\'User Request Clone VM(Approved by Faculty and Rejected by org-admin)\'),\n                   #   TR(INPUT(_name=\'testcase112\', _type=\'checkbox\', _value="112"),\'User Request Clone VM(Rejected by Faculty )\'),\n                   \n                  #   TR(INPUT(_name=\'testcase118\', _type=\'checkbox\', _value="118"),\'User Request Clone VM(Approved by Faculty,org-admin,admin)\'),\n                #   TR(INPUT(_name=\'testcase119\', _type=\'checkbox\', _value="119"),\'User Request Clone VM(Approved by Faculty and Rejected by org-admin)\'),\n                 #     TR(INPUT(_name=\'testcase120\', _type=\'checkbox\', _value="120"),\'User Request Clone VM(Approved by Faculty,org-admin and Rejected by admin)\'),\n                  #    TR(INPUT(_name=\'testcase121\', _type=\'checkbox\', _value="121"),\'User Request Edit VM Config(Rejected by Faculty )\'),\n                   \n                      BR(),\n                      TR(INPUT(_type=\'submit\',_value=\'submit\'))\n            )\n     )\n    if form.process().accepted:\n        for i in range(56,100):\n            test_case_no=request.vars[\'testcase\'+str(i)]\n            if i<=94:\n                if test_case_no!=None:\n                    test_script(test_case_no)\n            else :\n                if test_case_no!=None:\n                    graph_test(test_case_no)\n            \n    elif form.errors:\n        response.flash = \'form has errors\'\n    else:\n        response.flash = \'please fill the form\'\n    return dict(form=form)\n\nresponse._vars=response._caller(integration_testing)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'stacktrace'
+p12
+S"[u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...glecode.com/components/driver_component.js:8904)', u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...oglecode.com/components/driver_component.js:396)']"
+p13
+sS'__module__'
+p14
+S"'selenium.common.exceptions'"
+p15
+sS'__getslice__'
+p16
+S"<method-wrapper '__getslice__' of NoSuchElementException object>"
+p17
+sS'__str__'
+p18
+S'<bound method NoSuchElementException.__str__ of NoSuchElementException()>'
+p19
+sS'__reduce__'
+p20
+S'<built-in method __reduce__ of NoSuchElementException object>'
+p21
+sS'__dict__'
+p22
+S'{\'msg\': u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\', \'screen\': None, \'stacktrace\': [u\'    at <anonymous> (file:///tmp/tmpulEeo6/exte...glecode.com/components/driver_component.js:8904)\', u\'    at <anonymous> (file:///tmp/tmpulEeo6/exte...oglecode.com/components/driver_component.js:396)\']}'
+p23
+sS'__sizeof__'
+p24
+S'<built-in method __sizeof__ of NoSuchElementException object>'
+p25
+sS'__weakref__'
+p26
+S'None'
+p27
+sS'__init__'
+p28
+S'<bound method NoSuchElementException.__init__ of NoSuchElementException()>'
+p29
+sS'__setattr__'
+p30
+S"<method-wrapper '__setattr__' of NoSuchElementException object>"
+p31
+sS'__reduce_ex__'
+p32
+S'<built-in method __reduce_ex__ of NoSuchElementException object>'
+p33
+sS'__new__'
+p34
+S'<built-in method __new__ of type object>'
+p35
+sS'__format__'
+p36
+S'<built-in method __format__ of NoSuchElementException object>'
+p37
+sS'__class__'
+p38
+S"<class 'selenium.common.exceptions.NoSuchElementException'>"
+p39
+sS'msg'
+p40
+S'u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\''
+p41
+sS'__doc__'
+p42
+S"'\\n    Thrown when element could not be found.\\n\\n  ...it wrapper to wait for an element to appear.\\n    '"
+p43
+sS'__getitem__'
+p44
+S"<method-wrapper '__getitem__' of NoSuchElementException object>"
+p45
+sS'__setstate__'
+p46
+S'<built-in method __setstate__ of NoSuchElementException object>'
+p47
+sS'__getattribute__'
+p48
+S"<method-wrapper '__getattribute__' of NoSuchElementException object>"
+p49
+sS'screen'
+p50
+S'None'
+p51
+sS'args'
+p52
+S'()'
+p53
+sS'__subclasshook__'
+p54
+S'<built-in method __subclasshook__ of type object>'
+p55
+sS'__unicode__'
+p56
+S'<built-in method __unicode__ of NoSuchElementException object>'
+p57
+sS'__delattr__'
+p58
+S"<method-wrapper '__delattr__' of NoSuchElementException object>"
+p59
+sS'__repr__'
+p60
+S"<method-wrapper '__repr__' of NoSuchElementException object>"
+p61
+sS'__hash__'
+p62
+S"<method-wrapper '__hash__' of NoSuchElementException object>"
+p63
+ssS'evalue'
+p64
+S'Message: u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\' ; Stacktrace: \n    at <anonymous> (file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:8904)\n    at <anonymous> (file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:396) '
+p65
+sS'request'
+p66
+cgluon.html
+XML_unpickle
+p67
+(S's\xfe_\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">ajax</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">application</td><td style="vertical-align:top;">:</td><td><div>testapp</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cid</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">controller</td><td style="vertical-align:top;">:</td><td><div>default</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_admin</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-d862c030-1e30-4a2e-8c3c-29570d3bc33c<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_testapp</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_welcome</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-451a9551-702a-4b37-ac25-3807b172789b<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">env</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">CONTENT_LENGTH</td><td style="vertical-align:top;">:</td><td><div>453</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">CONTENT_TYPE</td><td style="vertical-align:top;">:</td><td><div>multipart/form-data; boundary=---------------------------123274084611129214791169120035</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_ENCODING</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_ACCEPT_LANGUAGE</td><td style="vertical-align:top;">:</td><td><div>en-US,en;q=0.5</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONNECTION</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONTENT_LENGTH</td><td style="vertical-align:top;">:</td><td><div>453</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_CONTENT_TYPE</td><td style="vertical-align:top;">:</td><td><div>multipart/form-data; boundary=---------------------------123274084611129214791169120035</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_COOKIE</td><td style="vertical-align:top;">:</td><td><div>session_id_welcome=127.0.0.1-451a9551-702a-4b37-ac25-3807b172789b; session_id_admin=127.0.0.1-d862c030-1e30-4a2e-8c3c-29570d3bc33c; session_id_testapp=127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_HOST</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_REFERER</td><td style="vertical-align:top;">:</td><td><div>http://127.0.0.1:8000/testapp/default/integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">HTTP_USER_AGENT</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:16.0) Gecko/20100101 Firefox/16.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">PATH_INFO</td><td style="vertical-align:top;">:</td><td><div>/testapp/default/integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">QUERY_STRING</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_ADDR</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REMOTE_PORT</td><td style="vertical-align:top;">:</td><td><div>56529</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">REQUEST_METHOD</td><td style="vertical-align:top;">:</td><td><div>POST</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SCRIPT_NAME</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_NAME</td><td style="vertical-align:top;">:</td><td><div>ubuntu</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PORT</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_PROTOCOL</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">SERVER_SOFTWARE</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/home/nalini/Desktop/web2py/applications/testapp/&#x27;, &#x27;/home/nalini/Desktop/web2py/applications/welcome/&#x27;, &#x27;/home/nalini/Desktop/web2py/applications/admin/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0xa68d1ec: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;127.0.1.1&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;ubuntu&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/nalini/Desktop/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">content_length</td><td style="vertical-align:top;">:</td><td><div>453</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">content_type</td><td style="vertical-align:top;">:</td><td><div>multipart/form-data; boundary=---------------------------123274084611129214791169120035</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept</td><td style="vertical-align:top;">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_encoding</td><td style="vertical-align:top;">:</td><td><div>gzip, deflate</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_accept_language</td><td style="vertical-align:top;">:</td><td><div>en-US,en;q=0.5</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_connection</td><td style="vertical-align:top;">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_content_length</td><td style="vertical-align:top;">:</td><td><div>453</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_content_type</td><td style="vertical-align:top;">:</td><td><div>multipart/form-data; boundary=---------------------------123274084611129214791169120035</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_cookie</td><td style="vertical-align:top;">:</td><td><div>session_id_welcome=127.0.0.1-451a9551-702a-4b37-ac25-3807b172789b; session_id_admin=127.0.0.1-d862c030-1e30-4a2e-8c3c-29570d3bc33c; session_id_testapp=127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_host</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_referer</td><td style="vertical-align:top;">:</td><td><div>http://127.0.0.1:8000/testapp/default/integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">http_user_agent</td><td style="vertical-align:top;">:</td><td><div>Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:16.0) Gecko/20100101 Firefox/16.0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>ubuntu.iitd.ernet.in</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>ubuntu</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path_info</td><td style="vertical-align:top;">:</td><td><div>/testapp/default/integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">query_string</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_addr</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">remote_port</td><td style="vertical-align:top;">:</td><td><div>56529</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_method</td><td style="vertical-align:top;">:</td><td><div>POST</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">request_uri</td><td style="vertical-align:top;">:</td><td><div>/testapp/default/integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">script_name</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_name</td><td style="vertical-align:top;">:</td><td><div>ubuntu</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_port</td><td style="vertical-align:top;">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_protocol</td><td style="vertical-align:top;">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">server_software</td><td style="vertical-align:top;">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_path</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.9.4-stable+timestamp.2014.03.05.04.44.09</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0xb78850d0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0xa65444c&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0xac3534ac&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi.version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_errors</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0xb78850d0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_file_wrapper</td><td style="vertical-align:top;">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0xa65444c&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_input</td><td style="vertical-align:top;">:</td><td><div>&lt;socket._fileobject object at 0xac3534ac&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multiprocess</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_multithread</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_run_once</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_url_scheme</td><td style="vertical-align:top;">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi_version</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">extension</td><td style="vertical-align:top;">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">folder</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py/applications/testapp/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">function</td><td style="vertical-align:top;">:</td><td><div>integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">global_settings</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">app_folders</td><td style="vertical-align:top;">:</td><td><div>set([&#x27;/home/nalini/Desktop/web2py/applications/testapp/&#x27;, &#x27;/home/nalini/Desktop/web2py/applications/welcome/&#x27;, &#x27;/home/nalini/Desktop/web2py/applications/admin/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">applications_parent</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_args</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cmd_options</td><td style="vertical-align:top;">:</td><td><div>&lt;Values at 0xa68d1ec: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [&#x27;127.0.1.1&#x27;], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;ubuntu&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/nalini/Desktop/web2py&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;profiler_dir&#x27;: None, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;interfaces&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;&lt;ask&gt;&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">db_sessions</td><td style="vertical-align:top;">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">debugging</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">gluon_parent</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_jython</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_pypy</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_source</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">local_hosts</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>ubuntu.iitd.ernet.in</div></td></tr><tr><td><div>::1</div></td></tr><tr><td><div>ubuntu</div></td></tr><tr><td><div>127.0.1.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">web2py_version</td><td style="vertical-align:top;">:</td><td><div>2.9.4-stable+timestamp.2014.03.05.04.44.09</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_https</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_local</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">is_restful</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">now</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2014, 4, 22, 17, 53, 32, 525406)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_args</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">raw_extension</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">url</td><td style="vertical-align:top;">:</td><td><div>/testapp/default/integration_testing</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">utcnow</td><td style="vertical-align:top;">:</td><td><div>datetime.datetime(2014, 4, 22, 12, 23, 32, 525437)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">uuid</td><td style="vertical-align:top;">:</td><td><div>testapp/127.0.0.1.2014-04-22.17-53-32.cc9cf712-0e83-4453-a1bf-fd7fbc2fb624</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">wsgi</td><td style="vertical-align:top;">:</td><td><div>&lt;gluon.main.LazyWSGI object at 0xad99f6ac&gt;</div></td></tr></table></div>'
+tRp68
+sS'frames'
+p69
+(lp70
+(dp71
+S'file'
+p72
+S'/home/nalini/Desktop/web2py/gluon/restricted.py'
+p73
+sS'dump'
+p74
+(dp75
+S'environment'
+p76
+S"{'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, ...}"
+p77
+sS'ccode'
+p78
+S'<code object <module> at 0xad504e30, file "/home...cations/testapp/controllers/default.py", line 11>'
+p79
+ssS'lnum'
+p80
+I217
+sS'lines'
+p81
+(dp82
+I212
+S'    try:'
+p83
+sI213
+S'        if isinstance(code, types.CodeType):'
+p84
+sI214
+S'            ccode = code'
+p85
+sI215
+S'        else:'
+p86
+sI216
+S'            ccode = compile2(code, layer)'
+p87
+sI217
+S'        exec ccode in environment'
+p88
+sI218
+S'    except HTTP:'
+p89
+sI219
+S'        raise'
+p90
+sI220
+S'    except RestrictedError:'
+p91
+sI221
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p92
+ssS'call'
+p93
+S"(code='# -*- coding: utf-8 -*-\\n# this file is released ...onse._vars=response._caller(integration_testing)\\n', environment={'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, 'CAT': <class 'gluon.html.CAT'>, 'CENTER': <class 'gluon.html.CENTER'>, ...}, layer='/home/nalini/Desktop/web2py/applications/testapp/controllers/default.py')"
+p94
+sS'func'
+p95
+S'restricted'
+p96
+sa(dp97
+g72
+S'/home/nalini/Desktop/web2py/applications/testapp/controllers/default.py'
+p98
+sg74
+(dp99
+sg80
+I297
+sg81
+(dp100
+I288
+S'                if test_case_no!=None:'
+p101
+sI289
+S'                    graph_test(test_case_no)'
+p102
+sI290
+S''
+sI291
+S'    elif form.errors:'
+p103
+sI292
+S"        response.flash = 'form has errors'"
+p104
+sI293
+S'    else:'
+p105
+sI294
+S"        response.flash = 'please fill the form'"
+p106
+sI295
+S'    return dict(form=form)'
+p107
+sI286
+S'                    test_script(test_case_no)'
+p108
+sI287
+S'            else :'
+p109
+ssg93
+S'()'
+p110
+sg95
+S'<module>'
+p111
+sa(dp112
+g72
+S'/home/nalini/Desktop/web2py/gluon/globals.py'
+p113
+sg74
+(dp114
+S'self'
+p115
+S'undefined'
+p116
+sS'f'
+S'<function integration_testing>'
+p117
+ssg80
+I385
+sg81
+(dp118
+I384
+S'        self._vars = None'
+p119
+sI385
+S'        self._caller = lambda f: f()'
+p120
+sI386
+S'        self._view_environment = None'
+p121
+sI387
+S'        self._custom_commit = None'
+p122
+sI388
+S'        self._custom_rollback = None'
+p123
+sI389
+S''
+sI380
+S'        self.menu = []             # used by the default view layout'
+p124
+sI381
+S'        self.files = []            # used by web2py_ajax.html'
+p125
+sI382
+S'        self.generic_patterns = []  # patterns to allow generic views'
+p126
+sI383
+S"        self.delimiters = ('{{', '}}')"
+p127
+ssg93
+S'(f=<function integration_testing>)'
+p128
+sg95
+S'<lambda>'
+p129
+sa(dp130
+g72
+S'/home/nalini/Desktop/web2py/applications/testapp/controllers/default.py'
+p131
+sg74
+(dp132
+S'test_case_no'
+p133
+S"'93'"
+p134
+sS'global test_script'
+p135
+S'<function test_script>'
+p136
+ssg80
+I286
+sg81
+(dp137
+I288
+S'                if test_case_no!=None:'
+p138
+sI289
+S'                    graph_test(test_case_no)'
+p139
+sI290
+S''
+sI281
+S'    if form.process().accepted:'
+p140
+sI282
+S'        for i in range(56,100):'
+p141
+sI283
+S"            test_case_no=request.vars['testcase'+str(i)]"
+p142
+sI284
+S'            if i<=94:'
+p143
+sI285
+S'                if test_case_no!=None:'
+p144
+sI286
+S'                    test_script(test_case_no)'
+p145
+sI287
+S'            else :'
+p146
+ssg93
+S'()'
+p147
+sg95
+S'integration_testing'
+p148
+sa(dp149
+g72
+S'/home/nalini/Desktop/web2py/applications/testapp/models/test.py'
+p150
+sg74
+(dp151
+S'xml_child'
+p152
+S"<Element 'test_case1'>"
+p153
+sS'xml_sub_child'
+p154
+S"<Element 'idompotent'>"
+p155
+sS'global maintain_idompotency'
+p156
+S'<function maintain_idompotency>'
+p157
+sS'driver'
+p158
+S'<selenium.webdriver.firefox.webdriver.WebDriver object>'
+p159
+ssg80
+I124
+sg81
+(dp160
+I128
+S'                    \tif k==39:'
+p161
+sI119
+S''
+sI120
+S'                    \telif field_type=="attach_disk":'
+p162
+sI121
+S'                        \toperation_name=xml_sub_child.text'
+p163
+sI122
+S'                        \tattack_disk(driver,xml_sub_child,xml_child,vm_name,operation_name)#checking for data in table'
+p164
+sI123
+S'                        elif field_type=="idompotent":'
+p165
+sI124
+S'                             maintain_idompotency(driver,xml_sub_child,xml_child)'
+p166
+sI125
+S'\t\t\t     #vm_list(driver)'
+p167
+sI126
+S'                    \telse:'
+p168
+sI127
+S'                        \tlogging.debug("report problem") #logging the report'
+p169
+ssg93
+S"(test_case_no='93')"
+p170
+sg95
+S'test_script'
+p171
+sa(dp172
+g72
+S'/home/nalini/Desktop/web2py/applications/testapp/models/test.py'
+p173
+sg74
+(dp174
+S'xml_child'
+p175
+S"<Element 'test_case1'>"
+p176
+sS'xml_sub_child'
+p177
+S"<Element 'idompotent'>"
+p178
+sS'driver'
+p179
+S'<selenium.webdriver.firefox.webdriver.WebDriver object>'
+p180
+sS'global delete_vm_from_allvms'
+p181
+S'<function delete_vm_from_allvms>'
+p182
+ssg80
+I1085
+sg81
+(dp183
+I1088
+S''
+sI1089
+S''
+sI1080
+S''
+sI1081
+S''
+sI1082
+S'def maintain_idompotency(driver,xml_sub_child,xml_child):'
+p184
+sI1083
+S'    execute_query("FLUSH QUERY CACHE")'
+p185
+sI1084
+S'    deletevm_from_pending_request_table(driver,xml_sub_child,xml_child)'
+p186
+sI1085
+S'    delete_vm_from_allvms(driver,xml_sub_child,xml_child)'
+p187
+sI1086
+S'    return'
+p188
+sI1087
+S''
+ssg93
+S"(driver=<selenium.webdriver.firefox.webdriver.WebDriver object>, xml_sub_child=<Element 'idompotent'>, xml_child=<Element 'test_case1'>)"
+p189
+sg95
+S'maintain_idompotency'
+p190
+sa(dp191
+g72
+S'/home/nalini/Desktop/web2py/applications/testapp/models/test.py'
+p192
+sg74
+(dp193
+S'driver.find_element_by_partial_link_text'
+p194
+S'<bound method WebDriver.find_element_by_partial_...um.webdriver.firefox.webdriver.WebDriver object>>'
+p195
+sS').click'
+p196
+g116
+sS'driver'
+p197
+S'<selenium.webdriver.firefox.webdriver.WebDriver object>'
+p198
+ssg80
+I1156
+sg81
+(dp199
+I1152
+S'\t\t   \t\t    logger.debug(str(user_name) + " VM (" + str(vm_id[3:]) + ") has been deleted from All VMs table")'
+p200
+sI1153
+S'                    select_row=0'
+p201
+sI1154
+S'                    col_count=0'
+p202
+sI1155
+S'                    vm_exist=1'
+p203
+sI1156
+S'                    driver.find_element_by_partial_link_text("All VMs").click()'
+p204
+sI1157
+S'                    driver.refresh()'
+p205
+sI1158
+S'                    time.sleep(10)'
+p206
+sI1159
+S'                    break'
+p207
+sI1160
+S''
+sI1151
+S'\t\t   \t\t    click_on_dialogbox(driver)'
+p208
+ssg93
+S"(driver=<selenium.webdriver.firefox.webdriver.WebDriver object>, xml_sub_child=<Element 'idompotent'>, xml_child=<Element 'test_case1'>)"
+p209
+sg95
+S'delete_vm_from_allvms'
+p210
+sa(dp211
+g72
+S'/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/webdriver.py'
+p212
+sg74
+(dp213
+S'self.find_element'
+p214
+S'<bound method WebDriver.find_element of <selenium.webdriver.firefox.webdriver.WebDriver object>>'
+p215
+sS'self'
+p216
+S'<selenium.webdriver.firefox.webdriver.WebDriver object>'
+p217
+sS'link_text'
+p218
+S"'All VMs'"
+p219
+sS'value'
+p220
+g116
+sS'global By'
+p221
+S"<class 'selenium.webdriver.common.by.By'>"
+p222
+sS'By.PARTIAL_LINK_TEXT'
+p223
+S"'partial link text'"
+p224
+sS'by'
+p225
+g116
+ssg80
+I269
+sg81
+(dp226
+I264
+S'         - link_text: The text of the element to partially match on.'
+p227
+sI265
+S''
+sI266
+S'        :Usage:'
+p228
+sI267
+S"            driver.find_element_by_partial_link_text('Sign')"
+p229
+sI268
+S'        """'
+p230
+sI269
+S'        return self.find_element(by=By.PARTIAL_LINK_TEXT, value=link_text)'
+p231
+sI270
+S''
+sI271
+S'    def find_elements_by_partial_link_text(self, link_text):'
+p232
+sI272
+S'        """'
+p233
+sI273
+S'        Finds elements by a partial match of their link text.'
+p234
+ssg93
+S"(self=<selenium.webdriver.firefox.webdriver.WebDriver object>, link_text='All VMs')"
+p235
+sg95
+S'find_element_by_partial_link_text'
+p236
+sa(dp237
+g72
+S'/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/webdriver.py'
+p238
+sg74
+(dp239
+S'by'
+p240
+S"'partial link text'"
+p241
+sS'value'
+p242
+S"'All VMs'"
+p243
+ssg80
+I681
+sg81
+(dp244
+I676
+S'        """'
+p245
+sI677
+S'        if not By.is_valid(by) or not isinstance(value, str):'
+p246
+sI678
+S'            raise InvalidSelectorException("Invalid locator values passed in")'
+p247
+sI679
+S''
+sI680
+S'        return self.execute(Command.FIND_ELEMENT,'
+p248
+sI681
+S"                             {'using': by, 'value': value})['value']"
+p249
+sI682
+S''
+sI683
+S'    def find_elements(self, by=By.ID, value=None):'
+p250
+sI684
+S'        """'
+p251
+sI685
+S"        'Private' method used by the find_elements_by_* methods."
+p252
+ssg93
+S"(self=<selenium.webdriver.firefox.webdriver.WebDriver object>, by='partial link text', value='All VMs')"
+p253
+sg95
+S'find_element'
+p254
+sa(dp255
+g72
+S'/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/webdriver.py'
+p256
+sg74
+(dp257
+S'self.error_handler'
+p258
+S'<selenium.webdriver.remote.errorhandler.ErrorHandler object>'
+p259
+sS'self'
+p260
+S'<selenium.webdriver.firefox.webdriver.WebDriver object>'
+p261
+sS'self.error_handler.check_response'
+p262
+S'<bound method ErrorHandler.check_response of <se...bdriver.remote.errorhandler.ErrorHandler object>>'
+p263
+sS'response'
+p264
+S'{u\'name\': u\'findElement\', u\'sessionId\': u\'42e21bdc-cb01-4d61-9f78-5bac028886a3\', u\'status\': 7, u\'value\': {u\'message\': u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\', u\'stackTrace\': [{u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 8904}, {u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 396}]}}'
+p265
+ssg80
+I164
+sg81
+(dp266
+I160
+S''
+sI161
+S'        params = self._wrap_value(params)'
+p267
+sI162
+S'        response = self.command_executor.execute(driver_command, params)'
+p268
+sI163
+S'        if response:'
+p269
+sI164
+S'            self.error_handler.check_response(response)'
+p270
+sI165
+S"            response['value'] = self._unwrap_value("
+p271
+sI166
+S"                response.get('value', None))"
+p272
+sI167
+S'            return response'
+p273
+sI168
+S"        # If the server doesn't send a response, assume the command was"
+p274
+sI159
+S"            params['sessionId'] = self.session_id"
+p275
+ssg93
+S"(self=<selenium.webdriver.firefox.webdriver.WebDriver object>, driver_command='findElement', params={'sessionId': u'42e21bdc-cb01-4d61-9f78-5bac028886a3', 'using': 'partial link text', 'value': 'All VMs'})"
+p276
+sg95
+S'execute'
+p277
+sa(dp278
+g72
+S'/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/errorhandler.py'
+p279
+sg74
+(dp280
+S'exception_class'
+p281
+S"<class 'selenium.common.exceptions.NoSuchElementException'>"
+p282
+sS'message'
+p283
+S'u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\''
+p284
+sS'screen'
+p285
+S'None'
+p286
+sS'stacktrace'
+p287
+S"[u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...glecode.com/components/driver_component.js:8904)', u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...oglecode.com/components/driver_component.js:396)']"
+p288
+ssg80
+I164
+sg81
+(dp289
+I160
+S'            except TypeError:'
+p290
+sI161
+S'                pass'
+p291
+sI162
+S'        if exception_class == ErrorInResponseException:'
+p292
+sI163
+S'            raise exception_class(response, message)'
+p293
+sI164
+S'        raise exception_class(message, screen, stacktrace)'
+p294
+sI165
+S''
+sI166
+S'    def _value_or_default(self, obj, key, default):'
+p295
+sI167
+S'      return obj[key] if key in obj else default'
+p296
+sI158
+S'                    msg = msg % (meth, file)'
+p297
+sI159
+S'                    stacktrace.append(msg)'
+p298
+ssg93
+S'(self=<selenium.webdriver.remote.errorhandler.ErrorHandler object>, response={u\'name\': u\'findElement\', u\'sessionId\': u\'42e21bdc-cb01-4d61-9f78-5bac028886a3\', u\'status\': 7, u\'value\': {u\'message\': u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\', u\'stackTrace\': [{u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 8904}, {u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 396}]}})'
+p299
+sg95
+S'check_response'
+p300
+sasS'pyver'
+p301
+S'Python 2.7.1+: /usr/bin/python (prefix: /usr)'
+p302
+sS'session'
+p303
+g67
+(S's\x1a\x00\x00\x00<div><table></table></div>'
+tRp304
+sS'etype'
+p305
+S"<class 'selenium.common.exceptions.NoSuchElementException'>"
+p306
+sS'date'
+p307
+S'Tue Apr 22 17:54:17 2014'
+p308
+sS'response'
+p309
+g67
+(S's\'2\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top;">body</td><td style="vertical-align:top;">:</td><td><div>&lt;cStringIO.StringO object at 0xae0cb240&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">cookies</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">session_id_testapp</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa<table><tr><td style="font-weight:bold;vertical-align:top;">comment</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">domain</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">expires</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">httponly</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">max-age</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">path</td><td style="vertical-align:top;">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">secure</td><td style="vertical-align:top;">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">version</td><td style="vertical-align:top;">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">delimiters</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">files</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">flash</td><td style="vertical-align:top;">:</td><td><div>Success!</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generic_patterns</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">google_analytics_id</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">headers</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">X-Powered-By</td><td style="vertical-align:top;">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">logo</td><td style="vertical-align:top;">:</td><td><div><a class="brand" href="http://www.web2py.com/"><b>web<span>2</span>py</b>&trade;&nbsp;</a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">menu</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div><table><tr><td><div>Home</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/testapp/default/index</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div><span class="highlighted">web2py</span></div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://web2py.com</div></td></tr><tr><td><div><table><tr><td><div><table><tr><td><div>My Sites</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/site</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>This App</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/admin/default/design/testapp</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Controller&#x27;&gt;, False, &#x27;/admin/default/edit/testapp/controllers/default.py&#x27;), (&lt;lazyT &#x27;View&#x27;&gt;, False, &#x27;/admin/default/edit/testapp/views/default/integration_testing.html&#x27;), (&lt;lazyT &#x27;Layout&#x27;&gt;, False, &#x27;/admin/default/edit/testapp/views/layout.html&#x27;), (&lt;lazyT &#x27;Stylesheet&#x27;&gt;, False, &#x27;/admin/default/edit/testapp/static/css/web2py.css&#x27;), (&lt;lazyT &#x27;DB Model&#x27;&gt;, False, &#x27;/admin/default/edit/testapp/models/db.py&#x27;), (&lt;lazyT &#x27;Menu Model&#x27;&gt;, False, &#x27;/admin/default/edit/testapp/models/menu.py&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;/testapp/appadmin/index&#x27;), (&lt;lazyT &#x27;Errors&#x27;&gt;, False, &#x27;/admin/default/errors/testapp&#x27;), (&lt;lazyT &#x27;About&#x27;&gt;, False, &#x27;/admin/default/about/testapp&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>web2py.com</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Download&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Support&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/support&#x27;), (&lt;lazyT &#x27;Demo&#x27;&gt;, False, &#x27;http://web2py.com/demo_admin&#x27;), (&lt;lazyT &#x27;Quick Examples&#x27;&gt;, False, &#x27;http://web2py.com/examples/default/examples&#x27;), (&lt;lazyT &#x27;FAQ&#x27;&gt;, False, &#x27;http://web2py.com/AlterEgo&#x27;), (&lt;lazyT &#x27;Videos&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/videos/&#x27;), (&lt;lazyT &#x27;Free Applications&#x27;&gt;, False, &#x27;http://web2py.com/appliances&#x27;), (&lt;lazyT &#x27;Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layouts&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;), (&lt;lazyT &#x27;Recipes&#x27;&gt;, False, &#x27;http://web2pyslices.com/&#x27;), (&lt;lazyT &#x27;Semantic&#x27;&gt;, False, &#x27;http://web2py.com/semantic&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Documentation</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>http://www.web2py.com/book</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Preface&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/00&#x27;), (&lt;lazyT &#x27;Introduction&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/01&#x27;), (&lt;lazyT &#x27;Python&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/02&#x27;), (&lt;lazyT &#x27;Overview&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/03&#x27;), (&lt;lazyT &#x27;The Core&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/04&#x27;), (&lt;lazyT &#x27;The Views&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/05&#x27;), (&lt;lazyT &#x27;Database&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/06&#x27;), (&lt;lazyT &#x27;Forms and Validators&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/07&#x27;), (&lt;lazyT &#x27;Email and SMS&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/08&#x27;), (&lt;lazyT &#x27;Access Control&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/09&#x27;), (&lt;lazyT &#x27;Services&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/10&#x27;), (&lt;lazyT &#x27;Ajax Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/11&#x27;), (&lt;lazyT &#x27;Components and Plugins&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/12&#x27;), (&lt;lazyT &#x27;Deployment Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/13&#x27;), (&lt;lazyT &#x27;Other Recipes&#x27;&gt;, False, &#x27;http://www.web2py.com/book/default/chapter/14&#x27;), (&lt;lazyT &#x27;Buy this book&#x27;&gt;, False, &#x27;http://stores.lulu.com/web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Community</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&lt;lazyT &#x27;Groups&#x27;&gt;, False, &#x27;http://www.web2py.com/examples/default/usergroups&#x27;), (&lt;lazyT &#x27;Twitter&#x27;&gt;, False, &#x27;http://twitter.com/web2py&#x27;), (&lt;lazyT &#x27;Live Chat&#x27;&gt;, False, &#x27;http://webchat.freenode.net/?channels=web2py&#x27;)]</div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Plugins</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>None</div></td></tr><tr><td><div>[(&#x27;plugin_wiki&#x27;, False, &#x27;http://web2py.com/examples/default/download&#x27;), (&lt;lazyT &#x27;Other Plugins&#x27;&gt;, False, &#x27;http://web2py.com/plugins&#x27;), (&lt;lazyT &#x27;Layout Plugins&#x27;&gt;, False, &#x27;http://web2py.com/layouts&#x27;)]</div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">meta</td><td style="vertical-align:top;">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top;">author</td><td style="vertical-align:top;">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">description</td><td style="vertical-align:top;">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">generator</td><td style="vertical-align:top;">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">keywords</td><td style="vertical-align:top;">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">models_to_run</td><td style="vertical-align:top;">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^default/\\w+\\.py$</div></td></tr><tr><td><div>^default/integration_testing/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">postprocessing</td><td style="vertical-align:top;">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_client</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_compression_level</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_expires</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_cookie_key</td><td style="vertical-align:top;">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_data_name</td><td style="vertical-align:top;">:</td><td><div>session_data_testapp</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_file</td><td style="vertical-align:top;">:</td><td><div>&lt;open file &#x27;/home/nalini/Desktop/web2py/applications/testapp/sessions/127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa&#x27;, mode &#x27;rb+&#x27; at 0xad70ce90&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_filename</td><td style="vertical-align:top;">:</td><td><div>/home/nalini/Desktop/web2py/applications/testapp/sessions/127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_hash</td><td style="vertical-align:top;">:</td><td><div>c0d23b8e70e7283869f48dab71b18e32</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id</td><td style="vertical-align:top;">:</td><td><div>127.0.0.1-35ecd5d5-984f-4330-bb22-8e6abe164daa</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_id_name</td><td style="vertical-align:top;">:</td><td><div>session_id_testapp</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_locked</td><td style="vertical-align:top;">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_masterapp</td><td style="vertical-align:top;">:</td><td><div>testapp</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_new</td><td style="vertical-align:top;">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">session_storage_type</td><td style="vertical-align:top;">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">status</td><td style="vertical-align:top;">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">subtitle</td><td style="vertical-align:top;">:</td><td><div>customize me!</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">title</td><td style="vertical-align:top;">:</td><td><div>Testapp</div></td></tr><tr><td style="font-weight:bold;vertical-align:top;">view</td><td style="vertical-align:top;">:</td><td><div>default/integration_testing.html</div></td></tr></table></div>'
+tRp310
+sS'locals'
+p311
+(dp312
+S'status'
+p313
+S'7'
+sg12
+S"[u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...glecode.com/components/driver_component.js:8904)', u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...oglecode.com/components/driver_component.js:396)']"
+p314
+sS'frame'
+p315
+S"{u'fileName': u'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js', u'lineNumber': 396}"
+p316
+sS'line'
+p317
+S'396'
+p318
+sS'value'
+p319
+S'{u\'message\': u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\', u\'stackTrace\': [{u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 8904}, {u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 396}]}'
+p320
+sS'self'
+p321
+S'<selenium.webdriver.remote.errorhandler.ErrorHandler object>'
+p322
+sS'exception_class'
+p323
+S"<class 'selenium.common.exceptions.NoSuchElementException'>"
+p324
+sg72
+S"u'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:396'"
+p325
+sg309
+S'{u\'name\': u\'findElement\', u\'sessionId\': u\'42e21bdc-cb01-4d61-9f78-5bac028886a3\', u\'status\': 7, u\'value\': {u\'message\': u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\', u\'stackTrace\': [{u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 8904}, {u\'fileName\': u\'file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js\', u\'lineNumber\': 396}]}}'
+p326
+sg40
+S"u'    at <anonymous> (file:///tmp/tmpulEeo6/exte...oglecode.com/components/driver_component.js:396)'"
+p327
+sS'meth'
+p328
+S"'<anonymous>'"
+p329
+sg50
+S'None'
+p330
+sS'message'
+p331
+S'u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\''
+p332
+sssS'traceback'
+p333
+S'Traceback (most recent call last):\n  File "/home/nalini/Desktop/web2py/gluon/restricted.py", line 217, in restricted\n    exec ccode in environment\n  File "/home/nalini/Desktop/web2py/applications/testapp/controllers/default.py", line 297, in <module>\n  File "/home/nalini/Desktop/web2py/gluon/globals.py", line 385, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/nalini/Desktop/web2py/applications/testapp/controllers/default.py", line 286, in integration_testing\n    test_script(test_case_no)\n  File "/home/nalini/Desktop/web2py/applications/testapp/models/test.py", line 124, in test_script\n    maintain_idompotency(driver,xml_sub_child,xml_child)\n  File "/home/nalini/Desktop/web2py/applications/testapp/models/test.py", line 1085, in maintain_idompotency\n    delete_vm_from_allvms(driver,xml_sub_child,xml_child)\n  File "/home/nalini/Desktop/web2py/applications/testapp/models/test.py", line 1156, in delete_vm_from_allvms\n    driver.find_element_by_partial_link_text("All VMs").click()\n  File "/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/webdriver.py", line 269, in find_element_by_partial_link_text\n    return self.find_element(by=By.PARTIAL_LINK_TEXT, value=link_text)\n  File "/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/webdriver.py", line 681, in find_element\n    {\'using\': by, \'value\': value})[\'value\']\n  File "/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/webdriver.py", line 164, in execute\n    self.error_handler.check_response(response)\n  File "/usr/local/lib/python2.7/dist-packages/selenium/webdriver/remote/errorhandler.py", line 164, in check_response\n    raise exception_class(message, screen, stacktrace)\nNoSuchElementException: Message: u\'Unable to locate element: {"method":"partial link text","selector":"All VMs"}\' ; Stacktrace: \n    at <anonymous> (file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:8904)\n    at <anonymous> (file:///tmp/tmpulEeo6/extensions/fxdriver@googlecode.com/components/driver_component.js:396) \n'
+p334
+s.

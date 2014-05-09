@@ -597,7 +597,7 @@
 
 		
 <test_script5 id="5"  href="Login" xpath="//span[@class='auth_navbar']" query3="  select name,vlan,visible_to_all from security_domain" name="Configure_security">
-<test_case1 value="checking the Security Domain Table">
+<!--<test_case1 value="checking the Security Domain Table">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
 		<submit type="submit">//input[@type='submit']</submit>
@@ -607,7 +607,7 @@
 		<configure type="href">Configure Security Domain</configure>
 		<host_list type="table"   >//div[@class='web2py_htmltable']/table/tbody/tr/td</host_list>
 	</test_case1>
-	<!--<test_case2 value="Checking for empty fields(Domain name)">
+<test_case2 value="Checking for empty fields(Domain name)">
 		<user_name id="user_username" type="input">badalUFA</user_name>
 		<password id="user_password" type="input">baadal</password>
 		<submit type="submit">//input[@type='submit']</submit>
@@ -994,7 +994,7 @@
 	
 	<test_script7 id="7"  href="Login" xpath="//span[@class='auth_navbar']"  name="list_my_vm">
 
-		<test_case1 value="Checking for correct entries in My VMs Table as User(UA) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUA' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case1 value="Checking for correct entries in My VMs Table as User(UA) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUA' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)  order by start_time desc" >
 			<user_name id="user_username" type="input">badalUA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			
@@ -1003,7 +1003,7 @@
 			<list_vm type="href">My VMs</list_vm>
 			<host_ip type="table">//*[@id='myvms']/tbody/tr/td</host_ip>
 		</test_case1>
-		<test_case2 value="Checking for correct entries in My VMs Table as User(UFA) "  query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUFA' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case2 value="Checking for correct entries in My VMs Table as User(UFA) "  query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUFA' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by start_time desc">
 			<user_name id="user_username" type="input">badalUFA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1011,7 +1011,7 @@
 			<list_vm type="href">My VMs</list_vm>
 			<host_ip type="table">//*[@id='myvms']/tbody/tr/td</host_ip>
 		</test_case2>
-		<test_case3 value="Checking for correct entries in My VMs Table as User(UOA) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUOA' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case3 value="Checking for correct entries in My VMs Table as User(UOA) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUOA' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by start_time desc">
 			
 			<user_name id="user_username" type="input">badalUOA</user_name>
 			<password id="user_password" type="input">baadal</password>
@@ -1029,7 +1029,7 @@
 			<list_vm type="href">My VMs</list_vm>
 			<host_ip type="table">//*[@id='myvms']/tbody/tr/td</host_ip>
 		</test_case4>
-		<test_case5 value="Checking for correct entries in My VMs Table as User(UO) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUO' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case5 value="Checking for correct entries in My VMs Table as User(UO) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUO' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by start_time desc">
 			
 			<user_name id="user_username" type="input">badalUO</user_name>
 			<password id="user_password" type="input">baadal</password>
@@ -1039,7 +1039,7 @@
 			<host_ip type="table">//*[@id='myvms']/tbody/tr/td</host_ip>
 		</test_case5>
 		
-		<test_case6 value="Checking for correct entries in My VMs Table as User(UFO) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUFO' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case6 value="Checking for correct entries in My VMs Table as User(UFO) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUFO' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by start_time desc">
 			<user_name id="user_username" type="input">badalUFO</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1048,7 +1048,7 @@
 			<host_ip type="table">//*[@id='myvms']/tbody/tr/td</host_ip>
 		</test_case6>
 		
-		<test_case7 value="Checking for correct entries in My VMs Table as User(UFOA)  " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='ssalaria' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case7 value="Checking for correct entries in My VMs Table as User(UFOA)  " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='ssalaria' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by start_time desc">
 			<user_name id="user_username" type="input">badalUFOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1056,7 +1056,7 @@
 			<list_vm type="href">My VMs</list_vm>
 			<host_ip type="table">//*[@id='myvms']/tbody/tr/td</host_ip>
 		</test_case7>
-		<test_case8 value="Checking for correct entries in My VMs Table as User(UF) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUF' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+		<test_case8 value="Checking for correct entries in My VMs Table as User(UF) " query3="select vm_data.vm_name,concat(user1.first_name,' ',user1.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.public_ip,vm_data.RAM,vm_data.vCPU,vm_data.status from user as user1,user_vm_map,vm_data,user,host where user1.id=vm_data.owner_id and  vm_data.host_id=host.id and user.id=user_id and user_vm_map.vm_id=vm_data.id and user.username='badalUF' and (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by start_time desc">
 			
 			<user_name id="user_username" type="input">badalUF</user_name>
 			<password id="user_password" type="input">baadal</password>
@@ -1174,7 +1174,7 @@
 		<test_script9 id="9"  href="Login" xpath="//span[@class='auth_navbar']"  name="completed_tasks">
 		
 		
-		<test_case1 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUA' order by start_time desc">
+		<test_case1 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUA' ">
 			<user_name id="user_username" type="input">badalUA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1186,7 +1186,7 @@
 			<submit type="submit" xpath="//span[@class='icon-refresh']" >//span[@class='icon-refresh']</submit>
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case1>
-		<test_case2 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UFA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUFA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUFA' order by start_time desc">
+		<test_case2 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UFA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUFA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUFA'">
 			<user_name id="user_username" type="input">badalUFA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1198,7 +1198,7 @@
 			<submit type="submit" xpath="//span[@class='icon-refresh']" >//span[@class='icon-refresh']</submit>
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case2>
-		<test_case3 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UOA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUOA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUOA' order by start_time desc">
+		<test_case3 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UOA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUOA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUOA'">
 			 <user_name id="user_username" type="input">badalUOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1212,7 +1212,7 @@
 		</test_case3>
 		
 		
-		<test_case4 value="Checking for COMPLETED TASKS IN USER MENU TASKS(U)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalU')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalU' order by start_time desc">
+		<test_case4 value="Checking for COMPLETED TASKS IN USER MENU TASKS(U)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalU')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalU' ">
 			<user_name id="user_username" type="input">badalU</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1223,7 +1223,7 @@
 			<submit type="submit" xpath="//span[@class='icon-refresh']" >//span[@class='icon-refresh']</submit>
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case4>
-		<test_case5 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UO)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUO')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUO' order by start_time desc">
+		<test_case5 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UO)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUO')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUO'">
 			<user_name id="user_username" type="input">badalUO</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1236,7 +1236,7 @@
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case5>
 		
-		<test_case6 value="Checking for COMPLETED TASKS IN ADMIN MENU TASKS(UFO)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUFO')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUFO' order by start_time desc">
+		<test_case6 value="Checking for COMPLETED TASKS IN ADMIN MENU TASKS(UFO)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUFO')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUFO'">
 			<user_name id="user_username" type="input">badalUFO</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1249,7 +1249,7 @@
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case6>
 		
-		<test_case7 value="Checking for COMPLETED TASKS IN ADMIN MENU TASKS(UFOA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUFOA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUFOA' order by start_time desc">
+		<test_case7 value="Checking for COMPLETED TASKS IN ADMIN MENU TASKS(UFOA)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUFOA')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUFOA'">
 			<user_name id="user_username" type="input">badalUFOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1261,7 +1261,7 @@
 			<submit type="submit" xpath="//span[@class='icon-refresh']" >//span[@class='icon-refresh']</submit>
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case7>
-		<test_case8 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UF)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUF')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUF' order by start_time desc">
+		<test_case8 value="Checking for COMPLETED TASKS IN USER MENU TASKS(UF)" query3="select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where user1.id=task_queue_event.requester_id and task_queue_event.status=3 and task_queue_event.vm_id in (select vm_id from user,user_vm_map where user.id=user_vm_map.user_id and user.username='badalUF')  union select task_type,vm_name,concat(user1.first_name,' ',user1.last_name) as user_name,task_queue_event.start_time,task_queue_event.end_time from user as user1,task_queue_event where  user1.id=task_queue_event.requester_id and task_queue_event.status=3 and user1.username='badalUF'">
 			<user_name id="user_username" type="input">badalUF</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -1273,8 +1273,7 @@
 			<submit type="submit" xpath="//span[@class='icon-refresh']" >//span[@class='icon-refresh']</submit>
 			<table type="table">//*[@id='completedtasks']/tbody/tr/td</table>
 		</test_case8>
-		</test_script9>
-		
+		</test_script9>	
 		<test_script10 id="10"  href="Login" xpath="//span[@class='auth_navbar']"   name="failed_tasks"  error_page="//span[@id='overlayblock']/div" error_page_close_text="CLOSE WINDOW" >
 	
 		 
@@ -1759,7 +1758,7 @@
 			</test_script17>
 				
 		<test_script18 id="18"  href="Login" xpath="//span[@class='auth_navbar']"  name="list_all_vm">
-			<test_case1 value="Checking for correct entries in Admin All VMs Table(UA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host ON vm_data.host_id=host.id and user.id= vm_data.owner_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+			<test_case1 value="Checking for correct entries in Admin All VMs Table(UA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,organisation.name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host JOIN organisation ON vm_data.host_id=host.id and user.id= vm_data.owner_id and organisation.id=user.organisation_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by private_ip">
 				<user_name id="user_username" type="input">badalUA</user_name>
 				<password id="user_password" type="input">baadal</password>
 				<submit type="submit">//input[@type='submit']</submit>
@@ -1767,7 +1766,7 @@
 				<list_vm type="href">All VMs</list_vm>
 				<table type="table">//div/table[@id="listallvm"]/tbody/tr/td</table>
 			</test_case1>
-			<test_case1 value="Checking for correct entries in Admin All VMs Table(UFA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host ON vm_data.host_id=host.id and user.id= vm_data.owner_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4)">
+			<test_case1 value="Checking for correct entries in Admin All VMs Table(UFA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,organisation.name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host JOIN organisation ON vm_data.host_id=host.id and user.id= vm_data.owner_id and organisation.id=user.organisation_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by private_ip">
 				<user_name id="user_username" type="input">badalUFA</user_name>
 				<password id="user_password" type="input">baadal</password>
 				<submit type="submit">//input[@type='submit']</submit>
@@ -1775,7 +1774,7 @@
 				<list_vm type="href">All VMs</list_vm>
 				<table type="table">//div/table[@id="listallvm"]/tbody/tr/td</table>
 			</test_case1>
-			<test_case1 value="Checking for correct entries in Admin All VMs Table(UOA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host ON vm_data.host_id=host.id and user.id= vm_data.owner_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) ">
+			<test_case1 value="Checking for correct entries in Admin All VMs Table(UOA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,organisation.name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host JOIN organisation ON vm_data.host_id=host.id and user.id= vm_data.owner_id and organisation.id=user.organisation_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by private_ip ">
 				<user_name id="user_username" type="input">badalUOA</user_name>
 				<password id="user_password" type="input">baadal</password>
 				<submit type="submit">//input[@type='submit']</submit>
@@ -1783,7 +1782,7 @@
 				<list_vm type="href">All VMs</list_vm>
 				<table type="table">//div/table[@id="listallvm"]/tbody/tr/td</table>
 			</test_case1>
-			<test_case1 value="Checking for correct entries in Admin All VMs Table(UFOA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host ON vm_data.host_id=host.id and user.id= vm_data.owner_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) ">
+			<test_case1 value="Checking for correct entries in Admin All VMs Table(UFOA)" query3="SELECT vm_data.vm_name,concat(user.first_name,' ',user.last_name) AS user_name,organisation.name,host.host_ip,vm_data.private_ip,vm_data.RAM,vm_data.vCPU,vm_data.status FROM vm_data JOIN user JOIN host JOIN organisation ON vm_data.host_id=host.id and user.id= vm_data.owner_id and organisation.id=user.organisation_id WHERE (vm_data.status=2 OR vm_data.status=3 OR vm_data.status=4) order by private_ip ">
 				<user_name id="user_username" type="input">badalUFOA</user_name>
 				<password id="user_password" type="input">baadal</password>
 				<submit type="submit">//input[@type='submit']</submit>
@@ -2173,9 +2172,9 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
 			<list_vm type="href">All VMs</list_vm>
-           <setting  type="img" name="vm_shutdown_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" query3="SELECT vm_name,vm_data.id,status,username FROM vm_data,user WHERE  requester_id=user.id and (status=2 or status=3 or status=4 ) order by start_time DESC  " xpath_op="//table[@id='vm_ops']/tbody/tr/td/a[@title='Take VM snapshot']" op="migrate_vm"  query4="select * from task_queue_event where task_type='Snapshot VM'  and  vm_name=%s"
+           <setting  type="img" name="vm_shutdown_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td"  xpath_op="//table[@id='vm_ops']/tbody/tr/td/a[@title='Take VM snapshot']" op="migrate_vm"  query4="select * from task_queue_event where task_type='Snapshot VM'  and  vm_name=%s"
       query_snapshot="select * from snapshot where vm_id=%s "        query_user_id="select user.id, concat(user.first_name,' ',user.last_name) as user_name from user_vm_map join user join vm_data where user_vm_map.user_id=user.id and user_vm_map.vm_id=vm_data.id and vm_name=%s" max="3" xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr"
-             print_mode="No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing" status="Shutdown" other_status1="2" other_status2="3"
+             print_mode="No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing" status="Shutdown" 
           task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
             
 		</test_case1>
@@ -2217,11 +2216,11 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 	      <test_script45  id="45"  href="Login" xpath="//span[@class='auth_navbar']"    name="pending_user_install_vm">
       
 			<test_case1 value="Checking for PENDING Request IN USER MENU (Install VM)(UA)" query3="select concat(user1.first_name,' ',user1.last_name) AS user_name,concat(user2.first_name,' ',user2.last_name) AS user_name,request_queue.vm_name,vCPU,RAM,extra_HDD,security_domain,status from request_queue,user as user1,user as user2 where user1.id=request_queue.requester_id and user2.id=request_queue.owner_id and request_type='Create VM' and user1.username='badalU' order by request_time">
-			<user_name id="user_username" type="input">badalU</user_name>
+			<user_name id="user_username" type="input">badalUFOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
 		
-			<pending_vm type="href">Pending Requests</pending_vm>
+			<pending_vm type="href">All Pending Requests</pending_vm>
 			
 			<table type="table">//table[@id="sortTable1"]/tbody/tr/td</table>
 		</test_case1>
@@ -2229,8 +2228,8 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			<user_name id="user_username" type="input">badalUFA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-			<user_menu type="href">USER MENU</user_menu>
-			<pending_vm type="href">Pending Requests</pending_vm>
+			
+			<pending_vm type="href">All Pending Requests</pending_vm>
 			
 			<table type="table">//table[@id="sortTable1"]/tbody/tr/td</table>
 		</test_case2>
@@ -2238,8 +2237,8 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 			 <user_name id="user_username" type="input">badalUOA</user_name>
 			<password id="user_password" type="input">baadal</password>
 			<submit type="submit">//input[@type='submit']</submit>
-			<user_menu type="href">USER MENU</user_menu>
-			<pending_vm type="href">Pending Requests</pending_vm>
+			
+			<pending_vm type="href">All Pending Requests</pending_vm>
 			
 			<table type="table">//table[@id="sortTable1"]/tbody/tr/td</table>
 		</test_case3>
@@ -2448,7 +2447,35 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
      </test_script47>
     
      
-      <test_script38 id="48"></test_script38>
+      <test_script48 id="48" href="Login" xpath="//span[@class='auth_navbar']" >
+<test_case  value="Create VM for user(UFOA)">
+		       <user_name id="user_username" type="input">badalU</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">Request VM</req_vm>
+			<vm_name type="input" id="request_queue_vm_name"></vm_name>
+			<templet_id type="select">//select[@id='request_queue_template_id']/option</templet_id>
+			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+			<purpose type="input" id="request_queue_purpose">testing</purpose>
+			<faculty_approver type="input" id="faculty_user">badalUFOA</faculty_approver>
+            		<list_vm type="href">Verify</list_vm>
+            		<security_domain type="select">//select[@id='request_queue_security_domain']/option</security_domain>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">My VMs</list_vm>
+			
+			
+           		 <login type="href">Logout</login>
+          		  <wait type="wait"></wait>
+          		  <login type="href">Login</login>
+			<user_name id="user_username" type="input">badalUFOA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			
+			<list_vm type="href">All Pending Requests</list_vm>
+                        <table type="check_data" id="admin" path="//table[@id='sortTable1']/tbody/tr/td/a[@class='Approve']"  print_data=" " click="approve_request"  query3=" SELECT id  FROM request_queue WHERE vm_name=%s"  data="integeration">//*[@id='sortTable1']/tbody/tr</table>
+                        <check_task type="task_table" task_type="checking" op_name="Create VM" task_query="select task_type,task_queue_event.start_time,task_id from task_queue_event join vm_data on vm_data.id=task_queue_event.vm_id where vm_data.vm_name=%s and task_queue_event.task_type=%s order by task_queue_event.start_time desc">Create VM</check_task>
+		       </test_case>
+</test_script48>
 <test_script38 id="49"></test_script38>
 <test_script38 id="50"></test_script38>
 <test_script38 id="51"></test_script38>
