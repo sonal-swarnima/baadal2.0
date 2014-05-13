@@ -339,7 +339,7 @@
 
 <script>
 jQuery(document).ready(function(){
-      jQuery("#sortTable1").tablesorter(); 
+      jQuery("#sortTable1").tablesorter({ headers: { 7: {sorter:"ipAddress"}} }); 
       jQuery("#sortTable2").tablesorter(); 
       jQuery("#sortTable3").tablesorter(); 
       jQuery("#sortTable4").tablesorter(); 
