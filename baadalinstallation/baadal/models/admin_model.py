@@ -686,6 +686,6 @@ def get_baadal_status_info():
                    'vm_name' : vm_detail.vm_identity, 
                    'host_ip' : vm_detail.host_id.host_ip, 
                    'vm_status' : get_vm_status(vm_detail.status),
-                   'sys_snapshot': True if (vm_detail.status in (VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) else False}
+                   'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
         vm_info.append(element)
     return vm_info

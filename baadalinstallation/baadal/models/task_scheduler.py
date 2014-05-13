@@ -248,7 +248,7 @@ def vm_utilization_rrd(host_ip):
 
         if is_pingable(host_ip):
 
-            update_rrd(host_ip)
+            update_vm_rrd(host_ip)
  
         else:
 

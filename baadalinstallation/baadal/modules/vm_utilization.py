@@ -201,8 +201,6 @@ def get_dom_mem_usage(dom_name, host):
     output = execute_remote_cmd(host, "root", cmd)
     output.sort(key=len, reverse=True)
 
-    ssh.close()
-
     if len(output) == 2:
         return (int(re.split('\s+', output[0])[5]))*1024 #returned memory in Bytes by default
     else:
@@ -347,6 +345,7 @@ def update_host_rrd(host_ip):
     try:
    
         rrd_file = get_rrd_file(host_ip.replace(".","_"))
+        timestamp_now = time.time()
 
         if not (os.path.exists(rrd_file)):
 
@@ -366,8 +365,7 @@ def update_host_rrd(host_ip):
         pass
 
 
-@handle_exception
-def update_rrd(host_ip):
+def update_vm_rrd(host_ip):
 
         rrd_logger.debug("Starting RRD updation for VMs on host: %s" % (host_ip))
 
@@ -425,8 +423,7 @@ def update_rrd(host_ip):
             rrd_logger.debug(time.ctime())
 
         except:
-
-            rrd_logger.exception("Error occured while creating/updating rrd for VM : %s" % (dom_name))
+            log_exception("Error occured while creating/updating rrd for VM : %s" % (dom_name), log_handler=rrd_logger)
             dom_name = None
             pass
 

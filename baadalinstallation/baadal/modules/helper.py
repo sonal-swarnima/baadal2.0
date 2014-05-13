@@ -169,13 +169,15 @@ def remove_dhcp_entry(host_name, mac_addr, ip_addr):
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
 
-def log_exception(message=None):
+def log_exception(message=None, log_handler=None):
+    
+    log_handler = logger if log_handler == None else log_handler
     import sys, traceback
     etype, value, tb = sys.exc_info()
     trace = ''.join(traceback.format_exception(etype, value, tb, 10))
     if message:
         trace = message + trace
-    logger.error(trace)
+    log_handler.error(trace)
     return trace
 
 def is_pingable(ip):
