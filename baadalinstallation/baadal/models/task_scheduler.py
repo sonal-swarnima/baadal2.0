@@ -315,12 +315,12 @@ active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
 for host in active_host_list:
 
     vm_scheduler.queue_task('vm_util_rrd', 
-                     pvars = dict(host_ip = host),
+                     pvars = dict(host_ip = host['host_ip']),
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 6 * MINUTES, # every 5 minutes
                      timeout = 12  * MINUTES,
-                     uuid = UUID_VM_UTIL_RRD + "-" + str(host))
+                     uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']))
 
 vm_scheduler.queue_task('vnc_access', 
                      repeats = 0, # run indefinitely
