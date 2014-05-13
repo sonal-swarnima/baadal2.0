@@ -43,6 +43,7 @@ function template_check() {
 }
   
 function verify_faculty() {
+	jQuery('.flash').hide().html('');
     var verify_url = "{{=URL('verify_faculty')}}";
     var faculty_user = jQuery('#faculty_user').val();
     if(faculty_user.trim() != '')
