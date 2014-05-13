@@ -39,7 +39,7 @@
 <script>
 
 jQuery(document).ready(function(){
-    jQuery("#sortTable1").tablesorter();
+    jQuery("#sortTable1").tablesorter({ headers: { 5: {sorter:"ipAddress"}} }); 
 
     var _header = $('#pageUtilHeader');
 	if (_header != 'undefined'){
