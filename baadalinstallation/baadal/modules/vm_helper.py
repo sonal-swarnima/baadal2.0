@@ -91,19 +91,22 @@ def choose_mac_ip_vncport(vm_properties):
 
 #Returns all the host running vms of particular run level
 def find_new_host(RAM, vCPU):
-    hosts = current.db(current.db.host.status == 1).select() 
+    hosts = current.db(current.db.host.status == 1).select()
+    hosts = hosts.as_list(True,False) 
     while hosts:
         host = random.choice(hosts)
-        logger.debug("Checking host =" + host.host_name)
-        (used_ram, used_cpu) = host_resources_used(host.id)
-        logger.debug("used ram: " + str(used_ram) + " used cpu: " + str(used_cpu) + " host ram: " + str(host.RAM) + " host cpu "+ str(host.CPUs))
-        host_ram_after_25_percent_overcommitment = math.floor((host.RAM * 1024) * 2)
-        host_cpu_after_25_percent_overcommitment = math.floor(host.CPUs * 2)
+        logger.debug("Checking host =" + host['host_name'])
+        (used_ram, used_cpu) = host_resources_used(host['id'])
+        logger.debug("used ram: " + str(used_ram) + " used cpu: " + str(used_cpu) + " host ram: " + str(host['RAM']) + " host cpu "+ str(host['CPUs']))
+        host_ram_after_200_percent_overcommitment = math.floor((host['RAM'] * 1024) * 2)
+        host_cpu_after_200_percent_overcommitment = math.floor(host['CPUs'] * 2)
 
-        if((( host_ram_after_25_percent_overcommitment - used_ram) >= RAM) & ((host_cpu_after_25_percent_overcommitment - used_cpu) >= vCPU) & (vCPU < host.CPUs)):
-            return host.id
+        logger.debug("ram available: %s cpu available: %s cpu < max cpu: %s" % ((( host_ram_after_200_percent_overcommitment - used_ram) >= RAM), ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vCPU), (vCPU <= host['CPUs']) ))
+
+        if((( host_ram_after_200_percent_overcommitment - used_ram) >= RAM) and ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vCPU) and (vCPU <= host['CPUs'])):
+            return host['id']
         else:
-            hosts.as_list(True,False).remove(host)
+            hosts.remove(host)
             
     #If no suitable host found
     raise Exception("No active host is available for a new vm.")
@@ -926,7 +929,7 @@ def clone(vmid):
         logger.debug("Available CPUs on host: %s, Requested CPU: %s " % ((host_cpu_after_200_percent_overcommitment - used_cpu), vm_details.vCPU))
         
 
-        if((( host_ram_after_200_percent_overcommitment - used_ram) >= vm_details.RAM) & ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vm_details.vCPU) & (vm_details.vCPU < host.CPUs)):
+        if((( host_ram_after_200_percent_overcommitment - used_ram) >= vm_details.RAM) and ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vm_details.vCPU) and (vm_details.vCPU <= host.CPUs)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
             exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
