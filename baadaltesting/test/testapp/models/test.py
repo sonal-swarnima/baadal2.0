@@ -156,17 +156,17 @@ def graph_test(test_case_no):
     
     xml_sub_child=root[i-1][0][0]
     xml_child=root[i-1][0]   
-    print "on controller"
+    
     ssh.connect("10.208.21.67", username="root", password="baadalcse_blade_FEB2014")   
     stdin, stdout, stderr =ssh.exec_command("cd /mnt/datastore/vm_rrds/;rrdtool fetch IITD_badalUFA_test1.rrd MIN -s -600s -e now")
 	
     initial_data=stdout.readlines()
-    print initial_data
+   
     current_time=datetime.datetime.now()
     ini_data=str(initial_data[2])
     init_data=ini_data.split()
     
-    ssh.connect("10.208.21.85", username="root", password="test_baadal")   
+    ssh.connect("10.208.23.56", username="root", password="baadal")   
     stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_run_prgrm"))
     data=stdout.readlines()
     time.sleep(100)   
@@ -186,19 +186,54 @@ def print_graph_result(finl_data,init_data,xml_child):
     logger.debug(xml_child.get("value") +" Final_data:"+ str(finl_data))
     for i in range(1,7):
         if init_data[i]=="-nan":
-            i_data=0
-        else:
-            i_data=init_data[i]      
-        diff=float(finl_data[i])-float(i_data)
-        logger.debug(xml_child.get("value") +": Differnce "+ str(diff)) 
-        if finl_data[i]=="-nan":
-            logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
+        	i_data=0
+    	else:
+       		 i_data=init_data[i]      
+    	diff=float(finl_data[i])-float(i_data)
+    	logger.debug(xml_child.get("value") +": Differnce "+ str(diff)) 
+    	if finl_data[i]=="-nan":
+       		 logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
         else :
-            if diff<=0:
-                logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
-            else:
-                logger.debug(xml_child.get("value") +':  '+"Correct Data")   
+      	     if diff<=0:
+            	logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
+       	     else:
+                 logger.debug(xml_child.get("value") +':  '+"Correct Data") 
+	'''print xml_child.get("type")
+	print i
+        if (xml_child.get("type")=="CPU") & (i==1):
+	    print "CPU"
+            check_type_of_graph(i)
+            break
+        if (xml_child.get("type")=="RAM") & (i==2 ):
+            check_type_of_graph(i)
+	    print "RAM"
+            break
+        if (xml_child.get("type")=="DISK") & (i==4| i==3):
+            check_type_of_graph(i)
+	    print "DISK"
+            break
+        if (xml_child.get("type")=="NETWORK") & (i==5 | i==6):
+            check_type_of_graph(i)
+     	    print "NETWORK"
+            break     '''
+            
+    return
 
+'''def check_type_of_graph(i):
+    	if init_data[i]=="-nan":
+        	i_data=0
+    	else:
+       		 i_data=init_data[i]      
+    	diff=float(finl_data[i])-float(i_data)
+    	logger.debug(xml_child.get("value") +": Differnce "+ str(diff)) 
+    	if finl_data[i]=="-nan":
+       		 logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
+        else :
+      	     if diff<=0:
+            	logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
+       	     else:
+                 logger.debug(xml_child.get("value") +':  '+"Correct Data") 
+    return'''
 
 def print_graph(finl_data,xml_child):
     for i in range(1,7):
