@@ -37,7 +37,7 @@ def update_constant(constant_name, constant_value):
     return 
 
 #Executes command on remote machine using paramiko SSHClient
-def execute_remote_cmd(machine_ip, user_name, command, password=None):
+def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
     output = None
@@ -47,8 +47,9 @@ def execute_remote_cmd(machine_ip, user_name, command, password=None):
         ssh.connect(machine_ip, username = user_name, password = password)
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         
-        output = "".join(stdout.readlines())
+        output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         error = "".join(stderr.readlines())
+
         if (stdout.channel.recv_exit_status()) == 1:
             raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:
