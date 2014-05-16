@@ -156,17 +156,17 @@ def graph_test(test_case_no):
     
     xml_sub_child=root[i-1][0][0]
     xml_child=root[i-1][0]   
-    print "on controller"
+    
     ssh.connect("10.208.21.67", username="root", password="baadalcse_blade_FEB2014")   
     stdin, stdout, stderr =ssh.exec_command("cd /mnt/datastore/vm_rrds/;rrdtool fetch IITD_badalUFA_test1.rrd MIN -s -600s -e now")
 	
     initial_data=stdout.readlines()
-    print initial_data
+   
     current_time=datetime.datetime.now()
     ini_data=str(initial_data[2])
     init_data=ini_data.split()
     
-    ssh.connect("10.208.21.85", username="root", password="test_baadal")   
+    ssh.connect("10.208.23.56", username="root", password="baadal")   
     stdin, stdout, stderr =ssh.exec_command(xml_sub_child.get("cmd_run_prgrm"))
     data=stdout.readlines()
     time.sleep(100)   
@@ -186,19 +186,54 @@ def print_graph_result(finl_data,init_data,xml_child):
     logger.debug(xml_child.get("value") +" Final_data:"+ str(finl_data))
     for i in range(1,7):
         if init_data[i]=="-nan":
-            i_data=0
-        else:
-            i_data=init_data[i]      
-        diff=float(finl_data[i])-float(i_data)
-        logger.debug(xml_child.get("value") +": Differnce "+ str(diff)) 
-        if finl_data[i]=="-nan":
-            logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
+        	i_data=0
+    	else:
+       		 i_data=init_data[i]      
+    	diff=float(finl_data[i])-float(i_data)
+    	logger.debug(xml_child.get("value") +": Differnce "+ str(diff)) 
+    	if finl_data[i]=="-nan":
+       		 logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
         else :
-            if diff<=0:
-                logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
-            else:
-                logger.debug(xml_child.get("value") +':  '+"Correct Data")   
+      	     if diff<=0:
+            	logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
+       	     else:
+                 logger.debug(xml_child.get("value") +':  '+"Correct Data") 
+	'''print xml_child.get("type")
+	print i
+        if (xml_child.get("type")=="CPU") & (i==1):
+	    print "CPU"
+            check_type_of_graph(i)
+            break
+        if (xml_child.get("type")=="RAM") & (i==2 ):
+            check_type_of_graph(i)
+	    print "RAM"
+            break
+        if (xml_child.get("type")=="DISK") & (i==4| i==3):
+            check_type_of_graph(i)
+	    print "DISK"
+            break
+        if (xml_child.get("type")=="NETWORK") & (i==5 | i==6):
+            check_type_of_graph(i)
+     	    print "NETWORK"
+            break     '''
+            
+    return
 
+'''def check_type_of_graph(i):
+    	if init_data[i]=="-nan":
+        	i_data=0
+    	else:
+       		 i_data=init_data[i]      
+    	diff=float(finl_data[i])-float(i_data)
+    	logger.debug(xml_child.get("value") +": Differnce "+ str(diff)) 
+    	if finl_data[i]=="-nan":
+       		 logger.debug(xml_child.get("value") +':  '+"Incorrect Data")
+        else :
+      	     if diff<=0:
+            	logger.debug(xml_child.get("value") +':  '+"Incorrect Data") 
+       	     else:
+                 logger.debug(xml_child.get("value") +':  '+"Correct Data") 
+    return'''
 
 def print_graph(finl_data,xml_child):
     for i in range(1,7):
@@ -2033,9 +2068,8 @@ def isImage(driver,xml_child,xml_sub_child,a):
     return 
 
 
-
 def isTable(driver,xml_parent,xml_child,xml_sub_child):
-    status_list={0:"Error",1:"failed_tasks",2:"TRY AGAIN | IGNORE",3:"my_pending_vm",4:"admin_pending_attach_disk",5:"pending_user_install_vm",6:"pending_user_clone_vm",7:"pending_user_attach_disk",8:"pending_user_edit_conf",9:"host_and_vm",10:"Configure_host",11:"admin_pending_clone_vm",12:"admin_pending_install_vm" ,13:'Configure_security',14:'pending_fac_install_vm',15:'pending_org_install_vm',16:'pending_org_clone_vm',17:'pending_org_attach_disk',18:'pending_org_edit_conf',19:"admin_pending_edit_conf" ,20:'list_my_vm',21:'fac_pending_attach_disk',22:'list_all_org_vm',23:'setting'}
+    status_list={0:"Error",1:"failed_tasks",2:"TRY AGAIN | IGNORE",3:"my_pending_vm",4:"admin_pending_attach_disk",5:"pending_user_install_vm",6:"pending_user_clone_vm",7:"pending_user_attach_disk",8:"pending_user_edit_conf",9:"host_and_vm",10:"Configure_host",11:"admin_pending_clone_vm",12:"admin_pending_install_vm" ,13:'Configure_security',14:'pending_fac_install_vm',15:'pending_org_install_vm',16:'pending_org_clone_vm',17:'pending_org_attach_disk',18:'pending_org_edit_conf',19:"admin_pending_edit_conf" ,20:'list_my_vm',21:'fac_pending_attach_disk',22:'list_all_org_vm',23:'setting',24:'list_all_vm'}
     
     table_path=xml_sub_child.text       
     if isTablePresent(driver,xml_child,table_path):
@@ -2064,7 +2098,8 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
                 count=count+1
         
         total=length_row*length
-        
+        print total
+	print count
         if ((str(total)==str(count))) :
             for col in field:
                 field_text=col.text
@@ -2079,14 +2114,14 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
                         result=status_list[2]
                         print_result(field_text,result,xml_child)
                     
-                    elif (col_count%int(length)==7) & ( (xml_parent.get("name")==status_list[22]) |  (xml_parent.get("name")==status_list[20])):
+                    elif (col_count%int(length)==7) & ( (xml_parent.get("name")==status_list[22]) | (xml_parent.get("name")==status_list[24])|  (xml_parent.get("name")==status_list[20])):
                     	status=query_result[row_count][col_count]
                         result=admin_vm_status(status)
                         
                         print_result(field_text,result,xml_child)
                     
                     elif ((col_count%int(length)==3) & ( (xml_parent.get("name")==status_list[14]) | (xml_parent.get("name")==status_list[15]) | (xml_parent.get("name")==status_list[21]) | (xml_parent.get("name")==status_list[16]) | (xml_parent.get("name")==status_list[17]))) | (col_count%int(length)==4) & ((xml_parent.get("name")==status_list[4]) | (xml_parent.get("name")==status_list[7]) | (xml_parent.get("name")==status_list[6]) | (xml_parent.get("name")==status_list[5]) | (xml_parent.get("name")==status_list[11])) | ((col_count%int(length)==5) & (
-                    (xml_parent.get("name")==status_list[12])  | (xml_parent.get("name")==status_list[22] ))) :
+                    (xml_parent.get("name")==status_list[12]) | (xml_parent.get("name")==status_list[24]) | (xml_parent.get("name")==status_list[22] )))   :
                         ram=query_result[row_count][col_count]
                         result=check_vm_ram(ram)
                         print_result(field_text,result,xml_child) 
@@ -2120,7 +2155,7 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
                         result=user_vm_status(status)
                         print_result(field_text,result,xml_child)  
                         
-                    elif (col_count%int(length)==2) & ( (xml_parent.get("name")==status_list[17]) | (xml_parent.get("name")==status_list[21]) | (xml_parent.get("name")==status_list[14]) | (xml_parent.get("name")==status_list[15])) | ((col_count%int(length)==5) &  (xml_parent.get("name")==status_list[16])) | ((col_count%int(length)==6) &  ((xml_parent.get("name")==status_list[11])  | (xml_parent.get("name")==status_list[22]) | (xml_parent.get("name")==status_list[6]))) | ((col_count%int(length)==3) & ( (xml_parent.get("name")==status_list[4]) | (xml_parent.get("name")==status_list[7]) | (xml_parent.get("name")==status_list[5]))) | ((col_count%int(length)==4) &  (xml_parent.get("name")==status_list[12])) | ( (col_count%int(length)==3)  &  (xml_parent.get("name")==status_list[23])):
+                    elif (col_count%int(length)==2) & ( (xml_parent.get("name")==status_list[17]) | (xml_parent.get("name")==status_list[21]) | (xml_parent.get("name")==status_list[14]) | (xml_parent.get("name")==status_list[15])) | ((col_count%int(length)==5) &  (xml_parent.get("name")==status_list[16])) | ((col_count%int(length)==6) &  ((xml_parent.get("name")==status_list[11])  | (xml_parent.get("name")==status_list[22]) | (xml_parent.get("name")==status_list[6]))) | ((col_count%int(length)==3) & ( (xml_parent.get("name")==status_list[4]) | (xml_parent.get("name")==status_list[7]) | (xml_parent.get("name")==status_list[5]))) | ((col_count%int(length)==4) &  (xml_parent.get("name")==status_list[12])) | ( (col_count%int(length)==3)  &  (xml_parent.get("name")==status_list[23])) | ((col_count%int(length)==6) &  (xml_parent.get("name")==status_list[24])):
                         status=query_result[row_count][col_count]
                         result=check_vcpu(status)
                         print_result(field_text,result,xml_child)  
@@ -2161,6 +2196,16 @@ def isTable(driver,xml_parent,xml_child,xml_sub_child):
     else:
     	logger.debug(xml_child.get("value") + ":Table does not exists")
     return
+
+def faculty_vm_status(owner_name_db,owner_name_screen,xml_child):
+	user_name=xml_child[0].text
+	
+	if owner_name_screen==str(owner_name_db):
+		result="Approve  |  Reject | Edit"
+	else:
+		result="Remind Faculty"
+	return result
+
 
 def faculty_vm_status(owner_name_db,owner_name_screen,xml_child):
 	user_name=xml_child[0].text
