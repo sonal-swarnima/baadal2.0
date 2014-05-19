@@ -291,7 +291,9 @@ def get_host_cpu_usage(host_ip):
 
     command = "iostat -c | sed '1,2d'"
     command_output = execute_remote_cmd(host_ip, 'root', command)
+    rrd_logger.debug(type(command_output))
     cpu_stats = re.split('\s+', command_output[1])
+    rrd_logger.debug(cpu_stats)
     rrd_logger.info("CPU stats of host %s is %s" % ( host_ip, (cpu_stats[1] + cpu_stats[2] + cpu_stats[3])))
     return (float(cpu_stats[1]) + float(cpu_stats[2]) + float(cpu_stats[3]))
 

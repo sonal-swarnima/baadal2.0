@@ -242,10 +242,12 @@ def check_vnc_access():
 # Handles periodic collection of VM utilization data &
 # updation of respective RRD file.
 def vm_utilization_rrd(host_ip):
-    logger.info("Starting data collection of VM utilization")
+    rrd_logger.info("Starting data collection of VM utilization")
     
     try:
-
+        
+        rrd_logger.debug(host_ip)
+        
         if is_pingable(host_ip):
 
             update_vm_rrd(host_ip)

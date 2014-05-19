@@ -5,7 +5,7 @@ import os, re, random
 import paramiko
 from gluon.validators import Validator
 from gluon import current
-from log_handler import logger
+from log_handler import logger, rrd_logger
 
 
 def get_context_path():
@@ -37,7 +37,7 @@ def update_constant(constant_name, constant_value):
     return 
 
 #Executes command on remote machine using paramiko SSHClient
-def execute_remote_cmd(machine_ip, user_name, command, password=None):
+def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
     output = None
@@ -47,9 +47,9 @@ def execute_remote_cmd(machine_ip, user_name, command, password=None):
         ssh.connect(machine_ip, username = user_name, password = password)
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         
-        output = "".join(stdout.readlines())
+        output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         error = "".join(stderr.readlines())
-        if (stdout.channel.recv_exit_status()) == 1:
+        if (stdout.channel.recv_exit_status()) != 0:
             raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:
         log_exception()
@@ -182,7 +182,9 @@ def log_exception(message=None, log_handler=None):
 
 def is_pingable(ip):
 
-    response = os.system("ping -c 1 %" % (ip))
+    command = "ping -c 1 %s" % ip
+    rrd_logger.debug(command)
+    response = os.system(command)
     
     return not(response)
 
