@@ -183,7 +183,6 @@ def log_exception(message=None, log_handler=None):
 def is_pingable(ip):
 
     command = "ping -c 1 %s" % ip
-    rrd_logger.debug(command)
     response = os.system(command)
     
     return not(response)

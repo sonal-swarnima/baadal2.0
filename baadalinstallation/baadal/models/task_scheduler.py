@@ -363,8 +363,8 @@ for host in active_host_list:
                      pvars = dict(host_ip = host['host_ip']),
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
-                     period = 6 * MINUTES, # every 5 minutes
-                     timeout = 12  * MINUTES,
+                     period = 5 * MINUTES, # every 5 minutes
+                     timeout = 5  * MINUTES,
                      uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']))
 
 vm_scheduler.queue_task('vnc_access', 

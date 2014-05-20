@@ -13,8 +13,8 @@ VM_UTIL_ONE_WEEK = 2
 VM_UTIL_ONE_MNTH = 3
 VM_UTIL_ONE_YEAR = 4
 
-STEP         = 360
-TIME_DIFF_MS = 700
+STEP         = 300
+TIME_DIFF_MS = 550
 
 def get_rrd_file(identity):
 
@@ -73,7 +73,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
         if graph_type == 'nw':
             ds1 = 'DEF:nwr=' + vm_name + '.rrd:tx:' + consolidation
-            ds2 = 'DEF:nww=' + vm_name + '.rrd:tw:' + consolidation
+            ds2 = 'DEF:nww=' + vm_name + '.rrd:rx:' + consolidation
             line1 = 'LINE1:nwr#0000FF:Transmit'
             line2 = 'LINE1:nww#FF7410:Receive'
 
@@ -159,7 +159,7 @@ def fetch_rrd_data(vm_identity, period=VM_UTIL_24_HOURS):
         dskr_idx = fld_info.index('dr')
         dskw_idx = fld_info.index('dw')
         nwr_idx = fld_info.index('tx')
-        nww_idx = fld_info.index('tw')
+        nww_idx = fld_info.index('rx')
         
         for row in data_info:
             if row[cpu_idx] != None: cpu_data.append(float(row[cpu_idx])) 
@@ -184,7 +184,7 @@ def create_rrd(rrd_file):
         "DS:dr:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
         "DS:dw:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
         "DS:tx:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
-        "DS:tw:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "DS:rx:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
         "RRA:MIN:0:1:200000",
         "RRA:AVERAGE:0.5:12:100",
         "RRA:AVERAGE:0.5:288:50",
@@ -277,7 +277,7 @@ def get_actual_usage(dom_obj, host_ip):
     usage = {'ram'      : dom_stats['memory']} #ram in Bytes usage
     usage.update({'cpu' : (dom_stats['cputime'] - prev_dom_stats['cputime'])/(float(prev_dom_stats['cpus'])*10000000*STEP)}) #percent cpu usage
     usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['tx'])}) #in KBytes
-    usage.update({'tw'  : (dom_stats['rx'] - prev_dom_stats['rx'])}) #in KBytes
+    usage.update({'rx'  : (dom_stats['rx'] - prev_dom_stats['rx'])}) #in KBytes
     usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])}) #in KBytes
     usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])}) #in KBytes
 
@@ -359,7 +359,7 @@ def update_host_rrd(host_ip):
         else:
 
             host_stats = get_host_resources_usage(host_ip)
-            ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['tw']))
+            ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
  
     except Exception, e:
  
@@ -413,7 +413,7 @@ def update_vm_rrd(host_ip):
 
                             usage = get_actual_usage(dom_obj, host_ip)
                             rrd_logger.debug(usage)
-                            ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, usage['cpu'], usage['ram'], usage['dr'], usage['dw'], usage['tx'], usage['tw']))
+                            ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, usage['cpu'], usage['ram'], usage['dr'], usage['dw'], usage['tx'], usage['rx']))
 
                         else:
                             
