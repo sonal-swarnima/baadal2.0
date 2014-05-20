@@ -6,6 +6,7 @@ from xml.etree import ElementTree
 from log_handler import rrd_logger
 from host_helper import *  # @UnusedWildImport
 from gluon import *
+from helper import *
 
 VM_UTIL_24_HOURS = 1
 VM_UTIL_ONE_WEEK = 2
@@ -198,7 +199,7 @@ def get_dom_mem_usage(dom_name, host):
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
     cmd = "ps aux | grep '\-name " + dom_name + " ' | grep kvm"
-    output = execute_remote_cmd(host, "root", cmd)
+    output = execute_remote_cmd(host, "root", cmd, None, True)
     output.sort(key=len, reverse=True)
 
     if len(output) == 2:
@@ -290,7 +291,7 @@ def get_actual_usage(dom_obj, host_ip):
 def get_host_cpu_usage(host_ip):
 
     command = "iostat -c | sed '1,2d'"
-    command_output = execute_remote_cmd(host_ip, 'root', command)
+    command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     rrd_logger.debug(type(command_output))
     cpu_stats = re.split('\s+', command_output[1])
     rrd_logger.debug(cpu_stats)
@@ -300,15 +301,15 @@ def get_host_cpu_usage(host_ip):
 def get_host_disk_usage(host_ip):
 
     command = "iostat -d | sed '1,2d'"
-    command_output = execute_remote_cmd(host_ip, 'root', command)
+    command_output = execute_remote_cmd(host_ip, 'root', command, None, True)
     disk_stats = re.split('\s+', command_output[1])
     rrd_logger.info("Disk stats of host %s is dr: %s dw: %s" % (host_ip, disk_stats[2], disk_stats[3]))  
-    return [disk_stats[2], disk_stats[3]]
+    return [float(disk_stats[2]), float(disk_stats[3])]
 
 def get_host_mem_usage(host_ip):
 
     command = "top -b -n1 | grep 'Mem'"
-    command_output = execute_remote_cmd(host_ip, 'root', command)
+    command_output = execute_remote_cmd(host_ip, 'root', command, None, True)
     mem_stats = re.split('\s+', command_output[0])[3]
     used_mem_in_kb = int(mem_stats[:-1])
     rrd_logger.info("Mem stats of host %s is %s" % (host_ip, used_mem_in_kb))
@@ -317,7 +318,7 @@ def get_host_mem_usage(host_ip):
 def get_host_nw_usage(host_ip):
 
     command = "ifconfig baadal-br-int | grep 'RX bytes:'"
-    command_output = execute_remote_cmd(host_ip, 'root', command)
+    command_output = execute_remote_cmd(host_ip, 'root', command, None, True)
     nw_stats = re.split('\s+', command_output[0])
     rx = int(re.split(':', nw_stats[2])[1])
     tx = int(re.split(':', nw_stats[6])[1])
