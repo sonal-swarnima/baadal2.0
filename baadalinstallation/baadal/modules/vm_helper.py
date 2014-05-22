@@ -777,8 +777,8 @@ def snapshot(parameters):
             raise Exception("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip))
 
     except:
-        logger.debug("Task Status: FAILED Error: %s " % message)
-        return (current.TASK_QUEUE_STATUS_FAILED, message)
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Reverts to snapshot
 def revert(parameters):
