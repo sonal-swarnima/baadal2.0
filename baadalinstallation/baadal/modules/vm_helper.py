@@ -38,9 +38,9 @@ def set_portgroup_in_vm(domain, portgroup, host_ip):
     dom = connection_object.lookupByName(domain)
     xml = etree.fromstring(dom.XMLDesc(0))
     source_network_element = xml.find('.//interface/source')
-    logger.debug("source network is " + etree.tostring(source_network_element))
+    logger.debug("Source network is " + etree.tostring(source_network_element))
     source_network_element.set('portgroup', portgroup)
-    logger.debug("source network is " + etree.tostring(source_network_element))
+    logger.debug("Changed source network is " + etree.tostring(source_network_element))
     domain = connection_object.defineXML(etree.tostring(xml))
     domain.destroy()
     domain.create()
@@ -145,7 +145,9 @@ def exec_command_on_host(machine_ip, user_name, command, password=None):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(machine_ip, username = user_name, password = password)
+        logger.debug("Starting to execute command %s " % command)
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
+        logger.debug("Command %s executed." % command)
         logger.debug(stdout.readlines())
         install_error_message = stderr.readlines()
         if (stdout.channel.recv_exit_status()) == 1:
@@ -194,7 +196,8 @@ def create_vm_image(vm_details, datastore):
     command_to_execute = copy_command + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
                          template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
                          vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
-    exec_command_on_host(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+    command_outputexecute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+    logger.debug(command_output)
     logger.debug("Copied successfully.")
     """
 
@@ -244,22 +247,22 @@ def generate_xml(diskpath,target_disk):
     return (etree.tostring(root_element))
       
 # Attaches a disk with vm
-def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_disks):
+def attach_disk(vm_details, disk_name, size, hostip, datastore, already_attached_disks, new_vm):
    
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
-        domain = connection_object.lookupByName(vmname)
+        domain = connection_object.lookupByName(vm_details.vm_identity)
         #already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
 
         if not os.path.exists (get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name \
-                               +  '/' +vmname):
+                               +  '/' +vm_details.vm_identity):
             logger.debug("Making Directory")          
             os.makedirs(get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + '/'  \
-                         + vmname)
+                         + vm_details.vm_identity)
 
-        diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + vmname \
-                   + "/" + disk_name
+        diskpath = get_constant('vmfiles_path') + '/' + get_constant('datastore_int') + '/' + datastore.ds_name + "/" + \
+                   vm_details.vm_identity + "/" + disk_name
 
         # Create a new image for the new disk to be attached
         command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
@@ -270,13 +273,30 @@ def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_dis
         # Attaching disk to vm using libvirt API
         target_disk = "vd" + chr(97 + already_attached_disks + 1)
         xmlDescription = generate_xml(diskpath, target_disk)
-        domain.attachDevice(xmlDescription)
+
+        if new_vm:
+            logger.debug("Starting to attach disk on new vm request.")
+            domain.attachDeviceFlags(xmlDescription, VIR_DOMAIN_AFFECT_LIVE)
+            logger.debug("Disk attached")
+            domain.destroy()
+            logger.debug("VM destroyed")
+            logger.debug("Turn on vm")
+            domain.create()
+            logger.debug("VM started")
+            domain.isActive()
+
+        elif vm_details.status == current.VM_STATUS_SHUTDOWN:
+            logger.debug("Starting to attach disk while vm is shutdown.")
+            domain.attachDeviceFlags(xmlDescription, VIR_DOMAIN_AFFECT_CONFIG) 
+            logger.debug("Disk attached")
+
+        else:
+            raise Exception("VM is not in shutdown state. Check its status on host")        
+        
         xmlfile = domain.XMLDesc(0)
         domain = connection_object.defineXML(xmlfile)
-        domain.destroy()
-        domain.create()
-        domain.isActive()
-        logger.debug("The disk has been attached successfully.")
+        logger.debug("VM XML redefined")
+
         connection_object.close()
         return True
     except:
@@ -284,14 +304,15 @@ def attach_disk(vmname, disk_name, size, hostip, datastore, already_attached_dis
         return False
 
 # Serves extra disk request and updates db
-def serve_extra_disk_request(vm_details, disk_size, host_ip):
+def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
 
     logger.debug("Starting to serve extra disk request...")
+    logger.debug("new vm is %s " % new_vm)
     datastore = choose_datastore()
     already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
     disk_name = vm_details.vm_identity + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
 
-    if (attach_disk(vm_details.vm_identity, disk_name, disk_size, host_ip, datastore, already_attached_disks)):
+    if (attach_disk(vm_details, disk_name, disk_size, host_ip, datastore, already_attached_disks, new_vm)):
         current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size) 
         return True
     else:
@@ -307,12 +328,15 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     logger.debug("Installation started...")
     logger.debug("Host is "+ host_ip)
     logger.debug("Installation command : " + install_command)
-    exec_command_on_host(host_ip, 'root', install_command)
+    command_output = execute_remote_cmd(host_ip, 'root', install_command)
+    logger.debug(command_output)
+    logger.debug("Starting to set portgroup in vm...")
     set_portgroup_in_vm(vm_details['vm_identity'],vm_properties['vlan_name'],host_ip)
+    logger.debug("Portgroup set in vm")
 
     # Serving HDD request
     if (int(vm_details.extra_HDD) != 0):
-        if (serve_extra_disk_request(vm_details, vm_details.extra_HDD, host_ip)):
+        if (serve_extra_disk_request(vm_details, vm_details.extra_HDD, host_ip, new_vm = True)):
             message = "Attached extra disk successfully."
             attach_disk_status_message += message
             logger.debug(message)
@@ -360,6 +384,7 @@ def free_vm_properties(vm_details, vm_properties = None):
 # Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None):
 
+    logger.debug("Starting to update db after vm installation..")
     hostid = vm_properties['host']
     datastore = vm_properties['datastore']
     template_hdd = vm_properties['template'].hdd
@@ -398,7 +423,7 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
 def install(parameters):
  
         vmid = parameters['vm_id']
-        logger.debug("In install function...")
+        logger.debug("In install() function...")
         vm_details = current.db.vm_data[vmid]
         vm_properties = None
 
@@ -425,87 +450,105 @@ def install(parameters):
             update_db_after_vm_installation(vm_details, vm_properties) 
 
             message = "VM is installed successfully." + attach_disk_status_message
+            logger.debug("Task Status: SUCCESS Message: %s " % message)
 
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
         except:
             if vm_properties != None:         
                 free_vm_properties(vm_details, vm_properties)
+            logger.debug("Task Status: FAILED Error: %s " % log_exception())
             return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Starts a vm
 def start(parameters):
     
+    logger.debug("Inside start() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
+        if domain.info()[0] == VIR_DOMAIN_RUNNING:
+            raise Exception("VM is already running. Check vm status on host.")
         domain.create()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)
         connection_object.close()  
         message = vm_details.vm_identity + " is started successfully."
-        logger.debug(message) 
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Suspends a vm
 def suspend(parameters):
 
+    logger.debug("Inside suspend() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
+        if domain.info()[0] == VIR_DOMAIN_PAUSED:
+            raise Exception("VM is already paused. Check vm status on host.")
         domain.suspend()
         connection_object.close()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SUSPENDED)       
         message = vm_details.vm_identity + " is suspended successfully." 
-        logger.debug(message)       
+        logger.debug("Task Status: SUCCESS Message: %s " % message)     
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Resumes a vm
 def resume(parameters):
 
+    logger.debug("Inside resume() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
+        if domain.info()[0] == VIR_DOMAIN_RUNNING:
+            raise Exception("VM is already running. Check vm status on host.")
         domain.resume()
         connection_object.close()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING) 
         message = vm_details.vm_identity + " is resumed successfully."
-        logger.debug(message)
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Destroys a vm forcefully
 def destroy(parameters):
 
+    logger.debug("Inside destroy() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     logger.debug(str(vm_details))
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
+        if domain.info()[0] == VIR_DOMAIN_SHUTOFF:
+            raise Exception("VM is already shutoff. Check vm status on host.")
         domain.destroy()
         connection_object.close()
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SHUTDOWN) 
         message = vm_details.vm_identity + " is destroyed successfully."
-        logger.debug(message)
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Function to clean up database after vm deletion
 def clean_up_database_after_vm_deletion(vm_details):
     
-    logger.debug("Inside clean up function...")
+    logger.debug("Inside clean up database after vm deletion () function...")
 
     # moving vm image folder to archives folder
     if not os.path.exists(get_constant('vmfiles_path') + '/' + get_constant('archives_dir')):
@@ -527,7 +570,10 @@ def clean_up_database_after_vm_deletion(vm_details):
                                                           (int(vm_details.extra_HDD) + int(vm_details.template_id.hdd)))
     # deleting entry of extra disk of vm
     current.db(current.db.attached_disks.vm_id == vm_details.id).delete()
-    
+
+    logger.debug("Database cleaned")
+
+# Checks if a vm has snapshot(s)    
 def vm_has_snapshots(vm_id):
     if (current.db(current.db.snapshot.vm_id == vm_id).select()):
         return True
@@ -538,6 +584,7 @@ def vm_has_snapshots(vm_id):
 # Deletes a vm
 def delete(parameters):
 
+    logger.debug("Inside delete() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
@@ -553,12 +600,13 @@ def delete(parameters):
         if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
             remove_mapping(vm_details.public_ip, vm_details.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
-        logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
         current.db(current.db.vm_data.id == vm_id).delete()
         current.db.commit()
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Migrate domain with snapshots
@@ -573,7 +621,8 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
         dump_xml_path = get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
         snapshot_dumpxml_command = 'virsh snapshot-dumpxml %s %s > %s' % ( vm_details.vm_identity, domain_snapshot, dump_xml_path)
         logger.debug("Taking xml dump of" + str(domain_snapshot))
-        exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_dumpxml_command)
+        command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', snapshot_dumpxml_command)
+        logger.debug(command_output)
         logger.debug("XML dump of " + str(domain_snapshot) + "succeeded.")
 
     # Delete snapshot(s) of the vm and migrate it to destination host
@@ -589,10 +638,12 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
     for domain_snapshot in domain_snapshots_list:
         redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
         snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
-        exec_command_on_host(destination_host_ip, 'root', snapshot_redefine_command)
+        command_output = execute_remote_cmd(destination_host_ip, 'root', snapshot_redefine_command)
+        logger.debug(command_output)
 
     snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
-    exec_command_on_host(destination_host_ip, 'root', snapshot_current_command)
+    command_output = execute_remote_cmd(destination_host_ip, 'root', snapshot_current_command)
+    logger.debug(command_output)
 
     return
 
@@ -613,9 +664,11 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name):
         for domain_snapshot in domain_snapshots_list:
             redefine_xml_path =  get_constant('vmfiles_path') + '/' + get_constant('vm_migration_data') + '/' + vm_details.vm_identity + '/' + 'dump_' + domain_snapshot
             snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
-            exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_redefine_command)
+            command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', snapshot_redefine_command, None, True)
+            logger.debug(command_output)
         snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
-        exec_command_on_host(vm_details.host_id.host_ip, 'root', snapshot_current_command)
+        command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', snapshot_current_command, None, True)
+        logger.debug(command_output)
     # Delete directory created for storing dumpxml of vm snapshots
     clean_migration_directory(vm_details)
 
@@ -668,15 +721,18 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         clean_migration_directory(vm_details)
 
         message = vm_details.vm_identity + " is migrated successfully."
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
         undo_migration(vm_details, domain_snapshots_list, current_snapshot_name)
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
  
 
 # Migrates a vm to a new host
 def migrate(parameters):
 
+    logger.debug("Inside migrate() function")
     vmid = parameters['vm_id']
     destination_host_id = parameters['destination_host']
     if parameters['live_migration'] == 'on':
@@ -689,6 +745,7 @@ def migrate(parameters):
 # Snapshots a vm
 def snapshot(parameters):
 
+    logger.debug("Inside snapshot() function")
     vm_id = parameters['vm_id']
     snapshot_type = parameters['snapshot_type']
     try:
@@ -711,20 +768,22 @@ def snapshot(parameters):
                     logger.debug(snapshot_cron)
                     delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
             current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
-            logger.debug(message)
+            logger.debug("Task Status: SUCCESS Message: %s " % message)
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)
 
         else:
                 
-            logger.error("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip))
+            message = "Unable to ping VM before snapshoting: %s" % (vm_details.private_ip)
+            raise Exception("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip))
 
     except:
-        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
+        logger.debug("Task Status: FAILED Error: %s " % message)
+        return (current.TASK_QUEUE_STATUS_FAILED, message)
 
 # Reverts to snapshot
 def revert(parameters):
     
-    logger.debug("Inside revert snapshot")
+    logger.debug("Inside revert snapshot() function")
     vm_id = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
     vm_details = current.db.vm_data[vm_id]
@@ -736,15 +795,16 @@ def revert(parameters):
         domain.revertToSnapshot(snapshot, 0)
         connection_object.close()
         message = "Reverted to snapshot successfully."
-        logger.debug(message)
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Deletes a snapshot
 def delete_snapshot(parameters):
 
-    logger.debug("Inside delete snapshot")
+    logger.debug("Inside delete snapshot() function")
     vm_id = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
     vm_details = current.db.vm_data[vm_id]
@@ -757,10 +817,11 @@ def delete_snapshot(parameters):
         snapshot.delete(0)
         connection_object.close()
         message = "Deleted snapshot successfully."
-        logger.debug(message)
         current.db(current.db.snapshot.id == snapshotid).delete()
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 
@@ -789,6 +850,7 @@ def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
 # Edits vm configuration
 def edit_vm_config(parameters):
 
+    logger.debug("Inside edit vm config() function")
     vm_id = parameters['vm_id']    
     vm_details = current.db.vm_data[vm_id]
     message = ""
@@ -834,17 +896,19 @@ def edit_vm_config(parameters):
             domain = connection_object.defineXML(xmlfile)
             domain.reboot(0)
             domain.isActive()
+            message += "Edited security domain successfully"
 
         connection_object.close()
-        logger.debug(message)
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 def get_clone_properties(vm_details, cloned_vm_details):
 
     vm_properties = {}
-
+    
     datastore = choose_datastore()
     vm_properties['datastore'] = datastore
     logger.debug("Datastore selected is: " + str(datastore))
@@ -911,6 +975,7 @@ def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_clo
 # Clones vm
 def clone(vmid):
 
+    logger.debug("Inside clone() function")
     cloned_vm_details = current.db.vm_data[vmid]
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
@@ -932,7 +997,8 @@ def clone(vmid):
         if((( host_ram_after_200_percent_overcommitment - used_ram) >= vm_details.RAM) and ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vm_details.vCPU) and (vm_details.vCPU <= host.CPUs)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
-            exec_command_on_host(vm_details.host_id.host_ip, 'root', clone_command)
+            command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', clone_command, None, True)
+            logger.debug(command_output)
             logger.debug("Updating db after cloning")
             update_db_after_vm_installation(cloned_vm_details, vm_properties, parent_id = vm_details.id)
             message = "Cloned successfully. "
@@ -949,18 +1015,20 @@ def clone(vmid):
             except:
                 message += "Could not find host to migrate cloned vm."
         
-            logger.debug(message)
+            logger.debug("Task Status: SUCCESS Message: %s " % message)
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)
 
         else:
             raise Exception("Host resources exhausted. Migrate the host vms and then try.")        
     except:
         free_vm_properties(cloned_vm_details)
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 # Attaches extra disk to VM
 def attach_extra_disk(parameters):
 
+    logger.debug("Inside attach extra disk() function")
     vmid = parameters['vm_id']
     disk_size = parameters['disk_size']
     vm_details = current.db.vm_data[vmid]
@@ -974,8 +1042,9 @@ def attach_extra_disk(parameters):
             return (current.TASK_QUEUE_STATUS_SUCCESS, message) 
         else:
             message = " Your request for additional HDD could not be completed at this moment. Check logs."
-            logger.debug(message)
+            logger.debug("Task Status: SUCCESS Message: %s " % message)
             return (current.TASK_QUEUE_STATUS_FAILED, message) 
     except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
