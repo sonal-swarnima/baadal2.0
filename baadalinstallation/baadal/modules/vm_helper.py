@@ -979,6 +979,11 @@ def clone(vmid):
     cloned_vm_details = current.db.vm_data[vmid]
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_identity)
+        if domain.info()[0] != VIR_DOMAIN_SHUTOFF:
+            raise Exception("VM is not shutoff. Check vm status.")
+        connection_object.close()
         (vm_properties, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
         logger.debug("vm_properties: " + str(vm_properties))
         host = vm_properties['host']
