@@ -109,12 +109,12 @@ def process_task_queue(task_event_id):
         #Update attention_time for task in the event table
         task_event_data.update_record(attention_time=get_datetime())
         #Call the corresponding function from vm_helper
-	logger.debug("Task Type: %s" % task_queue_data.task_type)
-	logger.debug("Task ID: %s" % task_event_id)
-	logger.debug("Task Params: %s" % task_queue_data.parameters)
-	logger.debug("Starting VM_TASK processing...")
+        logger.debug("Task Type: %s" % task_queue_data.task_type)
+        logger.debug("Task ID: %s" % task_event_id)
+        logger.debug("Task Params: %s" % task_queue_data.parameters)
+        logger.debug("Starting VM_TASK processing...")
         ret = task[task_queue_data.task_type](task_queue_data.parameters)
-	logger.debug("Completed VM_TASK processing...")
+        logger.debug("Completed VM_TASK processing...")
 
         #On return, update the status and end time in task event table
         task_event_data.update_record(status=ret[0], message=ret[1], end_time=get_datetime())
@@ -123,7 +123,7 @@ def process_task_queue(task_event_id):
 
 #             markFailedTask(task_process.id, task_event_id, ret[1])
             logger.debug("VM_TASK FAILED")
-	    logger.debug("VM_TASK Error Message: %s" % ret[1])
+            logger.debug("VM_TASK Error Message: %s" % ret[1])
             task_queue_data.update_record(status=TASK_QUEUE_STATUS_FAILED)
             if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
                 db.vm_data[task_queue_data.vm_id] = dict(status = VM_STATUS_UNKNOWN)
@@ -132,7 +132,7 @@ def process_task_queue(task_event_id):
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # Create log event for the task
-	    logger.debug("VM_TASK SUCCESSFUL")
+            logger.debug("VM_TASK SUCCESSFUL")
             log_vm_event(vm_data, task_queue_data)
             # For successful task, delete the task from queue 
             if db.task_queue[task_queue_data.id]:
@@ -150,7 +150,7 @@ def process_task_queue(task_event_id):
         
     finally:
         db.commit()
-	logger.info("EXITING VM_TASK........\n")
+        logger.info("EXITING VM_TASK........\n")
 
 
 
@@ -170,15 +170,15 @@ def process_clone_task(task_event_id, vm_id):
             task_event.update_record(attention_time=get_datetime())
         logger.debug("Starting VM Cloning...")
         ret = task[TASK_TYPE_CLONE_VM](vm_id)
-	logger.debug("Completed VM Cloning...")
+        logger.debug("Completed VM Cloning...")
 
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
             logger.debug("VM Cloning Failed")
-	    logger.debug("Failure Message: %s" % ret[1])
+            logger.debug("Failure Message: %s" % ret[1])
             message = message + '\n' + vm_data.vm_name + ': ' + ret[1]
             vm_data.update_record(status = VM_STATUS_UNKNOWN)
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
-	    logger.debug("VM Cloning Successfull")
+            logger.debug("VM Cloning Successfull")
             params = task_queue.parameters
             # Delete successful vms from list. So, that in case of retry, only failed requests are retried.
             params['clone_vm_id'].remove(vm_id)
@@ -213,7 +213,7 @@ def process_clone_task(task_event_id, vm_id):
 
     finally:
         db.commit()
-	logger.debug("EXITING CLONE_TASK........")
+        logger.debug("EXITING CLONE_TASK........")
 
 
 # Handles snapshot task
@@ -232,13 +232,12 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
             for vm_data in vms:
                 params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}
                 vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
-        #current.db.commit()
     except:
         log_exception()
         pass
     finally:
         db.commit()
-	logger.debug("EXITING SNAPSHOT VM TASK........")
+        logger.debug("EXITING SNAPSHOT VM TASK........")
           
 # Handles periodic VM sanity check
 # Invoked when scheduler runs task of type 'vm_sanity'
@@ -282,7 +281,7 @@ def vm_utilization_rrd(host_ip):
     logger.debug("RRDs to be updated for VMs on host: %s" % host_ip)
     try:
         
-	rrd_logger.debug("Starting RRD Processing for Host: %s" % host_ip)
+        rrd_logger.debug("Starting RRD Processing for Host: %s" % host_ip)
         rrd_logger.debug(host_ip)
         
         if is_pingable(host_ip):
@@ -300,7 +299,7 @@ def vm_utilization_rrd(host_ip):
         rrd_logger.debug("ERROR OCCURED: %s" % e)
  
     finally:
-        rrd_logger.debug("Complting RRD Processing for Host: %s" % host_ip)
+        rrd_logger.debug("Completing RRD Processing for Host: %s" % host_ip)
         logger.debug("EXITING RRD UPDATION/CREATION........")
    
 # Defining scheduler tasks
