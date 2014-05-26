@@ -122,7 +122,7 @@ def get_performance_graph(graph_type, vm, graph_period):
         import sys, traceback
         etype, value, tb = sys.exc_info()
         error = ''.join(traceback.format_exception(etype, value, tb, 10))
-        rrd_logger.error(error)
+        rrd_logger.debug(error)
 
     finally:
         if error != None:
@@ -200,12 +200,7 @@ def get_dom_mem_usage(dom_name, host):
 
     cmd = "ps aux | grep '\-name " + dom_name + " ' | grep kvm"
     output = execute_remote_cmd(host, "root", cmd, None, True)
-    output.sort(key=len, reverse=True)
-
-    if len(output) == 2:
-        return (int(re.split('\s+', output[0])[5]))*1024 #returned memory in Bytes by default
-    else:
-        rrd_logger.warn("Unable to fetch memory usage details for dom %s" % (dom_name))
+    return (int(re.split('\s+', output[0])[5]))*1024 #returned memory in Bytes by default
 
 def get_dom_nw_usage(dom_obj):
 
@@ -363,27 +358,47 @@ def update_host_rrd(host_ip):
  
     except Exception, e:
  
-        rrd_logger.exception("Error occured while creating/updating rrd for host: %s" % (host_ip))
-        rrd_logger.error(e)
-        pass
+        rrd_logger.debug("Error occured while creating/updating rrd for host: %s" % (host_ip))
+        rrd_logger.debug(e)
+
+def update_vm_rrd(dom, active_dom_ids, host_ip):
+
+        dom_name = dom.name()
+        rrd_file = get_rrd_file(dom.name())
+ 
+        if not (os.path.exists(rrd_file)):
+            rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
+            rrd_logger.warn("Creating new RRD file")
+            create_rrd(rrd_file)
+ 
+        else:
+ 
+            timestamp_now = time.time()
+ 
+            if dom.ID() in active_dom_ids:
+ 
+                vm_usage = get_actual_usage(dom, host_ip)
+                rrd_logger.debug("Usage Info for VM %s: %s" % (dom_name, vm_usage))
+                ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, vm_usage['cpu'], vm_usage['ram'], vm_usage['dr'], vm_usage['dw'], vm_usage['tx'], vm_usage['rx']))
+ 
+            else:
+ 
+                ret = rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
 
 
-def update_vm_rrd(host_ip):
-
-        rrd_logger.debug("Starting RRD updation for VMs on host: %s" % (host_ip))
+def update_rrd(host_ip):
 
         #UPDATE HOST RRD
         rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
-        rrd_logger.debug(time.ctime())
         update_host_rrd(host_ip)
-        rrd_logger.debug(time.ctime())
+        rrd_logger.info("Ending rrd updation for host %s" % (host_ip))
 
-        #UPDATE VM RRD
+
+        #UPDATE RRD for ALL VMs on GIVEN HOST
 
         rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
 
         hypervisor_conn = None
-        dom_name = None
 
         try:
 
@@ -395,40 +410,24 @@ def update_vm_rrd(host_ip):
 
             for dom_obj in all_dom_objs:
 
-                dom_name = dom_obj.name()
-                rrd_file = get_rrd_file(dom_obj.name())
+                try:
 
-                if not (os.path.exists(rrd_file)):
-                        rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
-                        rrd_logger.warn("Creating new RRD file")
-                        create_rrd(rrd_file)
+                    rrd_logger.info("Starting rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
+                    update_vm_rrd(dom_obj, active_dom_ids, host_ip)
 
-                else:
+                except Exception, e:
+                    
+                    rrd_logger.debug(e)
+                    rrd_logger("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
+  
+                finally:
 
-                    try:
-
-                        timestamp_now = time.time()
-
-                        if dom_obj.ID() in active_dom_ids:
-
-                            usage = get_actual_usage(dom_obj, host_ip)
-                            rrd_logger.debug(usage)
-                            ret = rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, usage['cpu'], usage['ram'], usage['dr'], usage['dw'], usage['tx'], usage['rx']))
-
-                        else:
-                            
-                            ret = rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
-
-                    except Exception, e:
-
-                        rrd_logger.exception(e)
-                        pass
-            rrd_logger.debug(time.ctime())
-
-        except:
-            log_exception("Error occured while creating/updating rrd for VM : %s" % (dom_name), log_handler=rrd_logger)
-            dom_name = None
-            pass
+                    rrd_logger.info("Ending rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
+                
+ 
+        except Exception, e:
+        
+            rrd_logger(e)
 
         finally:
 
