@@ -49,8 +49,7 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
         
         output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         error = "".join(stderr.readlines())
-
-        if (stdout.channel.recv_exit_status()) == 1:
+        if (stdout.channel.recv_exit_status()) != 0:
             raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:
         log_exception()

@@ -600,6 +600,7 @@ def delete(parameters):
         if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
             remove_mapping(vm_details.public_ip, vm_details.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
+        logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
         current.db(current.db.vm_data.id == vm_id).delete()
         current.db.commit()
@@ -817,6 +818,7 @@ def delete_snapshot(parameters):
         snapshot.delete(0)
         connection_object.close()
         message = "Deleted snapshot successfully."
+        logger.debug(message)
         current.db(current.db.snapshot.id == snapshotid).delete()
         logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
