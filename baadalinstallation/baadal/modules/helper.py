@@ -5,7 +5,7 @@ import os, re, random
 import paramiko
 from gluon.validators import Validator
 from gluon import current
-from log_handler import logger, rrd_logger
+from log_handler import logger
 
 
 def get_context_path():
@@ -49,7 +49,8 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
         
         output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         error = "".join(stderr.readlines())
-        if (stdout.channel.recv_exit_status()) != 0:
+
+        if (stdout.channel.recv_exit_status()) == 1:
             raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:
         log_exception()
@@ -75,7 +76,7 @@ def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
         
         stdin.write(command)
 
-        if (stdout.channel.recv_exit_status()) == 1:
+        if (stdout.channel.recv_exit_status()) != 0:
             raise Exception("Exception while executing remote command %s on %s" %(command, machine_ip))
         output = stdout.read()
         stdout.close()
@@ -162,7 +163,11 @@ def remove_dhcp_entry(host_name, mac_addr, ip_addr):
 
     host_name = host_name if host_name != None else ('IP_' + ip_addr.replace(".", '_'))
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
+    if mac_addr != None:
+        entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
+    else:
+        entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name)
+
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"
     
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)

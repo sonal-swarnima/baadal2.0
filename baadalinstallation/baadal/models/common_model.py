@@ -361,7 +361,7 @@ def get_vm_operations(vm_id):
         valid_operations = ['snapshot', 'show_vm_performance']
 
         if vm_status == VM_STATUS_RUNNING:
-            valid_operations.extend(['suspend_vm' , 'stop_vm', 'destroy_vm', 'attach_extra_disk'])
+            valid_operations.extend(['suspend_vm' , 'stop_vm', 'destroy_vm'])
         elif vm_status == VM_STATUS_SUSPENDED:
             valid_operations.extend(['resume_vm'])
         elif vm_status == VM_STATUS_SHUTDOWN:
