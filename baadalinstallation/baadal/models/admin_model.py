@@ -482,9 +482,9 @@ def configure_host_by_mac(mac_addr):
     else:
         avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
                     & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
-        avl_private_ip = avl_ip.first()['private_ip']
 
-    if avl_private_ip:
+    if avl_ip.first():
+        avl_private_ip = avl_ip.first()['private_ip']
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
         host_name = 'host'+str(avl_private_ip.split('.')[3])
         create_dhcp_entry(host_name, mac_addr, avl_private_ip)
