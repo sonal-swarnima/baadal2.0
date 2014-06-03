@@ -60,11 +60,6 @@ Chk_installation_config()
 		exit 1
 	fi
 
-	if test "$MAPPER_FILE_PATH" == ""; then
-		echo "Public-Private mapper file path not specified!!!"
-		exit 1
-	fi
-
 	if test "$AUTH_TYPE" == "ldap"; then
 
 		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || test "$LDAP_URL" == "" || test "$LDAP_DN" == ""; then
