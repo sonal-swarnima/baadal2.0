@@ -301,7 +301,26 @@ def vm_utilization_rrd(host_ip):
     finally:
         rrd_logger.debug("Completing RRD Processing for Host: %s" % host_ip)
         logger.debug("EXITING RRD UPDATION/CREATION........")
-   
+
+def overload_memory():
+  logger.debug("Executing overload memory task")
+  file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
+  file_path = file_path_row.value
+  logger.debug(type(file_path))
+  host_ips_rows=db(db.host.status==1).select(db.host.host_ip)
+  logger.debug(host_ips_rows)
+  command1 = 'gcc '+str(file_path)+'/memhog.c -o '+str(file_path)+'/hello'
+  command2 = 'nohup '+str(file_path)+'/hello >memoryhog.out 2>&1 &'
+  for host_ip_row in host_ips_rows:
+    logger.debug("overloading memory of")
+    logger.debug(host_ip_row)
+    logger.debug(type(host_ip_row['host_ip']))
+    ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1) 
+    ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command2)
+    logger.debug(ret)
+  logger.debug("Completed overload memory task")
+  
+     
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler
 vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue, 
@@ -310,7 +329,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_sanity=vm_sanity_check,
                                         vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
-                                        vm_util_rrd=vm_utilization_rrd))
+                                        vm_util_rrd=vm_utilization_rrd,
+					memory_overload=overload_memory))
 
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
@@ -352,6 +372,13 @@ vm_scheduler.queue_task('host_sanity',
                     period = 10 * MINUTES, # every 10 minutes
                     timeout = 5 * MINUTES,
                     uuid = UUID_HOST_SANITY_CHECK)
+
+vm_scheduler.queue_task('memory_overload',
+                    repeats = 0, # run indefinitely^M
+                    start_time = request.now,
+                    period = 1 * HOURS, # every 10 minutes^M
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_MEMORY_OVERLOAD)
 
 
 active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)

@@ -603,7 +603,7 @@ def delete_host_from_db(host_id):
     private_ip_data = db.private_ip_pool(private_ip = host_data.host_ip)    
     if private_ip_data:
         remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
-    db(db.scheduler_task.uuid is (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
+    db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
     del db.host[host_id]
     
 def get_util_period_form():
