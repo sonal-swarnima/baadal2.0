@@ -107,7 +107,7 @@ def process_task_queue(task_event_id):
     vm_data = db.vm_data[task_event_data.vm_id]
     try:
         #Update attention_time for task in the event table
-        task_event_data.update_record(attention_time=get_datetime())
+        task_event_data.update_record(attention_time=get_datetime(), status=TASK_QUEUE_STATUS_PROCESSING)
         #Call the corresponding function from vm_helper
         logger.debug("Task Type: %s" % task_queue_data.task_type)
         logger.debug("Task ID: %s" % task_event_id)

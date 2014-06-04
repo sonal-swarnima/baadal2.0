@@ -170,7 +170,10 @@ def migrate_vm():
     
     form = get_migrate_vm_form(vm_id)
 
-    if form.accepts(request.vars,session,keepvalues = True):
+    if form == None:
+        if_redirect = True
+        
+    elif form.accepts(request.vars,session,keepvalues = True):
 
         migrate_vm = True
 
