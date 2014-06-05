@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
-	printf ( "Current local time and date: %s", asctime (timeinfo) );
+	printf ( "Current local time and date: %s\n", asctime (timeinfo) );
 
 	printf("In main!!!\n");
 	pid_t childPID;
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
 	time ( &rawtime );
 	timeinfo = localtime ( &rawtime );
-	printf ( "Current local time and date: %s", asctime (timeinfo) );
+	printf ( "Current local time and date: %s\n", asctime (timeinfo) );
 
 	return 0;
 }
