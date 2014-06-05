@@ -94,6 +94,7 @@ UUID_VM_SANITY_CHECK = 'scheduler-uuid-vm-sanity-check'
 UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
 UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
 UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
+UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
