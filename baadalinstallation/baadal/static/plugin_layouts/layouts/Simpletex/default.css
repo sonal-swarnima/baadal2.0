@@ -200,20 +200,12 @@ html>body #menu a {
 	width: auto;
 }
 
-#menu li.active {
-	background: #EDEBD5 url(images/img05.gif) no-repeat;
-}
-
-#menu li.active a {
-	background: url(images/img06.gif) no-repeat right top;
-}
-
 /* Page */
 
 #page {
 	width: 90%;
 	margin: 0 auto 20px auto;
-	background:  url(images/img07.gif) repeat-y 260px 0;
+	background:  url(images/img07.gif) repeat-y repeat-x 0;
 	padding-bottom: 20px;
 }
 
@@ -221,7 +213,7 @@ html>body #menu a {
 
 #content {
 	float: right;
-	width: 70%;
+	width: 75%;
 	padding-right: 1%;
 	padding-top: 1%;
 }
@@ -265,7 +257,7 @@ html>body #menu a {
 
 #sidebar {
 	float: left;
-	width: 240px;
+	width: 20%;
 }
 
 #sidebar ul {
@@ -284,8 +276,7 @@ html>body #menu a {
 	padding-left:0px;
 	padding-top:10px;
 	padding-bottom:10px;
-	background: url(images/img11.gif) repeat-x left bottom;
-}
+	background: url(images/img111.gif) left top no-repeat, url(images/img113.gif) right top no-repeat, url(images/img112.gif);}
 
 #sidebar li {
 	padding-left:0px;

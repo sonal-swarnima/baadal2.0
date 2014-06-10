@@ -1,0 +1,20 @@
+{{extend 'layout.html'}}
+<div id="heading">TESTING INTERFACE FOR BAADAL WEBSITE</div>
+<div id="testcase">
+{{=form}}
+</div>
+
+
+<style>
+    #testcase{
+        background:rgb(209, 232, 248);
+        height:700px;
+        margin:40px 0 0 5px}
+        
+    #heading{
+         margin:50px 0 0 50px;
+        font-size:30px;
+        text-style:bold;
+        text-decoration:underline  
+    }
+</style>

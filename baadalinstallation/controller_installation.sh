@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 source ./controller_installation.cfg 2>> /dev/null
 
@@ -57,11 +57,6 @@ Chk_installation_config()
 		echo "Valid Network Gateway IP!!!"
 	else
 		echo "Invalid Network Gateway IP!!!"
-		exit 1
-	fi
-
-	if test "$MAPPER_FILE_PATH" == ""; then
-		echo "Public-Private mapper file path not specified!!!"
 		exit 1
 	fi
 
@@ -408,7 +403,9 @@ Setup_Baadalapp()
 
         sed -i -e 's/storage_type=/'"storage_type=$STORAGE_TYPE"'/g' $baadalapp_config_path
 
-        sed -i -e 's@nat_script_path=@'"nat_script_path=$MAPPER_FILE_PATH"'@g' $baadalapp_config_path
+        sed -i -e 's/nat_type=/nat_type='"$NAT_TYPE"'/g' $baadalapp_config_path
+
+	sed -i -e 's/vnc_ip=/vnc_ip='"$VNC_IP"'/g' $baadalapp_config_path
 
         sed -i -e 's/'"$DB_TYPE"'_db=/'"$DB_TYPE"'_db='"$DB_NAME"'/g' $baadalapp_config_path
 
@@ -441,6 +438,8 @@ Setup_Baadalapp()
                 sed -i -e 's/mail_admin_complaint=/'"mail_admin_complaint=$SUPPORT_MAIL_ID"'/g' $baadalapp_config_path
                 
                 sed -i -e 's/mail_login=/'"mail_login=$LOGIN_USERNAME:$LOGIN_PASSWORD"'/g' $baadalapp_config_path
+
+		sed -i -e 's/mail_server_tls=/'"mail_server_tls=$MAIL_SERVER_TLS"'/g' $baadalapp_config_path
 
         else
 
@@ -631,6 +630,7 @@ Rewrite_Apache_Conf()
 		  DocumentRoot /var/www
 		  RewriteEngine On
 		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+		  RewriteRule /$ https://%{HTTP_HOST}/baadal [R=301,L]
 		</VirtualHost>
 
 		<VirtualHost *:443>
@@ -642,6 +642,11 @@ Rewrite_Apache_Conf()
 		  WSGIScriptAlias / /home/www-data/web2py/wsgihandler.py
 		  WSGIPassAuthorization On
 		
+		  <LocationMatch ^/admin>
+		    Order Deny,Allow
+                    Deny from all
+                    Allow from 127.0.0.1
+                  </LocationMatch>		
 		  <Directory /home/www-data/web2py>
 		    AllowOverride None
 		    Order Allow,Deny
@@ -703,7 +708,7 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
 	rm -rf $TFTP_DIR/pxelinux.cfg
         mkdir $TFTP_DIR/pxelinux.cfg
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
-        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ks=http://$CONTROLLER_IP/ks.cfg --\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ksdevice=bootif ks=http://$CONTROLLER_IP/ks.cfg --\n\tIPAPPEND 2\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
 
@@ -822,12 +827,6 @@ Start_Web2py()
 
 	su www-data -c "python /home/www-data/web2py/web2py.py -K  baadal &"
 
-	rrd_cron_exists=`cat /etc/crontab | grep "rrd_gen_cron.py" | wc -l`
-
-	if test $rrd_cron_exists -eq 0; then
-		echo "*/5 * * * *  www-data python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py    /applications/baadal/private/rrd_gen_cron.py" >> /etc/crontab
-	fi
-	
 	echo "Controller Installation Complete!!!"
 }
 

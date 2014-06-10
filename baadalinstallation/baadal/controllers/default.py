@@ -4,10 +4,12 @@
 if 0:
     from gluon import *  # @UnusedWildImport
     from gluon import auth, request, session
+    from applications.baadal.models import *  # @UnusedWildImport
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
-from helper import is_moderator, get_constant
+from helper import get_constant
+from maintenance import BAADAL_STATUS_UP
 
 def user():
     """
@@ -27,10 +29,10 @@ def user():
 
 def index():
     if auth.is_logged_in():
-        if get_constant("baadal_status") != BAADAL_STATUS_UP:
+        if get_constant('baadal_status') != BAADAL_STATUS_UP:
             if not is_moderator():
                 redirect(URL(r=request,c='default', f='user/logout'))
-            session.flash="Baadal is in Maintenance Mode"
+            session.flash='Baadal is in Maintenance Mode'
     return dict(request=request)
 
 def contact():

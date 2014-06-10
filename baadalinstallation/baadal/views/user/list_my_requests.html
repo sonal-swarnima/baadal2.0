@@ -30,7 +30,7 @@
       </thead>
       <tbody>
       {{for pend_request in install_requests:}}
-       <tr>
+       <tr id='Row_{{=pend_request['id']}}'>
             <td>{{=pend_request['requester_name']}}</td>
             <td>{{=pend_request['faculty_name']}}</td>
             <td>{{=pend_request['vm_name']}}</td>
@@ -237,7 +237,7 @@
 
 <script>
 jQuery(document).ready(function(){
-      jQuery("#sortTable1").tablesorter(); 
+      jQuery("#sortTable1").tablesorter({ headers: {6: {sorter:"ipAddress"}} }); 
       jQuery("#sortTable2").tablesorter(); 
       jQuery("#sortTable3").tablesorter(); 
       jQuery("#sortTable4").tablesorter(); 

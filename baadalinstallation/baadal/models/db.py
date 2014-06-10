@@ -6,14 +6,16 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from simplejson import loads, dumps
-from helper import get_config_file,get_datetime, IS_MAC_ADDRESS
-from auth_user import login_callback,login_ldap_callback
+from ast import literal_eval
+from helper import config,get_datetime, IS_MAC_ADDRESS
+from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
+from datetime import timedelta
 
 #### Connection Pooling of Db is also possible
 
-config = get_config_file()
 db_type = config.get("GENERAL_CONF","database_type")
 conn_str = config.get(db_type.upper() + "_CONF", db_type + "_conn")
+#db = DAL(conn_str,fake_migrate_all=True)
 db = DAL(conn_str)
 
 db.define_table('constants',
@@ -23,7 +25,7 @@ db.define_table('constants',
 db.define_table('organisation',
     Field('name', 'string', length = 255, notnull = True, unique = True),
     Field('details', 'string', length = 255),
-    Field('public_ip', 'string',length = 15), 
+    Field('public_ip', 'string',length = 15),
     Field('admin_mailid', 'string', length = 50),
     format = '%(details)s')
 
@@ -32,12 +34,13 @@ auth = Auth(db)
 
 from gluon.tools import Mail
 mail = Mail()
-mail.settings.server = config.get("MAIL_CONF","mail_server")
-mail.settings.sender = config.get("MAIL_CONF","mail_sender")
-mail.settings.login = config.get("MAIL_CONF","mail_login")
-mail.settings.tls = True
+if config.getboolean("MAIL_CONF","mail_active"):
+    mail.settings.server = config.get("MAIL_CONF","mail_server")
+    mail.settings.sender = config.get("MAIL_CONF","mail_sender")
+    mail.settings.login = config.get("MAIL_CONF","mail_login")
+    mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
 
-#added to make auth and db objects available in modules 
+#added to make auth and db objects available in modules
 from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
@@ -64,6 +67,7 @@ db.define_table(
     Field('password', 'password', length = 512, readable = False, label = 'Password'), # required
     Field('organisation_id', db.organisation, label = 'Organisation'),
     Field('block_user', 'boolean', default = False, notnull = True, writable = False, readable = False),
+    Field('mail_subscribed', 'boolean', default = True, notnull = True),
     Field('registration_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('reset_password_key', length = 512, writable = False, readable = False, default = ''), # required
     Field('registration_id', length = 512, writable = False, readable = False, default = ''),
@@ -97,7 +101,7 @@ auth.define_tables(username = True)
 if current.auth_type == AUTH_TYPE_LDAP :
     from gluon.contrib.login_methods.pam_auth import pam_auth
     auth.settings.login_methods = [pam_auth()]
-    auth.settings.login_onaccept = [login_ldap_callback]  
+    auth.settings.login_onaccept = [login_ldap_callback]
 else:
     auth.settings.login_onaccept = [login_callback]
     auth.settings.registration_requires_approval = True
@@ -111,8 +115,7 @@ db.define_table('host',
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
     Field("category",'string', length = 50),
-    Field('status', 'integer'),
-    Field('vm_count', 'integer', default = 0))
+    Field('status', 'integer'))
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
@@ -144,14 +147,13 @@ db.define_table('vlan',
 
 db.define_table('security_domain',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
-    Field('vlan', 'reference vlan'),
+    Field('vlan', 'reference vlan', unique = True),
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
-
-db.security_domain.name.requires = [IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
-vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
-db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
+db.security_domain.name.requires = [IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
+# vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
+# db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
 # db.security_domain.vlan.widget=SQLFORM.widgets.options.widget
 # db.security_domain.vlan.requires=[IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None), IS_NOT_IN_DB(db,'security_domain.vlan')]
 
@@ -176,7 +178,6 @@ db.define_table('vm_data',
     Field('start_time', 'datetime', default = get_datetime()),
     Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
-    Field('enable_service', 'list:string'),
     Field('security_domain', db.security_domain),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
 
@@ -190,7 +191,6 @@ db.define_table('request_queue',
     Field('attach_disk', 'integer', label='Disk Size(GB)'),
     Field('vCPU', 'integer', label='CPUs'),
     Field('template_id', db.template),
-    Field('enable_service', 'list:string'),
     Field('public_ip', 'boolean', default = False, label='Assign Public IP'),
     Field('security_domain', db.security_domain, label='Security Domain'),
     Field('requester_id',db.user, label='Requester'),
@@ -201,11 +201,10 @@ db.define_table('request_queue',
     Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
     Field('request_time', 'datetime', default = get_datetime()))
 
-db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=VM_NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
+db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
 db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
+db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
-db.request_queue.enable_service.requires=IS_EMPTY_OR(IS_IN_SET(['HTTP','FTP'],multiple=True))
-db.request_queue.enable_service.widget=lambda f, v: SQLFORM.widgets.checkboxes.widget(f, v, style='divs')
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
@@ -259,7 +258,8 @@ db.define_table('snapshot',
     Field('datastore_id', db.datastore,notnull = True),
     Field('snapshot_name', 'string', length = 50),
     Field('type', 'integer'),
-    Field('path', 'string', length = 255))
+    Field('path', 'string', length = 255),
+    Field('timestamp', 'datetime', default = get_datetime()))
 
 db.define_table('task_queue',
     Field('task_type', 'string',length = 30,notnull = True),
@@ -288,17 +288,16 @@ db.define_table('task_queue_event',
 db.task_queue_event.parameters.filter_in = lambda obj, dumps=dumps: dumps(obj)
 db.task_queue_event.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 
-#TODO: to be modified after networking details have been finalized 
-db.define_table('vnc_server',
-    Field('ip_addr', 'string',length = 15,notnull = True))
-
-#TODO: to be modified after networking details have been finalized 
 db.define_table('vnc_access',
     Field('vm_id', db.vm_data),
-    Field('vnc_server_id', db.vnc_server,length = 15, notnull = True),
-    Field('vnc_proxy_port', 'integer', notnull = True),
+    Field('vnc_server_ip', 'string',length = 15, notnull = True),
+    Field('host_id', db.host, length = 15, notnull = True),
+    Field('vnc_source_port', 'integer', notnull = True),
+    Field('vnc_destination_port','integer',default = -1),
     Field('duration', 'integer'),
-    Field('time_requested', 'datetime', default = get_datetime()))
+    Field('status', 'string', length = 15, notnull = True, default = 'inactive'),
+    Field('time_requested', 'datetime', default = get_datetime()),
+    Field('expiry_time', compute=lambda r: r['time_requested']+ timedelta(seconds=r['duration'])))
 
 db.define_table('public_ip_pool',
     Field('public_ip', 'string', length = 15, notnull = True, unique = True),
@@ -313,5 +312,5 @@ db.define_table('private_ip_pool',
     Field('vm_id', db.vm_data, writable = False))
 
 db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]
-db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
+db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_UPPER(), IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
 db.private_ip_pool.vlan.requires = IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None)

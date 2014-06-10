@@ -47,11 +47,11 @@
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
             	{{elif is_orgadmin() and (auth.user.organisation_id == pend_request['org_id']):}}
-					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
+					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]))}}
+					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
             	{{else:}}
 	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin', _onclick="tab_refresh();", _href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
@@ -93,11 +93,11 @@
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
             	{{elif is_orgadmin() & auth.user.organisation_id == pend_request['org_id']:}}
-					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
+					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]))}}
+					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
             	{{else:}}
 	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin', _onclick="tab_refresh();", _href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
@@ -141,11 +141,11 @@
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
             	{{elif is_orgadmin() & auth.user.organisation_id == pend_request['org_id']:}}
-					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
+					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]))}}
+					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
             	{{else:}}
 	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin', _onclick="tab_refresh();", _href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
@@ -212,11 +212,11 @@
             	{{if pend_request['status'] == REQ_STATUS_APPROVED:}}
             		Waiting for admin approval
             	{{elif is_orgadmin() & auth.user.organisation_id == pend_request['org_id']:}}
-					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]))}}
+					{{=A('Approve', _onclick="tab_refresh();", _href=URL(r=request, f='approve_request', args=[pend_request['id']]), _id="accept_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]))}}
+					{{=A('Reject', _onclick="tab_refresh();", _href=URL(r=request, f='reject_request', args=[pend_request['id']]), _id="reject_"+str(pend_request['id']))}}
 					&nbsp;|&nbsp;
-					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]))}}
+					{{=A('Edit', _onclick="tab_refresh();", _href=URL(r=request,c='faculty',f='edit_pending_request',args=[pend_request['id']]), _id="edit_"+str(pend_request['id']))}}
             	{{else:}}
 	               {{=A('Remind ' + pend_request['organisation'] + ' Org Admin', _onclick="tab_refresh();", _href=URL(r=request,c='admin', f='remind_orgadmin', args=[pend_request['id']]))}}
             	{{pass}}
@@ -233,7 +233,7 @@
 
 <script>
 jQuery(document).ready(function(){
-      jQuery("#sortTable1").tablesorter(); 
+      jQuery("#sortTable1").tablesorter({ headers: {5: {sorter:"ipAddress"}} }); 
       jQuery("#sortTable2").tablesorter(); 
       jQuery("#sortTable3").tablesorter(); 
       jQuery("#sortTable4").tablesorter(); 

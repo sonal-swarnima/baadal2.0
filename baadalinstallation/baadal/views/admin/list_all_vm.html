@@ -32,12 +32,9 @@
         <td>{{=vm['RAM']}}</td>
 		<td>{{=vm['vcpus']}}</td>
         <td>{{=vm['status']}}</td>
-        <td>
-	        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), 
-	        _title="Settings", 
-	        _alt="Settings")}}
-        </td>
+	        {{=TD(A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), _title="Settings", 
+	        _alt="Settings"), _id="vm_"+str(vm['id']))}}
       </tr>
       </form>
     {{pass}}
@@ -47,6 +44,6 @@
 
 <script>
 jQuery(document).ready(function(){
-      jQuery("#listallvm").tablesorter(); 
+      jQuery("#listallvm").tablesorter({ headers: { 3: {sorter:"ipAddress"}, 4: {sorter:"ipAddress"} } }); 
 });
 </script>

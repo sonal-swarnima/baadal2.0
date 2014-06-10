@@ -80,17 +80,21 @@ def unit_testing():
             TR(INPUT(_name='testcase7', _type='checkbox', _value="7"),'Pending Faculty-Level VM Approvals(Install VM)'),
             TR(INPUT(_name='testcase46', _type='checkbox', _value="46"),'Pending Faculty-Level VM Approvals(Clone VM)'),
             TR(INPUT(_name='testcase49', _type='checkbox', _value="49"),'Pending Faculty-Level VM Approvals(Attach Disk)'),
-            TR(INPUT(_name='testcase50', _type='checkbox', _value="50"),'Pending Faculty-Level VM Approvals(Edit Configuration)'),
+            
             TR(INPUT(_name='testcase8', _type='checkbox', _value="8"),'Pending Org-Level VM Approvals(Install VM)'),
             TR(INPUT(_name='testcase51', _type='checkbox', _value="51"),'Pending Org-Level VM Approvals(Clone VM)'),
             TR(INPUT(_name='testcase52', _type='checkbox', _value="52"),'Pending Org-Level VM Approvals(Attach Disk)'),
-            TR(INPUT(_name='testcase53', _type='checkbox', _value="53"),'Pending Org-Level VM Approvals(Edit Configuration)'),
+            
            TR(INPUT(_name='testcase9', _type='checkbox', _value="9"),'List All Org-Level VMs',),
            TR(INPUT(_name='testcase10', _type='checkbox', _value="10"),'All VMs'),
-           TR(INPUT(_name='testcase19', _type='checkbox', _value="19"),'Pending VM Requests(Install VM)'),
-           TR(INPUT(_name='testcase54', _type='checkbox', _value="54"),'Pending VM Requests(Clone VM)'),
-           TR(INPUT(_name='testcase55', _type='checkbox', _value="55"),'Pending VM Requests(Attach Disk)'),
-           TR(INPUT(_name='testcase56', _type='checkbox', _value="56"),'Pending VM Requests(Edit Configuration)'),
+           #TR(INPUT(_name='testcase19', _type='checkbox', _value="19"),'Pending Admin VM Requests(Install VM)'),
+           #TR(INPUT(_name='testcase54', _type='checkbox', _value="54"),'Pending Admin VM Requests(Clone VM)'),
+           #TR(INPUT(_name='testcase55', _type='checkbox', _value="55"),'Pending Admin VM Requests(Attach Disk)'),
+           
+           TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Pending User VM Requests(Install VM)'),
+           TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Pending User VM Requests(Clone VM)'),
+           TR(INPUT(_name='testcase64', _type='checkbox', _value="64"),'Pending User VM Requests(Attach Disk)'),
+           
            TR(INPUT(_name='testcase11', _type='checkbox', _value="11"),'Host and VMs',),
            TR(INPUT(_name='testcase12', _type='checkbox', _value="12"),'Pending Tasks'),
            TR(INPUT(_name='testcase13', _type='checkbox', _value="13"),'Completed Tasks'),
@@ -101,38 +105,39 @@ def unit_testing():
            
            TR(INPUT(_name='testcase21', _type='checkbox', _value="21"),'Add User to VM   (Running )'),
            
-           TR(INPUT(_name='testcase22', _type='checkbox', _value="22"),'Delete VM    (Running)'),
+           
            TR(INPUT(_name='testcase23', _type='checkbox', _value="23"),'Gracefully shut down VM    (Running )'),
            TR(INPUT(_name='testcase24', _type='checkbox', _value="24"),'Forcefully power off VM   (Running )'),
-            TR(INPUT(_name='testcase25', _type='checkbox', _value="25"),'Attach Extra Disk to VM   (Running )'),
-          TR(INPUT(_name='testcase57', _type='checkbox', _value="57"),'Migrate VM(Runnig)'),
+     
+           TR(INPUT(_name='testcase57', _type='checkbox', _value="57"),'Migrate VM(Running)'),
+           TR(INPUT(_name='testcase22', _type='checkbox', _value="22"),'Delete VM    (Running)'),
            TR(INPUT(_name='testcase26', _type='checkbox', _value="26"),'Take VM snapshot   (Paused )'),
            TR(INPUT(_name='testcase27', _type='checkbox', _value="27"),'Migrate VM(Paused)'),
            TR(INPUT(_name='testcase28', _type='checkbox', _value="28"),'Unpause VM   (Paused )'),
            TR(INPUT(_name='testcase29', _type='checkbox', _value="29"),'Add User to VM  (Paused )'),
            TR(INPUT(_name='testcase30', _type='checkbox', _value="30"),'Delete VM   (Paused )'),
-           TR(INPUT(_name='testcase31', _type='checkbox', _value="31"),'Adjust VM Resources Utilization   (Paused )'),
+           #TR(INPUT(_name='testcase31', _type='checkbox', _value="31"),'Adjust VM Resources Utilization   (Paused )'),
            TR(INPUT(_name='testcase32', _type='checkbox', _value="32"),'Forcefully power off VM   (Paused)'),
            TR(INPUT(_name='testcase33', _type='checkbox', _value="33"),'Delete Addtional User   (Paused )'), 
            TR(INPUT(_name='testcase47', _type='checkbox', _value="47"),'Revert Snapshot    (Paused )'),
            TR(INPUT(_name='testcase42', _type='checkbox', _value="42"),'Delete Snapshot    (Paused )'),
-           TR(INPUT(_name='testcase34', _type='checkbox', _value="34"),'Edit VM Config   (Running )'),
+         
            TR(INPUT(_name='testcase35', _type='checkbox', _value="35"),'Turn on VM   (Shutdown )'),
            TR(INPUT(_name='testcase36', _type='checkbox', _value="36"),'Add User to VM  (Shutdown)'),
            TR(INPUT(_name='testcase37', _type='checkbox', _value="37"),'Delete VM   (Shutdown )'),
            TR(INPUT(_name='testcase38', _type='checkbox', _value="38"),'Attach Extra Disk  (Shutdown )'),
            TR(INPUT(_name='testcase39', _type='checkbox', _value="39"),'Request Clone VM   (Shutdown )'),
-            TR(INPUT(_name='testcase40', _type='checkbox', _value="40"),'Edit VM Config   (Shutdown )'),
-           TR(INPUT(_name='testcase41', _type='checkbox', _value="41"),'Assign VNC   (Shutdown )'),
+       
+           
            TR(INPUT(_name='testcase58', _type='checkbox', _value="58"),'Migrate VM(Shutdown)'),
            TR(INPUT(_name='testcase43', _type='checkbox', _value="43"),'Take VM snapshot   (Shutdown )'),
             
-            TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Approve VM(Org-admin)'),
-           TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Reject VM(Org-admin)'), 
+            #TR(INPUT(_name='testcase44', _type='checkbox', _value="44"),'Approve VM(Org-admin)'),
+          # TR(INPUT(_name='testcase45', _type='checkbox', _value="45"),'Reject VM(Org-admin)'), 
             TR(INPUT(_name='testcase60', _type='checkbox', _value="60"),'Approve VM(Faculty)'),
            TR(INPUT(_name='testcase61', _type='checkbox', _value="61"),'Reject VM(Faculty)'), 
-               TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Approve VM(Admin)'),
-           TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Reject VM(Admin)'), 
+               #TR(INPUT(_name='testcase62', _type='checkbox', _value="62"),'Approve VM(Admin)'),
+           #TR(INPUT(_name='testcase63', _type='checkbox', _value="63"),'Reject VM(Admin)'), 
            TR(INPUT(_name='testcase48', _type='checkbox', _value="48"),'Sanity Table'),
            
            BR(),
@@ -242,27 +247,20 @@ def stress_testing():
 def integration_testing(): 
     import commands
     form = FORM(  TABLE
-                  (    TR(INPUT(_name='testcase130', _type='checkbox', _value="130"),'VM Performance(Memory)'),
+                  
+                  (    TR(INPUT(_name='testcase127', _type='checkbox', _value="127"),'Maintain Idompotency'),
+                       TR(INPUT(_name='testcase130', _type='checkbox', _value="130"),'VM Performance(Memory)'),
                        TR(INPUT(_name='testcase131', _type='checkbox', _value="131"),'VM Performance(CPU)'),
                        TR(INPUT(_name='testcase132', _type='checkbox', _value="132"),'VM Performance(Network)'),
                        TR(INPUT(_name='testcase133', _type='checkbox', _value="133"),'VM Performance(Disk)'),
                         TR(INPUT(_name='testcase126', _type='checkbox', _value="126"),'VM Performance   (Shutdown )'),
-                    
                     TR(INPUT(_name='testcase72', _type='checkbox', _value="72"),'User Request VM(Approved by Faculty,org-admin,admin)'),
                      TR(INPUT(_name='testcase73', _type='checkbox', _value="73"),'User Request VM(Approved by Faculty and Rejected by org-admin)'),
                       TR(INPUT(_name='testcase74', _type='checkbox', _value="74"),'User Request VM(Approved by Faculty,org-admin and Rejected by admin)'),
                       TR(INPUT(_name='testcase75', _type='checkbox', _value="76"),'User Request VM(Rejected by Faculty )'),
                     TR(INPUT(_name='testcase76', _type='checkbox', _value="76"),'Faculty Request VM(Rejected by org-admin)'),
                     TR(INPUT(_name='testcase77', _type='checkbox', _value="77"),'Faculty Request VM(Approved by org-admin  and Rejected by admin)'),
-                    TR(INPUT(_name='testcase78', _type='checkbox', _value="78"),'Faculty Request VM(Approved by org-admin, admin)'),
-                    
-                    
-                   
-                    
-                    
-                  
-                    
-                    
+                    TR(INPUT(_name='testcase78', _type='checkbox', _value="78"),'Faculty Request VM(Approved by org-admin, admin)'),                    
                     TR(INPUT(_name='testcase79', _type='checkbox', _value="79"),'Take VM snapshot    (Running )'),
                     TR(INPUT(_name='testcase80', _type='checkbox', _value="80"),'Pause VM   (Running )'),
                    TR(INPUT(_name='testcase81', _type='checkbox', _value="81"),'Add User to VM   (Running )'),
@@ -282,7 +280,6 @@ def integration_testing():
                       TR(INPUT(_name='testcase97', _type='checkbox', _value="97"),'Turn on VM   (Shutdown )'),
                       TR(INPUT(_name='testcase98', _type='checkbox', _value="98"),'Add User to VM  (Shutdown)'),
                       TR(INPUT(_name='testcase99', _type='checkbox', _value="99"),'Delete VM   (Shutdown )'),
-
                        TR(INPUT(_name='testcase103', _type='checkbox', _value="103"),'Take VM snapshot   (Shutdown )'),
                        TR(INPUT(_name='testcase104', _type='checkbox', _value="104"),'Migrate VM   (Shutdown )'),
                         TR(INPUT(_name='testcase107', _type='checkbox', _value="107"),'User Request Attach Disk(Approved by Faculty,org-admin,admin)'),
@@ -290,11 +287,9 @@ def integration_testing():
                     TR(INPUT(_name='testcase71', _type='checkbox', _value="71"), 'Org-Admin Request VM(Rejected by admin)'),
                      TR(INPUT(_name='testcase109', _type='checkbox', _value="109"),'User Request Attach Disk(Approved by Faculty and Rejected by org-admin)'),
                       TR(INPUT(_name='testcase108', _type='checkbox', _value="108"),'User Request Attach Disk(Approved by Faculty,org-admin and Rejected by admin)'),
-                       TR(INPUT(_name='testcase110', _type='checkbox', _value="110"),'User Request Attach Disk(Rejected by Faculty )'),
-                       
+                       TR(INPUT(_name='testcase110', _type='checkbox', _value="110"),'User Request Attach Disk(Rejected by Faculty )'),            
                       TR(INPUT(_name='testcase105', _type='checkbox', _value="105"),'Org-Admin  Attach Disk(Approved by admin)'),
-                    TR(INPUT(_name='testcase106', _type='checkbox', _value="106"), 'Org-Admin Attach Disk(Rejected by admin)'),
-                    
+                    TR(INPUT(_name='testcase106', _type='checkbox', _value="106"), 'Org-Admin Attach Disk(Rejected by admin)'),                    
                      TR(INPUT(_name='testcase85', _type='checkbox', _value="85"),'Faculty Request Attach Disk(Rejected by org-admin)'),
                     TR(INPUT(_name='testcase87', _type='checkbox', _value="87"),'Faculty Request Attach Disk(Approved by org-admin  and Rejected by admin)'),
                    TR(INPUT(_name='testcase100', _type='checkbox', _value="100"),'Faculty Request Attach Disk(Approved by org-admin, admin)'),
@@ -306,8 +301,7 @@ def integration_testing():
                     TR(INPUT(_name='testcase114', _type='checkbox', _value="114"),'Faculty Request Clone VM(Approved by org-admin  and Rejected by admin)'),
                     TR(INPUT(_name='testcase115', _type='checkbox', _value="115"),'Faculty Request Clone VM(Approved by org-admin, admin)'),
                      TR(INPUT(_name='testcase116', _type='checkbox', _value="116"),'Org-Admin  Request Clone VM(Approved by admin)'),
-                    TR(INPUT(_name='testcase117', _type='checkbox', _value="117"), 'Org-Admin Request Clone VM(Rejected by admin)'),
-                    
+                    TR(INPUT(_name='testcase117', _type='checkbox', _value="117"), 'Org-Admin Request Clone VM(Rejected by admin)'),                    
                      TR(INPUT(_name='testcase118', _type='checkbox', _value="118"),'User Request Clone VM(Approved by Faculty,org-admin,admin)'),
                    TR(INPUT(_name='testcase119', _type='checkbox', _value="119"),'User Request Clone VM(Approved by Faculty and Rejected by org-admin)'),
                       TR(INPUT(_name='testcase120', _type='checkbox', _value="120"),'User Request Clone VM(Approved by Faculty,org-admin and Rejected by admin)'),
@@ -316,19 +310,16 @@ def integration_testing():
                     TR(INPUT(_name='testcase123', _type='checkbox', _value="123"),'Faculty Request Clone VM(Approved by org-admin  and Rejected by admin)'),
                     TR(INPUT(_name='testcase124', _type='checkbox', _value="124"),'Faculty Request Clone VM(Approved by org-admin, admin)'),
                      TR(INPUT(_name='testcase125', _type='checkbox', _value="125"),'Org-Admin  Request Clone VM(Approved by admin)'),
-                    TR(INPUT(_name='testcase126', _type='checkbox', _value="136"), 'Org-Admin Request Clone VM(Rejected by admin)'),
-                       
+                    TR(INPUT(_name='testcase126', _type='checkbox', _value="136"), 'Org-Admin Request Clone VM(Rejected by admin)'),                       
                        TR(INPUT(_name='testcase', _type='checkbox', _value=""),'Configure Template'),
                        TR(INPUT(_name='testcase', _type='checkbox', _value=""),'Configure Host'),
                         TR(INPUT(_name='testcase', _type='checkbox', _value=""),'Configure Datastore'),
-                      
-                      
                       BR(),
                       TR(INPUT(_type='submit',_value='submit'))
             )
      )
     if form.process().accepted:
-        for i in range(67,135):
+        for i in range(67,137):
             test_case_no=request.vars['testcase'+str(i)]
             if i<=129:
                 if test_case_no!=None:

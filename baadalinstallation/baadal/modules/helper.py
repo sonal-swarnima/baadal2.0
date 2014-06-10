@@ -2,23 +2,16 @@
 ###################################################################################
 
 import os, re, random
-from gluon import current
+import paramiko
 from gluon.validators import Validator
+from gluon import current
+from log_handler import logger
 
-def is_moderator():
-    if current.ADMIN in current.auth.user_groups.values():
-        return True
-    return False    
 
-def is_faculty():
-    if current.FACULTY in current.auth.user_groups.values():
-        return True
-    return False 
-    
-def is_orgadmin():
-    if current.ORGADMIN in current.auth.user_groups.values():
-        return True
-    return False        
+def get_context_path():
+
+    ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
+    return ctx_path
 
 def get_config_file():
 
@@ -27,10 +20,7 @@ def get_config_file():
     config.read(os.path.join(get_context_path(), 'static/baadalapp.cfg'));
     return config
 
-def get_context_path():
-
-    ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
-    return ctx_path
+config = get_config_file()
 
 def get_datetime():
     import datetime
@@ -47,26 +37,51 @@ def update_constant(constant_name, constant_value):
     return 
 
 #Executes command on remote machine using paramiko SSHClient
-def execute_remote_cmd(machine_ip, user_name, command, password=None):
+def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
-    current.logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
-
+    logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
     output = None
     try:
-        import paramiko
-    
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(machine_ip, username = user_name, password = password)
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         
-        output = "".join(stdout.readlines())
+        output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         error = "".join(stderr.readlines())
-        if (stdout.channel.recv_exit_status()) == 1:
+        if (stdout.channel.recv_exit_status()) != 0:
             raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:
         log_exception()
         raise
+    finally:
+        if ssh:
+            ssh.close()
+    
+    return output
+
+#Executes command on remote machine using paramiko SSHClient
+def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
+
+    logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+    output = None
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(machine_ip, username=user_name)
+        channel = ssh.invoke_shell()
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('rb')
+        
+        stdin.write(command)
+
+        if (stdout.channel.recv_exit_status()) != 0:
+            raise Exception("Exception while executing remote command %s on %s" %(command, machine_ip))
+        output = stdout.read()
+        stdout.close()
+        stdin.close()
+    except paramiko.SSHException:
+        log_exception()
     finally:
         if ssh:
             ssh.close()
@@ -117,22 +132,19 @@ def generate_random_mac():
         i += 1
     return (':'.join(map(lambda x: "%02x" % x, mac))).upper()
     
-def check_db_storage_type():
-    config = get_config_file()
-    storage_type = config.get("GENERAL_CONF","storage_type")
-    if storage_type == current.AUTH_TYPE_DB:
-        return True
-    return False
-    
+
 #Creates bulk entry into DHCP
 # Gets list of tuple containing (host_name, mac_addr, ip_addr)
 def create_dhcp_bulk_entry(dhcp_info_list):
     
-    config = get_config_file()
+    if len(dhcp_info_list) == 0: return
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
     entry_cmd = "echo -e  '"
+    
     for dhcp_info in dhcp_info_list:
-        entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(dhcp_info[0], dhcp_info[1], dhcp_info[2])
+        host_name = dhcp_info[0] if dhcp_info[0] != None else ('IP_' + dhcp_info[2].replace(".", '_'))
+        entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(host_name, dhcp_info[1], dhcp_info[2])
+
     entry_cmd += "' >> /etc/dhcp/dhcpd.conf"    
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"
 
@@ -147,22 +159,38 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
 
 #Removes entry from DHCP
 def remove_dhcp_entry(host_name, mac_addr, ip_addr):
-    config = get_config_file()
+
+    host_name = host_name if host_name != None else ('IP_' + ip_addr.replace(".", '_'))
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
+    if mac_addr != None:
+        entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
+    else:
+        entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name)
+
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"
     
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 
-def log_exception(message=None):
+
+def log_exception(message=None, log_handler=None):
+    
+    log_handler = logger if log_handler == None else log_handler
     import sys, traceback
     etype, value, tb = sys.exc_info()
     trace = ''.join(traceback.format_exception(etype, value, tb, 10))
     if message:
         trace = message + trace
-    current.logger.error(trace)
+    log_handler.error(trace)
     return trace
+
+def is_pingable(ip):
+
+    command = "ping -c 1 %s" % ip
+    response = os.system(command)
+    
+    return not(response)
+
 
 class IS_MAC_ADDRESS(Validator):
     
@@ -176,3 +204,4 @@ class IS_MAC_ADDRESS(Validator):
             return (value, None)
         else:
             return (value, self.error_message)
+

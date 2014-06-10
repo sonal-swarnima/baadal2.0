@@ -8,8 +8,11 @@ if 0:
 ###################################################################################
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
     remove_dhcp_entry, create_dhcp_bulk_entry
-from host_helper import put_host_in_maint_mode, is_host_available, get_host_mac_address,\
-    get_host_cpu, get_host_ram, get_host_hdd
+from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
+    get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE
+from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
+    VM_UTIL_ONE_YEAR
+from log_handler import logger
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -72,7 +75,7 @@ def get_manage_public_ip_pool_form():
 def private_ip_on_delete(private_ip_pool_id):
     private_ip_data = db.private_ip_pool[private_ip_pool_id]
     if private_ip_data.vlan != HOST_VLAN_ID:
-        remove_dhcp_entry('baadal_vm' + str(private_ip_pool_id), private_ip_data.mac_addr ,private_ip_data.private_ip)
+        remove_dhcp_entry(None, private_ip_data.mac_addr ,private_ip_data.private_ip)
     
 def get_manage_private_ip_pool_form():
     db.private_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
@@ -124,10 +127,12 @@ def add_private_ip_range(rangeFrom, rangeTo, vlan):
         if(db.private_ip_pool(private_ip=ip_addr)):
             failed += 1
         else:
-            idx = db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
+            db.private_ip_pool.insert(private_ip=ip_addr, mac_addr=mac_address, vlan=vlan)
             if vlan != HOST_VLAN_ID:
-                dhcp_info_list.append(('baadal_vm'+str(idx), mac_address, ip_addr))
+                dhcp_info_list.append((None, mac_address, ip_addr))
+    
     create_dhcp_bulk_entry(dhcp_info_list)
+    
     return failed
 
 
@@ -143,7 +148,8 @@ def add_private_ip(ip_pool_id):
                 if not (db.private_ip_pool(mac_addr=mac_address)):break
             #Update generated mac address in DB
             private_ip_pool.update_record(mac_addr=mac_address)
-        create_dhcp_entry('baadal_vm'+str(ip_pool_id), mac_address, private_ip_pool.private_ip)
+
+        create_dhcp_entry(None, mac_address, private_ip_pool.private_ip)
 
 
 def get_org_visibility(row):
@@ -202,7 +208,7 @@ def get_all_pending_requests():
             vm_request['requested_by'] = USER
 
     return requests
-    
+
 def get_all_unregistered_users():
     unregistered_users=db(db.user.registration_key == USER_PENDING_APPROVAL).select()
     return unregistered_users
@@ -329,7 +335,14 @@ def enqueue_vm_request(request_id):
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 
 
-def delete_user_vm_access(vm_id,user_id) :    
+def delete_user_vm_access(vm_id, user_id) :
+
+    vm_data = db.vm_data[vm_id]
+    if vm_data.owner_id == user_id:
+        vm_data.update_record(owner_id = -1)
+    if vm_data.requester_id == user_id:
+        vm_data.update_record(requester_id = -1)
+
     db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()  
 
 
@@ -463,10 +476,18 @@ def get_host_form(host_ip):
 
 def configure_host_by_mac(mac_addr):
     
-    avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
-                & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
-    if avl_ip:
-        avl_private_ip = avl_ip.first()['private_ip']
+    avl_private_ip = None
+    ip_info = db.private_ip_pool(mac_addr=mac_addr)
+    if ip_info:
+        avl_private_ip = ip_info.private_ip
+    else:
+        avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
+                    & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
+        if avl_ip.first():
+            avl_private_ip = avl_ip.first()['private_ip']
+            
+
+    if avl_private_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
         host_name = 'host'+str(avl_private_ip.split('.')[3])
         create_dhcp_entry(host_name, mac_addr, avl_private_ip)
@@ -487,19 +508,23 @@ def add_live_migration_option(form):
 
 def get_migrate_vm_form(vm_id):
 
+    form = None
     host_id = db(db.vm_data.id == vm_id).select(db.vm_data.host_id).first()['host_id']
-    host_options = [OPTION(host.host_ip, _value = host.id) for host in db(db.host.id != host_id).select()]
-
-    form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
+    host_options = [OPTION(host.host_ip, _value = host.id) for host in db((db.host.id != host_id) & (db.host.status == 1)).select()]
+    if host_options:
+        form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
                       TR('Current Host:', INPUT(_name = 'current_host', _readonly = True)),
                       TR('Destination Host:' , SELECT(*host_options, **dict(_name = 'destination_host', requires = IS_IN_DB(db, 'host.id')))),
                       TR('', INPUT(_type='submit', _value = 'Migrate'))))
 
-    form.vars.vm_name = db(db.vm_data.id == vm_id).select(db.vm_data.vm_name).first()['vm_name']  
-    form.vars.current_host = db(db.host.id == host_id).select(db.host.host_ip).first()['host_ip']
+        form.vars.vm_name = db(db.vm_data.id == vm_id).select(db.vm_data.vm_name).first()['vm_name']  
+        form.vars.current_host = db(db.host.id == host_id).select(db.host.host_ip).first()['host_ip']
 
-    if is_vm_running(vm_id):
-        add_live_migration_option(form)
+        if is_vm_running(vm_id):
+            add_live_migration_option(form)
+
+    else:
+        session.flash = "No host available right now"
         
     return form
 
@@ -570,7 +595,8 @@ def updte_host_status(host_id, status):
         else:
             return False
     elif status == HOST_STATUS_MAINTENANCE:
-        put_host_in_maint_mode(host_id)
+        migrate_all_vms_from_host(host_data.host_ip)
+        host_data.update_record(status=HOST_STATUS_MAINTENANCE)
     host_data.update_record(status = status)
     return True
         
@@ -578,7 +604,9 @@ def delete_host_from_db(host_id):
     
     host_data = db.host[host_id]
     private_ip_data = db.private_ip_pool(private_ip = host_data.host_ip)    
-    remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
+    if private_ip_data:
+        remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
+    db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
     del db.host[host_id]
     
 def get_util_period_form():
@@ -645,7 +673,7 @@ def specify_user_roles(user_id, user_roles):
                 db.user_membership.insert(user_id=user_id, group_id=role) 
             message = "User Activated with specified roles"
         db(db.user.id == user_id).update(registration_key='')    
-        for row in db(db.user_group.role == current.USER).select(db.user_group.id):
+        for row in db(db.user_group.role == USER).select(db.user_group.id):
                 role_type_user = row.id
         db.user_membership.insert(user_id=user_id, group_id=role_type_user)
     except Exception:
@@ -660,11 +688,11 @@ def get_baadal_status_info():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     vm_info = []
     for vm_detail in vms:
-        sys_snapshot = db.snapshot(vm_id=vm_detail.id,type=SNAPSHOT_SYSTEM)
+#         sys_snapshot = db.snapshot(vm_id=vm_detail.id,type=SNAPSHOT_SYSTEM)
         element = {'id' : vm_detail.id,
                    'vm_name' : vm_detail.vm_identity, 
                    'host_ip' : vm_detail.host_id.host_ip, 
                    'vm_status' : get_vm_status(vm_detail.status),
-                   'sys_snapshot': True if sys_snapshot else False}
+                   'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
         vm_info.append(element)
     return vm_info

@@ -6,9 +6,11 @@ if 0:
     from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from host_helper import delete_orhan_vm
-from helper import get_constant, update_constant
-from vm_helper import shutdown_baadal, bootup_baadal
+from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN, \
+    HOST_STATUS_MAINTENANCE
+from helper import get_constant
+from maintenance import shutdown_baadal, bootup_baadal
+from vm_utilization import VM_UTIL_24_HOURS
 
 @check_moderator
 @handle_exception
@@ -155,8 +157,8 @@ def add_user_to_vm():
 def delete_user_vm():
     vm_id=request.args[0]
     user_id=request.args[1]
-    delete_user_vm_access(vm_id,user_id)    			
-    session.flash = 'User access is eradicated.'
+    delete_user_vm_access(int(vm_id), int(user_id))    			
+    session.flash = 'User access for the VM is removed.'
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_moderator
@@ -168,7 +170,10 @@ def migrate_vm():
     
     form = get_migrate_vm_form(vm_id)
 
-    if form.accepts(request.vars,session,keepvalues = True):
+    if form == None:
+        if_redirect = True
+        
+    elif form.accepts(request.vars,session,keepvalues = True):
 
         migrate_vm = True
 
@@ -261,7 +266,7 @@ def sync_vm():
     if task == 'Delete_Orphan':
         delete_orhan_vm(vm_name, host_id)
     elif task == 'Add_Orphan':
-        add_orhan_vm(vm_name, host_id)
+        add_orphan_vm(vm_name, host_id)
     elif task == 'Delete_VM_Info':
         delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
@@ -341,7 +346,7 @@ def validate_private_ip_range():
     
     from helper import validate_ip_range
     if validate_ip_range(rangeFrom, rangeTo):
-        failed = add_private_ip_range(rangeFrom, rangeTo, vlan)
+        failed = add_private_ip_range(rangeFrom, rangeTo, int(vlan))
         return str(failed)
     else:
         return '-1'
@@ -356,7 +361,9 @@ def manage_private_ip_pool():
         if error_message != None:
             session.flash = error_message
             redirect(URL(c='admin', f='manage_private_ip_pool'))
-        
+        else:
+            session.flash = 'Private IP deleted successfully'
+            
     form = get_manage_private_ip_pool_form()
     return dict(form=form)
 
@@ -422,13 +429,9 @@ def baadal_status():
 @check_moderator
 @handle_exception   
 def start_shutdown():
-    update_constant('baadal_status', BAADAL_STATUS_DOWN_IN_PROGRESS)
     shutdown_baadal()
-    update_constant('baadal_status', BAADAL_STATUS_DOWN)
     
 @check_moderator
 @handle_exception   
 def start_bootup():
-    update_constant('baadal_status', BAADAL_STATUS_UP_IN_PROGRESS)
     bootup_baadal()
-    update_constant('baadal_status', BAADAL_STATUS_UP)

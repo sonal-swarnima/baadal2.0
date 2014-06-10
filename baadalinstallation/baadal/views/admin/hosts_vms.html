@@ -2,7 +2,7 @@
   {{for vmhosts in hostvmlist:}}
     <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}GB, vCPUs= {{=vmhosts['cpus']}}]</h2>
     <div class="TABLE">
-    <table>
+    <table id="host_{{=vmhosts['hostIP'].replace('.','_')}}">
       <tr>
         <th>Name</th>
         <th>Owner</th>              
@@ -25,7 +25,7 @@
         <td>{{=vm['status']}}</td>
         <td>
             {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-            _href=URL(r=request,c='user' ,f='settings', args=[vm['id']]), 
+            _href=URL(r=request,c='user' ,f='settings', args=[vm['id']]), _id="vm_"+str(vm['id']), 
             _title="Settings", 
             _alt="Settings")}}
         </td>

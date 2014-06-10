@@ -33,22 +33,6 @@ TASK_QUEUE_PRIORITY_NORMAL = 1
 TASK_QUEUE_PRIORITY_HIGH = 2
 TASK_QUEUE_PRIORITY_URGENT = 3
 
-#Host Status
-HOST_STATUS_DOWN = 0
-HOST_STATUS_UP = 1
-HOST_STATUS_MAINTENANCE = 2
-
-current.HOST_STATUS_UP = HOST_STATUS_UP
-current.HOST_STATUS_DOWN = HOST_STATUS_DOWN
-
-COST_CPU = 1.0
-COST_RAM = 1.0
-COST_SCALE = 1.2
-COST_RUNLEVEL_0 = 0
-COST_RUNLEVEL_1 = 5
-COST_RUNLEVEL_2 = 15
-COST_RUNLEVEL_3 = 30
-
 REQ_STATUS_REQUESTED = 1
 REQ_STATUS_REJECTED  = 2
 REQ_STATUS_VERIFIED  = 3
@@ -65,6 +49,8 @@ VM_STATUS_SHUTDOWN  = 4
 current.VM_STATUS_RUNNING = VM_STATUS_RUNNING
 current.VM_STATUS_SUSPENDED = VM_STATUS_SUSPENDED
 current.VM_STATUS_SHUTDOWN = VM_STATUS_SHUTDOWN
+current.VM_STATUS_UNKNOWN = VM_STATUS_UNKNOWN
+current.VM_STATUS_IN_QUEUE = VM_STATUS_IN_QUEUE
 
 #NETWORK
 LIBVIRT_NETWORK ='ovs-net'
@@ -101,23 +87,25 @@ current.ORGADMIN = ORGADMIN
 current.FACULTY = FACULTY
 current.USER = USER
 
-#Auth types
-AUTH_TYPE_LDAP = 'ldap'
-AUTH_TYPE_DB = 'db'
-
-current.AUTH_TYPE_LDAP = AUTH_TYPE_LDAP
-current.AUTH_TYPE_DB = AUTH_TYPE_DB
+UUID_SNAPSHOT_DAILY = 'scheduler-uuid-snapshot-daily'
+UUID_SNAPSHOT_WEEKLY = 'scheduler-uuid-snapshot-weekly'
+UUID_SNAPSHOT_MONTHLY = 'scheduler-uuid-snapshot-monthly'
+UUID_VM_SANITY_CHECK = 'scheduler-uuid-vm-sanity-check'
+UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
+UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
+UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
+UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 
-VM_RAM_SET = (256, 512,1024,2048,4096,8192)
-VM_vCPU_SET = (1,2,4,8)
+VM_RAM_SET = (256, 512,1024,2048,4096,8192,16384)
+VM_vCPU_SET = (1,2,4,8,16)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
-VM_NAME_ERROR_MESSAGE = 'VM name should start with alphanumeric and can only contain letters, numbers, dash and underscore'
+NAME_ERROR_MESSAGE = 'Name should start with alphanumeric and can only contain letters, numbers, dash and underscore'
 SECURITY_DOMAIN_DELETE_MESSAGE = 'There are VMs assigned to this security domain. It can''t be deleted.'
 PRIVATE_IP_DELETE_MESSAGE = 'Private IP is assigned to a VM. It can''t be deleted.'
 
@@ -126,20 +114,12 @@ MINUTES = 60 * SECONDS
 HOURS = 60 * MINUTES
 DAYS = 24 * HOURS
 
-VM_UTIL_24_HOURS = 1
-VM_UTIL_ONE_WEEK = 2
-VM_UTIL_ONE_MNTH = 3
-VM_UTIL_ONE_YEAR = 4
-
 HOST_VLAN_ID=1
 
-BAADAL_STATUS_UP='up'
-BAADAL_STATUS_UP_IN_PROGRESS='up-progress'
-BAADAL_STATUS_DOWN='down'
-BAADAL_STATUS_DOWN_IN_PROGRESS='down-progress'
-
 # List of valid CPU and RAM combination
-VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(8,16)]
+VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(8,16),(16,16)]
+
+MAX_VNC_ALLOWED_IN_A_DAY = 10
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)

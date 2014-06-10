@@ -8,7 +8,8 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import is_moderator, is_faculty, is_orgadmin
+from log_handler import logger
+from vm_utilization import get_performance_graph
 
 @auth.requires_login()
 @handle_exception
@@ -19,7 +20,7 @@ def request_vm():
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         
         send_email_to_requester(form.vars.vm_name)
-        if not(is_moderator() or is_orgadmin() or is_faculty()):
+        if is_vm_user():
             send_remind_faculty_email(form.vars.id)
 
         logger.debug('VM requested successfully')
@@ -59,7 +60,7 @@ def settings():
     vm_info = get_vm_config(vm_id)
     if not vm_info:
         redirect(URL(f='list_my_vm'))
-    if is_moderator() or is_faculty() or is_orgadmin():
+    if not is_vm_user():
         vm_users = get_vm_user_list(vm_id)
     
     vm_operations = get_vm_operations(vm_id)
@@ -169,16 +170,23 @@ def list_my_task():
 def show_vm_performance():
     vm_id = int(request.args[0])
     vm_info = get_vm_info(vm_id)    
-    return dict(vm_id = vm_id, vm_name = vm_info['vm_name'])
+    return dict(vm_id = vm_id, vm_identity = vm_info['vm_identity'])
 
 @auth.requires_login()
 @handle_exception       
 def get_updated_graph():
 
         logger.debug(request.vars['graphType'])
-        logger.debug(request.vars['vmName'])
+        logger.debug(request.vars['vmIdentity'])
         logger.debug(request.vars['graphPeriod'])
-        return get_performance_graph(request.vars['graphType'], request.vars['vmName'], request.vars['graphPeriod'])
+        graphRet = get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
+        if not isinstance(graphRet, IMG):
+            if is_moderator():
+                return H3(graphRet)
+            else:
+                return H3('VMs RRD File Unavailable!!!')
+        else:
+            return graphRet
 
 @check_vm_owner
 @handle_exception       
@@ -249,3 +257,13 @@ def vm_history():
     vm_id = request.args[0]
     vm_history = get_vm_history(vm_id)        
     return dict(vm_id = vm_id, vm_history = vm_history)
+
+
+@check_vm_owner
+@handle_exception       
+def grant_vnc():
+
+    vm_id = request.args[0]
+    session.flash = grant_vnc_access(vm_id)
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+

@@ -6,9 +6,9 @@ function update_graph()
 {
     graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
     period = $('input[name=graph-period-radio]:radio:checked').val();
-    vm_name = "{{=vm_name}}";
+    vm_identity = "{{=vm_identity}}";
 
-    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{graphType:graph_type, vmName:vm_name,
+    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,
         graphPeriod:period}, success:function(msg) { jQuery("#target").html(msg); 
                                                      src = jQuery("#target img").attr("src") + "?" + new Date().getTime(); 
                                                      jQuery("#target img").attr("src" , src) } });
@@ -85,5 +85,20 @@ jQuery(document).ready( function(){
     _href=URL(r=request, f='settings', args=[vm_id]), 
     _title="Settings", 
     _alt="Settings")}}
+
+    <br>
+
+    <p>
+        <b>NOTE:</b><br/>
+            Y axis of the graph is auto-scaled as the data changes. Below are some pointer regarding the value displayed on the Y axis.
+        <ul>
+            <li>'u' besides a value on the Y axis implies it is multipled by 10<sup>-6</sup>. </li>
+            <li>'m' besides a value on the Y axis implies it is multipled by 10<sup>-3</sup>. </li>
+            <li>'k' besides a value on the Y axis implies it is multipled by 10<sup>3</sup>. </li>
+            <li>'M' besides a value on the Y axis implies it is multipled by 10<sup>6</sup>. </li>
+        </ul>
+
+    </p>
+
 </div>
 

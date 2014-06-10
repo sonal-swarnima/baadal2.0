@@ -7,11 +7,13 @@
 <h3>No VM Running</h3>
 {{else:}}
   <table id="myvms" class="tablesorter">
-    <thead>  
+    <thead>
       <tr>
         <th>Name</th>
         <th>Owner</th>
+        {{if is_moderator():}}
         <th>Host</th>
+        {{pass}}
         <th>Private IP</th>
         <th>Public IP</th>
 		<th>RAM</th>
@@ -25,20 +27,19 @@
       <tr>
         <td>{{=vm['name']}}</td>
         <td>{{=(vm['owner'])}}</td>
+        {{if is_moderator():}}
         <td>{{=vm['hostip']}}</td>
+        {{pass}}
         <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['public_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
 		<td>{{=vm['vcpus']}}</td>
         <td>{{=vm['status']}}</td>
         <td>
-        <div id = '{{=vm['name']}}'>
         {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-        _href=URL(r=request, f='settings', args=[vm['id']]), 
+        _href=URL(r=request, f='settings', args=[vm['id']]), _id="vm_"+str(vm['id']), 
         _title="Settings", 
         _alt="Settings")}}
-        {{vm=vm['name']}}
-        </div>
         </td>
       </tr>
     {{pass}}
@@ -48,6 +49,7 @@
 
 <script>
 jQuery(document).ready(function(){
+      jQuery("#myvms").tablesorter({ headers: {2: {sorter:"ipAddress"}, 3: {sorter:"ipAddress"}} }); 
       jQuery("#myvms").tablesorter(); 
 });
 </script>

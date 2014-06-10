@@ -8,11 +8,14 @@ if 0:
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from auth_user import fetch_ldap_user, create_or_update_user
-from helper import is_moderator, is_orgadmin, is_faculty
+from auth_user import fetch_ldap_user, create_or_update_user, AUTH_TYPE_LDAP
+from log_handler import logger
+from helper import log_exception, get_datetime
+from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
+from datetime import timedelta
 
 def get_my_requests():
-    
+
     requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
     return get_pending_request_list(requests)
 
@@ -104,10 +107,10 @@ def request_vm_validation(form):
     set_configuration_elem(form)
     form.vars.status = get_request_status()
 
-    if (is_moderator() or is_orgadmin() or is_faculty()):
-        form.vars.owner_id = auth.user.id
-    else:
+    if is_vm_user():
         validate_approver(form)
+    else:
+        form.vars.owner_id = auth.user.id
 
     vm_users = request.post_vars.vm_users
     user_list = []
@@ -168,15 +171,15 @@ def get_request_vm_form():
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    if not(is_moderator() or is_orgadmin() or is_faculty()):
-        add_faculty_approver(form)
+    if is_vm_user(): add_faculty_approver(form)
+    
     add_collaborators(form)
     return form
 
 
 def get_user_info(username, roles):
+
     user_query = db((db.user.username == username) 
-             & (db.user.organisation_id == auth.user.organisation_id)
              & (db.user.id == db.user_membership.user_id)
              & (db.user_membership.group_id == db.user_group.id)
              & (db.user_group.role.belongs(roles)))
@@ -193,7 +196,8 @@ def get_user_info(username, roles):
                     user = user_query.select(db.user.ALL).first()
     
     if user:
-        return (user['id'], (user['first_name'] + ' ' + user['last_name']))	
+        if is_moderator() | (user['organisation_id'] == auth.user.organisation_id):
+            return (user['id'], (user['first_name'] + ' ' + user['last_name']))
 
 
 def get_my_task_list(task_status, task_num):
@@ -225,8 +229,11 @@ def get_vm_config(vm_id):
                    'security_domain'  : str(vminfo.security_domain.name)}
 
     if is_moderator():
-        vm_info_map.update({'host' : str(vminfo.host_id.host_ip),
-                             'vnc'  : str(vminfo.vnc_port)})
+        vm_info_map.update({'host' : str(vminfo.host_id.host_ip)})
+    
+    vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
+    if vnc_info:
+        vm_info_map.update({'vnc_ip' : str(vnc_info[0].vnc_server_ip), 'vnc_port' : str(vnc_info[0].vnc_source_port)})
 
     return vm_info_map  
     
@@ -322,7 +329,6 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
     db.request_queue.HDD.default = vm_data.HDD
-#     db.request_queue.enable_service.default = vm_data.enable_service
     db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
@@ -334,7 +340,7 @@ def get_edit_vm_config_form(vm_id):
     
     form_fields = ['vm_name', 'RAM', 'vCPU', 'public_ip', 'security_domain','purpose']
     form = SQLFORM(db.request_queue, fields = form_fields)
-#     add_security_domain(form, vm_id=vm_id)
+
     return form
 
 def get_mail_admin_form():
@@ -359,3 +365,37 @@ def get_vm_history(vm_id):
                    'timestamp' : vm_log.timestamp}
         vm_history.append(element)
     return vm_history
+
+
+def grant_vnc_access(vm_id):
+    active_vnc = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).count()
+    if active_vnc > 0:
+        msg = 'VNC access already granted. Please check your mail for further details.'
+    else:
+        vnc_count = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.time_requested > (get_datetime() - timedelta(days=1)))).count()
+        if vnc_count >= MAX_VNC_ALLOWED_IN_A_DAY :
+            msg = 'VNC request has exceeded limit.'
+        else:
+            try:
+                create_vnc_mapping_in_nat(vm_id)
+                
+                vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
+                if vnc_info:
+                    vm_users = []
+                    for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
+                        vm_users.append(user['user_id'])
+    
+                    send_email_vnc_access_granted(vm_users, 
+                                                  vnc_info[0].vnc_server_ip, 
+                                                  vnc_info[0].vnc_source_port, 
+                                                  vnc_info[0].vm_id.vm_name, 
+                                                  vnc_info[0].time_requested)
+                else: 
+                    raise
+                msg = 'VNC access granted. Please check your mail for further details.'
+            except:
+                msg = 'Some Error Occurred. Please try later'
+                log_exception()
+                pass
+    return msg
+

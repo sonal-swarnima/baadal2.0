@@ -8,7 +8,9 @@ if 0:
 import libvirt
 from libvirt import *  # @UnusedWildImport
 from lxml import etree
-from helper import execute_remote_cmd
+from helper import execute_remote_cmd, log_exception
+from host_helper import HOST_STATUS_UP, get_host_domains
+from log_handler import logger
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,
@@ -31,28 +33,21 @@ def vminfo_to_state(vm_state):
 
     return status
 
-# def check_host_sanity():
-
 def check_vm_sanity():
     vmcheck=[]
     vm_list = []
     hosts=db(db.host.status == HOST_STATUS_UP).select()
     for host in hosts:
         try:
-            #Establish a read only remote connection to libvirtd
-            #find out all domains running and not running
-            conn = libvirt.openReadOnly('qemu+ssh://root@'+host.host_ip+'/system')
-            domains=[]
-            ids = conn.listDomainsID()
-            for _id in ids:
-                domains.append(conn.lookupByID(_id))
-            names = conn.listDefinedDomains()
-            for dom_name in names:
-                domains.append(conn.lookupByName(dom_name))
+            logger.info('Starting sanity check for host %s' %(host.host_name))
+            #Get list of the domains(running and not running) on the hypervisor
+            domains = get_host_domains(host.host_ip)
             for dom in domains:
                 try:
                     domain_name = dom.name()
-                    vm = db(db.vm_data.vm_identity == domain_name).select().first()
+                    vm = db((db.vm_data.vm_identity == domain_name) & 
+                            (db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN))).select().first()
+                    
                     vm_state = dom.info()[0]
                     status = vminfo_to_state(vm_state)
                     if(vm):
@@ -76,7 +71,7 @@ def check_vm_sanity():
                             
                         vm_list.append(vm.vm_identity)
                             
-                    elif vm_state != VIR_DOMAIN_SHUTOFF:
+                    elif vm_state != VIR_DOMAIN_CRASHED:
                         vmcheck.append({'host':host.host_name,
                                         'host_id':host.id,
                                         'vmname':dom.name(),
@@ -84,8 +79,8 @@ def check_vm_sanity():
                                         'message':'Orphan, VM is not in database', 
                                         'operation':'Orphan'})#Orphan VMs
 
-                except Exception as e:
-                    logger.error(e)
+                except Exception:
+                    log_exception()
                     if(vm):
                         vmcheck.append({'vmname':vm.vm_name,
                                         'host':'Unknown',
@@ -94,9 +89,6 @@ def check_vm_sanity():
                                         'message':'Some Error Occurred', 
                                         'operation':'Error'})
 
-            domains=[]
-            names=[]
-            conn.close()
         except:pass
         db.commit()
         
@@ -110,10 +102,11 @@ def check_vm_sanity():
                             'message':'VM not found', 
                             'operation':'Undefined'})
             
+    logger.debug(vmcheck)
     return vmcheck
 
 
-def add_orhan_vm(vm_name, host_id):
+def add_orphan_vm(vm_name, host_id):
 
     host_details = db.host[host_id]
     connection_object = libvirt.openReadOnly("qemu+ssh://root@" + host_details.host_ip + "/system")
@@ -125,7 +118,7 @@ def add_orhan_vm(vm_name, host_id):
 
     ram_elem = root.xpath('memory')[0]
     ram_in_kb = int(ram_elem.text)
-    ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
+    ram_in_mb = int(round(int(ram_in_kb)/(1024),0))
 
     cpu_elem = root.xpath('vcpu')[0]
     cpu = int(cpu_elem.text)
@@ -133,13 +126,13 @@ def add_orhan_vm(vm_name, host_id):
     vnc_elem = root.xpath("devices/graphics[@type='vnc']")[0]
     vnc_port = vnc_elem.attrib['port']
     
-    mac_elem = root.xpath("devices/interface[@type='bridge']/mac")[0]
+    mac_elem = root.xpath("devices/interface[@type='network']/mac")[0]
     mac_address = mac_elem.attrib['address']
 
-    ip_addr = db(db.private_ip_pool.mac_addr == mac_address).select(db.private_ip_pool.private_ip)
+    ip_addr = db.private_ip_pool(mac_addr = mac_address)
     ip_address = '127.0.0.1'
     if ip_addr:
-        ip_address = ip_addr.first()['private_ip']
+        ip_address = ip_addr['private_ip']
     
     template_elem = root.xpath("devices/disk[@type='file']/source")[0]
     template_file = template_elem.attrib['file']
@@ -148,37 +141,40 @@ def add_orhan_vm(vm_name, host_id):
     ret = execute_remote_cmd(host_details.host_ip, 'root', command) # Returns e.g. virtual size: 40G (42949672960 bytes)
     hdd = int(ret[ret.index(':')+1:ret.index('G ')].strip())
 
+    security_domain_row = db.security_domain(vlan=ip_addr['vlan'])
+    
     vm_id = db.vm_data.insert(
         vm_name = vm_name, 
         vm_identity = (vm_name), 
-        RAM = ram_in_gb,
+        RAM = ram_in_mb,
         HDD = hdd,
         extra_HDD = 0,
         vCPU = cpu,
         host_id = host_id,
-        template_id = 1,
+        template_id = 1, #TBD
+        datastore_id = 1, #TBD
         owner_id = -1,
         requester_id = -1,
         private_ip = ip_address,
         mac_addr = mac_address,
         vnc_port = vnc_port,
         purpose = 'Added by System',
-        security_domain = 1,
+        security_domain = security_domain_row['id'],
         status = vm_status)
         
-    db.private_ip_pool[ip_addr.id] = dict(vm_id=vm_id)
+    db.private_ip_pool[ip_addr['id']] = dict(vm_id=vm_id)
     return
 
 def delete_vm_info(vm_identity):
 
     vm_details = db(db.vm_data.vm_identity == vm_identity).select().first()
-    count = vm_details.host_id.vm_count
-    db(db.host.id == vm_details.host_id).update(vm_count = count - 1)
 
     # updating the used entry of database
     if vm_details.HDD != None:
         db(db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
                                                                          (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
+    db(db.private_ip_pool.vm_id == vm_details.id).update(vm_id = None)
+    db(db.public_ip_pool.vm_id == vm_details.id).update(vm_id = None)
     #this will delete vm_data entry and also its references
     db(db.vm_data.id == vm_details.id).delete()
     

@@ -11,6 +11,7 @@ function run
   fi
 
   dns_get
+  config_get CONTROLLER_INTERFACE
 
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
 
