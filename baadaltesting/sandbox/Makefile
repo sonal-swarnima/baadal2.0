@@ -135,7 +135,7 @@ openvswitch: sources-list-setup
 	apt-get -y install openvswitch-switch=1.10.2-0ubuntu2~cloud0
 	apt-get -y install python-openvswitch=1.10.2-0ubuntu2~cloud0
 
-$(BIN_CONFIGURE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
+$(BIN_CONFIGURE): $(BIN_DIR) $(LOGS_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
