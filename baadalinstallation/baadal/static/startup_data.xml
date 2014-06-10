@@ -14,7 +14,7 @@
 	<table name="constants">
 		<row name="baadal_status" value="up"/>
 		<row name="vmfiles_path" value="/mnt/datastore"/>
-		<row name="datastore_int" value="vm_extra_disks"/>
+		<row name="extra_disks_dir" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
 		<row name="archives_dir" value="vm_deleted"/>
         <row name="vm_migration_data" value="vm_migration_data"/>

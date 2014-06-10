@@ -125,6 +125,7 @@ db.define_table('datastore',
     Field('password', 'password', label='Password', readable=False),
     Field('path', 'string', notnull = True, label='Path'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
+    Field('system_mount_point', 'string', notnull = True, length = 255, label='System Mount Point'),
     format = '%(ds_name)s')
 db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
 
