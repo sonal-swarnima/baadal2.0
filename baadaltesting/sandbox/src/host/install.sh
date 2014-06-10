@@ -3,6 +3,11 @@ function run
   check_root
   #package_update_db
   package_install qemu-kvm
+
+  echo "\n"
+  echo $HOST_SPACE
+  echo "\n"
+
   disk_create $HOST_DISK ${HOST_SPACE}G
 
   $ECHO_PROGRESS Installing OS
