@@ -5,6 +5,9 @@ function disk_create
 
   $ECHO_PROGRESS "Creating virtual disk using qemu-img"
 
+  echo $size
+  echo $file
+
   qemu-img create -f qcow2 $file $size 1>>$LOGS/log.out 2>>$LOGS/log.err
   status=$?
   if [[ $status -ne 0 ]]; then
