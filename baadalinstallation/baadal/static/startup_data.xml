@@ -24,6 +24,7 @@
 		<row name="graph_file_dir" value="/images/vm_graphs/"/>
 		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
 		<row name="vms" value="/vm_images"/>
+                <row name="memory_overload_file_path" value="/baadal/baadal/baadalinstallation/baadal/private"/>
 	</table>
 
 	<table name="vlan">
