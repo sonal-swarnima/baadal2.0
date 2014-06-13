@@ -49,8 +49,6 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
         logger.debug("Connected to host %s " % machine_ip)
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         logger.debug("Command executed")
-        logger.debug(str(stdout.readlines()))
-        logger.debug(str(stderr.readlines()))
         
         output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         logger.debug("Output : %s " % output)
