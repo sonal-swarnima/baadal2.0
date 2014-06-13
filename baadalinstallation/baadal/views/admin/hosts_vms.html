@@ -1,6 +1,6 @@
 {{extend 'layout.html'}}
   {{for vmhosts in hostvmlist:}}
-    <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}GB, vCPUs= {{=vmhosts['cpus']}}]</h2>
+<h2 class="title">{{=A('host :'+ str(vmhosts['hostIP']), _href=URL(r=request,c='admin' ,f='host_config', args=[vmhosts['hostIP']] ))}}</h2>
     <div class="TABLE">
     <table id="host_{{=vmhosts['hostIP'].replace('.','_')}}">
       <tr>
@@ -36,3 +36,4 @@
   </div>
   <br>
  {{pass}}
+

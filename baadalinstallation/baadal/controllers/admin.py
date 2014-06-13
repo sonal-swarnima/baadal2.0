@@ -10,7 +10,7 @@ from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN, \
     HOST_STATUS_MAINTENANCE
 from helper import get_constant
 from maintenance import shutdown_baadal, bootup_baadal
-from vm_utilization import VM_UTIL_24_HOURS
+from vm_utilization import *
 
 @check_moderator
 @handle_exception
@@ -170,7 +170,10 @@ def migrate_vm():
     
     form = get_migrate_vm_form(vm_id)
 
-    if form.accepts(request.vars,session,keepvalues = True):
+    if form == None:
+        if_redirect = True
+        
+    elif form.accepts(request.vars,session,keepvalues = True):
 
         migrate_vm = True
 
@@ -432,3 +435,34 @@ def start_shutdown():
 @handle_exception   
 def start_bootup():
     bootup_baadal()
+
+
+
+
+
+@auth.requires_login()
+@handle_exception       
+def get_updated_host_graph():
+    logger.debug("in")
+    logger.debug(request.vars['graphType'])
+    logger.debug(request.vars['vmIdentity'])
+    logger.debug(request.vars['graphPeriod'])
+    graphRet = get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
+    if not isinstance(graphRet, IMG):
+        if is_moderator():
+            return H3(graphRet)
+        else:
+            return H3('VMs RRD File Unavailable!!!')
+    else:
+        return graphRet
+        
+        
+@handle_exception
+def host_config():
+    host_ip=request.args(0)
+    logger.debug("host_ip :" + str( host_ip))
+    host_info=get_host_config(host_ip)
+    logger.debug(host_info)
+    ip=str(host_ip).replace('.','_')
+    return dict(host_info=host_info,host_ip=ip)
+

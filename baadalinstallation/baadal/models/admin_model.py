@@ -476,13 +476,16 @@ def get_host_form(host_ip):
 
 def configure_host_by_mac(mac_addr):
     
+    avl_private_ip = None
     ip_info = db.private_ip_pool(mac_addr=mac_addr)
     if ip_info:
         avl_private_ip = ip_info.private_ip
     else:
         avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
                     & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
-        avl_private_ip = avl_ip.first()['private_ip']
+        if avl_ip.first():
+            avl_private_ip = avl_ip.first()['private_ip']
+            
 
     if avl_private_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
@@ -505,19 +508,23 @@ def add_live_migration_option(form):
 
 def get_migrate_vm_form(vm_id):
 
+    form = None
     host_id = db(db.vm_data.id == vm_id).select(db.vm_data.host_id).first()['host_id']
-    host_options = [OPTION(host.host_ip, _value = host.id) for host in db(db.host.id != host_id).select()]
-
-    form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
+    host_options = [OPTION(host.host_ip, _value = host.id) for host in db((db.host.id != host_id) & (db.host.status == 1)).select()]
+    if host_options:
+        form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
                       TR('Current Host:', INPUT(_name = 'current_host', _readonly = True)),
                       TR('Destination Host:' , SELECT(*host_options, **dict(_name = 'destination_host', requires = IS_IN_DB(db, 'host.id')))),
                       TR('', INPUT(_type='submit', _value = 'Migrate'))))
 
-    form.vars.vm_name = db(db.vm_data.id == vm_id).select(db.vm_data.vm_name).first()['vm_name']  
-    form.vars.current_host = db(db.host.id == host_id).select(db.host.host_ip).first()['host_ip']
+        form.vars.vm_name = db(db.vm_data.id == vm_id).select(db.vm_data.vm_name).first()['vm_name']  
+        form.vars.current_host = db(db.host.id == host_id).select(db.host.host_ip).first()['host_ip']
 
-    if is_vm_running(vm_id):
-        add_live_migration_option(form)
+        if is_vm_running(vm_id):
+            add_live_migration_option(form)
+
+    else:
+        session.flash = "No host available right now"
         
     return form
 
@@ -599,7 +606,7 @@ def delete_host_from_db(host_id):
     private_ip_data = db.private_ip_pool(private_ip = host_data.host_ip)    
     if private_ip_data:
         remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
-    db(db.scheduler_task.uuid is (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
+    db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
     del db.host[host_id]
     
 def get_util_period_form():
@@ -689,3 +696,36 @@ def get_baadal_status_info():
                    'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
         vm_info.append(element)
     return vm_info
+
+
+
+
+
+def get_baadal_status_info():
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    vm_info = []
+    for vm_detail in vms:
+#         sys_snapshot = db.snapshot(vm_id=vm_detail.id,type=SNAPSHOT_SYSTEM)
+        element = {'id' : vm_detail.id,
+                   'vm_name' : vm_detail.vm_identity, 
+                   'host_ip' : vm_detail.host_id.host_ip, 
+                   'vm_status' : get_vm_status(vm_detail.status),
+                   'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
+        vm_info.append(element)
+    return vm_info
+
+def get_host_config(host_ip):
+    hosts=db(db.host.host_ip==host_ip).select()
+    host_info=[]
+    for host_detail in hosts:
+        element = {'id' : host_detail.id,
+                   'name' : host_detail.host_name, 
+                   'host_ip' : host_detail.host_ip, 
+                   'hdd' :  str(host_detail.HDD) + ' GB', 
+                   'ram' : str(host_detail.RAM ) + ' GB', 
+                   'vcpus' : str(host_detail.CPUs) + ' CPU',
+                   'mac_addr':host_detail.mac_addr,
+                   'status':host_detail.status}
+        host_info.append(element)
+    return host_info
+
