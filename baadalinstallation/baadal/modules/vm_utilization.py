@@ -198,7 +198,7 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
-    cmd = "output=`ps -ef --sort=start_time | grep '\-name ADMIN_admin_apoorve_test1' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'"
+    cmd = "output=`ps -ef --sort=start_time | grep '%s.qcow2' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'" % dom_name
     #"ps aux | grep '\-name " + dom_name + " ' | grep kvm"
     output = execute_remote_cmd(host, "root", cmd, None, True)
     return (int(output[0]))*1024 #returned memory in Bytes by default

@@ -60,7 +60,7 @@ def get_host_hdd(host_ip):
 
 def check_host_service_status(host_ip):
     #Check libvirt status
-    command = "status libvirt-bin | grep -w 'running' | wc -l"
+    command = "ps -ef | grep libvirtd | grep -v grep  | wc -l"
     ret = execute_remote_cmd(host_ip, 'root',command)
     if ret == 0 :
         logger.error("Critical: Libvirt service is not running on host " + host_ip)
