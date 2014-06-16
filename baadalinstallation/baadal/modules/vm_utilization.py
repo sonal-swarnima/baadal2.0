@@ -419,7 +419,7 @@ def update_rrd(host_ip):
                 except Exception, e:
                     
                     rrd_logger.debug(e)
-                    rrd_logger("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
+                    rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
   
                 finally:
 
@@ -428,7 +428,7 @@ def update_rrd(host_ip):
  
         except Exception, e:
         
-            rrd_logger(e)
+            rrd_logger.debug(e)
 
         finally:
 
