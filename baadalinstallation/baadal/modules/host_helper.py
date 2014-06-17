@@ -162,7 +162,6 @@ def has_running_vm(host_ip):
 def host_power_operation():
     logger.debug("\nIn host power operation function\n-----------------------------------\n")
     livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
-    masterhost = livehosts[0].host_ip
     freehosts=[]
     try:
         for host_data in livehosts:
@@ -176,7 +175,7 @@ def host_power_operation():
             newhosts = current.db(current.db.host.status == HOST_STATUS_DOWN).select()[0:(2-freehostscount)] #Select only Shutoff hosts
             for host_data in newhosts:
                 logger.debug("Sending magic packet to "+host_data.host_name)
-                commands.getstatusoutput("ssh root@"+masterhost+" wakeonlan "+str(host_data.mac_addr))
+                host_power_up(host_data.mac_addr)
         elif(freehosts > 2):
             logger.debug("Sending shutdown signal to total "+str(freehostscount-2)+" no. of host(s)")
             extrahosts=freehosts[2:]
@@ -186,6 +185,17 @@ def host_power_operation():
                 logger.debug("Sending kill signal to " + host_data.host_ip)
                 commands.getstatusoutput("ssh root@" + host_data.host_ip + " shutdown -h now")
                 host_data.update_record(status=HOST_STATUS_DOWN)
+    except:
+        log_exception()
+    return
+
+#Power up the host using wakeonlan
+def host_power_up(host_mac):
+    logger.debug("Powering up host with MAC " + host_mac)
+    try:
+        livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
+        masterhost = livehosts[0].host_ip
+        commands.getstatusoutput("ssh root@" + masterhost + " wakeonlan " + host_mac)
     except:
         log_exception()
     return

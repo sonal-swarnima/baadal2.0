@@ -6,10 +6,12 @@ if 0:
     from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+import time
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
     remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
-    get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE
+    get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
+    host_power_up
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR
 from log_handler import logger
@@ -586,14 +588,18 @@ def vm_has_snapshots(vm_id):
 def updte_host_status(host_id, status):
     host_data = db.host[host_id]
     if status == HOST_STATUS_UP:
-        if is_host_available(host_data.host_ip):
-            if host_data.CPUs == 0:
-                cpu_num = get_host_cpu(host_data.host_ip)
-                ram_gb = get_host_ram(host_data.host_ip)
-                hdd_gb = get_host_hdd(host_data.host_ip)
-                host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
-        else:
-            return False
+        for i in range(0,5):
+            if is_host_available(host_data.host_ip):
+                if host_data.CPUs == 0:
+                    cpu_num = get_host_cpu(host_data.host_ip)
+                    ram_gb = get_host_ram(host_data.host_ip)
+                    hdd_gb = get_host_hdd(host_data.host_ip)
+                    host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
+            else:
+                return False
+            break
+        host_power_up(str(host_data.mac_addr))
+        time.sleep(15)
     elif status == HOST_STATUS_MAINTENANCE:
         migrate_all_vms_from_host(host_data.host_ip)
         host_data.update_record(status=HOST_STATUS_MAINTENANCE)

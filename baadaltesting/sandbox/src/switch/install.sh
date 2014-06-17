@@ -92,5 +92,21 @@ function run
     $ECHO_OK dnsmasq
   fi
 
+  # Running wake-on-lan listener
+  bash -c "tcpdump -i $OVS_BRIDGE_INTERNAL -l \
+    | grep --line-buffered ffff \
+    | while read -r lineraw ; \
+        do echo $lineraw \
+          | awk '{print $5,$6,$7}' \
+          | sed 's:\ ::g' \
+          | sed 's/../&:/g;s/:$//' ;\
+        done \
+    | while read -r mac ; \
+        do \
+          if [[ -n ${MAC_VM[$mac]} ]]; \
+            then virsh start ${MAC_VM[$mac]};\
+          fi ;\
+        done" 1>>$LOGS/log.out 2>>$LOGS/log.err &
+
   $ECHO_OK Switch Installation Complete
 }
