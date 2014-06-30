@@ -60,11 +60,6 @@ Chk_installation_config()
 		exit 1
 	fi
 
-	if test "$MAPPER_FILE_PATH" == ""; then
-		echo "Public-Private mapper file path not specified!!!"
-		exit 1
-	fi
-
 	if test "$AUTH_TYPE" == "ldap"; then
 
 		if test "$LDAP_KERBEROS_SETUP_FILES_PATH" == "" || test "$LDAP_URL" == "" || test "$LDAP_DN" == ""; then
@@ -832,12 +827,6 @@ Start_Web2py()
 
 	su www-data -c "python /home/www-data/web2py/web2py.py -K  baadal &"
 
-	rrd_cron_exists=`cat /etc/crontab | grep "rrd_gen_cron.py" | wc -l`
-
-	if test $rrd_cron_exists -eq 0; then
-		echo "*/5 * * * *  www-data python -u /home/www-data/web2py/web2py.py -S baadal -M -R /home/www-data/web2py    /applications/baadal/private/rrd_gen_cron.py" >> /etc/crontab
-	fi
-	
 	echo "Controller Installation Complete!!!"
 }
 

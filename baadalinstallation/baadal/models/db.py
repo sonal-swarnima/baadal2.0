@@ -115,7 +115,10 @@ db.define_table('host',
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
     Field("category",'string', length = 50),
-    Field('status', 'integer'))
+    Field('status', 'integer'),
+    Field('slot_number', 'integer'),
+    Field('rack_number', 'integer'),
+    Field('extra', 'string', length =50))
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
@@ -125,6 +128,7 @@ db.define_table('datastore',
     Field('password', 'password', label='Password', readable=False),
     Field('path', 'string', notnull = True, label='Path'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
+    Field('system_mount_point', 'string', notnull = True, length = 255, label='System Mount Point'),
     format = '%(ds_name)s')
 db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
 

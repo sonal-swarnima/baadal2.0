@@ -1,3 +1,44 @@
+function config_init
+{
+  mkdir -p $CONFIG
+}
+
+function config_get
+{
+  config_init
+
+  config_name=$1
+  config_file=$CONFIG/${config_name,,}
+  CONFIG_VAL=
+
+  # Get from $CONFIG
+  CONFIG_VAL=$(cat $config_file 2>/dev/null)
+  if [[ $CONFIG_VAL == "" ]]; then
+    # Get default value or value from environment
+    CONFIG_VAL=${!config_name}
+  fi
+  eval $config_name=\$CONFIG_VAL
+}
+
+function config_set
+{
+  config_init
+
+  config_name=$1
+  config_file=$CONFIG/${config_name,,}
+
+  echo "${!config_name}" > $config_file
+}
+
+function config_clr
+{
+  config_init
+
+  config_name=$1
+  config_file=$CONFIG/${config_name,,}
+
+  rm -f $config_file
+}
 ROOT=$PWD
 BAADAL_LOCAL_DIR=~/.baadal
 
@@ -72,12 +113,12 @@ NAT_EXTERNAL_INTERFACE=eth0
 NAT_INTERNAL_INTERFACE=eth1
 
 CONTROLLER_DISK=$DISKS/controller.img
-CONTROLLER_SPACE=10
+CONTROLLER_SPACE=5
 CONTROLLER_ARCH=x86_64
 CONTROLLER_NAME=baadal_controller
 CONTROLLER_HOSTNAME=baadal-controller # Should match in ks.cfg
-CONTROLLER_RAM=1028
-CONTROLLER_VCPUS=2
+CONTROLLER_RAM=1024
+CONTROLLER_VCPUS=1
 CONTROLLER_ISO=$UTILS_LOCAL/ubuntu.controller.iso
 CONTROLLER_KICKSTART=$BIN/ks.controller.cfg
 CONTROLLER_TRANSFER=$BIN/transfer.controller/
@@ -85,7 +126,7 @@ CONTROLLER_KS=$CONTROLLER/ks.cfg
 CONTROLLER_INTERFACE=${CONTROLLER_INTERFACE:-eth0}
 
 FILER_DISK=$DISKS/filer.img
-FILER_SPACE=50
+FILER_SPACE=150
 FILER_ARCH=x86_64
 FILER_NAME=baadal_filer
 FILER_HOSTNAME=baadal-filer # Should match in ks.cfg
@@ -98,11 +139,11 @@ FILER_KS=$FILER/ks.cfg
 
 HOST_ID=${HOST_ID:-0}
 HOST_DISK=$DISKS/host.$HOST_ID.img
-HOST_SPACE=50
+HOST_SPACE=60
 HOST_ARCH=x86_64
 HOST_NAME=baadal_host_$HOST_ID
 HOST_HOSTNAME=baadal-host # Should match in ks.cfg
-HOST_RAM=6144
+HOST_RAM=8192
 HOST_VCPUS=8
 HOST_INTERFACE=${HOST_INTERFACE:-eth0}
 
@@ -122,16 +163,47 @@ MAC_HOST_9=52:52:00:01:15:13
 MAC_HOST_HELPER=MAC_HOST_${HOST_ID}
 MAC_HOST=${!MAC_HOST_HELPER}
 
-declare -a MAC_VM
-MAC_VM[$MAC_CONTROLLER]=$CONTROLLER_NAME
-MAC_VM[$MAC_NAT]=$NAT_NAME
-MAC_VM[$MAC_FILER]=$FILER_NAME
-MAC_VM[$MAC_HOST_1]=baadal_host_1
-MAC_VM[$MAC_HOST_2]=baadal_host_2
-MAC_VM[$MAC_HOST_3]=baadal_host_3
-MAC_VM[$MAC_HOST_4]=baadal_host_4
-MAC_VM[$MAC_HOST_5]=baadal_host_5
-MAC_VM[$MAC_HOST_6]=baadal_host_6
-MAC_VM[$MAC_HOST_7]=baadal_host_7
-MAC_VM[$MAC_HOST_8]=baadal_host_8
-MAC_VM[$MAC_HOST_9]=baadal_host_9
+function dns_get
+{
+  if [[ $DNS != '' ]]; then
+    dns=$DNS
+  else
+    dns=$(cat /var/run/dnsmasq/resolv.conf | grep "nameserver" | sed "s:nameserver ::g" | head -n 1)
+  fi
+
+  package_install ipcalc
+  ipcalc -b $dns | tee -a $LOGS/log.err | grep INVALID\ ADDRESS 1>>$LOGS/log.out
+  status=$?
+
+  if [[ $status -eq 0 ]]; then
+    dns=$(cat /etc/resolv.conf | grep "nameserver" | sed "s:nameserver ::g" | head -n 1)
+
+    ipcalc -b $dns | tee -a $LOGS/log.err | grep INVALID\ ADDRESS 1>>$LOGS/log.out
+    status=$?
+
+    if [[ $status -eq 0 ]]; then
+      $ECHO_ER Failed to retrieve DNS info from sandbox system \(check logs\) OR \
+        manually specify DNS as \'make switch DNS=a.b.c.d\' or \'make controller-setup DNS=a.b.c.d\'
+      tail -15 $LOGS/log.err
+      exit 1
+    else
+      $ECHO_OK DNS = $dns
+    fi
+  else
+    $ECHO_OK DNS = $dns
+  fi
+}
+
+dns_get
+
+dnsmasq \
+    --listen-address=$NETWORK_INTERNAL_IP_SANDBOX \
+    --bind-interfaces \
+    --dhcp-mac=nat,$MAC_NAT \
+    --dhcp-host=$MAC_CONTROLLER,$NETWORK_INTERNAL_IP_CONTROLLER \
+    --dhcp-host=$MAC_NAT,$NETWORK_INTERNAL_IP_NAT \
+    --dhcp-host=$MAC_FILER,$NETWORK_INTERNAL_IP_FILER \
+    --dhcp-option=6,$dns \
+    --dhcp-option=nat,option:router,0.0.0.0 \
+    --dhcp-option=3,$NETWORK_INTERNAL_IP_GATEWAY \
+    --dhcp-range=$NETWORK_INTERNAL,static

@@ -28,27 +28,28 @@
    before installing the controller, because the controller's post VM
    installation script requires NAT to be setup.
 
-NOTE: For better performance you may use the sandbox machine as the filer. No need to execute this step is doing so.
 
-7. make filer 
-   This will create the filer VM. Can be tested by mounting x.y.0.4:/baadal/data
-   on the sandbox machine. (here x.y=10.0 or 192.168 depending on internal
-   network IPs). The data on the filer is stored in /baadal/data.
-
-8. make controller
-
------ wait for all VMs to get fully installed -----
-
-9. Go to the NAT VM and type
+7.. Go to the NAT VM and type
    $ cd /baadal/baadal/baadaltesting/sandbox
    $ make openvswitch
    $ make nat-setup
 
 NOTE: Restart NAT machine after executing make nat-setup file and before proceeding to next step.
 
-10. Go to filer VM or sandbox machine(in case you have not created a filer vm using make filer command and want to use sandbox machine as the filer) and type
+
+
+NOTE: For better performance you may use the sandbox machine as the filer. So you may skip STEP 8 and run STEP 9 on sandbox machine.
+
+8. make filer 
+   This will create the filer VM. Can be tested by mounting x.y.0.4:/baadal/data
+   on the sandbox machine. (here x.y=10.0 or 192.168 depending on internal
+   network IPs). The data on the filer is stored in /baadal/data.
+
+9. Go to filer VM or sandbox machine(in case you have not created a filer vm using make filer command and want to use sandbox machine as the filer) and type
     $ cd /baadal/baadal/baadaltesting/sandbox
     $ make filer-setup
+
+10. make controller
 
 11. Go to controller VM and type
     $ cd /baadal/baadal/baadaltesting/sandbox

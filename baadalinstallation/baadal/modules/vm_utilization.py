@@ -198,9 +198,10 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
-    cmd = "ps aux | grep '\-name " + dom_name + " ' | grep kvm"
+    cmd = "output=`ps -ef --sort=start_time | grep '%s.qcow2' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'" % dom_name
+    #"ps aux | grep '\-name " + dom_name + " ' | grep kvm"
     output = execute_remote_cmd(host, "root", cmd, None, True)
-    return (int(re.split('\s+', output[0])[5]))*1024 #returned memory in Bytes by default
+    return (int(output[0]))*1024 #returned memory in Bytes by default
 
 def get_dom_nw_usage(dom_obj):
 
@@ -418,7 +419,7 @@ def update_rrd(host_ip):
                 except Exception, e:
                     
                     rrd_logger.debug(e)
-                    rrd_logger("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
+                    rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
   
                 finally:
 
@@ -427,7 +428,7 @@ def update_rrd(host_ip):
  
         except Exception, e:
         
-            rrd_logger(e)
+            rrd_logger.debug(e)
 
         finally:
 
