@@ -174,9 +174,10 @@ def create_vm_image(vm_details, datastore):
 
     # Finds the location of template image that the user has requested for its vm.               
     template = current.db.template[vm_details.template_id]
-    template_location = datastore.system_mount_point + '/' + get_constant('templates_dir') + '/' + template.hdfile
     vm_image_location = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
-
+   
+    """
+    template_location = datastore.system_mount_point + '/' + get_constant('templates_dir') + '/' + template.hdfile
     rc = os.system("cp %s %s" % (template_location, vm_image_location))
 
     if rc != 0:
@@ -199,7 +200,6 @@ def create_vm_image(vm_details, datastore):
     command_outputexecute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
     logger.debug(command_output)
     logger.debug("Copied successfully.")
-    """
 
     return (template, vm_image_location)
 
