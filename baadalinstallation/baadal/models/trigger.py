@@ -72,9 +72,9 @@ import ast
 def scheduler_task_update_callback(dbset, new_fields):
 
     logger.debug("~~~~~~in callback~~~~~")
-    logger.debug(dbset.select())
-    logger.debug(dir(new_fields))
-    logger.debug(new_fields)
+    #logger.debug(dbset.select())
+    #logger.debug(dir(new_fields))
+    #logger.debug(new_fields)
     if 'status' in new_fields and 'next_run_time' in new_fields:
       if new_fields['status']=='TIMEOUT':
         logger.debug(new_fields['next_run_time'])
@@ -84,8 +84,8 @@ def scheduler_task_update_callback(dbset, new_fields):
         rows =db((db.scheduler_task.status==new_fields['status']) & (db.scheduler_task.next_run_time==next_run_time[0])).select()
 	for row in rows:
             logger.debug("status"+str(row.status))
-            logger.debug("next_run_time"+str(row.next_run_time))
-            logger.debug(row.vars)
+            #logger.debug("next_run_time"+str(row.next_run_time))
+            #logger.debug(row.vars)
             if 'task_event_id' in row.vars:
                 a_dict = ast.literal_eval(row.vars)
                 logger.debug(a_dict)
@@ -121,5 +121,5 @@ def task_timeout_cleanup(task_event_id, scheduler_row):
        if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
           db.vm_data[task_queue_data.vm_id] = dict(status = VM_STATUS_UNKNOWN)
        if 'request_id' in task_queue_data.parameters:
-          logger.debug(type(task_queue_data.parameters))
+          #logger.debug(type(task_queue_data.parameters))
           db.request_queue[task_queue_data.parameters['request_id']] = dict(status = REQ_STATUS_FAILED)
