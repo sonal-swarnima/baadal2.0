@@ -174,11 +174,11 @@ def create_vm_image(vm_details, datastore):
 
     # Finds the location of template image that the user has requested for its vm.               
     template = current.db.template[vm_details.template_id]
-    vm_image_location = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
-   
+    vm_image_name = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
+
     """
     template_location = datastore.system_mount_point + '/' + get_constant('templates_dir') + '/' + template.hdfile
-    rc = os.system("cp %s %s" % (template_location, vm_image_location))
+    rc = os.system("cp %s %s" % (template_location, vm_image_name))
 
     if rc != 0:
         logger.error("Copy not successful")
@@ -187,21 +187,30 @@ def create_vm_image(vm_details, datastore):
         logger.debug("Copied successfully")
 
     """
-            
+
     # Copies the template image from its location to new vm directory
     storage_type = config.get("GENERAL_CONF","storage_type")
 
     copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
-        
+
     logger.debug("Copy in progress when storage type is " + str(storage_type))
     command_to_execute = copy_command + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
                          template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
-                         vm_details.vm_identity + '/' + vm_details.vm_identity + '.qcow2'
-    command_outputexecute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+                         vm_details.vm_identity
+    logger.debug("ndmpcopy command: " + str(command_to_execute))
+    command_output = execute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
     logger.debug(command_output)
     logger.debug("Copied successfully.")
 
-    return (template, vm_image_location)
+    try:
+        vm_template_name = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_details.vm_identity + '/' + template.hdfile
+        os.rename(vm_template_name, vm_image_name)
+        logger.debug("Template renamed successfully")
+    except:
+        logger.debug("Template rename not successful")
+        raise Exception("Template rename not successful")
+
+    return (template, vm_image_name)
 
 # Determines an install command for vm
 def get_install_command(vm_details, vm_image_location, vm_properties):
