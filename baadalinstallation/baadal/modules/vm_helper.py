@@ -220,23 +220,23 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
     optional = ' --import --os-type=' + template.os_type
     if (template.arch != 'amd64' and template.os_type == 'Linux'):
         optional = optional + ' --arch=' + template.arch + ' '
+        model = ',model=virtio'
         
     
     format_command = ''
     if (template.type == 'QCOW2'):
         format_command = ',format=qcow2'
     
-    variant_command = ''
     if (template.os_type == 'Windows'):
-        variant_command = ' --os-variant=' + template.arch 
         bus = ''
+        model = ''
     
     install_command = 'virt-install \
                      --name=' + vm_details.vm_identity + ' \
                      --ram=' + str(vm_properties['ram']) + ' \
-                     --vcpus=' + str(vm_properties['vcpus']) + optional + variant_command + ' \
+                     --vcpus=' + str(vm_properties['vcpus']) + optional + ' \
                      --disk path=' + vm_image_location + format_command + bus + ',cache=none' + ' \
-                     --network network='+current.LIBVIRT_NETWORK+',model=virtio,mac=' + vm_properties['mac_addr'] + ' \
+                     --network network='+current.LIBVIRT_NETWORK + model + ',mac=' + vm_properties['mac_addr'] + ' \
                      --graphics vnc,port=' + vm_properties['vnc_port'] + ',listen=0.0.0.0,password=duolc \
                      --noautoconsole \
                      --description \
