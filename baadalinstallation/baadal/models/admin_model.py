@@ -11,7 +11,7 @@ from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate
     remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
-    host_power_up
+    host_power_up_vm,host_power_down_physical_machine,host_power_down_vm,host_power_up_physical_machine
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR
 from log_handler import logger
@@ -452,7 +452,7 @@ def get_configure_host_form():
 
 
 def get_add_host_form():
-    form_fields = ['host_ip','host_name','mac_addr','HDD','RAM','CPUs']
+    form_fields = ['host_ip','host_name','mac_addr','HDD','RAM','CPUs', 'host_type']
     form_labels = {'host_ip':'Host IP','host_name':'Host Name','mac_addr':'MAC Address','HDD':'Harddisk(GB)','RAM':'RAM size in GB:','CPUs':'No. of CPUs:'}
 
     form = SQLFORM(db.host, fields = form_fields, labels = form_labels, submit_button = 'Add Host')
@@ -469,6 +469,9 @@ def get_host_form(host_ip):
         form.vars.CPUs = get_host_cpu(host_ip)
         form.vars.RAM  = get_host_ram(host_ip)
         form.vars.HDD = get_host_hdd(host_ip)
+	abc=get_host_type(host_ip)
+        logger.debug(abc)
+        form.vars.host_type = abc
         form.vars.status = HOST_STATUS_UP
     else:
         form.vars.status = HOST_STATUS_DOWN
@@ -587,23 +590,33 @@ def vm_has_snapshots(vm_id):
     
 def updte_host_status(host_id, status):
     host_data = db.host[host_id]
+    logger.debug(host_data.host_ip)
+    host_info=host_data.host_type
+    logger.debug(host_info)
     if status == HOST_STATUS_UP:
-        for i in range(0,5):
-            if is_host_available(host_data.host_ip):
+        if is_host_available(host_data.host_ip):
                 if host_data.CPUs == 0:
                     cpu_num = get_host_cpu(host_data.host_ip)
                     ram_gb = get_host_ram(host_data.host_ip)
                     hdd_gb = get_host_hdd(host_data.host_ip)
                     host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
-            else:
-                return False
-            break
-        host_power_up(str(host_data.mac_addr))
-        time.sleep(15)
+        else:   
+		if host_info == "virtual" :
+			host_power_up_vm(str(host_data.host_ip))        		
+		else:						
+                        host_power_up_physical_machine(str(host_data.mac_addr))
+    	host_data.update_record(status = HOST_STATUS_UP)
+
     elif status == HOST_STATUS_MAINTENANCE:
         migrate_all_vms_from_host(host_data.host_ip)
         host_data.update_record(status=HOST_STATUS_MAINTENANCE)
-    host_data.update_record(status = status)
+
+    elif status == HOST_STATUS_DOWN:
+	if host_info == "virtual":                
+		host_power_down_vm(str(host_data.host_ip))
+	else:						
+		host_power_down_physical_machine(str(host_data.host_ip))      	
+    	host_data.update_record(status = HOST_STATUS_DOWN )  
     return True
         
 def delete_host_from_db(host_id):

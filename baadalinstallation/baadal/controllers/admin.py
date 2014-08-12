@@ -290,6 +290,7 @@ def reject_request():
 @check_moderator
 @handle_exception
 def maintenance_host():
+    logger.debug("INSIDE MAINTENANCE HOST FUNCTION")
     host_id=request.args[0]
     #migration requests to be added to queue
     updte_host_status(host_id, HOST_STATUS_MAINTENANCE)
@@ -298,14 +299,16 @@ def maintenance_host():
 @check_moderator
 @handle_exception
 def boot_up_host():
+    logger.debug("INSIDE BOOT UP HOST FUNCTION")
     host_id=request.args[0]
-    if not (updte_host_status(host_id, HOST_STATUS_UP)):
-        session.flash = 'Host not accessible. Please verify'
+    updte_host_status(host_id, HOST_STATUS_UP)
+        #session.flash = 'Host not accessible. Please verify'
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
 @handle_exception
 def shut_down_host():
+    logger.debug("INSIDE SHUTDOWN HOST FUNCTION")
     host_id=request.args[0]
     #shut down to be implemented
     updte_host_status(host_id, HOST_STATUS_DOWN)

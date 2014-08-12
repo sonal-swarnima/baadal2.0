@@ -31,7 +31,16 @@
             {{pass}}
         </td>
         <td>
-        {{ if host['status']!= HOST_STATUS_MAINTENANCE:}} 
+   
+        {{ if host['status']== HOST_STATUS_DOWN:}}
+         <a href=# alt="Put host boot up state." title="Put host in boot up state."</a>
+        
+		{{=A(IMG(_src=URL('static','images/repaired.jpg'), _height=15, _width=15),
+                    _href=URL(r=request, f='boot_up_host', args=[host['id']]), 
+                    _title="Host is fit now.",
+                    _alt="Host is fit now.")}}
+	 {{pass}}
+        {{ if host['status'] == HOST_STATUS_UP:}} 
         <a href=# alt="Put host to maintenance mode." title="Put host to maintenance mode." onClick="if(confirm('Are you sure you want to put this host in maintenance mode? All off vms will be put on first active host and migration request will be queued for all running vms.'))
                                 {
                                     window.location ='{{=URL(r=request, f='maintenance_host', args=[host['id']])}}'

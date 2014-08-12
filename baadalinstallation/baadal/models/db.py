@@ -118,7 +118,8 @@ db.define_table('host',
     Field('status', 'integer'),
     Field('slot_number', 'integer'),
     Field('rack_number', 'integer'),
-    Field('extra', 'string', length =50))
+    Field('extra', 'string', length =50),
+    Field('host_type', 'string', length =20, default='physical'))
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
@@ -134,7 +135,9 @@ db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('template',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name of Template'),
-    Field('os_type', default = "Linux", requires = IS_IN_SET(('Linux', 'Windows', 'Others')), label='Operating System'),
+    Field('os_name', default = "Linux", requires = IS_IN_SET(('ubuntu', 'Windows','Centos', 'Others')), label='Operating System Name'),
+    Field('os_version','string',length = 50,notnull = True, label='Operating System Version'),
+    Field('os_type', default = "Desktop", requires = IS_IN_SET(('Desktop','Server')), label='Operating System Type'),
     Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386', 'win7')), label='Architecture'),
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
     Field('hdfile', 'string', length = 255, notnull = True, label='HD File'),

@@ -10,6 +10,8 @@ HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
 HOST_STATUS_MAINTENANCE = 2
 
+get_host_name={"10.0.0.5":"baadal_host_1","10.0.0.6":"baadal_host_2","10.0.0.7":"baadal_host_3","10.0.0.8":"baadal_host_4","10.0.0.9":"baadal_host_5","10.0.0.10":"baadal_host_6","10.0.0.11":"baadal_host_7","10.0.0.12":"baadal_host_8","10.0.0.13":"baadal_host_9"}
+
 def check_host_status(host_ip):
     out=commands.getstatusoutput("ping -c 2 -W 1 " + host_ip)[0]
     logger.debug("Host Check command response for %s: %s" %(host_ip, str(out)))
@@ -57,6 +59,15 @@ def get_host_hdd(host_ip):
     hdd_in_gb = int(math.ceil(float(ret)))
     return hdd_in_gb
 
+
+def get_host_type(host_ip):
+    command="virt-what"
+    logger.debug("AAAAAAAAAAAAAAAAAAAAAA")
+    ret=execute_remote_cmd(host_ip, 'root',command)
+    if ret:
+    	return "virtual"
+    else:
+        return "physical"
 
 def check_host_service_status(host_ip):
     #Check libvirt status
@@ -190,15 +201,49 @@ def host_power_operation():
     return
 
 #Power up the host using wakeonlan
-def host_power_up(host_mac):
+def host_power_up_physical_machine(host_mac):
     logger.debug("Powering up host with MAC " + host_mac)
+    host_address=system("ifconfig baadal-br-int | grep 'inet addr' | awk '{print $2}' | sed 's/addr://'")
+    logger.debug(host_address)
     try:
-        livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
-        masterhost = livehosts[0].host_ip
-        commands.getstatusoutput("ssh root@" + masterhost + " wakeonlan " + host_mac)
+         commands.getstatusoutput("ssh root@"+ host_address + " wakeonlan " + host_mac)
+         logger.debug("successfully host up!!!")
     except:
         log_exception()
     return
+
+#Power down the host
+def host_power_down_physical_machine(host_ip):
+    try:
+	commands.getstatusoutput("ssh -t root@" + host_ip + " sudo shutdown -P 0")
+        logger.debug("SUCCESSFULLY HOST DOWN !!!")
+    except:
+        log_exception()
+    return  
+
+def host_power_up_vm(host_ip):
+    try:
+	host_ip=str(host_ip)
+        new_host_name=get_host_name[host_ip]
+        logger.debug("NEW HOST NAME " + str(new_host_name))
+        status, output=commands.getstatusoutput("ssh -X root@10.0.0.1 "+ "virsh start " + new_host_name)
+        logger.debug(str(output) +" ,SUCCESSFULLY HOST UP !!!")
+    except:
+        log_exception()
+    return
+
+	
+#Power down the host
+def host_power_down_vm(host_ip):
+    try:
+        host_ip=str(host_ip)
+        new_host_name=get_host_name[host_ip]
+        logger.debug("NEW HOST NAME " + str(new_host_name))
+        status, output=commands.getstatusoutput("ssh -X root@10.0.0.1 "+ "virsh destroy " + new_host_name)
+        logger.debug(str(output)+" ,SUCCESSFULLY HOST DOWN !!!")
+    except:
+        log_exception()
+    return  
 
 #Migrate all running vms and redefine dead ones
 def migrate_all_vms_from_host(host_ip):
