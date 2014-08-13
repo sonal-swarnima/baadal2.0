@@ -224,7 +224,7 @@ def get_vm_config(vm_id):
                    'status'           : get_vm_status(vminfo.vm_data.status),
                    'os_name'          : str(vminfo.template.os_name),
                    'os_type'          : str(vminfo.template.os_type),
-                   'os_version'          : str(vminfo.template.os_version),
+                   'os_version'       : str(vminfo.template.os_version),
                    'purpose'          : str(vminfo.vm_data.purpose),
                    'private_ip'       : str(vminfo.vm_data.private_ip),
                    'public_ip'        : str(vminfo.vm_data.public_ip),
