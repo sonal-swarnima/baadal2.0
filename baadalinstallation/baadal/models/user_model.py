@@ -15,7 +15,7 @@ from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
 from datetime import timedelta
 
 def get_my_requests():
-
+    
     requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
     return get_pending_request_list(requests)
 
@@ -223,7 +223,7 @@ def get_vm_config(vm_id):
                    'vcpus'            : str(vminfo.vm_data.vCPU) + ' CPU',
                    'status'           : get_vm_status(vminfo.vm_data.status),
                    'os_name'          : str(vminfo.template.os_name),
-                   'os_type'          : str(vminfo.template.os_type),
+                   'os_type'          : str(vminfo.template.os_name) + ' ' + str(vminfo.template.os_version) + ' ' + str(vminfo.template.os_type) + ' ' + str(vminfo.template.arch),
                    'os_version'       : str(vminfo.template.os_version),
                    'purpose'          : str(vminfo.vm_data.purpose),
                    'private_ip'       : str(vminfo.vm_data.private_ip),

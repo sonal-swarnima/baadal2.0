@@ -217,16 +217,16 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
 
     template = vm_properties['template']
     bus = ',bus=virtio'     
-    optional = ' --import --os-type=' + template.os_type
+    optional = ' --import --os-type=' + template.os
     model = ',model=virtio'
-    if (template.arch != 'amd64' and template.os_type == 'Linux'):
+    if (template.arch != 'amd64' and template.os == 'Linux'):
         optional = optional + ' --arch=' + template.arch + ' '
    
     format_command = ''
     if (template.type == 'QCOW2'):
         format_command = ',format=qcow2'
     
-    if (template.os_type == 'Windows'):
+    if (template.os == 'Windows'):
         bus = ''
         model = ''
     
