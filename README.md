@@ -2,8 +2,11 @@ Baadal
 ============
 
 Baadal is a cloud orchestration software for academic and scientific environments. It is based on open technologies like Linux, KVM, libvirt, OpenVSwitch, Apache, MySQL, and web2py. 
+
 Workflows are implemented expected in academic and research environments, where a user or student can request a VM, a faculty supervisor can approve it, and an administrator can commission it. 
+
 Baadal supports multiple organizations sharing a cloud infrastructure, and thus has a provision for an organization-level administrator. 
+
 Baadal is a multi-tenant implementation, which means that different organizations are isolated from each other against network and system-level security attacks.
 
 Features
@@ -41,5 +44,5 @@ Installation setup
                                    |_ Hosts
 
 
-'NOTE:' On every host Virtual Machines of multiple organisations may run. The traffic between Virtual Machines of different organizations will be seperated by creating separate Security Domains(VLanS) for an organization (or a group or organizations) on a host system. This is acheived by configuring the physical switch and thorugh Open vSwitch Software on the host machine. Open vSwitch software and its configurations are automatically setup when the host is installed through the PXE-Server. All the prerequisites needs to be configured manually as of now.
+`NOTE:` On every host Virtual Machines of multiple organisations may run. The traffic between Virtual Machines of different organizations will be seperated by creating separate Security Domains(VLanS) for an organization (or a group or organizations) on a host system. This is acheived by configuring the physical switch and thorugh Open vSwitch Software on the host machine. Open vSwitch software and its configurations are automatically setup when the host is installed through the PXE-Server. All the prerequisites needs to be configured manually as of now.
 
