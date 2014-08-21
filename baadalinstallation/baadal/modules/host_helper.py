@@ -4,6 +4,7 @@ import libvirt,commands  # @UnusedImport
 from libvirt import *  # @UnusedWildImport
 from vm_helper import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
+import os
 
 #Host Status
 HOST_STATUS_DOWN = 0
@@ -173,6 +174,7 @@ def has_running_vm(host_ip):
 def host_power_operation():
     logger.debug("\nIn host power operation function\n-----------------------------------\n")
     livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
+    masterhost = livehosts[0].host_ip
     freehosts=[]
     try:
         for host_data in livehosts:
@@ -199,14 +201,20 @@ def host_power_operation():
     except:
         log_exception()
     return
-
+ 
 #Power up the host using wakeonlan
 def host_power_up_physical_machine(host_mac):
+    #import subprocess
     logger.debug("Powering up host with MAC " + host_mac)
-    host_address=system("ifconfig baadal-br-int | grep 'inet addr' | awk '{print $2}' | sed 's/addr://'")
-    logger.debug(host_address)
+    #status,output = commands.getstatusoutput('cat /etc/network/interfaces | grep "baadal-br-int inet" -A 1')
+    #string = re.split('\s+', output)
+    #host_address =  string[-1]
+    #logger.debug("ip address of the machine is :"+ str(host_address))
+    #logger.debug("new ip address of the machine is :"+ str(host_address))
     try:
-         commands.getstatusoutput("ssh root@"+ host_address + " wakeonlan " + host_mac)
+         #commands.getstatusoutput("ssh root@"+ host_address + " wakeonlan " + host_mac)
+         logger.debug("wakeonlan " + host_mac)
+         commands.getstatusoutput( "wakeonlan " + host_mac)
          logger.debug("successfully host up!!!")
     except:
         log_exception()
@@ -215,7 +223,10 @@ def host_power_up_physical_machine(host_mac):
 #Power down the host
 def host_power_down_physical_machine(host_ip):
     try:
-	commands.getstatusoutput("ssh -t root@" + host_ip + " sudo shutdown -P 0")
+        logger.debug(type(host_ip))
+        logger.debug("ssh root@" + host_ip + " init 0")
+	status, output=commands.getstatusoutput("ssh root@" + host_ip + " init 0")
+	logger.debug(str(output) +" ,SUCCESSFULLY HOST down !!!")
         logger.debug("SUCCESSFULLY HOST DOWN !!!")
     except:
         log_exception()

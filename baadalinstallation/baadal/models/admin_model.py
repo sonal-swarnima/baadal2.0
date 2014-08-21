@@ -603,7 +603,7 @@ def updte_host_status(host_id, status):
         else:   
 		if host_info == "virtual" :
 			host_power_up_vm(str(host_data.host_ip))        		
-		else:						
+		else:					
                         host_power_up_physical_machine(str(host_data.mac_addr))
     	host_data.update_record(status = HOST_STATUS_UP)
 
