@@ -15,7 +15,7 @@ from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
 from datetime import timedelta
 
 def get_my_requests():
-    
+
     requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
     return get_pending_request_list(requests)
 
@@ -101,6 +101,26 @@ def get_request_status():
         status = REQ_STATUS_VERIFIED
 
     return status
+
+
+def is_vm_name_unique(user_set, vm_name):
+    
+    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
+             (db.user_vm_map.user_id.belongs(user_set)) & 
+             (db.vm_data.vm_name.like(vm_name))).select()
+    
+    if vms:
+        return False
+
+    requests = db(((db.request_queue.owner_id.belongs(user_set)) |
+                   (db.request_queue.requester_id.belongs(user_set))) & 
+                   (db.request_queue.vm_name.like(vm_name))).select()
+    
+    if requests:
+        return False
+
+    return True
+
     
 def request_vm_validation(form):
     
@@ -125,16 +145,7 @@ def request_vm_validation(form):
     user_set = set(user_list)
     user_set.add(auth.user.id)
 
-    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
-             (db.user_vm_map.user_id.belongs(user_set))).select(db.vm_data.vm_name)
-    
-    if vms.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
-        form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
-
-    requests = db((db.request_queue.owner_id.belongs(user_set)) |
-             (db.request_queue.requester_id.belongs(user_set))).select(db.request_queue.vm_name)
-    
-    if requests.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
+    if not is_vm_name_unique(user_set, form.vars.vm_name):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
         
 

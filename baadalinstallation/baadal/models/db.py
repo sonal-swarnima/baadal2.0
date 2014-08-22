@@ -10,6 +10,7 @@ from ast import literal_eval
 from helper import config,get_datetime, IS_MAC_ADDRESS
 from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
 from datetime import timedelta
+from host_helper import HOST_TYPE_PHYSICAL
 
 #### Connection Pooling of Db is also possible
 
@@ -118,8 +119,8 @@ db.define_table('host',
     Field('status', 'integer'),
     Field('slot_number', 'integer'),
     Field('rack_number', 'integer'),
-    Field('extra', 'string', length =50),
-    Field('host_type', 'string', length =20, default='physical'))
+    Field('extra', 'string', length = 50),
+    Field('host_type', 'string', length = 20, default = HOST_TYPE_PHYSICAL))
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),

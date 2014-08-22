@@ -6,11 +6,12 @@ if 0:
     from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN, \
-    HOST_STATUS_MAINTENANCE
-from helper import get_constant
 from maintenance import shutdown_baadal, bootup_baadal
-from vm_utilization import *
+from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN,\
+    HOST_STATUS_MAINTENANCE
+from log_handler import logger
+from vm_utilization import VM_UTIL_24_HOURS, get_performance_graph
+from helper import get_constant
 
 @check_moderator
 @handle_exception
@@ -145,6 +146,12 @@ def add_user_to_vm():
     form = get_user_form(username, vm_id)
 
     if form.accepts(request.vars,session):
+        
+        user_set = set({form.vars.user_id})
+    
+        if not is_vm_name_unique(user_set, vm_id=vm_id):
+            form.errors.vm_name = 'VM name should be unique for the user.'
+
         add_user_vm_access(vm_id, form.vars.user_id)
         session.flash = "User is added to vm"
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
@@ -293,7 +300,7 @@ def maintenance_host():
     logger.debug("INSIDE MAINTENANCE HOST FUNCTION")
     host_id=request.args[0]
     #migration requests to be added to queue
-    updte_host_status(host_id, HOST_STATUS_MAINTENANCE)
+    update_host_status(host_id, HOST_STATUS_MAINTENANCE)
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
@@ -301,8 +308,8 @@ def maintenance_host():
 def boot_up_host():
     logger.debug("INSIDE BOOT UP HOST FUNCTION")
     host_id=request.args[0]
-    updte_host_status(host_id, HOST_STATUS_UP)
-        #session.flash = 'Host not accessible. Please verify'
+    if not (update_host_status(host_id, HOST_STATUS_UP)):
+        session.flash = 'Host not accessible. Please verify'
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
@@ -311,7 +318,7 @@ def shut_down_host():
     logger.debug("INSIDE SHUTDOWN HOST FUNCTION")
     host_id=request.args[0]
     #shut down to be implemented
-    updte_host_status(host_id, HOST_STATUS_DOWN)
+    update_host_status(host_id, HOST_STATUS_DOWN)
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
@@ -439,11 +446,7 @@ def start_shutdown():
 def start_bootup():
     bootup_baadal()
 
-
-
-
-
-@auth.requires_login()
+@check_moderator
 @handle_exception       
 def get_updated_host_graph():
     logger.debug("in")
@@ -459,13 +462,13 @@ def get_updated_host_graph():
     else:
         return graphRet
         
-        
-@handle_exception
+@check_moderator
+@handle_exception       
 def host_config():
     host_ip=request.args(0)
     logger.debug("host_ip :" + str( host_ip))
-    host_info=get_host_config(host_ip)
+    host_info = get_host_config(host_ip)
     logger.debug(host_info)
     ip=str(host_ip).replace('.','_')
-    return dict(host_info=host_info,host_ip=ip)
+    return dict(host_info=host_info, host_ip=ip)
 

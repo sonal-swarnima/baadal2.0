@@ -3,15 +3,15 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db, request
+    from gluon import db, request, session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import time
+# import time
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
     remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
-    host_power_up_vm,host_power_down_physical_machine,host_power_down_vm,host_power_up_physical_machine
+    get_host_type, host_power_up, host_power_down
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR
 from log_handler import logger
@@ -414,23 +414,24 @@ def update_task_ignore(event_id):
     task_event_data = db.task_queue_event[event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
 
-    if 'request_id' in task_queue_data.parameters:
-        request_id = task_queue_data.parameters['request_id']
+    if 'request_id' in task_event_data.parameters:
+        request_id = task_event_data.parameters['request_id']
         if db.request_queue[request_id]:
             del db.request_queue[request_id]
     
     if task_event_data.task_type == TASK_TYPE_CREATE_VM:
         if db.vm_data[task_event_data.vm_id]: del db.vm_data[task_event_data.vm_id]
     elif task_event_data.task_type == TASK_TYPE_CLONE_VM:
-        vm_list = task_queue_data.parameters['clone_vm_id']
+        vm_list = task_event_data.parameters['clone_vm_id']
         for vm in vm_list:
             if db.vm_data[vm]: del db.vm_data[vm]
 
     task_event_data.update_record(task_id = None, status=TASK_QUEUE_STATUS_IGNORE)
 
     #Delete task from task_queue
-    if db.task_queue[task_queue_data.id]:
-        del db.task_queue[task_queue_data.id]
+    if task_queue_data:
+        if db.task_queue[task_queue_data.id]:
+            del db.task_queue[task_queue_data.id]
 
 
 def get_search_host_form():
@@ -469,9 +470,7 @@ def get_host_form(host_ip):
         form.vars.CPUs = get_host_cpu(host_ip)
         form.vars.RAM  = get_host_ram(host_ip)
         form.vars.HDD = get_host_hdd(host_ip)
-	abc=get_host_type(host_ip)
-        logger.debug(abc)
-        form.vars.host_type = abc
+        form.vars.host_type = get_host_type(host_ip)
         form.vars.status = HOST_STATUS_UP
     else:
         form.vars.status = HOST_STATUS_DOWN
@@ -588,7 +587,7 @@ def vm_has_snapshots(vm_id):
     else:
         return False
     
-def updte_host_status(host_id, status):
+def update_host_status(host_id, status):
     host_data = db.host[host_id]
     logger.debug(host_data.host_ip)
     host_info=host_data.host_type
@@ -601,22 +600,18 @@ def updte_host_status(host_id, status):
                     hdd_gb = get_host_hdd(host_data.host_ip)
                     host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
         else:   
-		if host_info == "virtual" :
-			host_power_up_vm(str(host_data.host_ip))        		
-		else:					
-                        host_power_up_physical_machine(str(host_data.mac_addr))
-    	host_data.update_record(status = HOST_STATUS_UP)
+            host_power_up(host_data)                
+
+        host_data.update_record(status = HOST_STATUS_UP)
 
     elif status == HOST_STATUS_MAINTENANCE:
         migrate_all_vms_from_host(host_data.host_ip)
         host_data.update_record(status=HOST_STATUS_MAINTENANCE)
 
     elif status == HOST_STATUS_DOWN:
-	if host_info == "virtual":                
-		host_power_down_vm(str(host_data.host_ip))
-	else:						
-		host_power_down_physical_machine(str(host_data.host_ip))      	
-    	host_data.update_record(status = HOST_STATUS_DOWN )  
+        host_power_down(host_data)          
+        host_data.update_record(status = HOST_STATUS_DOWN )  
+
     return True
         
 def delete_host_from_db(host_id):
@@ -699,26 +694,11 @@ def specify_user_roles(user_id, user_roles):
         logger.debug("Ignoring duplicate role entry")
     return message
     
+
 def disable_user(user_id):
     db(db.user.id == user_id).update(registration_key='disable')
     return "User disabled in DB"
 
-def get_baadal_status_info():
-    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-    vm_info = []
-    for vm_detail in vms:
-#         sys_snapshot = db.snapshot(vm_id=vm_detail.id,type=SNAPSHOT_SYSTEM)
-        element = {'id' : vm_detail.id,
-                   'vm_name' : vm_detail.vm_identity, 
-                   'host_ip' : vm_detail.host_id.host_ip, 
-                   'vm_status' : get_vm_status(vm_detail.status),
-                   'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
-        vm_info.append(element)
-    return vm_info
-
-
-
-
 
 def get_baadal_status_info():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
@@ -732,19 +712,14 @@ def get_baadal_status_info():
                    'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
         vm_info.append(element)
     return vm_info
+
 
 def get_host_config(host_ip):
-    hosts=db(db.host.host_ip==host_ip).select()
-    host_info=[]
-    for host_detail in hosts:
-        element = {'id' : host_detail.id,
-                   'name' : host_detail.host_name, 
-                   'host_ip' : host_detail.host_ip, 
-                   'hdd' :  str(host_detail.HDD) + ' GB', 
-                   'ram' : str(host_detail.RAM ) + ' GB', 
-                   'vcpus' : str(host_detail.CPUs) + ' CPU',
-                   'mac_addr':host_detail.mac_addr,
-                   'status':host_detail.status}
-        host_info.append(element)
+    
+    host_info = db.host(host_ip=host_ip)
+    host_info['HDD'] = str(host_info['HDD']) + ' GB'
+    host_info['RAM'] = str(host_info['RAM']) + ' GB'
+    host_info['CPUs'] = str(host_info['CPUs']) + ' CPU'
+
     return host_info
 

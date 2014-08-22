@@ -10,6 +10,7 @@ from libvirt import *  # @UnusedWildImport
 from lxml import etree
 from helper import execute_remote_cmd, log_exception
 from host_helper import HOST_STATUS_UP, get_host_domains
+from nat_mapper import remove_mapping
 from log_handler import logger
 
 vm_state_map = {
@@ -102,7 +103,6 @@ def check_vm_sanity():
                             'message':'VM not found', 
                             'operation':'Undefined'})
             
-    logger.debug(vmcheck)
     return vmcheck
 
 
@@ -175,6 +175,9 @@ def delete_vm_info(vm_identity):
                                                                          (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
     db(db.private_ip_pool.vm_id == vm_details.id).update(vm_id = None)
     db(db.public_ip_pool.vm_id == vm_details.id).update(vm_id = None)
+
+    if vm_details.public_ip != PUBLIC_IP_NOT_ASSIGNED:
+        remove_mapping(vm_details.public_ip, vm_details.private_ip)
     #this will delete vm_data entry and also its references
     db(db.vm_data.id == vm_details.id).delete()
     

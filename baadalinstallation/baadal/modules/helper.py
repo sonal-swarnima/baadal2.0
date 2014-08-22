@@ -40,6 +40,8 @@ def update_constant(constant_name, constant_value):
 def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+    return
+
     output = None
     try:
         ssh = paramiko.SSHClient()
@@ -69,6 +71,7 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
 def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
 
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+    return
     output = None
     try:
         ssh = paramiko.SSHClient()

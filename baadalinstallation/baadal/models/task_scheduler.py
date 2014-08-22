@@ -5,7 +5,7 @@ if 0:
     from gluon import db,request, cache
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception, is_pingable
+from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
@@ -109,9 +109,6 @@ def process_task_queue(task_event_id):
         #Update attention_time for task in the event table
         task_event_data.update_record(attention_time=get_datetime(), status=TASK_QUEUE_STATUS_PROCESSING)
         #Call the corresponding function from vm_helper
-        logger.debug("Task Type: %s" % task_queue_data.task_type)
-        logger.debug("Task ID: %s" % task_event_id)
-        logger.debug("Task Params: %s" % task_queue_data.parameters)
         logger.debug("Starting VM_TASK processing...")
         ret = task[task_queue_data.task_type](task_queue_data.parameters)
         logger.debug("Completed VM_TASK processing...")
@@ -121,14 +118,9 @@ def process_task_queue(task_event_id):
         
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
 
-#             markFailedTask(task_process.id, task_event_id, ret[1])
             logger.debug("VM_TASK FAILED")
             logger.debug("VM_TASK Error Message: %s" % ret[1])
             task_queue_data.update_record(status=TASK_QUEUE_STATUS_FAILED)
-            if task_queue_data.task_type == TASK_TYPE_CREATE_VM:
-                db.vm_data[task_queue_data.vm_id] = dict(status = VM_STATUS_UNKNOWN)
-            if 'request_id' in task_queue_data.parameters:
-                db.request_queue[task_queue_data.parameters['request_id']] = dict(status = REQ_STATUS_FAILED)
 
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # Create log event for the task
@@ -285,14 +277,10 @@ def vm_utilization_rrd(host_ip):
         rrd_logger.debug(host_ip)
         
         if is_pingable(host_ip):
-
             update_rrd(host_ip)
  
         else:
-
             rrd_logger.error("UNABLE TO UPDATE RRDs for host : %s" % host_ip)
- 
-
 
     except Exception as e:
 
@@ -302,23 +290,24 @@ def vm_utilization_rrd(host_ip):
         rrd_logger.debug("Completing RRD Processing for Host: %s" % host_ip)
         logger.debug("EXITING RRD UPDATION/CREATION........")
 
+
 def overload_memory():
-  logger.debug("Executing overload memory task")
-  file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
-  file_path = file_path_row.value
-  logger.debug(type(file_path))
-  host_ips_rows=db(db.host.status==1).select(db.host.host_ip)
-  logger.debug(host_ips_rows)
-  command1 = 'gcc '+str(file_path)+'/memhog.c -o '+str(file_path)+'/hello'
-  command2 = 'nohup '+str(file_path)+'/hello >memoryhog.out 2>&1 &'
-  for host_ip_row in host_ips_rows:
-    logger.debug("overloading memory of")
-    logger.debug(host_ip_row)
-    logger.debug(type(host_ip_row['host_ip']))
-    ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1) 
-    ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command2)
-    logger.debug(ret)
-  logger.debug("Completed overload memory task")
+    logger.debug("Executing overload memory task")
+    file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
+    file_path = file_path_row.value
+    logger.debug(type(file_path))
+    host_ips_rows=db(db.host.status==1).select(db.host.host_ip)
+    logger.debug(host_ips_rows)
+    command1 = 'gcc '+str(file_path)+'/memhog.c -o '+str(file_path)+'/hello'
+    command2 = 'nohup '+str(file_path)+'/hello >memoryhog.out 2>&1 &'
+    for host_ip_row in host_ips_rows:
+        logger.debug("overloading memory of")
+        logger.debug(host_ip_row)
+        logger.debug(type(host_ip_row['host_ip']))
+        ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1) 
+        ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command2)
+        logger.debug(ret)
+    logger.debug("Completed overload memory task")
   
      
 # Defining scheduler tasks
@@ -330,7 +319,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
                                         vm_util_rrd=vm_utilization_rrd,
-					memory_overload=overload_memory))
+					                    memory_overload=overload_memory), 
+                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd'])
 
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
@@ -341,7 +331,8 @@ vm_scheduler.queue_task('snapshot_vm',
                     start_time = midnight_time, 
                     period = 24 * HOURS, # every 24h
                     timeout = 5 * MINUTES,
-                    uuid = UUID_SNAPSHOT_DAILY)
+                    uuid = UUID_SNAPSHOT_DAILY,
+                    group_name = 'vm_task')
 
 vm_scheduler.queue_task('snapshot_vm', 
                     pvars = dict(snapshot_type = SNAPSHOT_WEEKLY),
@@ -349,7 +340,8 @@ vm_scheduler.queue_task('snapshot_vm',
                     start_time = midnight_time, 
                     period = 7 * DAYS, # every 7 days
                     timeout = 5 * MINUTES,
-                    uuid = UUID_SNAPSHOT_WEEKLY)
+                    uuid = UUID_SNAPSHOT_WEEKLY,
+                    group_name = 'vm_task')
 
 vm_scheduler.queue_task('snapshot_vm', 
                     pvars = dict(snapshot_type = SNAPSHOT_MONTHLY),
@@ -357,28 +349,32 @@ vm_scheduler.queue_task('snapshot_vm',
                     start_time = midnight_time, 
                     period = 30 * DAYS, # every 30 days
                     timeout = 5 * MINUTES,
-                    uuid = UUID_SNAPSHOT_MONTHLY)
+                    uuid = UUID_SNAPSHOT_MONTHLY,
+                    group_name = 'vm_task')
 
 vm_scheduler.queue_task('vm_sanity', 
                     repeats = 0, # run indefinitely
                     start_time = request.now, 
                     period = 30 * MINUTES, # every 30 minutes
                     timeout = 5 * MINUTES,
-                    uuid = UUID_VM_SANITY_CHECK)
+                    uuid = UUID_VM_SANITY_CHECK,
+                    group_name = 'vm_sanity')
 
 vm_scheduler.queue_task('host_sanity', 
                     repeats = 0, # run indefinitely
                     start_time = request.now, 
                     period = 10 * MINUTES, # every 10 minutes
                     timeout = 5 * MINUTES,
-                    uuid = UUID_HOST_SANITY_CHECK)
+                    uuid = UUID_HOST_SANITY_CHECK,
+                    group_name = 'host_task')
 
 vm_scheduler.queue_task('memory_overload',
                     repeats = 0, # run indefinitely^M
                     start_time = request.now,
-                    period = 1 * HOURS, # every 10 minutes^M
+                    period = 1 * HOURS, # every hour
                     timeout = 5 * MINUTES,
-                    uuid = UUID_MEMORY_OVERLOAD)
+                    uuid = UUID_MEMORY_OVERLOAD,
+                    group_name = 'host_task')
 
 
 active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
@@ -391,12 +387,14 @@ for host in active_host_list:
                      start_time = request.now, 
                      period = 5 * MINUTES, # every 5 minutes
                      timeout = 5  * MINUTES,
-                     uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']))
+                     uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']),
+                    group_name = 'vm_rrd')
 
 vm_scheduler.queue_task('vnc_access', 
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 5 * MINUTES, # every 5 minutes
                      timeout = 5 * MINUTES,
-                     uuid = UUID_VNC_ACCESS)
+                     uuid = UUID_VNC_ACCESS,
+                    group_name = 'vm_task')
 
