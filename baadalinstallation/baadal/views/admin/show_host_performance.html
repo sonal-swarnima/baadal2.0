@@ -1,0 +1,106 @@
+{{extend 'layout.html'}}
+<script>
+  {{=host_info}}  
+function update_graph()
+{
+    graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
+    period = $('input[name=graph-period-radio]:radio:checked').val();
+	
+    
+    vm_identity = host_info;
+    alert(host_info);
+    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_host_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,
+        graphPeriod:period}, success:function(msg) { jQuery("#target").html(msg); 
+                                                     src = jQuery("#target img").attr("src") + "?" + new Date().getTime(); 
+                                                     jQuery("#target img").attr("src" , src) } });
+}
+
+jQuery(document).ready( function(){
+
+    update_graph();
+
+    $('input[name=graph-period-radio]:radio').click( function() {  
+        update_graph();
+    }); 
+
+    $('#tabs-task ul li').click( function() {  
+        update_graph();
+    }); 
+
+    $('#refresh').click( function() {
+        update_graph();
+    });
+
+});
+
+</script>
+
+
+
+
+<div id="tabs-task">
+<ul>
+    <li><a href="#ram">Memory</a></li>
+    <li><a href="#cpu">CPU</a></li>
+    <li><a href="#nw">Network</a></li>
+    <li><a href="#disk">Disk</a></li>
+</ul>
+
+<br/><br/>
+
+<table>
+    <tr>
+    <td>
+        <div id="graph-type">
+            <input type="radio" value="hour" name="graph-period-radio" checked="checked">&nbsp;Hourly<br/><br/>
+            <input type="radio" value="day" name="graph-period-radio">&nbsp;Daily<br/><br/>
+            <input type="radio" value="week" name="graph-period-radio">&nbsp;Weekly<br/><br/>
+            <input type="radio" value="month" name="graph-period-radio">&nbsp;Monthly<br/><br/>
+            <input type="radio" value="year" name="graph-period-radio">&nbsp;Yearly<br/><br/>
+        </div>
+    </td>
+
+    <td>
+        <table>
+            <tr>
+                <td id="target"></td>
+            </tr>
+        </table>
+    </td>
+    </tr>
+
+    <tr>
+        <td>
+	    <input type="button" id="refresh" name="refresh" value="Refresh Graph">
+        </td>
+    </tr>
+
+</table>
+
+<div id="ram"></div>
+<div id="cpu"></div>
+<div id="nw"></div>
+<div id="disk"></div>
+
+</div>
+
+<div>
+    {{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
+    _href=URL(r=request, f='hosts_config', args=host_info), 
+   )}}
+
+    <br>
+
+    <p>
+        <b>NOTE:</b><br/>
+            Y axis of the graph is auto-scaled as the data changes. Below are some pointer regarding the value displayed on the Y axis.
+        <ul>
+            <li>'u' besides a value on the Y axis implies it is multipled by 10<sup>-6</sup>. </li>
+            <li>'m' besides a value on the Y axis implies it is multipled by 10<sup>-3</sup>. </li>
+            <li>'k' besides a value on the Y axis implies it is multipled by 10<sup>3</sup>. </li>
+            <li>'M' besides a value on the Y axis implies it is multipled by 10<sup>6</sup>. </li>
+        </ul>
+        
+    </p>
+
+</div>

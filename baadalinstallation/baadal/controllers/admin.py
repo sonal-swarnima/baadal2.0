@@ -446,6 +446,16 @@ def start_shutdown():
 def start_bootup():
     bootup_baadal()
 
+
+@check_moderator
+@handle_exception       
+def show_host_performance():
+    host_ip=request.args(0)
+    logger.debug(host_ip)
+    ip=host_ip.replace('.','_')
+    return dict(host_info=ip)
+
+
 @check_moderator
 @handle_exception       
 def get_updated_host_graph():

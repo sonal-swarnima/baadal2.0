@@ -2,7 +2,7 @@
 
 
 {{if host_info:}}
-
+<div class="post" >
 
     <h2 class="title">Host Configuration </h2>
 
@@ -16,136 +16,31 @@
             <th>IP Address</th>
             <th>MAC Address</th>
              <th>Status</th>
-           
+              <th>Performance</th>
         </tr>
-        {{for host_inf in host_info:}}
         <tr>
-            <td>{{=host_inf['name']}}</td>
-            <td>{{=host_inf['hdd']}}</td>
-            <td>{{=host_inf['ram']}}</td>
-            <td>{{=host_inf['vcpus']}}</td>
-            <td>{{=host_inf['host_ip']}}</td>
-            <td>{{=host_inf['mac_addr']}}</td>
+            <td>{{=host_info['host_name']}}</td>
+            <td>{{=host_info['HDD']}}</td>
+            <td>{{=host_info['RAM']}}</td>
+            <td>{{=host_info['CPUs']}}</td>
+            <td>{{=host_info['host_ip']}}</td>
+            <td>{{=host_info['mac_addr']}}</td>
             <td>
-            {{if host_inf['status']== HOST_STATUS_UP :}}
-                Up 
-            {{elif host_inf['status']==HOST_STATUS_DOWN:}}
+            {{if host_info['status']== HOST_STATUS_UP :}}
+                Up <!-- #TODO Insert Image -->
+            {{elif host_info['status']==HOST_STATUS_DOWN:}}
                 Down
-            {{elif host_inf['status']== HOST_STATUS_MAINTENANCE:}}
+            {{elif host_info['status']== HOST_STATUS_MAINTENANCE:}}
                 Maintenance
             {{pass}}
         </td>
-        
+         <td>
+        {{=A(IMG(_src=URL('static','images/performance.jpg'), _height=18, _width=18),
+        _href=URL(r=request, f='show_host_performance', args=[host_info['host_ip']]), 
+        )}}
+        </td>
         </tr>
-   
-    {{pass}}
     </table>    
     </div>
-    <br><br><br><br>
-     <h2 class="title">Host Performance </h2>
-    <script>
-
-function update_graph()
-{
-    graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
-    period = $('input[name=graph-period-radio]:radio:checked').val();
-	
-   
-    vm_identity = "{{=host_ip}}";
-    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_host_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,
-        graphPeriod:period}, success:function(msg) { jQuery("#target").html(msg); 
-                                                     src = jQuery("#target img").attr("src") + "?" + new Date().getTime(); 
-                                                     jQuery("#target img").attr("src" , src) } });
-}
-
-jQuery(document).ready( function(){
-
-    update_graph();
-
-    $('input[name=graph-period-radio]:radio').click( function() {  
-        update_graph();
-    }); 
-
-    $('#tabs-task ul li').click( function() {  
-        update_graph();
-    }); 
-
-    $('#refresh').click( function() {
-        update_graph();
-    });
-
-});
-
-</script>
-
-
-
-
-<div id="tabs-task">
-<ul>
-    <li><a href="#ram">Memory</a></li>
-    <li><a href="#cpu">CPU</a></li>
-    <li><a href="#nw">Network</a></li>
-    <li><a href="#disk">Disk</a></li>
-</ul>
-
-<br/><br/>
-
-<table>
-    <tr>
-    <td>
-        <div id="graph-type">
-            <input type="radio" value="hour" name="graph-period-radio" checked="checked">&nbsp;Hourly<br/><br/>
-            <input type="radio" value="day" name="graph-period-radio">&nbsp;Daily<br/><br/>
-            <input type="radio" value="week" name="graph-period-radio">&nbsp;Weekly<br/><br/>
-            <input type="radio" value="month" name="graph-period-radio">&nbsp;Monthly<br/><br/>
-            <input type="radio" value="year" name="graph-period-radio">&nbsp;Yearly<br/><br/>
-        </div>
-    </td>
-
-    <td>
-        <table>
-            <tr>
-                <td id="target"></td>
-            </tr>
-        </table>
-    </td>
-    </tr>
-
-    <tr>
-        <td>
-	    <input type="button" id="refresh" name="refresh" value="Refresh Graph">
-        </td>
-    </tr>
-
-</table>
-
-<div id="ram"></div>
-<div id="cpu"></div>
-<div id="nw"></div>
-<div id="disk"></div>
-
-</div>
-
-<div>
-    {{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
-    _href=URL(r=request, f='hosts_vms', args=host_inf['host_ip']), 
-   )}}
-
-    <br>
-
-    <p>
-        <b>NOTE:</b><br/>
-            Y axis of the graph is auto-scaled as the data changes. Below are some pointer regarding the value displayed on the Y axis.
-        <ul>
-            <li>'u' besides a value on the Y axis implies it is multipled by 10<sup>-6</sup>. </li>
-            <li>'m' besides a value on the Y axis implies it is multipled by 10<sup>-3</sup>. </li>
-            <li>'k' besides a value on the Y axis implies it is multipled by 10<sup>3</sup>. </li>
-            <li>'M' besides a value on the Y axis implies it is multipled by 10<sup>6</sup>. </li>
-        </ul>
-        
-    </p>
-
 </div>
 {{pass}}
-
