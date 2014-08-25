@@ -137,30 +137,6 @@ def allocate_vm_properties(vm_details):
     return vm_properties
 
 
-# Executes command on host machine using paramiko module
-def exec_command_on_host(machine_ip, user_name, command, password=None):
-
-    try:
-        logger.debug("Starting to establish SSH connection with host " + str(machine_ip))
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(machine_ip, username = user_name, password = password)
-        logger.debug("Starting to execute command %s " % command)
-        stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
-        logger.debug("Command %s executed." % command)
-        logger.debug(stdout.readlines())
-        install_error_message = stderr.readlines()
-        if (stdout.channel.recv_exit_status()) == 1:
-            logger.error(install_error_message)
-            raise Exception(install_error_message)
-    except paramiko.SSHException:
-        message = log_exception('Exception: ')
-        raise Exception(message)
-    finally:
-        if ssh:
-            ssh.close()
-    return
-    
 # Creates a vm image
 def create_vm_image(vm_details, datastore):
 
@@ -483,8 +459,8 @@ def start(parameters):
         if domain.info()[0] == VIR_DOMAIN_RUNNING:
             raise Exception("VM is already running. Check vm status on host.")
         domain.create()
-        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)
         connection_object.close()  
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)
         message = vm_details.vm_identity + " is started successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
