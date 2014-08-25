@@ -103,8 +103,12 @@ def get_request_status():
     return status
 
 
-def is_vm_name_unique(user_set, vm_name):
+def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
     
+    if vm_id != None:
+        vm_data = db.vm_data[vm_id]
+        vm_name = vm_data.vm_name
+        
     vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
              (db.user_vm_map.user_id.belongs(user_set)) & 
              (db.vm_data.vm_name.like(vm_name))).select()
