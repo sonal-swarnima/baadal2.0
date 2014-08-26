@@ -758,9 +758,9 @@ def snapshot(parameters):
             connection_object.close()
             message = "Snapshotted successfully."
             if snapshot_type != current.SNAPSHOT_USER:
-                snapshot_cron = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select().first()
+                snapshots = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select()
                 #Delete the existing Daily/Monthly/Yearly snapshot
-                if snapshot_cron:
+                for snapshot_cron in snapshots:
                     logger.debug(snapshot_cron)
                     delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
             current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)

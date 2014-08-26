@@ -222,8 +222,11 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
         else:    
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
             for vm_data in vms:
-                params={'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}
-                vm_scheduler.queue_task('snapshot_vm', pvars = params, start_time = request.now, timeout = 30 * MINUTES)
+                vm_scheduler.queue_task('snapshot_vm', 
+                                        group_name = 'snapshot_task', 
+                                        pvars = {'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}, 
+                                        start_time = request.now, 
+                                        timeout = 30 * MINUTES)
     except:
         log_exception()
         pass
@@ -320,7 +323,7 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         host_sanity=host_sanity_check,
                                         vm_util_rrd=vm_utilization_rrd,
 					                    memory_overload=overload_memory), 
-                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd'])
+                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
@@ -332,7 +335,7 @@ vm_scheduler.queue_task('snapshot_vm',
                     period = 24 * HOURS, # every 24h
                     timeout = 5 * MINUTES,
                     uuid = UUID_SNAPSHOT_DAILY,
-                    group_name = 'vm_task')
+                    group_name = 'snapshot_task')
 
 vm_scheduler.queue_task('snapshot_vm', 
                     pvars = dict(snapshot_type = SNAPSHOT_WEEKLY),
@@ -341,7 +344,7 @@ vm_scheduler.queue_task('snapshot_vm',
                     period = 7 * DAYS, # every 7 days
                     timeout = 5 * MINUTES,
                     uuid = UUID_SNAPSHOT_WEEKLY,
-                    group_name = 'vm_task')
+                    group_name = 'snapshot_task')
 
 vm_scheduler.queue_task('snapshot_vm', 
                     pvars = dict(snapshot_type = SNAPSHOT_MONTHLY),
@@ -350,7 +353,7 @@ vm_scheduler.queue_task('snapshot_vm',
                     period = 30 * DAYS, # every 30 days
                     timeout = 5 * MINUTES,
                     uuid = UUID_SNAPSHOT_MONTHLY,
-                    group_name = 'vm_task')
+                    group_name = 'snapshot_task')
 
 vm_scheduler.queue_task('vm_sanity', 
                     repeats = 0, # run indefinitely
