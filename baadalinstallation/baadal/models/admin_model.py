@@ -43,11 +43,14 @@ def get_manage_datastore_form(req_type):
 
 
 def get_vm_link(row):
-    if row.vm_id == None:
+    if (row.vm_id == None) & (row.host_id==None):
         return 'Unassigned'
-    else:
+    elif row.vm_id != None:
         vm_data = db.vm_data[row.vm_id]
         return A(vm_data.vm_name, _href=URL(r=request, c='user',f='settings', args=vm_data.id))
+    elif row.host_id != None:
+        host_data = db.host[row.host_id]
+        return A(host_data.host_name, _href=URL(r=request, c='admin',f='host_config', args=host_data.id))
 
 
 def get_manage_public_ip_pool_form():
@@ -375,7 +378,9 @@ def get_vm_groupby_hosts() :
     hostvmlist = []
     for host in hosts:    # for each host get all the vm's that runs on it and add them to list                          
         vmlist = get_all_vm_ofhost(host['id'])
-        hostvms = {'hostIP':host['ip'], 'details':vmlist, 'ram':host['RAM'], 'cpus':host['CPUs']}
+        hostvms = {'host_id':host['id'],
+                   'host_ip':host['ip'], 
+                   'details':vmlist}
         hostvmlist.append(hostvms)    
     return (hostvmlist)
 
@@ -714,12 +719,12 @@ def get_baadal_status_info():
     return vm_info
 
 
-def get_host_config(host_ip):
+def get_host_config(host_id):
     
-    host_info = db.host(host_ip=host_ip)
-    host_info['HDD'] = str(host_info['HDD']) + ' GB'
-    host_info['RAM'] = str(host_info['RAM']) + ' GB'
-    host_info['CPUs'] = str(host_info['CPUs']) + ' CPU'
+    host_info = db.host[host_id]
+    host_info.HDD = str(host_info.HDD) + ' GB'
+    host_info.RAM = str(host_info.RAM) + ' GB'
+    host_info.CPUs = str(host_info.CPUs) + ' CPU'
 
     return host_info
 

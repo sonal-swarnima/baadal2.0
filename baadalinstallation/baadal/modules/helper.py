@@ -45,16 +45,14 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        logger.debug("Connecting with host %s " % machine_ip)
         ssh.connect(machine_ip, username = user_name, password = password)
         logger.debug("Connected to host %s " % machine_ip)
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
-        logger.debug("Command executed")
         
         output = stdout.readlines() if ret_list else "".join(stdout.readlines())
         logger.debug("Output : %s " % output)
+
         error = "".join(stderr.readlines())
-        logger.debug("Error : %s " % error)
         if (stdout.channel.recv_exit_status()) != 0:
             raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
     except paramiko.SSHException:

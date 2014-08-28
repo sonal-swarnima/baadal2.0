@@ -450,10 +450,8 @@ def start_bootup():
 @check_moderator
 @handle_exception       
 def show_host_performance():
-    host_ip=request.args(0)
-    logger.debug(host_ip)
-    ip=host_ip.replace('.','_')
-    return dict(host_info=ip)
+    host_id=request.args(0)
+    return dict(host_id=host_id)
 
 
 @check_moderator
@@ -475,10 +473,8 @@ def get_updated_host_graph():
 @check_moderator
 @handle_exception       
 def host_config():
-    host_ip=request.args(0)
-    logger.debug("host_ip :" + str( host_ip))
-    host_info = get_host_config(host_ip)
+    host_id=request.args(0)
+    host_info = get_host_config(host_id)
     logger.debug(host_info)
-    ip=str(host_ip).replace('.','_')
-    return dict(host_info=host_info, host_ip=ip)
+    return dict(host_info=host_info)
 

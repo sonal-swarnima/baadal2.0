@@ -310,7 +310,8 @@ db.define_table('vnc_access',
 
 db.define_table('public_ip_pool',
     Field('public_ip', 'string', length = 15, notnull = True, unique = True),
-    Field('vm_id', db.vm_data, writable = False))
+    Field('vm_id', db.vm_data, writable = False),
+    Field('host_id', db.host, readable = False, writable = False))
 
 db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
 
@@ -318,7 +319,8 @@ db.define_table('private_ip_pool',
     Field('private_ip', 'string', length = 15, notnull = True, unique = True),
     Field('mac_addr', 'string', length = 20, unique = True),
     Field('vlan', db.vlan, notnull = True),
-    Field('vm_id', db.vm_data, writable = False))
+    Field('vm_id', db.vm_data, writable = False),
+    Field('host_id', db.host, readable = False, writable = False))
 
 db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]
 db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_UPPER(), IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
