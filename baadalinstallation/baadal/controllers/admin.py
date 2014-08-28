@@ -451,10 +451,11 @@ def start_bootup():
 @handle_exception       
 def show_host_performance():
 
-    host_info = get_host_config(request.args(0))
+    host_id = request.args(0)
+    host_info = get_host_config(host_id)
     host_identity = str(host_info.host_ip).replace('.','_')
     
-    return dict(host_identity=host_identity)
+    return dict(host_id=host_id, host_identity=host_identity)
 
 
 @check_moderator
