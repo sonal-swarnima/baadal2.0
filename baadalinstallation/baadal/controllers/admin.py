@@ -450,18 +450,21 @@ def start_bootup():
 @check_moderator
 @handle_exception       
 def show_host_performance():
-    host_id=request.args(0)
-    return dict(host_id=host_id)
+
+    host_info = get_host_config(request.args(0))
+    host_identity = str(host_info.host_ip).replace('.','_')
+    
+    return dict(host_identity=host_identity)
 
 
 @check_moderator
 @handle_exception       
 def get_updated_host_graph():
-    logger.debug("in")
+#     logger.debug("in")
     logger.debug(request.vars['graphType'])
-    logger.debug(request.vars['vmIdentity'])
+    logger.debug(request.vars['hostIdentity'])
     logger.debug(request.vars['graphPeriod'])
-    graphRet = get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
+    graphRet = get_performance_graph(request.vars['graphType'], request.vars['hostIdentity'], request.vars['graphPeriod'])
     if not isinstance(graphRet, IMG):
         if is_moderator():
             return H3(graphRet)

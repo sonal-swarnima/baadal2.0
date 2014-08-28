@@ -4,11 +4,9 @@ function update_graph()
 {
     graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
     period = $('input[name=graph-period-radio]:radio:checked').val();
-	
+    host_identity = "{{=host_identity}}";
     
-    vm_identity = host_info;
-    alert(host_info);
-    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_host_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,
+    jQuery.ajax({type:"POST", url:"{{=URL('get_updated_host_graph')}}", data:{graphType:graph_type, hostIdentity:host_identity,
         graphPeriod:period}, success:function(msg) { jQuery("#target").html(msg); 
                                                      src = jQuery("#target img").attr("src") + "?" + new Date().getTime(); 
                                                      jQuery("#target img").attr("src" , src) } });

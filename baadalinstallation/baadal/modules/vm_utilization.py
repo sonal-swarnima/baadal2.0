@@ -21,13 +21,13 @@ def get_rrd_file(identity):
     rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + identity + ".rrd"
     return rrd_file
 
-def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
+def create_graph(rrd_file_name, graph_type, rrd_file_path, graph_period):
 
-    rrd_logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
-    rrd_file = vm_name + '.rrd'       
+    rrd_logger.debug(rrd_file_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
+    rrd_file = rrd_file_name + '.rrd'       
 
     shutil.copyfile(rrd_file_path, rrd_file)
-    graph_file = vm_name + "_" + graph_type + ".png"
+    graph_file = rrd_file_name + "_" + graph_type + ".png"
 
     start_time = None
     grid = None
@@ -55,31 +55,31 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
     if ((graph_type == 'ram') or (graph_type == 'cpu')):
 
         if graph_type == 'ram':
-            ds = 'DEF:ram=' + vm_name + '.rrd:ram:' + consolidation
+            ds = 'DEF:ram=' + rrd_file_name + '.rrd:ram:' + consolidation
             line = 'LINE1:ram#0000FF:Memory'
             graph_type += " (Bytes/Sec)"
             upper_limit = ""
         elif graph_type == 'cpu':
-            ds = 'DEF:cpu=' + vm_name + '.rrd:cpu:' + consolidation
+            ds = 'DEF:cpu=' + rrd_file_name + '.rrd:cpu:' + consolidation
             line = 'LINE1:cpu#0000FF:CPU'
             graph_type += " (%)"
             upper_limit = "-u 100"
                 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds, line, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + rrd_file_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
 
     else:
 
         if graph_type == 'nw':
-            ds1 = 'DEF:nwr=' + vm_name + '.rrd:tx:' + consolidation
-            ds2 = 'DEF:nww=' + vm_name + '.rrd:rx:' + consolidation
+            ds1 = 'DEF:nwr=' + rrd_file_name + '.rrd:tx:' + consolidation
+            ds2 = 'DEF:nww=' + rrd_file_name + '.rrd:rx:' + consolidation
             line1 = 'LINE1:nwr#0000FF:Transmit'
             line2 = 'LINE1:nww#FF7410:Receive'
 
         elif graph_type == 'disk':
-            ds1 = 'DEF:diskr=' + vm_name + '.rrd:dr:' + consolidation
-            ds2 = 'DEF:diskw=' + vm_name + '.rrd:dw:' + consolidation
+            ds1 = 'DEF:diskr=' + rrd_file_name + '.rrd:dr:' + consolidation
+            ds2 = 'DEF:diskw=' + rrd_file_name + '.rrd:dw:' + consolidation
             line1 = 'LINE1:diskr#0000FF:DiskRead'
             line2 = 'LINE1:diskw#FF7410:DiskWrite'
 
@@ -87,7 +87,7 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6" )
+        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + rrd_file_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6" )
 
 
     graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
