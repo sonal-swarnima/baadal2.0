@@ -153,7 +153,7 @@ def send_email_on_registration_denied(user_id):
 
 
 def send_shutdown_email_to_all():
-    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING)).select()
     for vm_data in vms:
         for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
             user_info = get_user_details(user.user_id)
@@ -161,4 +161,6 @@ def send_shutdown_email_to_all():
                            userName = user_info[0])
             logger.info("Sending mail to:: " + str(user_info[1]))
             send_email(user_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context)
+            import time
+            time.sleep(5)
 
