@@ -8,6 +8,7 @@
 <h2 class="subtitle">{{=T(' VM Shutdown status')}}</h2>
 {{if baadal_status == BAADAL_STATUS_UP :}}
 {{=INPUT(value='Start Baadal Shutdown',_id='start_shutbown_button',_type='button',_onclick='start_shutdown()')}}
+{{=INPUT(value='Send Shutdown Mail',_id='send_shutbown_mail_button',_type='button',_onclick='send_shutdown_mail()')}}
 {{elif baadal_status == BAADAL_STATUS_DOWN :}}
 {{=INPUT(value='Start Baadal Bootup',_id='start_bootup_button',_type='button',_onclick='start_bootup()')}}
 {{pass}}
@@ -48,7 +49,15 @@ function start_shutdown() {
 	$('#start_shutbown_button').prop('disabled', true);
     jQuery('.flash').html('Baadal Shutdown initiated').slideDown();
 }
-
+function send_shutdown_mail() {
+    var shutdown_mail_url = "{{=URL('send_shutdown_mail')}}";
+    jQuery.post(shutdown_mail_url, {},
+        function(result){
+        }
+    );
+	$('#send_shutbown_mail_button').prop('disabled', true);
+    jQuery('.flash').html('Baadal Shutdown mails sent').slideDown();
+}
 function start_bootup() {
     var bootup_url = "{{=URL('start_bootup')}}";
     jQuery.post(bootup_url, {},

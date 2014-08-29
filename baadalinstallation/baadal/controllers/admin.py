@@ -440,6 +440,11 @@ def baadal_status():
 @handle_exception   
 def start_shutdown():
     shutdown_baadal()
+
+@check_moderator
+@handle_exception   
+def send_shutdown_mail():
+    send_shutdown_email_to_all()
     
 @check_moderator
 @handle_exception   
