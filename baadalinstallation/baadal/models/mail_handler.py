@@ -163,5 +163,5 @@ def send_shutdown_email_to_all():
             logger.info("Sending mail to:: " + str(user_info[1]))
             send_email(user_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context)
             import time
-            time.sleep(5)
+            time.sleep(10)
 

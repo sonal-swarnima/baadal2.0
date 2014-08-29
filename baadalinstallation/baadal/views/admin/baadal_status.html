@@ -41,22 +41,26 @@
 
 <script>
 function start_shutdown() {
-    var shutdown_url = "{{=URL('start_shutdown')}}";
-    jQuery.post(shutdown_url, {},
-        function(result){
-        }
-    );
-	$('#start_shutbown_button').prop('disabled', true);
-    jQuery('.flash').html('Baadal Shutdown initiated').slideDown();
+	if(confirm('Are you sure you want to shutdown all the vms?')) {
+	    var shutdown_url = "{{=URL('start_shutdown')}}";
+	    jQuery.post(shutdown_url, {},
+	        function(result){
+	        }
+	    );
+		$('#start_shutbown_button').prop('disabled', true);
+	    jQuery('.flash').html('Baadal Shutdown initiated').slideDown();
+	}
 }
 function send_shutdown_mail() {
-    var shutdown_mail_url = "{{=URL('send_shutdown_mail')}}";
-    jQuery.post(shutdown_mail_url, {},
-        function(result){
-        }
-    );
-	$('#send_shutbown_mail_button').prop('disabled', true);
-    jQuery('.flash').html('Baadal Shutdown mails sent').slideDown();
+	if(confirm('Are you sure you want to send mail to all the vm owners?')) {
+	    var shutdown_mail_url = "{{=URL('send_shutdown_mail')}}";
+	    jQuery.post(shutdown_mail_url, {},
+	        function(result){
+	        }
+	    );
+		$('#send_shutbown_mail_button').prop('disabled', true);
+	    jQuery('.flash').html('Baadal Shutdown mails sent').slideDown();
+	}
 }
 function start_bootup() {
     var bootup_url = "{{=URL('start_bootup')}}";
