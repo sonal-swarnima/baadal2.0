@@ -153,7 +153,7 @@ def send_email_on_registration_denied(user_id):
 
 
 def send_shutdown_email_to_all():
-    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING)).select()
+    vms = db(db.vm_data.status == VM_STATUS_RUNNING).select()
     for vm_data in vms:
         for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
             user_info = get_user_details(user.user_id)
