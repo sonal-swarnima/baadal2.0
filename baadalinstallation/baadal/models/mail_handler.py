@@ -51,7 +51,7 @@ VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was ac
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown"
 
-BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nIn view of the planned electricity shutdown tomorrow, your VM {0[vmName]} will be shutdown after 8:00 PM today.\n"\
+BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nIn view of the planned electricity shutdown tomorrow, your VM {0[vmName]}({0[vmIp]}) will be shutdown after 8:00 PM today.\n"\
              "Please save your work accordingly.\n\nRegards,\nBaadal Admin"
 
 MAIL_FOOTER = "\n\n\nNOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
@@ -158,7 +158,8 @@ def send_shutdown_email_to_all():
         for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
             user_info = get_user_details(user.user_id)
             context = dict(vmName = vm_data.vm_name,
-                           userName = user_info[0])
+                           userName = user_info[0],
+                           vmIp = vm_data.private_ip)
             logger.info("Sending mail to:: " + str(user_info[1]))
             send_email(user_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context)
             import time
