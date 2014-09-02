@@ -809,9 +809,18 @@ def delete_snapshot(parameters):
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
-        snapshot = domain.snapshotLookupByName(snapshot_name, 0)
-        snapshot.delete(0)
+        
+        snapshot = None
+        try:
+            snapshot = domain.snapshotLookupByName(snapshot_name, 0)
+        except libvirtError:
+            logger.debug("Snapshot %s not found" %(snapshot_name))
+        
+        if snapshot != None:
+            snapshot.delete(0)        
+
         connection_object.close()
+
         message = "Deleted snapshot successfully."
         logger.debug(message)
         current.db(current.db.snapshot.id == snapshotid).delete()
