@@ -27,7 +27,7 @@
         																				'vm_name' : snapshot['vm_name'], 
         																				'snapshot_name' : snapshot['snapshot_name']}))}}
         {{elif snapshot['operation'] == 'Undefined':}}
-        	{{=A('Delete Snapshot Info',_href=URL(r=request,f='sync_snapshot',vars={'action_type' : 'Delete_VM_Info', 
+        	{{=A('Delete Snapshot Info',_href=URL(r=request,f='sync_snapshot',vars={'action_type' : 'Delete_Snapshot_Info', 
         																				'vm_id' : vm_id, 
         																				'snapshot_id' : snapshot['snapshot_id']}))}}
         {{else:}}
