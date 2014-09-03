@@ -53,7 +53,8 @@ def check_vm_sanity():
                     status = vminfo_to_state(vm_state)
                     if(vm):
                         if(vm.host_id != host.id):
-                            vmcheck.append({'host':host.host_name, 
+                            vmcheck.append({'vm_id':vm.id,
+                                            'host':host.host_name, 
                                             'host_id':host.id,
                                             'vmname':vm.vm_name,
                                             'status':status,
@@ -61,7 +62,8 @@ def check_vm_sanity():
                             #If VM has been migrated to another host; Host information updated
                             db(db.vm_data.vm_identity == domain_name).update(host_id = host.id)
                         else:
-                            vmcheck.append({'host':host.host_name,
+                            vmcheck.append({'vm_id':vm.id,
+                                            'host':host.host_name,
                                             'host_id':host.id,
                                             'vmname':vm.vm_name,
                                             'status':status,
@@ -182,3 +184,61 @@ def delete_vm_info(vm_identity):
     db(db.vm_data.id == vm_details.id).delete()
     
     return
+
+
+def check_vm_snapshot_sanity(vm_id):
+    vm_data = db.vm_data[vm_id]
+    snapshot_check = []
+    try:
+        conn = libvirt.openReadOnly('qemu+ssh://root@'+vm_data.host_id.host_ip+'/system')
+        domain = conn.lookupByName(vm_data.vm_identity)
+        
+        dom_snapshot_names = domain.snapshotListNames(0)
+        logger.debug(dom_snapshot_names)
+        conn.close()
+            
+        snapshots = db(db.snapshot.vm_id == vm_id).select()
+        for snapshot in snapshots:
+            if snapshot.snapshot_name in dom_snapshot_names:
+                snapshot_check.append({'snapshot_name' : snapshot.snapshot_name,
+                                       'snapshot_type' : get_snapshot_type(snapshot.type),
+                                       'message' : 'Snapshot present',
+                                       'operation' : 'None'})
+                dom_snapshot_names.remove(snapshot.snapshot_name)
+            else:
+                snapshot_check.append({'snapshot_id' : snapshot.id,
+                                       'snapshot_name' : snapshot.snapshot_name,
+                                       'snapshot_type' : get_snapshot_type(snapshot.type),
+                                       'message' : 'Snapshot not present',
+                                       'operation' : 'Undefined'})
+
+        for dom_snapshot_name in dom_snapshot_names:
+                snapshot_check.append({'vm_name' : vm_data.vm_identity,
+                                       'snapshot_name' : dom_snapshot_name,
+                                       'snapshot_type' : 'Unknown',
+                                       'message' : 'Orphan Snapshot',
+                                       'operation' : 'Orphan'})
+                        
+    except Exception:
+        log_exception()
+    logger.debug(snapshot_check)
+    return (vm_data.id, vm_data.vm_name, snapshot_check)
+
+
+def delete_orphan_snapshot(domain_name, snapshot_name):
+    
+    logger.debug('Deleting orphan snapshot %s of VM %s' %(snapshot_name, domain_name))
+    vm_data = db(db.vm_data.vm_identity == domain_name).select().first()
+
+    conn = libvirt.open('qemu+ssh://root@'+vm_data.host_id.host_ip+'/system')
+    domain = conn.lookupByName(vm_data.vm_identity)
+    
+    snapshot = domain.snapshotLookupByName(snapshot_name, 0)        
+    snapshot.delete(0)
+    conn.close
+    logger.debug('Orphan VM deleted')    
+
+def delete_snapshot_info(snapshot_id):
+    logger.debug('Deleting snapshot info for ' + str(snapshot_id))
+    del db.snapshot[snapshot_id]
+    logger.debug('Snapshot info deleted')

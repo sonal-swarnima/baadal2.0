@@ -399,17 +399,20 @@ def get_vm_operations(vm_id):
         raise
     return valid_operations_list  
 
+def get_snapshot_type(type):
+    snapshot_type = {SNAPSHOT_USER    : 'User',
+                     SNAPSHOT_DAILY   : 'Daily',
+                     SNAPSHOT_WEEKLY  : 'Weekly',
+                     SNAPSHOT_MONTHLY : 'Monthly'}
+    return snapshot_type[type]
+
 def get_vm_snapshots(vm_id):
     vm_snapshots_list = []
     for snapshot in db(db.snapshot.vm_id == vm_id).select():
 
         snapshot_dict = {'id' : snapshot.id}
-        snapshot_type = {SNAPSHOT_USER    : 'User',
-                         SNAPSHOT_DAILY   : 'Daily',
-                         SNAPSHOT_WEEKLY  : 'Weekly',
-                         SNAPSHOT_MONTHLY : 'Monthly'}
         
-        snapshot_dict['type'] = snapshot_type[snapshot.type]
+        snapshot_dict['type'] = get_snapshot_type(snapshot.type)
         snapshot_dict['name'] = snapshot.snapshot_name
         if snapshot.type == SNAPSHOT_USER:
             snapshot_dict['delete'] = A(IMG(_src=URL('static','images/delete-snapshot.gif'), _style='height:20px;weight:20px'),

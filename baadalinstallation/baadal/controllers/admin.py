@@ -277,7 +277,27 @@ def sync_vm():
     elif task == 'Delete_VM_Info':
         delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
+    
+@check_moderator
+def snapshot_sanity_check():
+    vm_id = request.args[0]
+    output = check_vm_snapshot_sanity(vm_id)
+    return dict(vm_id=output[0], vm_name=output[1], snapshots=output[2])
 
+@check_moderator
+def sync_snapshot():
+    task = request.vars['action_type']
+    vm_id = request.vars['vm_id']
+    logger.debug(request.args)
+    if task == 'Delete_Orphan':
+        vm_name = request.vars['vm_name']
+        snapshot_name = request.vars['snapshot_name']
+        delete_orphan_snapshot(vm_name, snapshot_name)
+    elif task == 'Delete_Snapshot_Info':
+        snapshot_id = request.vars['snapshot_id']
+        delete_snapshot_info(snapshot_id)
+    redirect(URL(r=request,c='admin',f='snapshot_sanity_check', args = vm_id))
+    
 @check_moderator
 @handle_exception
 def approve_request():
