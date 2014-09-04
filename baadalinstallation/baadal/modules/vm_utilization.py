@@ -403,7 +403,7 @@ def update_rrd(host_ip):
 
         try:
 
-            hypervisor_conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
+            hypervisor_conn = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
             rrd_logger.debug(hypervisor_conn.getHostname())
 
             active_dom_ids  = hypervisor_conn.listDomainsID()

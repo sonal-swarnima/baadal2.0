@@ -262,8 +262,17 @@ def delete_machine():
 
 @check_moderator
 def sanity_check():
-    output = check_vm_sanity()
-    return dict(vms=output)
+
+    form = get_host_sanity_form()
+    host_selected = 0
+    form.vars.host_selected = host_selected
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        host_selected = int(form.vars.host_selected)
+    
+    output = check_vm_sanity(host_selected)
+    
+    return dict(sanity_data=output, form=form)
     
 @check_moderator
 def sync_vm():

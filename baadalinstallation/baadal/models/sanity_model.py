@@ -2,6 +2,7 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
+    from gluon import *  # @UnusedWildImport
     from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
@@ -34,10 +35,30 @@ def vminfo_to_state(vm_state):
 
     return status
 
-def check_vm_sanity():
+
+def get_host_sanity_form():
+    _dict = {0 : 'All'}
+
+    hosts=db(db.host.status == HOST_STATUS_UP).select()
+    for host in hosts:
+        _dict.update({host.id : host.host_name})
+    
+    form = FORM(TR("Show:", 
+           SELECT(_name='host_selected', _id='host_select_id',
+           *[OPTION(_dict[key], _value=str(key)) for key in _dict.keys()]), 
+            A(SPAN(_class='icon-refresh'), _onclick = '$(this).closest(\'form\').submit()', _href='#')))
+    return form
+
+
+def check_vm_sanity(host_id):
     vmcheck=[]
     vm_list = []
-    hosts=db(db.host.status == HOST_STATUS_UP).select()
+    
+    if host_id == 0:
+        hosts=db(db.host.status == HOST_STATUS_UP).select()
+    else:
+        hosts=db(db.host.id == host_id).select()
+    
     for host in hosts:
         try:
             logger.info('Starting sanity check for host %s' %(host.host_name))
