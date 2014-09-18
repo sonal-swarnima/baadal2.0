@@ -49,7 +49,7 @@ def set_portgroup_in_vm(domain, portgroup, host_ip):
     
 def get_private_ip_mac(security_domain_id):
     vlans = current.db(current.db.security_domain.id == security_domain_id)._select(current.db.security_domain.vlan)
-    private_ip_pool = current.db((current.db.private_ip_pool.vm_id == None) & 
+    private_ip_pool = current.db((current.db.private_ip_pool.vm_id == None) & (current.db.private_ip_pool.host_id == None) & 
                          (current.db.private_ip_pool.vlan.belongs(vlans))).select(orderby='<random>').first()
 
     if private_ip_pool:
@@ -836,7 +836,7 @@ def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
     private_ip_info = get_private_ip_mac(security_domain_id)
     # update vm config to add new mac address.
     root = etree.fromstring(xmlDesc)
-    mac_elem = root.xpath("devices/interface[@type='bridge']/mac")[0]
+    mac_elem = root.find("devices/interface[@type='network']/mac")
     mac_elem.set('address', private_ip_info[1])
     
     # update NAT IP mapping, if public IP present
@@ -900,8 +900,8 @@ def edit_vm_config(parameters):
             logger.debug('Updating security domain')
             xmlfile = update_security_domain(vm_details, parameters['security_domain'], domain.XMLDesc(0))
             domain = connection_object.defineXML(xmlfile)
-            domain.reboot(0)
-            domain.isActive()
+            if domain.isActive():
+                domain.reboot(0)
             message += "Edited security domain successfully"
 
         connection_object.close()

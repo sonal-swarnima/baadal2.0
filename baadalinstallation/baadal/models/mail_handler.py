@@ -36,6 +36,8 @@ VM_CREATION_SUBJECT = "VM created successfully"
 VM_CREATION_BODY="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[requestTime]} is "\
                     "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
                     "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nDefault credentials for VM:\nUsername:root/baadalservervm/baadaldesktopvm\nPassword:baadal\n\n"\
+                    "To access VM using assigned private IP; SSH to baadal gateway machine using your GCL credential.\n"\
+                    "username@baadalgateway.cse.iitd.ernet.in\n"\
                     "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"

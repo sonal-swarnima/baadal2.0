@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-import time, rrdtool
 
+import os, re, shutil, time, rrdtool, libvirt
 from xml.etree import ElementTree
 from log_handler import rrd_logger
-from host_helper import *  # @UnusedWildImport
-from gluon import *
-from helper import *
+from gluon import IMG, URL, current
+from helper import get_constant, get_context_path, execute_remote_cmd
 
-VM_UTIL_24_HOURS = 1
-VM_UTIL_ONE_WEEK = 2
-VM_UTIL_ONE_MNTH = 3
-VM_UTIL_ONE_YEAR = 4
+VM_UTIL_05_MINS = 1
+VM_UTIL_24_HOURS = 2
+VM_UTIL_ONE_WEEK = 3
+VM_UTIL_ONE_MNTH = 4
+VM_UTIL_ONE_YEAR = 5
 
 STEP         = 300
 TIME_DIFF_MS = 550
@@ -131,13 +131,15 @@ def get_performance_graph(graph_type, vm, graph_period):
             rrd_logger.info("Returning image.")
             return img
 
-def fetch_rrd_data(vm_identity, period=VM_UTIL_24_HOURS):
-    rrd_file = get_rrd_file(vm_identity)
+def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
+    rrd_file = get_rrd_file(rrd_file_name)
 
     start_time = 'now - ' + str(24*60*60)
     end_time = 'now'
     
-    if period == VM_UTIL_ONE_WEEK:
+    if period == VM_UTIL_05_MINS:
+        start_time = 'now - ' + str(5*60)
+    elif period == VM_UTIL_ONE_WEEK:
         start_time = '-1w'
     elif period == VM_UTIL_ONE_MNTH:
         start_time = '-1m'
@@ -266,7 +268,7 @@ def get_actual_usage(dom_obj, host_ip):
 
     dom_stats = get_current_dom_resource_usage(dom_obj, host_ip)
 
-    prev_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400) 
+    prev_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)  # @UndefinedVariable
     rrd_logger.debug(prev_dom_stats)
         
     #cal usage
@@ -277,9 +279,9 @@ def get_actual_usage(dom_obj, host_ip):
     usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])}) #in KBytes
     usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])}) #in KBytes
 
-    current.cache.disk.clear(str(dom_name))
+    current.cache.disk.clear(str(dom_name))  # @UndefinedVariable
 
-    latest_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)        
+    latest_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)        # @UndefinedVariable
     rrd_logger.debug(latest_dom_stats)
    
     return usage 

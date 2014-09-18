@@ -6,11 +6,12 @@ if 0:
     from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from simplejson import dumps
 from maintenance import shutdown_baadal, bootup_baadal
 from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN,\
     HOST_STATUS_MAINTENANCE
 from log_handler import logger
-from vm_utilization import VM_UTIL_24_HOURS, get_performance_graph
+from vm_utilization import VM_UTIL_05_MINS, VM_UTIL_24_HOURS, get_performance_graph
 from helper import get_constant
 
 @check_moderator
@@ -62,8 +63,22 @@ def modify_roles():
 @check_moderator
 @handle_exception
 def hosts_vms():
+
+    form = get_util_period_form(submit_form=False)
+    util_period = VM_UTIL_05_MINS
+    form.vars.util_period = util_period
+
+    host_util_data = get_host_util_data(util_period)
+    
     hostvmlist = get_vm_groupby_hosts()        
-    return dict(hostvmlist = hostvmlist)
+    return dict(hostvmlist = hostvmlist, host_util_data = dumps(host_util_data), util_form=form)
+
+
+@check_moderator
+def get_host_utilization_data():
+    util_period = request.vars['keywords']
+    host_util_data = get_host_util_data(util_period)
+    return dumps(host_util_data)
 
 @check_moderator
 @handle_exception

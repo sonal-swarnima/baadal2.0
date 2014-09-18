@@ -13,7 +13,7 @@ from host_helper import migrate_all_vms_from_host, is_host_available, get_host_m
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
     get_host_type, host_power_up, host_power_down
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
-    VM_UTIL_ONE_YEAR
+    VM_UTIL_ONE_YEAR, VM_UTIL_05_MINS
 from log_handler import logger
 
 def get_manage_template_form(req_type):
@@ -628,17 +628,20 @@ def delete_host_from_db(host_id):
     db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
     del db.host[host_id]
     
-def get_util_period_form():
+def get_util_period_form(submit_form=True):
     
-    _dict = {VM_UTIL_24_HOURS : 'Last 24 hours' , 
+    _dict = {VM_UTIL_05_MINS : 'Last 5 minutes' , 
+             VM_UTIL_24_HOURS : 'Last 24 hours' , 
              VM_UTIL_ONE_WEEK : 'Last One Week',
              VM_UTIL_ONE_MNTH : 'Last One Month',
              VM_UTIL_ONE_YEAR : 'Last One Year'}
     
+    click_action= '$(this).closest(\'form\').submit()' if submit_form else 'get_utilization_data()'
+    
     form = FORM(TR("Show:", 
            SELECT(_name='util_period', _id='period_select_id',
            *[OPTION(_dict[key], _value=str(key)) for key in _dict.keys()]), 
-            A(SPAN(_class='icon-refresh'), _onclick = '$(this).closest(\'form\').submit()', _href='#')))
+            A(SPAN(_class='icon-refresh'), _onclick = click_action, _href='#')))
     return form
 
 def get_vm_util_data(util_period):
@@ -657,6 +660,19 @@ def get_vm_util_data(util_period):
         vmlist.append(element)
     return vmlist
 
+
+def get_host_util_data(util_period):
+    hosts = db(db.host.status == HOST_STATUS_UP).select()
+    host_util_dict = {}
+    for host_info in hosts:
+        host_identity = str(host_info.host_ip).replace('.','_')
+        util_result = fetch_rrd_data(host_identity, util_period)
+        element = {'Memory' : round(util_result[0], 2),
+                   'CPU' : round(util_result[1], 2)}
+        
+        host_util_dict[host_info.id] = element
+
+    return host_util_dict
 
 def check_vm_resource(request_id):
     
