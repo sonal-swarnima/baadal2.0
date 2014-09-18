@@ -13,7 +13,7 @@ from host_helper import migrate_all_vms_from_host, is_host_available, get_host_m
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
     get_host_type, host_power_up, host_power_down
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
-    VM_UTIL_ONE_YEAR, VM_UTIL_05_MINS
+    VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS
 from log_handler import logger
 
 def get_manage_template_form(req_type):
@@ -630,7 +630,7 @@ def delete_host_from_db(host_id):
     
 def get_util_period_form(submit_form=True):
     
-    _dict = {VM_UTIL_05_MINS : 'Last 5 minutes' , 
+    _dict = {VM_UTIL_10_MINS : 'Last 10 minutes' , 
              VM_UTIL_24_HOURS : 'Last 24 hours' , 
              VM_UTIL_ONE_WEEK : 'Last One Week',
              VM_UTIL_ONE_MNTH : 'Last One Month',

@@ -11,7 +11,7 @@ from maintenance import shutdown_baadal, bootup_baadal
 from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN,\
     HOST_STATUS_MAINTENANCE
 from log_handler import logger
-from vm_utilization import VM_UTIL_05_MINS, VM_UTIL_24_HOURS, get_performance_graph
+from vm_utilization import VM_UTIL_10_MINS, VM_UTIL_24_HOURS, get_performance_graph
 from helper import get_constant
 
 @check_moderator
@@ -65,7 +65,7 @@ def modify_roles():
 def hosts_vms():
 
     form = get_util_period_form(submit_form=False)
-    util_period = VM_UTIL_05_MINS
+    util_period = VM_UTIL_10_MINS
     form.vars.util_period = util_period
 
     host_util_data = get_host_util_data(util_period)

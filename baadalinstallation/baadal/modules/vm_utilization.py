@@ -7,7 +7,7 @@ from log_handler import rrd_logger
 from gluon import IMG, URL, current
 from helper import get_constant, get_context_path, execute_remote_cmd
 
-VM_UTIL_05_MINS = 1
+VM_UTIL_10_MINS = 1
 VM_UTIL_24_HOURS = 2
 VM_UTIL_ONE_WEEK = 3
 VM_UTIL_ONE_MNTH = 4
@@ -93,7 +93,7 @@ def create_graph(rrd_file_name, graph_type, rrd_file_path, graph_period):
 
 
     #graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))    
-    logger.debug(graph_file_path)
+    rrd_logger.debug(graph_file_path)
     #shutil.copy2(graph_file_path, graph_file_dir)
 
     if os.path.exists(graph_file_path):
@@ -140,8 +140,8 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
     start_time = 'now - ' + str(24*60*60)
     end_time = 'now'
     
-    if period == VM_UTIL_05_MINS:
-        start_time = 'now - ' + str(5*60)
+    if period == VM_UTIL_10_MINS:
+        start_time = 'now - ' + str(10*60)
     elif period == VM_UTIL_ONE_WEEK:
         start_time = '-1w'
     elif period == VM_UTIL_ONE_MNTH:
