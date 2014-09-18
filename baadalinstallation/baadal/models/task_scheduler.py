@@ -16,6 +16,8 @@ from host_helper import HOST_STATUS_UP
 from gluon import current
 current.cache = cache
 
+import os
+
 task = {TASK_TYPE_CREATE_VM               :    install,
         TASK_TYPE_START_VM                :    start,
         TASK_TYPE_STOP_VM                 :    destroy,
@@ -301,13 +303,18 @@ def overload_memory():
     logger.debug(type(file_path))
     host_ips_rows=db(db.host.status==1).select(db.host.host_ip)
     logger.debug(host_ips_rows)
-    command1 = 'gcc '+str(file_path)+'/memhog.c -o '+str(file_path)+'/hello'
-    command2 = 'nohup '+str(file_path)+'/hello >memoryhog.out 2>&1 &'
+#    command1 = 'gcc '+str(file_path)+'/memhog.c -o '+str(file_path)+'/hello'
+#    command1 = 'scp '+ str(file_path) +'/memhog root@192.168.0.50:/'
+    command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
     for host_ip_row in host_ips_rows:
         logger.debug("overloading memory of")
         logger.debug(host_ip_row)
         logger.debug(type(host_ip_row['host_ip']))
-        ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1) 
+       # ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1)
+        command1 = 'scp '+ str(file_path) +'/memhog root@'+ str(host_ip_row['host_ip']) +':/'
+	logger.debug('executing' + command1) 
+        ret = os.system(command1)
+	logger.debug('os.system return value' + str(ret))
         ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command2)
         logger.debug(ret)
     logger.debug("Completed overload memory task")
@@ -321,8 +328,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_sanity=vm_sanity_check,
                                         vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
-                                        vm_util_rrd=vm_utilization_rrd,
-					                    memory_overload=overload_memory), 
+                                        vm_util_rrd=vm_utilization_rrd),
+#					                    memory_overload=overload_memory), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -371,6 +378,7 @@ vm_scheduler.queue_task('host_sanity',
                     uuid = UUID_HOST_SANITY_CHECK,
                     group_name = 'host_task')
 
+'''
 vm_scheduler.queue_task('memory_overload',
                     repeats = 0, # run indefinitely^M
                     start_time = request.now,
@@ -378,7 +386,7 @@ vm_scheduler.queue_task('memory_overload',
                     timeout = 5 * MINUTES,
                     uuid = UUID_MEMORY_OVERLOAD,
                     group_name = 'host_task')
-
+'''
 
 active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
 
