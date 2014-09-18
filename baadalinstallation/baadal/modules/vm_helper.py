@@ -162,6 +162,7 @@ def create_vm_image(vm_details, datastore):
     else:
         logger.debug("Copied successfully")
 
+    
     """
 
     # Copies the template image from its location to new vm directory
@@ -177,6 +178,7 @@ def create_vm_image(vm_details, datastore):
     command_output = execute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
     logger.debug(command_output)
     logger.debug("Copied successfully.")
+      
 
     try:
         vm_template_name = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_details.vm_identity + '/' + template.hdfile
