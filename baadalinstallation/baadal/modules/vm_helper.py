@@ -258,16 +258,19 @@ def attach_disk(vm_details, disk_name, size, hostip, datastore, already_attached
             
         # Attaching disk to vm using libvirt API
         target_disk = "vd" + chr(97 + already_attached_disks + 1)
+        logger.debug(target_disk)
+        logger.debug("...................")
         xmlDescription = generate_xml(diskpath, target_disk)
-
+	logger.debug(xmlDescription)
         logger.debug("new vm is %s " % new_vm)
 
         if new_vm:
             logger.debug("Starting to attach disk on new vm request.")
-            domain.attachDeviceFlags(xmlDescription, VIR_DOMAIN_AFFECT_LIVE)
-            logger.debug("Disk attached")
-            domain.destroy()
+	    domain.destroy()
             logger.debug("VM destroyed")
+            domain.attachDeviceFlags(xmlDescription, VIR_DOMAIN_AFFECT_CONFIG)
+            logger.debug("Disk attached")
+            
             logger.debug("Turn on vm")
             domain.create()
             logger.debug("VM started")
