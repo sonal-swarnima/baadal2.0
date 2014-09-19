@@ -366,10 +366,17 @@ def free_vm_properties(vm_details, vm_properties):
             connection_object.close()
             logger.debug("VM deleted.")
 
+    current.db(current.db.attached_disks.vm_id == vm_details.id).delete() 
+
     vm_directory_path = vm_properties['datastore'].system_mount_point + '/' + get_constant('vms') + '/' + vm_details.vm_identity
+
+    vm_extra_disk_dir_path = vm_properties['datastore'].system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + vm_properties['datastore'].ds_name + '/' + vm_details.vm_identity
     if os.path.exists (vm_directory_path):
         logger.debug("Starting to delete vm directory.")
         shutil.rmtree(vm_directory_path)
+    if os.path.exists (vm_extra_disk_dir_path):
+        logger.debug("Starting to delete vm extra disk directory.")
+        shutil.rmtree(vm_extra_disk_dir_path)
     return
     
 
