@@ -2,7 +2,7 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import *  # @UnusedWildImport
+    from gluon import db
     import gluon
     global auth; auth = gluon.tools.Auth()
     global mail; mail = gluon.tools.Mail()
@@ -36,6 +36,8 @@ VM_CREATION_SUBJECT = "VM created successfully"
 VM_CREATION_BODY="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[requestTime]} is "\
                     "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
                     "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nDefault credentials for VM:\nUsername:root/baadalservervm/baadaldesktopvm\nPassword:baadal\n\n"\
+                    "To access VM using assigned private IP; SSH to baadal gateway machine using your GCL credential.\n"\
+                    "username@baadalgateway.cse.iitd.ernet.in\n"\
                     "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
@@ -48,6 +50,11 @@ VNC_ACCESS_SUBJECT="VNC Access to your VM activated"
 VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was activated on {0[requestTime]}. Details follow:\n"\
                 "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
                 "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
+
+BAADAL_SHUTDOWN_SUBJECT="VM Shutdown"
+
+BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nIn view of the planned electricity shutdown tomorrow, your VM {0[vmName]}({0[vmIp]}) will be shutdown after 8:00 PM today.\n"\
+             "Please save your work accordingly.\n\nRegards,\nBaadal Admin"
 
 MAIL_FOOTER = "\n\n\nNOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
              "If you have any queries, send an email to {0[adminEmail]}."
@@ -145,3 +152,18 @@ def send_email_on_registration_denied(user_id):
         context = dict(userName = user_info[0],
                         supportMail = config.get("MAIL_CONF","mail_admin_request"))
         send_email(user_info[1], REGISTRATION_DENIED_SUBJECT, REGISTRATION_DENIED_BODY, context)
+
+
+def send_shutdown_email_to_all():
+    vms = db(db.vm_data.status == VM_STATUS_RUNNING).select()
+    for vm_data in vms:
+        for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
+            user_info = get_user_details(user.user_id)
+            context = dict(vmName = vm_data.vm_name,
+                           userName = user_info[0],
+                           vmIp = vm_data.private_ip)
+            logger.info("Sending mail to:: " + str(user_info[1]))
+            send_email(user_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context)
+            import time
+            time.sleep(10)
+

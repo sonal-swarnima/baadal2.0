@@ -6,11 +6,13 @@ if 0:
     from gluon import request,response,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN, \
-    HOST_STATUS_MAINTENANCE
-from helper import get_constant
+from simplejson import dumps
 from maintenance import shutdown_baadal, bootup_baadal
-from vm_utilization import VM_UTIL_24_HOURS
+from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN,\
+    HOST_STATUS_MAINTENANCE
+from log_handler import logger
+from vm_utilization import VM_UTIL_10_MINS, VM_UTIL_24_HOURS, get_performance_graph
+from helper import get_constant
 
 @check_moderator
 @handle_exception
@@ -61,8 +63,22 @@ def modify_roles():
 @check_moderator
 @handle_exception
 def hosts_vms():
+
+    form = get_util_period_form(submit_form=False)
+    util_period = VM_UTIL_10_MINS
+    form.vars.util_period = util_period
+
+    host_util_data = get_host_util_data(util_period)
+    
     hostvmlist = get_vm_groupby_hosts()        
-    return dict(hostvmlist = hostvmlist)
+    return dict(hostvmlist = hostvmlist, host_util_data = dumps(host_util_data), util_form=form)
+
+
+@check_moderator
+def get_host_utilization_data():
+    util_period = request.vars['keywords']
+    host_util_data = get_host_util_data(util_period)
+    return dumps(host_util_data)
 
 @check_moderator
 @handle_exception
@@ -145,6 +161,12 @@ def add_user_to_vm():
     form = get_user_form(username, vm_id)
 
     if form.accepts(request.vars,session):
+        
+        user_set = set({form.vars.user_id})
+    
+        if not is_vm_name_unique(user_set, vm_id=vm_id):
+            form.errors.vm_name = 'VM name should be unique for the user.'
+
         add_user_vm_access(vm_id, form.vars.user_id)
         session.flash = "User is added to vm"
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
@@ -255,8 +277,17 @@ def delete_machine():
 
 @check_moderator
 def sanity_check():
-    output = check_vm_sanity()
-    return dict(vms=output)
+
+    form = get_host_sanity_form()
+    host_selected = 0
+    form.vars.host_selected = host_selected
+
+    if form.accepts(request.vars, session, keepvalues=True):
+        host_selected = int(form.vars.host_selected)
+    
+    output = check_vm_sanity(host_selected)
+    
+    return dict(sanity_data=output, form=form)
     
 @check_moderator
 def sync_vm():
@@ -270,7 +301,27 @@ def sync_vm():
     elif task == 'Delete_VM_Info':
         delete_vm_info(vm_name)
     redirect(URL(r=request,c='admin',f='sanity_check'))
+    
+@check_moderator
+def snapshot_sanity_check():
+    vm_id = request.args[0]
+    output = check_vm_snapshot_sanity(vm_id)
+    return dict(vm_id=output[0], vm_name=output[1], snapshots=output[2])
 
+@check_moderator
+def sync_snapshot():
+    task = request.vars['action_type']
+    vm_id = request.vars['vm_id']
+    logger.debug(request.args)
+    if task == 'Delete_Orphan':
+        vm_name = request.vars['vm_name']
+        snapshot_name = request.vars['snapshot_name']
+        delete_orphan_snapshot(vm_name, snapshot_name)
+    elif task == 'Delete_Snapshot_Info':
+        snapshot_id = request.vars['snapshot_id']
+        delete_snapshot_info(snapshot_id)
+    redirect(URL(r=request,c='admin',f='snapshot_sanity_check', args = vm_id))
+    
 @check_moderator
 @handle_exception
 def approve_request():
@@ -290,25 +341,28 @@ def reject_request():
 @check_moderator
 @handle_exception
 def maintenance_host():
+    logger.debug("INSIDE MAINTENANCE HOST FUNCTION")
     host_id=request.args[0]
     #migration requests to be added to queue
-    updte_host_status(host_id, HOST_STATUS_MAINTENANCE)
+    update_host_status(host_id, HOST_STATUS_MAINTENANCE)
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
 @handle_exception
 def boot_up_host():
+    logger.debug("INSIDE BOOT UP HOST FUNCTION")
     host_id=request.args[0]
-    if not (updte_host_status(host_id, HOST_STATUS_UP)):
+    if not (update_host_status(host_id, HOST_STATUS_UP)):
         session.flash = 'Host not accessible. Please verify'
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
 @handle_exception
 def shut_down_host():
+    logger.debug("INSIDE SHUTDOWN HOST FUNCTION")
     host_id=request.args[0]
     #shut down to be implemented
-    updte_host_status(host_id, HOST_STATUS_DOWN)
+    update_host_status(host_id, HOST_STATUS_DOWN)
     redirect(URL(c='admin', f='host_details'))
     
 @check_moderator
@@ -430,8 +484,50 @@ def baadal_status():
 @handle_exception   
 def start_shutdown():
     shutdown_baadal()
+
+@check_moderator
+@handle_exception   
+def send_shutdown_mail():
+    send_shutdown_email_to_all()
     
 @check_moderator
 @handle_exception   
 def start_bootup():
     bootup_baadal()
+
+
+@check_moderator
+@handle_exception       
+def show_host_performance():
+
+    host_id = request.args(0)
+    host_info = get_host_config(host_id)
+    host_identity = str(host_info.host_ip).replace('.','_')
+    
+    return dict(host_id=host_id, host_identity=host_identity)
+
+
+@check_moderator
+@handle_exception       
+def get_updated_host_graph():
+#     logger.debug("in")
+    logger.debug(request.vars['graphType'])
+    logger.debug(request.vars['hostIdentity'])
+    logger.debug(request.vars['graphPeriod'])
+    graphRet = get_performance_graph(request.vars['graphType'], request.vars['hostIdentity'], request.vars['graphPeriod'])
+    if not isinstance(graphRet, IMG):
+        if is_moderator():
+            return H3(graphRet)
+        else:
+            return H3('VMs RRD File Unavailable!!!')
+    else:
+        return graphRet
+        
+@check_moderator
+@handle_exception       
+def host_config():
+    host_id=request.args(0)
+    host_info = get_host_config(host_id)
+    logger.debug(host_info)
+    return dict(host_info=host_info)
+

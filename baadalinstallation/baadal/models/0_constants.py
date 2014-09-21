@@ -101,7 +101,7 @@ current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 
-VM_RAM_SET = (256, 512,1024,2048,4096,8192,16384)
+VM_RAM_SET = (256, 512,1024,2048,4096,8192,16384,32768,65536)
 VM_vCPU_SET = (1,2,4,8,16)
 
 IP_ERROR_MESSAGE = 'Enter valid IP address'
@@ -123,3 +123,6 @@ MAX_VNC_ALLOWED_IN_A_DAY = 10
 
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
+
+
+

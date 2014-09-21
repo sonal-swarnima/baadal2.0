@@ -10,6 +10,7 @@ from ast import literal_eval
 from helper import config,get_datetime, IS_MAC_ADDRESS
 from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
 from datetime import timedelta
+from host_helper import HOST_TYPE_PHYSICAL
 
 #### Connection Pooling of Db is also possible
 
@@ -115,7 +116,11 @@ db.define_table('host',
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
     Field("category",'string', length = 50),
-    Field('status', 'integer'))
+    Field('status', 'integer'),
+    Field('slot_number', 'integer'),
+    Field('rack_number', 'integer'),
+    Field('extra', 'string', length = 50),
+    Field('host_type', 'string', length = 20, default = HOST_TYPE_PHYSICAL))
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
@@ -125,18 +130,22 @@ db.define_table('datastore',
     Field('password', 'password', label='Password', readable=False),
     Field('path', 'string', notnull = True, label='Path'),
     Field('used', 'integer', default = 0, readable=False, writable=False),
+    Field('system_mount_point', 'string', notnull = True, length = 255, label='System Mount Point'),
     format = '%(ds_name)s')
 db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('template',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name of Template'),
-    Field('os_type', default = "Linux", requires = IS_IN_SET(('Linux', 'Windows', 'Others')), label='Operating System'),
-    Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386', 'win7')), label='Architecture'),
+    Field('os', default = "Linux", requires = IS_IN_SET(('Linux', 'Windows','Others')), label='Operating System'),
+    Field('os_name', default = "Ubuntu", requires = IS_IN_SET(('Ubuntu','Centos', 'Kali', 'Windows', 'Others')), label='OS Name'),
+    Field('os_version','string',length = 50,notnull = True, label='OS Version'),
+    Field('os_type', default = "Desktop", requires = IS_IN_SET(('Desktop','Server')), label='OS Type'),
+    Field('arch', default = "amd64", requires = IS_IN_SET(('amd64', 'i386', 'x86', 'x64')), label='Architecture'),
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
     Field('hdfile', 'string', length = 255, notnull = True, label='HD File'),
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
     Field('datastore_id', db.datastore, notnull = True, label='Datastore'),
-    format = '%(name)s')
+    format = '%(os_name)s %(os_version)s %(os_type)s %(arch)s %(hdd)sGB')
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('vlan',
@@ -185,7 +194,7 @@ db.define_table('request_queue',
     Field('vm_name', 'string', length = 100, notnull = True, label='VM Name'),
     Field('parent_id', 'reference vm_data'),
     Field('request_type', 'string', length = 20, notnull = True),
-    Field('RAM', 'integer', label='RAM(GB)'),
+    Field('RAM', 'integer', label='RAM(MB)'),
     Field('HDD', 'integer', label='HDD(GB)'),
     Field('extra_HDD', 'integer', label='Extra HDD(GB)'),
     Field('attach_disk', 'integer', label='Disk Size(GB)'),
@@ -198,7 +207,7 @@ db.define_table('request_queue',
     Field('collaborators', 'list:reference user'),
     Field('clone_count', 'integer', label='No. of Clones'),
     Field('purpose', 'string', length = 512),
-    Field('status', 'integer', represent=lambda x, row: get_request_status(x)),
+    Field('status', 'integer'),
     Field('request_time', 'datetime', default = get_datetime()))
 
 db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
@@ -206,7 +215,7 @@ db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
 db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
-db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(name)s', zero=None)
+db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(os_name)s %(os_version)s %(os_type)s %(arch)s %(hdd)sGB', zero=None)
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
 db.define_table('vm_event_log',
@@ -301,7 +310,8 @@ db.define_table('vnc_access',
 
 db.define_table('public_ip_pool',
     Field('public_ip', 'string', length = 15, notnull = True, unique = True),
-    Field('vm_id', db.vm_data, writable = False))
+    Field('vm_id', db.vm_data, writable = False),
+    Field('host_id', db.host, readable = False, writable = False))
 
 db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
 
@@ -309,8 +319,10 @@ db.define_table('private_ip_pool',
     Field('private_ip', 'string', length = 15, notnull = True, unique = True),
     Field('mac_addr', 'string', length = 20, unique = True),
     Field('vlan', db.vlan, notnull = True),
-    Field('vm_id', db.vm_data, writable = False))
+    Field('vm_id', db.vm_data, writable = False),
+    Field('host_id', db.host, readable = False, writable = False))
 
 db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]
 db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_UPPER(), IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
 db.private_ip_pool.vlan.requires = IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None)
+

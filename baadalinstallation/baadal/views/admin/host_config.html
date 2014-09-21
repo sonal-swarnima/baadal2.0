@@ -1,0 +1,46 @@
+{{extend 'layout.html'}}
+
+
+{{if host_info:}}
+<div class="post" >
+
+    <h2 class="title">Host Configuration </h2>
+
+    <div class="TABLE">
+    <table id="configuration">
+        <tr>
+            <th>Name</th>
+            <th>HDD</th>
+            <th>RAM</th>
+            <th>VCPUs</th>
+            <th>IP Address</th>
+            <th>MAC Address</th>
+             <th>Status</th>
+              <th>Performance</th>
+        </tr>
+        <tr>
+            <td>{{=host_info['host_name']}}</td>
+            <td>{{=host_info['HDD']}}</td>
+            <td>{{=host_info['RAM']}}</td>
+            <td>{{=host_info['CPUs']}}</td>
+            <td>{{=host_info['host_ip']}}</td>
+            <td>{{=host_info['mac_addr']}}</td>
+            <td>
+            {{if host_info['status']== HOST_STATUS_UP :}}
+                Up <!-- #TODO Insert Image -->
+            {{elif host_info['status']==HOST_STATUS_DOWN:}}
+                Down
+            {{elif host_info['status']== HOST_STATUS_MAINTENANCE:}}
+                Maintenance
+            {{pass}}
+        </td>
+         <td>
+        {{=A(IMG(_src=URL('static','images/performance.jpg'), _height=18, _width=18),
+        _href=URL(r=request, f='show_host_performance', args=[host_info['id']]), 
+        )}}
+        </td>
+        </tr>
+    </table>    
+    </div>
+</div>
+{{pass}}

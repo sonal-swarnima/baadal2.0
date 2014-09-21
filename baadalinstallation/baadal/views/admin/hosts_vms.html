@@ -1,12 +1,18 @@
 {{extend 'layout.html'}}
-  {{for vmhosts in hostvmlist:}}
-    <h2 class="title">Host IP : {{=vmhosts['hostIP']}}    [RAM= {{=vmhosts['ram']}}GB, vCPUs= {{=vmhosts['cpus']}}]</h2>
+
+<div style="text-align:right;padding-right:40px">
+{{=util_form}}
+</div>
+
+{{for vmhosts in hostvmlist:}}
+<h2 class="title">{{=A('host :'+ str(vmhosts['host_ip']), _href=URL(r=request,c='admin' ,f='host_config', args=[vmhosts['host_id']] ))}}</h2>
+<div id="host_utilization_{{=vmhosts['host_id']}}"></div>
     <div class="TABLE">
-    <table id="host_{{=vmhosts['hostIP'].replace('.','_')}}">
+    <table id="host_{{=vmhosts['host_ip']}}">
       <tr>
         <th>Name</th>
-        <th>Owner</th>              
-        <th>Organisation</th>              
+        <th>Owner</th>
+        <th>Organisation</th>
         <th>Private IP</th>
         <th>RAM</th>
         <th>vCPUs</th>
@@ -14,10 +20,9 @@
         <th>Settings</th>
       </tr>
       {{for vm in vmhosts['details']:}}
-      <form>
       <tr>
         <td>{{=vm['name']}}</td>
-        <td>{{=vm['owner']}}</td>                
+        <td>{{=vm['owner']}}</td>  
         <td>{{=vm['organisation']}}</td>
         <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
@@ -25,14 +30,58 @@
         <td>{{=vm['status']}}</td>
         <td>
             {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
-            _href=URL(r=request,c='user' ,f='settings', args=[vm['id']]), _id="vm_"+str(vm['id']), 
+            _href=URL(r=request,c='user' ,f='settings', args=[vm['id']]), _id="vm_"+str(vm['id']),
             _title="Settings", 
             _alt="Settings")}}
         </td>
       </tr>
-      </form>
-    {{pass}}
+      {{pass}}
   </table>
   </div>
   <br>
- {{pass}}
+{{pass}}
+
+<script>
+
+jQuery(document).ready(function(){
+	var JSONstring = '{{=host_util_data}}';
+	JSONstring = JSONstring.replace(/&quot;/ig,'"');
+
+	parse_utilization_data(jQuery.parseJSON(JSONstring));
+	
+});
+
+function get_utilization_data() {
+
+	var util_data = jQuery('#period_select_id').val();
+
+	jQuery.ajax(
+	{
+		url : '{{=URL('get_host_utilization_data')}}',
+		type: 'POST',
+		dataType : 'json',
+		data: {keywords:util_data},
+		success:function(data) {
+		
+			parse_utilization_data(data);
+		}
+	});
+}
+
+
+function parse_utilization_data(JSONstring){
+
+	$.each(JSONstring, function(host_id, host_util_data) {
+
+		display_str = '<b>Utilization data for ' + $('#period_select_id option:selected').text() + '</b> [';
+		$.each(host_util_data, function(param, util_val) {
+
+			display_str += param + ': ' + util_val + ', ';
+		});
+		display_str = display_str.substring(0, (display_str.length)-2);
+		display_str += ']';
+		$('#host_utilization_'+host_id).html(display_str)
+	});
+
+}
+</script>

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-import time, rrdtool
 
+import os, re, shutil, time, rrdtool, libvirt
 from xml.etree import ElementTree
 from log_handler import rrd_logger
-from host_helper import *  # @UnusedWildImport
-from gluon import *
-from helper import *
+from gluon import IMG, URL, current
+from helper import get_constant, get_context_path, execute_remote_cmd
 
-VM_UTIL_24_HOURS = 1
-VM_UTIL_ONE_WEEK = 2
-VM_UTIL_ONE_MNTH = 3
-VM_UTIL_ONE_YEAR = 4
+VM_UTIL_10_MINS = 1
+VM_UTIL_24_HOURS = 2
+VM_UTIL_ONE_WEEK = 3
+VM_UTIL_ONE_MNTH = 4
+VM_UTIL_ONE_YEAR = 5
 
 STEP         = 300
 TIME_DIFF_MS = 550
@@ -21,13 +21,15 @@ def get_rrd_file(identity):
     rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + identity + ".rrd"
     return rrd_file
 
-def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
+def create_graph(rrd_file_name, graph_type, rrd_file_path, graph_period):
 
-    rrd_logger.debug(vm_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
-    rrd_file = vm_name + '.rrd'       
+    rrd_logger.debug(rrd_file_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
+    #rrd_file = rrd_file_name + '.rrd'       
 
-    shutil.copyfile(rrd_file_path, rrd_file)
-    graph_file = vm_name + "_" + graph_type + ".png"
+    #shutil.copyfile(rrd_file_path, rrd_file)
+    graph_file = rrd_file_name + "_" + graph_type + ".png"
+    graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
+    graph_file_path = graph_file_dir + os.sep + graph_file
 
     start_time = None
     grid = None
@@ -55,31 +57,31 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
     if ((graph_type == 'ram') or (graph_type == 'cpu')):
 
         if graph_type == 'ram':
-            ds = 'DEF:ram=' + vm_name + '.rrd:ram:' + consolidation
+            ds = 'DEF:ram=' + rrd_file_path + ':ram:' + consolidation
             line = 'LINE1:ram#0000FF:Memory'
             graph_type += " (Bytes/Sec)"
             upper_limit = ""
         elif graph_type == 'cpu':
-            ds = 'DEF:cpu=' + vm_name + '.rrd:cpu:' + consolidation
+            ds = 'DEF:cpu=' + rrd_file_path + ':cpu:' + consolidation
             line = 'LINE1:cpu#0000FF:CPU'
             graph_type += " (%)"
             upper_limit = "-u 100"
                 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds, line, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
+        rrdtool.graph(graph_file_path, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + rrd_file_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
 
     else:
 
         if graph_type == 'nw':
-            ds1 = 'DEF:nwr=' + vm_name + '.rrd:tx:' + consolidation
-            ds2 = 'DEF:nww=' + vm_name + '.rrd:rx:' + consolidation
+            ds1 = 'DEF:nwr=' + rrd_file_path + ':tx:' + consolidation
+            ds2 = 'DEF:nww=' + rrd_file_path + ':rx:' + consolidation
             line1 = 'LINE1:nwr#0000FF:Transmit'
             line2 = 'LINE1:nww#FF7410:Receive'
 
         elif graph_type == 'disk':
-            ds1 = 'DEF:diskr=' + vm_name + '.rrd:dr:' + consolidation
-            ds2 = 'DEF:diskw=' + vm_name + '.rrd:dw:' + consolidation
+            ds1 = 'DEF:diskr=' + rrd_file_path + ':dr:' + consolidation
+            ds2 = 'DEF:diskw=' + rrd_file_path + ':dw:' + consolidation
             line1 = 'LINE1:diskr#0000FF:DiskRead'
             line2 = 'LINE1:diskw#FF7410:DiskWrite'
 
@@ -87,13 +89,14 @@ def create_graph(vm_name, graph_type, rrd_file_path, graph_period):
 
 #        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', 'VM Name: ' + vm_name, '--x-grid', grid, ds1, ds2, line1, line2, "-l 0")
 
-        rrdtool.graph(graph_file, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + vm_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6" )
+        rrdtool.graph(graph_file_path, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + rrd_file_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6" )
 
 
-    graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
-    shutil.copy2(graph_file, graph_file_dir)
+    #graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))    
+    rrd_logger.debug(graph_file_path)
+    #shutil.copy2(graph_file_path, graph_file_dir)
 
-    if os.path.exists(graph_file_dir + os.sep + graph_file):
+    if os.path.exists(graph_file_path):
         return True
     else:
         return False
@@ -131,13 +134,15 @@ def get_performance_graph(graph_type, vm, graph_period):
             rrd_logger.info("Returning image.")
             return img
 
-def fetch_rrd_data(vm_identity, period=VM_UTIL_24_HOURS):
-    rrd_file = get_rrd_file(vm_identity)
+def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
+    rrd_file = get_rrd_file(rrd_file_name)
 
     start_time = 'now - ' + str(24*60*60)
     end_time = 'now'
     
-    if period == VM_UTIL_ONE_WEEK:
+    if period == VM_UTIL_10_MINS:
+        start_time = 'now - ' + str(10*60)
+    elif period == VM_UTIL_ONE_WEEK:
         start_time = '-1w'
     elif period == VM_UTIL_ONE_MNTH:
         start_time = '-1m'
@@ -198,7 +203,7 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("fecthing memory usage of domain %s defined on host %s" % (dom_name, host))
 
-    cmd = "output=`ps -ef --sort=start_time | grep '\-name ADMIN_admin_apoorve_test1' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'"
+    cmd = "output=`ps -ef --sort=start_time | grep '%s.qcow2' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'" % dom_name
     #"ps aux | grep '\-name " + dom_name + " ' | grep kvm"
     output = execute_remote_cmd(host, "root", cmd, None, True)
     return (int(output[0]))*1024 #returned memory in Bytes by default
@@ -266,7 +271,7 @@ def get_actual_usage(dom_obj, host_ip):
 
     dom_stats = get_current_dom_resource_usage(dom_obj, host_ip)
 
-    prev_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400) 
+    prev_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)  # @UndefinedVariable
     rrd_logger.debug(prev_dom_stats)
         
     #cal usage
@@ -277,9 +282,9 @@ def get_actual_usage(dom_obj, host_ip):
     usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])}) #in KBytes
     usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])}) #in KBytes
 
-    current.cache.disk.clear(str(dom_name))
+    current.cache.disk.clear(str(dom_name))  # @UndefinedVariable
 
-    latest_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)        
+    latest_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)        # @UndefinedVariable
     rrd_logger.debug(latest_dom_stats)
    
     return usage 
@@ -403,7 +408,7 @@ def update_rrd(host_ip):
 
         try:
 
-            hypervisor_conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
+            hypervisor_conn = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
             rrd_logger.debug(hypervisor_conn.getHostname())
 
             active_dom_ids  = hypervisor_conn.listDomainsID()
@@ -419,7 +424,7 @@ def update_rrd(host_ip):
                 except Exception, e:
                     
                     rrd_logger.debug(e)
-                    rrd_logger("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
+                    rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
   
                 finally:
 
@@ -428,7 +433,7 @@ def update_rrd(host_ip):
  
         except Exception, e:
         
-            rrd_logger(e)
+            rrd_logger.debug(e)
 
         finally:
 

@@ -2,6 +2,7 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
+    from gluon import *  # @UnusedWildImport
     from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
@@ -10,6 +11,7 @@ from libvirt import *  # @UnusedWildImport
 from lxml import etree
 from helper import execute_remote_cmd, log_exception
 from host_helper import HOST_STATUS_UP, get_host_domains
+from nat_mapper import remove_mapping
 from log_handler import logger
 
 vm_state_map = {
@@ -33,10 +35,30 @@ def vminfo_to_state(vm_state):
 
     return status
 
-def check_vm_sanity():
+
+def get_host_sanity_form():
+    _dict = {0 : 'All'}
+
+    hosts=db(db.host.status == HOST_STATUS_UP).select()
+    for host in hosts:
+        _dict.update({host.id : host.host_name})
+    
+    form = FORM(TR("Show:", 
+           SELECT(_name='host_selected', _id='host_select_id',
+           *[OPTION(_dict[key], _value=str(key)) for key in _dict.keys()]), 
+            A(SPAN(_class='icon-refresh'), _onclick = '$(this).closest(\'form\').submit()', _href='#')))
+    return form
+
+
+def check_vm_sanity(host_id):
     vmcheck=[]
     vm_list = []
-    hosts=db(db.host.status == HOST_STATUS_UP).select()
+    
+    if host_id == 0:
+        hosts=db(db.host.status == HOST_STATUS_UP).select()
+    else:
+        hosts=db(db.host.id == host_id).select()
+    
     for host in hosts:
         try:
             logger.info('Starting sanity check for host %s' %(host.host_name))
@@ -52,7 +74,8 @@ def check_vm_sanity():
                     status = vminfo_to_state(vm_state)
                     if(vm):
                         if(vm.host_id != host.id):
-                            vmcheck.append({'host':host.host_name, 
+                            vmcheck.append({'vm_id':vm.id,
+                                            'host':host.host_name, 
                                             'host_id':host.id,
                                             'vmname':vm.vm_name,
                                             'status':status,
@@ -60,7 +83,8 @@ def check_vm_sanity():
                             #If VM has been migrated to another host; Host information updated
                             db(db.vm_data.vm_identity == domain_name).update(host_id = host.id)
                         else:
-                            vmcheck.append({'host':host.host_name,
+                            vmcheck.append({'vm_id':vm.id,
+                                            'host':host.host_name,
                                             'host_id':host.id,
                                             'vmname':vm.vm_name,
                                             'status':status,
@@ -102,7 +126,6 @@ def check_vm_sanity():
                             'message':'VM not found', 
                             'operation':'Undefined'})
             
-    logger.debug(vmcheck)
     return vmcheck
 
 
@@ -175,7 +198,68 @@ def delete_vm_info(vm_identity):
                                                                          (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
     db(db.private_ip_pool.vm_id == vm_details.id).update(vm_id = None)
     db(db.public_ip_pool.vm_id == vm_details.id).update(vm_id = None)
+
+    if vm_details.public_ip != PUBLIC_IP_NOT_ASSIGNED:
+        remove_mapping(vm_details.public_ip, vm_details.private_ip)
     #this will delete vm_data entry and also its references
     db(db.vm_data.id == vm_details.id).delete()
     
     return
+
+
+def check_vm_snapshot_sanity(vm_id):
+    vm_data = db.vm_data[vm_id]
+    snapshot_check = []
+    try:
+        conn = libvirt.openReadOnly('qemu+ssh://root@'+vm_data.host_id.host_ip+'/system')
+        domain = conn.lookupByName(vm_data.vm_identity)
+        
+        dom_snapshot_names = domain.snapshotListNames(0)
+        logger.debug(dom_snapshot_names)
+        conn.close()
+            
+        snapshots = db(db.snapshot.vm_id == vm_id).select()
+        for snapshot in snapshots:
+            if snapshot.snapshot_name in dom_snapshot_names:
+                snapshot_check.append({'snapshot_name' : snapshot.snapshot_name,
+                                       'snapshot_type' : get_snapshot_type(snapshot.type),
+                                       'message' : 'Snapshot present',
+                                       'operation' : 'None'})
+                dom_snapshot_names.remove(snapshot.snapshot_name)
+            else:
+                snapshot_check.append({'snapshot_id' : snapshot.id,
+                                       'snapshot_name' : snapshot.snapshot_name,
+                                       'snapshot_type' : get_snapshot_type(snapshot.type),
+                                       'message' : 'Snapshot not present',
+                                       'operation' : 'Undefined'})
+
+        for dom_snapshot_name in dom_snapshot_names:
+                snapshot_check.append({'vm_name' : vm_data.vm_identity,
+                                       'snapshot_name' : dom_snapshot_name,
+                                       'snapshot_type' : 'Unknown',
+                                       'message' : 'Orphan Snapshot',
+                                       'operation' : 'Orphan'})
+                        
+    except Exception:
+        log_exception()
+    logger.debug(snapshot_check)
+    return (vm_data.id, vm_data.vm_name, snapshot_check)
+
+
+def delete_orphan_snapshot(domain_name, snapshot_name):
+    
+    logger.debug('Deleting orphan snapshot %s of VM %s' %(snapshot_name, domain_name))
+    vm_data = db(db.vm_data.vm_identity == domain_name).select().first()
+
+    conn = libvirt.open('qemu+ssh://root@'+vm_data.host_id.host_ip+'/system')
+    domain = conn.lookupByName(vm_data.vm_identity)
+    
+    snapshot = domain.snapshotLookupByName(snapshot_name, 0)        
+    snapshot.delete(0)
+    conn.close
+    logger.debug('Orphan VM deleted')    
+
+def delete_snapshot_info(snapshot_id):
+    logger.debug('Deleting snapshot info for ' + str(snapshot_id))
+    del db.snapshot[snapshot_id]
+    logger.debug('Snapshot info deleted')

@@ -1,0 +1,41 @@
+{{extend 'layout.html'}}
+<h2 class="subtitle">Sanity Check for {{=A(vm_name, _href=URL(r=request, c='user',f='settings', args=[vm_id]))}} snapshots</h2>
+
+
+{{
+  if not snapshots:
+}}
+<h3>No Snapshots found</h3>
+{{else:}}
+  <div class="TABLE" id="snapshot_sanity_check_table">
+  <table>
+      <tr>
+        <th>Snapshot Name</th>
+        <th>Snapshot Type</th>
+        <th>Message</th>
+        <th>Operations</th>
+      </tr>
+  {{for snapshot in snapshots:}}
+      <tr>
+        <td>{{=snapshot['snapshot_name']}}</td>
+        <td>{{=snapshot['snapshot_type']}}</td>
+        <td>{{=snapshot['message']}}</td>
+        <td>
+        {{if snapshot['operation'] == 'Orphan':}}
+        	{{=A('Delete Orphan Snapshot',_href=URL(r=request,f='sync_snapshot',vars={'action_type':'Delete_Orphan', 
+        																				'vm_id' : vm_id, 
+        																				'vm_name' : snapshot['vm_name'], 
+        																				'snapshot_name' : snapshot['snapshot_name']}))}}
+        {{elif snapshot['operation'] == 'Undefined':}}
+        	{{=A('Delete Snapshot Info',_href=URL(r=request,f='sync_snapshot',vars={'action_type' : 'Delete_Snapshot_Info', 
+        																				'vm_id' : vm_id, 
+        																				'snapshot_id' : snapshot['snapshot_id']}))}}
+        {{else:}}
+        	-
+        {{pass}}
+        </td>
+      </tr>
+  {{pass}}
+  </table>
+  </div>
+{{pass}}

@@ -10,6 +10,12 @@ HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
 HOST_STATUS_MAINTENANCE = 2
 
+HOST_TYPE_PHYSICAL = "Physical"
+HOST_TYPE_VIRTUAL = "Virtual"
+
+
+get_host_name={"10.0.0.5":"baadal_host_1","10.0.0.6":"baadal_host_2","10.0.0.7":"baadal_host_3","10.0.0.8":"baadal_host_4","10.0.0.9":"baadal_host_5","10.0.0.10":"baadal_host_6","10.0.0.11":"baadal_host_7","10.0.0.12":"baadal_host_8","10.0.0.13":"baadal_host_9"}
+
 def check_host_status(host_ip):
     out=commands.getstatusoutput("ping -c 2 -W 1 " + host_ip)[0]
     logger.debug("Host Check command response for %s: %s" %(host_ip, str(out)))
@@ -51,6 +57,7 @@ def get_host_ram(host_ip):
 
 
 def get_host_hdd(host_ip):
+    
     command = "fdisk -l | egrep 'Disk.*bytes' | awk '{ sub(/,/,\"\"); sum +=$3;} END {print sum}'"
     ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. 500.1 kB
     logger.debug("Host HDD is %s" %ret)
@@ -58,9 +65,15 @@ def get_host_hdd(host_ip):
     return hdd_in_gb
 
 
+def get_host_type(host_ip):
+
+    command="virt-what"
+    ret=execute_remote_cmd(host_ip, 'root',command)
+    return HOST_TYPE_VIRTUAL if ret else HOST_TYPE_PHYSICAL
+
 def check_host_service_status(host_ip):
     #Check libvirt status
-    command = "status libvirt-bin | grep -w 'running' | wc -l"
+    command = "ps -ef | grep libvirtd | grep -v grep  | wc -l"
     ret = execute_remote_cmd(host_ip, 'root',command)
     if ret == 0 :
         logger.error("Critical: Libvirt service is not running on host " + host_ip)
@@ -100,10 +113,10 @@ def respawn_dangling_vms(host_id):
         command_to_execute = copy_command + ds_image_location%(vm_data.vm_identity, vm_data.vm_identity) + \
                                 ' ' + ds_image_location%(vm_data.vm_identity, vm_data.vm_identity+'_old')
 
-        exec_command_on_host(vm_data.datastore_id.ds_ip, 
-                             vm_data.datastore_id.username, 
-                             command_to_execute, 
-                             vm_data.datastore_id.password)
+        execute_remote_cmd(vm_data.datastore_id.ds_ip, 
+                           vm_data.datastore_id.username, 
+                           command_to_execute, 
+                           vm_data.datastore_id.password)
         logger.debug('Backup copy of the VM image cretaed successfully.')
         
         vm_properties = {}
@@ -162,7 +175,6 @@ def has_running_vm(host_ip):
 def host_power_operation():
     logger.debug("\nIn host power operation function\n-----------------------------------\n")
     livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
-    masterhost = livehosts[0].host_ip
     freehosts=[]
     try:
         for host_data in livehosts:
@@ -176,7 +188,7 @@ def host_power_operation():
             newhosts = current.db(current.db.host.status == HOST_STATUS_DOWN).select()[0:(2-freehostscount)] #Select only Shutoff hosts
             for host_data in newhosts:
                 logger.debug("Sending magic packet to "+host_data.host_name)
-                commands.getstatusoutput("ssh root@"+masterhost+" wakeonlan "+str(host_data.mac_addr))
+                host_power_up(host_data)
         elif(freehosts > 2):
             logger.debug("Sending shutdown signal to total "+str(freehostscount-2)+" no. of host(s)")
             extrahosts=freehosts[2:]
@@ -189,6 +201,36 @@ def host_power_operation():
     except:
         log_exception()
     return
+
+
+def host_power_up(host_data):
+    try:
+        if host_data.host_type == HOST_TYPE_VIRTUAL:
+            host_ip = host_data.host_ip
+            execute_remote_cmd(host_ip, 'root', 'virsh start' + get_host_name[host_ip])
+        else:                        
+            logger.debug('Powering up host with MAC ' + host_data.mac_addr)
+            commands.getstatusoutput( "wakeonlan " + host_data.mac_addr)
+        
+        logger.debug("Host powered up successfully!!!")
+    except:
+        log_exception()
+
+
+#Power down the host
+def host_power_down(host_data):
+
+    try:
+        host_ip = host_data.host_ip
+        if host_data.host_type == HOST_TYPE_VIRTUAL:
+            output = execute_remote_cmd(host_ip, 'root', 'virsh destroy' + get_host_name[host_ip])
+        else:                        
+            output = execute_remote_cmd(host_ip, 'root', 'init 0')
+
+        logger.debug(str(output) + ' ,Host shut down successfully !!!')
+    except:
+        log_exception()
+
 
 #Migrate all running vms and redefine dead ones
 def migrate_all_vms_from_host(host_ip):

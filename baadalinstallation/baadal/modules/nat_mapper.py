@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception
-import paramiko
 from gluon import current
 
 #nat types
 NAT_TYPE_SOFTWARE = 'software_nat'
 NAT_TYPE_HARDWARE = 'hardware_nat'
+NAT_TYPE_MAPPING = 'mapping_nat'
 
 #VNC access status
 VNC_ACCESS_STATUS_ACTIVE = 'active'
@@ -77,6 +77,9 @@ def create_mapping(source_ip , destination_ip, source_port = -1, destination_por
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
         raise Exception("No implementation for NAT type hardware")
+    elif nat_type == NAT_TYPE_MAPPING:
+        # This function is to be implemented
+        return
     else:
         raise Exception("NAT type is not supported")
 
@@ -126,6 +129,9 @@ def remove_mapping(source_ip, destination_ip, source_port=-1, destination_port=-
     elif nat_type == NAT_TYPE_HARDWARE:
         #This function is to be implemented
         raise Exception("No implementation for NAT type hardware")
+    elif nat_type == NAT_TYPE_MAPPING:
+        # This function is to be implemented
+        return
     else:
         raise Exception("NAT type is not supported")
 
@@ -138,28 +144,20 @@ def clear_all_nat_mappings(db):
 
         logger.debug("Clearing all NAT mappings")
     
-        # Create single SSh session to execute all commands on NAT box
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(nat_ip, username=nat_user)
-        channel = ssh.invoke_shell()
-        stdin = channel.makefile('wb')
-        stdout = channel.makefile('rb')
-
+        command = ''
         # For all public IP - private IP mappings, Delete aliases
         public_ip_mappings = db(db.vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED).select(db.vm_data.private_ip, db.vm_data.public_ip)
         for mapping in public_ip_mappings:
             logger.debug('Removing private to public IP mapping for private IP: %s and public IP:%s' %(mapping['private_ip'],mapping['public_ip']))
             private_ip_octets = mapping['private_ip'].split('.')
-            interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces" %(private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3])
-            interfaces_command = "ifconfig eth0:%s.%S down" %(private_ip_octets[2], private_ip_octets[3])
-            stdin.write('''
-                %s
-                %s
-            ''' %(interfaces_entry_command, interfaces_command))
+
+            command += '''
+                        sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces
+                        ifconfig eth0:%s.%S down
+                       ''' %(private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3])
 
         # Flushing all rules from iptables
-        stdin.write('''
+        command += '''
             iptables --flush
             iptables -t nat --flush
             iptables --delete-chain
@@ -167,11 +165,8 @@ def clear_all_nat_mappings(db):
             /etc/init.d/iptables-persistent save
             /etc/init.d/iptables-persistent reload
             exit
-        ''')
-        logger.debug(stdout.read())
-        stdout.close()
-        stdin.close()
-        ssh.close()
+        '''
+        execute_remote_bulk_cmd(nat_ip, nat_user, command)
 
         # Updating DB
         logger.debug("Flushing all public Ip - private IP mappings and VNC mappings from DB")
@@ -181,6 +176,13 @@ def clear_all_nat_mappings(db):
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
         raise Exception("No implementation for NAT type hardware")
+    elif nat_type == NAT_TYPE_MAPPING:
+        logger.debug("Clearing all mapping information from DB")
+
+        db.vm_data.update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
+        db.public_ip_pool.update(vm_id = None)
+        db.vnc_access.update(status = VNC_ACCESS_STATUS_INACTIVE)
+
     else:
         raise Exception("NAT type is not supported")
         
@@ -223,6 +225,20 @@ def clear_all_timedout_vnc_mappings():
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
         raise Exception("No implementation for NAT type hardware")
+    elif nat_type == NAT_TYPE_MAPPING:
+        # This function is to be implemented
+        logger.debug('Clearing all timed out VNC mappings') 
+
+        # Get all active VNC mappings from DB
+        vnc_mappings = current.db((current.db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE) & 
+                                  (current.db.vnc_access.expiry_time < get_datetime())).select()
+        if (vnc_mappings != None) & (len(vnc_mappings) != 0):
+
+            for mapping in vnc_mappings:
+                # Update DB for each VNC access
+                current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
+            current.db.commit()
+        logger.debug("Done clearing vnc mappings")    
     else:
         raise Exception("NAT type is not supported")
 

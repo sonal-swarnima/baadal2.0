@@ -1,9 +1,14 @@
 {{extend 'layout.html'}}
-<h2 class="subtitle">Sanity Check</h2>
+<div style="text-align:right;padding-right:40px">
+{{=form}}
+</div>
+
+
+<h2 class="subtitle" id="pageHeader">Sanity Check</h2>
 {{
-  if not vms:
+  if not sanity_data:
 }}
-<h3>No VM running</h3>
+<h3>No VM running on selected host</h3>
 {{else:}}
   <div class="TABLE" id="sanity_check_table">
   <table>
@@ -14,7 +19,7 @@
         <th>Message</th>
         <th>Operations</th>
       </tr>
-  {{for vm in vms:}}
+  {{for vm in sanity_data:}}
       <tr>
         <td>{{=vm['host']}}</td>
         <td>{{=vm['status']}}</td>
@@ -27,8 +32,10 @@
         	{{=A('Update VM Info',_href=URL(r=request,f='sync_vm',args=['Add_Orphan', vm['vmname'], vm['host_id']]))}}
         {{elif vm['operation'] == 'Undefined':}}
         	{{=A('Delete VM Info',_href=URL(r=request,f='sync_vm',args=['Delete_VM_Info', vm['vmname'], vm['host_id']]))}}
-        {{else:}}
+        {{elif vm['operation'] == 'Error':}}
         	-
+        {{else:}}
+        	{{=A('Snapshot Sanity Check',_href=URL(r=request,f='snapshot_sanity_check',args=[vm['vm_id']]))}}
         {{pass}}
         </td>
       </tr>
@@ -36,3 +43,15 @@
   </table>
   </div>
 {{pass}}
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var _header = $('#pageHeader');
+	if (_header != 'undefined'){
+        _header.html('Sanity Check for ' + $('#host_select_id option:selected').text());
+	}
+});
+</script>

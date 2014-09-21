@@ -101,6 +101,30 @@ def get_request_status():
         status = REQ_STATUS_VERIFIED
 
     return status
+
+
+def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
+    
+    if vm_id != None:
+        vm_data = db.vm_data[vm_id]
+        vm_name = vm_data.vm_name
+        
+    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
+             (db.user_vm_map.user_id.belongs(user_set)) & 
+             (db.vm_data.vm_name.like(vm_name))).select()
+    
+    if vms:
+        return False
+
+    requests = db(((db.request_queue.owner_id.belongs(user_set)) |
+                   (db.request_queue.requester_id.belongs(user_set))) & 
+                   (db.request_queue.vm_name.like(vm_name))).select()
+    
+    if requests:
+        return False
+
+    return True
+
     
 def request_vm_validation(form):
     
@@ -125,16 +149,7 @@ def request_vm_validation(form):
     user_set = set(user_list)
     user_set.add(auth.user.id)
 
-    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
-             (db.user_vm_map.user_id.belongs(user_set))).select(db.vm_data.vm_name)
-    
-    if vms.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
-        form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
-
-    requests = db((db.request_queue.owner_id.belongs(user_set)) |
-             (db.request_queue.requester_id.belongs(user_set))).select(db.request_queue.vm_name)
-    
-    if requests.find(lambda row: row.vm_name == form.vars.vm_name, limitby=(0,1)):
+    if not is_vm_name_unique(user_set, form.vars.vm_name):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
         
 
@@ -216,20 +231,22 @@ def get_vm_config(vm_id):
     vminfo = get_vm_info(vm_id)
     if not vminfo : return
     
-    vm_info_map = {'id'               : str(vminfo.id),
-                   'name'             : str(vminfo.vm_name),
-                   'hdd'              : str(vminfo.HDD)+' GB' + ('+ ' + str(vminfo.extra_HDD) + ' GB' if vminfo.extra_HDD!=0 else ''),
-                   'ram'              : str(vminfo.RAM) + ' MB',
-                   'vcpus'            : str(vminfo.vCPU) + ' CPU',
-                   'status'           : get_vm_status(vminfo.status),
-                   'ostype'           : 'Linux',
-                   'purpose'          : str(vminfo.purpose),
-                   'private_ip'       : str(vminfo.private_ip),
-                   'public_ip'        : str(vminfo.public_ip),
-                   'security_domain'  : str(vminfo.security_domain.name)}
+    vm_info_map = {'id'               : str(vminfo.vm_data.id),
+                   'name'             : str(vminfo.vm_data.vm_name),
+                   'hdd'              : str(vminfo.vm_data.HDD)+' GB' + ('+ ' + str(vminfo.vm_data.extra_HDD) + ' GB' if vminfo.vm_data.extra_HDD!=0 else ''),
+                   'ram'              : str(vminfo.vm_data.RAM) + ' MB',
+                   'vcpus'            : str(vminfo.vm_data.vCPU) + ' CPU',
+                   'status'           : get_vm_status(vminfo.vm_data.status),
+                   'os_name'          : str(vminfo.template.os_name),
+                   'os_type'          : str(vminfo.template.os_name) + ' ' + str(vminfo.template.os_version) + ' ' + str(vminfo.template.os_type) + ' ' + str(vminfo.template.arch),
+                   'os_version'       : str(vminfo.template.os_version),
+                   'purpose'          : str(vminfo.vm_data.purpose),
+                   'private_ip'       : str(vminfo.vm_data.private_ip),
+                   'public_ip'        : str(vminfo.vm_data.public_ip),
+                   'security_domain'  : str(vminfo.vm_data.security_domain.name)}
 
     if is_moderator():
-        vm_info_map.update({'host' : str(vminfo.host_id.host_ip)})
+        vm_info_map.update({'host' : str(vminfo.vm_data.host_id.host_ip)})
     
     vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
     if vnc_info:

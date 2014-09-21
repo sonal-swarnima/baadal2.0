@@ -170,7 +170,7 @@ def list_my_task():
 def show_vm_performance():
     vm_id = int(request.args[0])
     vm_info = get_vm_info(vm_id)    
-    return dict(vm_id = vm_id, vm_identity = vm_info['vm_identity'])
+    return dict(vm_id = vm_id, vm_identity = vm_info.vm_data.vm_identity)
 
 @auth.requires_login()
 @handle_exception       
