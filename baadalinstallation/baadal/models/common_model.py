@@ -366,7 +366,12 @@ def get_vm_operations(vm_id):
         elif vm_status == VM_STATUS_SUSPENDED:
             valid_operations.extend(['resume_vm'])
         elif vm_status == VM_STATUS_SHUTDOWN:
-            valid_operations.extend(['start_vm', 'clone_vm', 'edit_vm_config', 'attach_extra_disk'])
+            #Start VM option is not valid if edit VM or attach disk option is in queue
+            if not (is_request_in_queue(vm_id, TASK_TYPE_EDITCONFIG_VM) | 
+                    is_request_in_queue(vm_id, TASK_TYPE_ATTACH_DISK)):
+                valid_operations.extend(['start_vm'])
+
+            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk'])
 
         if not is_vm_user():
             valid_operations.extend(['confirm_vm_deletion()'])
@@ -378,6 +383,7 @@ def get_vm_operations(vm_id):
 
         valid_operations.extend(['grant_vnc', 'vm_history'])
         
+        #Disable all links if Delete VM option is in queue
         link_disabled = True if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM) else False
         for valid_operation in valid_operations:
             
@@ -399,12 +405,13 @@ def get_vm_operations(vm_id):
         raise
     return valid_operations_list  
 
-def get_snapshot_type(type):
-    snapshot_type = {SNAPSHOT_USER    : 'User',
+def get_snapshot_type(snapshot_type):
+    snapshot_map = {SNAPSHOT_USER    : 'User',
                      SNAPSHOT_DAILY   : 'Daily',
                      SNAPSHOT_WEEKLY  : 'Weekly',
                      SNAPSHOT_MONTHLY : 'Monthly'}
-    return snapshot_type[type]
+    
+    return snapshot_map[snapshot_type]
 
 def get_vm_snapshots(vm_id):
     vm_snapshots_list = []

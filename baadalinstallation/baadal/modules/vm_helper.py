@@ -261,12 +261,12 @@ def attach_disk(vm_details, disk_name, size, hostip, datastore, already_attached
         logger.debug(target_disk)
         logger.debug("...................")
         xmlDescription = generate_xml(diskpath, target_disk)
-	logger.debug(xmlDescription)
+        logger.debug(xmlDescription)
         logger.debug("new vm is %s " % new_vm)
 
         if new_vm:
             logger.debug("Starting to attach disk on new vm request.")
-	    domain.destroy()
+            domain.destroy()
             logger.debug("VM destroyed")
             domain.attachDeviceFlags(xmlDescription, VIR_DOMAIN_AFFECT_CONFIG)
             logger.debug("Disk attached")
