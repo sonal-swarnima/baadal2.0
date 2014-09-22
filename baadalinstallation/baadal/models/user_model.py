@@ -264,8 +264,10 @@ def get_vm_user_list(vm_id) :
 
 def is_request_in_queue(vm_id, task_type, snapshot_id=None):
 
+    #Check if request is present in task_queue table
     _data =  db((db.task_queue.vm_id == vm_id) & (db.task_queue.task_type == task_type) 
                    & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select()
+
     if _data:
         if snapshot_id != None:
             for req_data in _data:    
@@ -275,7 +277,12 @@ def is_request_in_queue(vm_id, task_type, snapshot_id=None):
         else:
             return True
     else:
-        return False
+        #Check if request is present in request_queue table
+        _request = db((db.request_queue.parent_id == vm_id) & (db.request_queue.request_type == task_type) 
+                   & db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED)).select()
+
+        return True if _request else False
+
 
 def check_snapshot_limit(vm_id):
     snapshots = db((db.snapshot.vm_id == vm_id) & (db.snapshot.type == SNAPSHOT_USER)).count()

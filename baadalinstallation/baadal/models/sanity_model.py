@@ -50,7 +50,7 @@ def get_host_sanity_form():
     return form
 
 
-def check_vm_sanity(host_id):
+def check_vm_sanity(host_id=0):
     vmcheck=[]
     vm_list = []
     
