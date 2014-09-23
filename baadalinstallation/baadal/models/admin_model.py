@@ -667,8 +667,12 @@ def get_host_util_data(util_period):
     for host_info in hosts:
         host_identity = str(host_info.host_ip).replace('.','_')
         util_result = fetch_rrd_data(host_identity, util_period)
-        element = {'Memory' : round(util_result[0], 2),
-                   'CPU' : round(util_result[1], 2)}
+        total_mem_kb=(host_info.RAM)*1024*1024*1024
+        
+        mem_util=(util_result[0]/float(total_mem_kb))*100
+
+        element = {'Memory' : str(round(mem_util,2)) + "%",
+                   'CPU'    : str(round(util_result[1],2)) + "%"}
         
         host_util_dict[host_info.id] = element
 
