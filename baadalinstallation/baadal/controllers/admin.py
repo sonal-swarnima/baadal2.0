@@ -279,13 +279,13 @@ def delete_machine():
 def sanity_check():
 
     form = get_host_sanity_form()
-    host_selected = 0
+    host_selected = -1
     form.vars.host_selected = host_selected
 
     if form.accepts(request.vars, session, keepvalues=True):
         host_selected = int(form.vars.host_selected)
     
-    output = check_vm_sanity(host_selected)
+    output = check_vm_sanity(host_selected) if host_selected != -1 else []
     
     return dict(sanity_data=output, form=form)
     

@@ -37,7 +37,7 @@ def vminfo_to_state(vm_state):
 
 
 def get_host_sanity_form():
-    _dict = {0 : 'All'}
+    _dict = {-1 : 'None', 0 : 'All'}
 
     hosts=db(db.host.status == HOST_STATUS_UP).select()
     for host in hosts:
@@ -50,7 +50,7 @@ def get_host_sanity_form():
     return form
 
 
-def check_vm_sanity(host_id=0):
+def check_vm_sanity(host_id = 0):
     vmcheck=[]
     vm_list = []
     
@@ -116,15 +116,16 @@ def check_vm_sanity(host_id=0):
         except:pass
         db.commit()
         
-    db_vms=db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-    for db_vm in db_vms:
-        if(db_vm.vm_identity not in vm_list):
-            vmcheck.append({'vmname':db_vm.vm_identity,
-                            'host':db_vm.host_id.host_name,
-                            'host_id':db_vm.host_id,
-                            'status':'Undefined',
-                            'message':'VM not found', 
-                            'operation':'Undefined'})
+    if host_id == 0:
+        db_vms=db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+        for db_vm in db_vms:
+            if(db_vm.vm_identity not in vm_list):
+                vmcheck.append({'vmname':db_vm.vm_identity,
+                                'host':db_vm.host_id.host_name,
+                                'host_id':db_vm.host_id,
+                                'status':'Undefined',
+                                'message':'VM not found', 
+                                'operation':'Undefined'})
             
     return vmcheck
 
