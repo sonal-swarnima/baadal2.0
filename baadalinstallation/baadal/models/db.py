@@ -124,7 +124,7 @@ db.define_table('host',
 
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
-    Field('ds_ip', 'string', length = 15, unique = True, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
+    Field('ds_ip', 'string', length = 15, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),
     Field('capacity', 'integer', notnull = True, label='Capacity(GB)'),
     Field('username', 'string', notnull = True, length = 255, label='Username'),
     Field('password', 'password', label='Password', readable=False),
