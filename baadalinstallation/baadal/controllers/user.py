@@ -222,9 +222,14 @@ def edit_vm_config():
 
     vm_id = request.args[0]
     form = get_edit_vm_config_form(vm_id)
-    if form.accepts(request.vars, session):
+
+    if form.accepts(request.vars, session, onvalidation=edit_vm_config_validation, hideerror=True):
         session.flash = "Your request has been queued!!!"
         redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+
+    elif form.errors:
+        session.flash = "Error in form!!!"
+
     return dict(form=form)
 
 @auth.requires_login()

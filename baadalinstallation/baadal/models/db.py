@@ -132,7 +132,7 @@ db.define_table('datastore',
     Field('used', 'integer', default = 0, readable=False, writable=False),
     Field('system_mount_point', 'string', notnull = True, length = 255, label='System Mount Point'),
     format = '%(ds_name)s')
-db.datastore.capacity.requires=IS_INT_IN_RANGE(1,1025)
+db.datastore.capacity.requires=IS_INT_IN_RANGE(1,10000)
 
 db.define_table('template',
     Field('name', 'string', length = 30, notnull = True, unique = True, label='Name of Template'),

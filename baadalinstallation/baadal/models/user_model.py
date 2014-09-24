@@ -365,6 +365,22 @@ def get_edit_vm_config_form(vm_id):
 
     return form
 
+def edit_vm_config_validation(form):
+    
+    vm_id = request.args[0]
+    vm_data = db.vm_data[vm_id]
+    
+    curr_public_ip = False if vm_data.public_ip == PUBLIC_IP_NOT_ASSIGNED else True
+    new_public_ip = True if form.vars.public_ip else False
+    
+    if ((long(form.vars.vCPU) == long(vm_data.vCPU)) & 
+        (long(form.vars.security_domain) == long(vm_data.security_domain)) & 
+        (long(form.vars.RAM) == long(vm_data.RAM)) & 
+        (new_public_ip == curr_public_ip)):
+        
+        form.errors.vCPU = 'No change in VM properties.'
+    
+
 def get_mail_admin_form():
     form = FORM(TABLE(TR('Type:'),
                 TR(TABLE(TR(TD(INPUT(_name='email_type', _type='radio', _value='report_bug', value='report_bug')),TD('Report Bug'),

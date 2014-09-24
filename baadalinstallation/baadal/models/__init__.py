@@ -28,7 +28,7 @@ __all__ =['add_faculty_approver', 'add_orphan_vm', 'add_private_ip', 'add_privat
 			'update_task_retry', 'update_vm_lock', 'update_host_status', 'validate_user', 'verify_vm_request', 'vm_has_snapshots', 
 			'is_moderator', 'is_orgadmin', 'is_faculty', 'grant_vnc_access', 'send_email_vnc_access_granted', 'is_vm_name_unique',
             'get_host_config','send_shutdown_email_to_all','check_vm_snapshot_sanity','delete_orphan_snapshot','delete_snapshot_info',
-            'get_snapshot_type','get_host_sanity_form','get_host_util_data']
+            'get_snapshot_type','get_host_sanity_form','get_host_util_data','edit_vm_config_validation']
 
 if 0:
     from admin_model import *
