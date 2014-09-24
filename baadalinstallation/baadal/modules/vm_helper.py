@@ -13,13 +13,29 @@ from nat_mapper import create_mapping, remove_mapping
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():
-
-    datastores = current.db(current.db.datastore.id >= 0).select(orderby = current.db.datastore.used)
- 
-    if(len(datastores) == 0):
+  
+    # datastore_capacity = current.db(current.db.datastore.id >= 0).select(orderby = current.db.datastore.used
+    datastores = current.db(current.db.datastore.id >= 0).select()
+    datastore_length = len(datastores)
+    logger.debug("datastore_lengtn" + str(datastore_length))
+    if(datastore_length == 0):
         raise Exception("No datastore found.")
     else:
-        return datastores[0]
+        count = datastore_length
+        available_datastores = {}
+        while count != 0:
+             available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
+             available_datastores[datastores[datastore_length-count]] = available
+             count = count-1
+        z = [(i,available_datastores[i]) for i in available_datastores] 
+        z.sort(key=lambda x: x[1])
+        available_datastores = z
+        logger.debug("available d" + str(available_datastores[-1]))
+        first_elts = available_datastores[-1]
+        first_elts = first_elts[0]
+
+        logger.debug("selected database" + str(first_elts))
+        return first_elts
 
 #Returns resources utilization of a host in MB,Count
 def host_resources_used(host_id):
@@ -304,7 +320,8 @@ def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
     disk_name = vm_details.vm_identity + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
 
     if (attach_disk(vm_details, disk_name, disk_size, host_ip, datastore, already_attached_disks, new_vm)):
-        current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size) 
+        current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size)
+        current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(disk_size)) 
         return True
     else:
         return False
@@ -963,8 +980,14 @@ def get_clone_properties(vm_details, cloned_vm_details):
             os.makedirs(cloned_vm_extra_disks_directory)
 
     while already_attached_disks > 0:
-        clone_file_parameters += ' --file ' + cloned_vm_extra_disks_directory + '/' + cloned_vm_details.vm_identity \
-                                  + '_disk' + str(already_attached_disks + 1) + '.qcow2'
+        
+        disk_name = cloned_vm_details.vm_identity + '_disk' + str(count - already_attached_disks + 1) + '.qcow2'
+        clone_file_parameters += ' --file ' + cloned_vm_extra_disks_directory + '/' + disk_name
+        current.db.attached_disks.insert(vm_id = cloned_vm_details.id, 
+                                          datastore_id = datastore.id , 
+                                          attached_disk_name = disk_name, 
+                                          capacity = disk_details_of_cloning_vm[count - already_attached_disks].capacity)
+        #logger.debug(db._lastsql)
         already_attached_disks -= 1
 
     return (vm_properties, clone_file_parameters)
