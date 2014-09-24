@@ -50,7 +50,7 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
         stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         
         output = stdout.readlines() if ret_list else "".join(stdout.readlines())
-        logger.debug("Output : %s " % output)
+        #logger.debug("Output : %s " % output)
 
         error = "".join(stderr.readlines())
         if (stdout.channel.recv_exit_status()) != 0:
