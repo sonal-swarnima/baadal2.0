@@ -258,7 +258,7 @@ db.define_table('vm_data_event',
 db.define_table('attached_disks',
     Field('vm_id', db.vm_data, notnull = True),
     Field('datastore_id', db.datastore,notnull = True),
-    Field('attached_disk_name', 'string', length=30, notnull = True),
+    Field('attached_disk_name', 'string', length=100, notnull = True),
     Field('capacity', 'string',length = 45),
     primarykey = ['datastore_id', 'vm_id', 'attached_disk_name'])
 
