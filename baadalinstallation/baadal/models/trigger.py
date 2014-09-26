@@ -42,7 +42,7 @@ def schedule_task(fields, _id):
         vm_scheduler.queue_task('vm_task', 
                                 pvars = dict(task_event_id = task_event_id),
                                 start_time = request.now, 
-                                timeout = 5 * SECONDS, 
+                                timeout = 30 * MINUTES, 
                                 group_name = 'vm_task')
 
 
