@@ -940,9 +940,7 @@ def edit_vm_config(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-def get_clone_properties(vm_details, cloned_vm_details):
-
-    vm_properties = {}
+def get_clone_properties(vm_details, cloned_vm_details, vm_properties):
     
     datastore = choose_datastore()
     vm_properties['datastore'] = datastore
@@ -957,8 +955,9 @@ def get_clone_properties(vm_details, cloned_vm_details):
   
     # Template and host of parent vm
     vm_properties['template'] = current.db(current.db.template.id == vm_details.template_id).select()[0]
-    vm_properties['host'] = current.db.host[vm_details.host_id]
-
+    vm_properties['vm_host_details'] = current.db.host[vm_details.host_id]
+    
+    vm_properties['host'] = vm_properties['vm_host_details'].id
     # Creates a directory for the cloned vm
     logger.debug("Creating directory for cloned vm...")
     cloned_vm_directory_path = datastore.system_mount_point + '/' + get_constant('vms') + '/' + cloned_vm_details.vm_identity
@@ -970,15 +969,17 @@ def get_clone_properties(vm_details, cloned_vm_details):
 
     # Creates a folder for additional disks of the cloned vm
     vm = current.db(current.db.vm_data.vm_identity == vm_details.vm_identity).select().first()
-    already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
-
+    disk_details_of_cloning_vm = current.db(current.db.attached_disks.vm_id == vm.id).select(orderby=current.db.attached_disks.attached_disk_name)
+    logger.debug(disk_details_of_cloning_vm)
+    already_attached_disks = len(disk_details_of_cloning_vm) 
+    
     cloned_vm_extra_disks_directory = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
                                       datastore.ds_name +  '/' + cloned_vm_details.vm_identity
     if already_attached_disks > 0:
         if not os.path.exists (cloned_vm_extra_disks_directory):
             logger.debug("Making Directory")          
             os.makedirs(cloned_vm_extra_disks_directory)
-
+    count = already_attached_disks
     while already_attached_disks > 0:
         
         disk_name = cloned_vm_details.vm_identity + '_disk' + str(count - already_attached_disks + 1) + '.qcow2'
@@ -990,10 +991,10 @@ def get_clone_properties(vm_details, cloned_vm_details):
         #logger.debug(db._lastsql)
         already_attached_disks -= 1
 
-    return (vm_properties, clone_file_parameters)
+    return (clone_file_parameters)
                 
 # Migrates cloned vm to new host
-def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm):
+def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm,vm_properties):
 
     try:
         new_host_ip_for_cloned_vm = current.db.host[new_host_id_for_cloned_vm]['host_ip']
@@ -1006,6 +1007,7 @@ def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_clo
         domain.migrateToURI("qemu+ssh://root@" + new_host_ip_for_cloned_vm + "/system", flags , None, 0)
         logger.debug("Successfully migrated cloned vm to host " + str(new_host_ip_for_cloned_vm))
         cloned_vm_details.update_record(host_id = new_host_id_for_cloned_vm)
+        vm_properties['host'] = new_host_id_for_cloned_vm
         return True
     except libvirt.libvirtError,e:
         message = e.get_error_message()
@@ -1014,7 +1016,8 @@ def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_clo
         
 # Clones vm
 def clone(vmid):
-
+    
+    vm_properties = {}
     logger.debug("Inside clone() function")
     cloned_vm_details = current.db.vm_data[vmid]
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
@@ -1024,9 +1027,9 @@ def clone(vmid):
         if domain.info()[0] != VIR_DOMAIN_SHUTOFF:
             raise Exception("VM is not shutoff. Check vm status.")
         connection_object.close()
-        (vm_properties, clone_file_parameters) = get_clone_properties(vm_details, cloned_vm_details)
-        logger.debug("vm_properties: " + str(vm_properties))
-        host = vm_properties['host']
+        clone_file_parameters = get_clone_properties(vm_details, cloned_vm_details, vm_properties)
+        logger.debug("cloned vm properties after clone_file_parameters" + str(vm_properties))
+        host = vm_properties['vm_host_details']
         logger.debug("host is: " + str(host))
         logger.debug("host details are: " + str(host))
         (used_ram, used_cpu) = host_resources_used(host.id)
@@ -1051,7 +1054,7 @@ def clone(vmid):
             try:
                 new_host_id_for_cloned_vm = find_new_host(cloned_vm_details.RAM, cloned_vm_details.vCPU)
                 if new_host_id_for_cloned_vm != host.id:
-                    if migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm):
+                    if migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm,vm_properties):
                         message += "Found new host and migrated successfully."
                     else:
                         message += "Found new host but not migrated successfully."
@@ -1066,11 +1069,11 @@ def clone(vmid):
         else:
             raise Exception("Host resources exhausted. Migrate the host vms and then try.")        
     except:
-        #free_cloned_vm_properties(cloned_vm_details, vm_properties)
+        free_vm_properties(cloned_vm_details, vm_properties)
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-
+'''
 def free_cloned_vm_properties(cloned_vm_details, vm_properties):
 
     logger.debug("Cloned VM installation fails..Starting to delete directory")
@@ -1081,6 +1084,7 @@ def free_cloned_vm_properties(cloned_vm_details, vm_properties):
         logger.debug("Starting to delete vm directory.")
         shutil.rmtree(cloned_vm_directory_path)
     return
+'''
 
 # Attaches extra disk to VM
 def attach_extra_disk(parameters):
