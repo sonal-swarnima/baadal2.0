@@ -14,10 +14,14 @@ function run
   ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
 
-	ovsvsctl_add_br $OVS_BRIDGE_EXTERNAL
+  ovsvsctl_add_br $OVS_BRIDGE_EXTERNAL
 
   config_get INTERFACE
-	ovsvsctl_add_port $OVS_BRIDGE_EXTERNAL $INTERFACE
+
+  MAC_INTERFACE=$(ifconfig $INTERFACE | grep HWaddr | cut -d ' ' -f 1,11 | cut -d ' ' -f 2)
+  ovs-vsctl set bridge $OVS_BRIDGE_EXTERNAL other-config:hwaddr=${MAC_INTERFACE}
+
+  ovsvsctl_add_port $OVS_BRIDGE_EXTERNAL $INTERFACE
   ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
 
   ovsvsctl_set_port $OVS_BRIDGE_INTERNAL "tag=1"
