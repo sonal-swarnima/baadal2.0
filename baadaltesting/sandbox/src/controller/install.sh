@@ -20,7 +20,7 @@ function run
     --network network=$OVS_NET_INTERNAL,mac=$MAC_CONTROLLER \
     --noautoconsole \
     --graphics vnc,listen=0.0.0.0 \
-    1>$LOGS/log.out 2>/$LOGS/log.err
+    1>>$LOGS/log.out 2>>/$LOGS/log.err
   status=$?
 
   if [[ $status -ne 0 ]]; then

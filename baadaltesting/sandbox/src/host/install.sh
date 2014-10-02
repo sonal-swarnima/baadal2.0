@@ -23,7 +23,7 @@ function run
     --pxe \
     --network network=$OVS_NET_INTERNAL,mac=$MAC_HOST \
     --graphics vnc,listen=0.0.0.0 \
-    1>$LOGS/log.out 2>/$LOGS/log.err
+    1>>$LOGS/log.out 2>>/$LOGS/log.err
   status=$?
 
   if [[ $status -ne 0 ]]; then

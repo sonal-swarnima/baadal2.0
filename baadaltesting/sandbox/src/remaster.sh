@@ -1,6 +1,8 @@
 # This module is referenced from http://askubuntu.com/questions/122505
 function remaster_ubuntu
 {
+  package_install genisoimage
+
   $ECHO_PROGRESS "Remastering Ubuntu ISO for preseeding"
 
   kickstart=$1
