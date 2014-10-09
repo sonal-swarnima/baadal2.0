@@ -53,8 +53,8 @@ VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was ac
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown"
 
-BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nIn view of the planned electricity shutdown tomorrow, your VM {0[vmName]}({0[vmIp]}) will be shutdown after 8:00 PM today.\n"\
-             "Please save your work accordingly.\n\nRegards,\nBaadal Admin"
+BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nIn view of planned server migration tomorrow, Baadal team will shutdown your VM {0[vmName]}({0[vmIp]}) at 3:00 PM.\n"\
+             "Please save your work accordingly.\n\nVM will be brought up as soon as possible.\n\nRegards,\nBaadal Admin"
 
 MAIL_FOOTER = "\n\n\nNOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
              "If you have any queries, send an email to {0[adminEmail]}."
@@ -155,15 +155,21 @@ def send_email_on_registration_denied(user_id):
 
 
 def send_shutdown_email_to_all():
-    vms = db(db.vm_data.status == VM_STATUS_RUNNING).select()
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_PAUSED)).select()
     for vm_data in vms:
+        owner_info = get_user_details(vm_data.owner_id)
+        context = dict(vmName = vm_data.vm_name,
+                       userName = owner_info[0],
+                       vmIp = vm_data.private_ip)
+        
+        cc_user_list = []
         for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
-            user_info = get_user_details(user.user_id)
-            context = dict(vmName = vm_data.vm_name,
-                           userName = user_info[0],
-                           vmIp = vm_data.private_ip)
-            logger.info("Sending mail to:: " + str(user_info[1]))
-            send_email(user_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context)
-            import time
-            time.sleep(10)
+            if user.user_id != vm_data.owner_id:
+                user_info = get_user_details(user.user_id)
+                cc_user_list.append(user_info[1])
+
+        logger.info("Sending mail to:: " + str(user_info[1]))
+        send_email(owner_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context, cc_user_list)
+        import time
+        time.sleep(30)
 
