@@ -18,7 +18,7 @@ DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
 
 PROFILE = iitd
-PROFILE_PPA = http://10.208.26.168/openvswitch
+PROFILE_PPA = http://10.237.22.42/openvswitch
   
 HOST_ID = 1
   
