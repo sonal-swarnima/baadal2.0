@@ -168,7 +168,7 @@ def send_shutdown_email_to_all():
                 user_info = get_user_details(user.user_id)
                 cc_user_list.append(user_info[1])
 
-        logger.info("Sending mail to:: " + str(user_info[1]))
+        logger.info("Sending mail to:: " + str(owner_info[1]))
         send_email(owner_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context, cc_user_list)
         import time
         time.sleep(30)
