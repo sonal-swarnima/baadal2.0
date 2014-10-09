@@ -51,9 +51,9 @@ VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was ac
                 "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
                 "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
 
-BAADAL_SHUTDOWN_SUBJECT="VM Shutdown"
+BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
 
-BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nIn view of planned server migration tomorrow, Baadal team will shutdown your VM {0[vmName]}({0[vmIp]}) at 3:00 PM.\n"\
+BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nBaadal services will be shutting down tomorrow at 3:00 PM for planned maintenance.We will shutdown your VM {0[vmName]}({0[vmIp]}) to avoid any corruption of data.\n"\
              "Please save your work accordingly.\n\nVM will be brought up as soon as possible.\n\nRegards,\nBaadal Admin"
 
 MAIL_FOOTER = "\n\n\nNOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
@@ -155,7 +155,7 @@ def send_email_on_registration_denied(user_id):
 
 
 def send_shutdown_email_to_all():
-    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_PAUSED)).select()
+    vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED)).select()
     for vm_data in vms:
         owner_info = get_user_details(vm_data.owner_id)
         context = dict(vmName = vm_data.vm_name,
