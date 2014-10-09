@@ -5,17 +5,25 @@
 <center><h3>No VM running</h3></center>
 
 {{else:}}
+
+
+<div class = "toolbar" style=" position: relative;" >
+   <label for="search">
+   <strong> Search </strong>
+   </label>     
+   <input type ="text" id = "search"  placeholder ="search list"/>
+</div>
 <h2 class="subtitle">{{=T('All VMs')}}</h2>
   <table id="listallvm" class="tablesorter">
     <thead>  
-      <tr>
+      <tr >
         <th>Name</th>
         <th>Owner</th>
-		<th>Organisation</th>
+        <th>Organisation</th>
         <th>Host</th>
         <th>Private IP</th>
-		<th>RAM</th>
-		<th>vCPUs</th>
+	<th>RAM</th>
+	<th>vCPUs</th>
         <th>Status</th>
         <th>Settings</th>
       </tr>
@@ -30,7 +38,7 @@
         <td>{{=vm['hostip']}}</td>
         <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
-		<td>{{=vm['vcpus']}}</td>
+	<td>{{=vm['vcpus']}}</td>
         <td>{{=vm['status']}}</td>
 	        {{=TD(A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
 	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), _title="Settings", 
@@ -41,9 +49,39 @@
     </tbody>
   </table>
 {{pass}}
-
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 <script>
 jQuery(document).ready(function(){
-      jQuery("#listallvm").tablesorter({ headers: { 3: {sorter:"ipAddress"}, 4: {sorter:"ipAddress"} } }); 
+        jQuery("#listallvm").tablesorter({ headers: { 3: {sorter:"ipAddress"}, 4: {sorter:"ipAddress"} } }); 
+      
+	$('#search').keyup(function()
+	{
+		searchTable($(this).val());
+	});
 });
+
+
+function searchTable(inputVal)
+{
+	var table = $('#listallvm');
+	table.find('tr').each(function(index, row)
+	{
+		var allCells = $(row).find('td');
+		if(allCells.length > 0)
+		{
+			var found = false;
+			allCells.each(function(index, td)
+			{
+				var regExp = new RegExp(inputVal, 'i');
+				if(regExp.test($(td).text()))
+				{
+					found = true;
+					return false;
+				}
+			});
+			if(found == true)$(row).show();else $(row).hide();
+		}
+	});
+}
+
 </script>
