@@ -18,7 +18,9 @@ DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
 
 PROFILE = iitd
-PROFILE_PPA = http://10.237.22.42/openvswitch
+# Please update this ip address after migration is complete, and make
+# sure it's reachable from any (all) subnets of IITD including hostels.
+PROFILE_PPA = http://10.208.20.131/openvswitch
   
 HOST_ID = 1
   
