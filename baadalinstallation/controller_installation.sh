@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 source ./controller_installation.cfg 2>> /dev/null
 
