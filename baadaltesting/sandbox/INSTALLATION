@@ -54,6 +54,7 @@ NOTE: For better performance you may use the sandbox machine as the filer. So yo
 11. Go to controller VM and type
     $ cd /baadal/baadal/baadaltesting/sandbox
     $ make openvswitch
+    $ make configure
     $ make controller-setup
     On controller machine edit /baadal/baadal/baadalinstallation/controller_installation.cfg
     $ cd /baadal/baadal/baadalinstallation
