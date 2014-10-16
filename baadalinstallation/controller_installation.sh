@@ -823,9 +823,9 @@ Start_Web2py()
 	cd /home/www-data/web2py
 	sudo -u www-data python -c "from gluon.widget import console; console();"
 	sudo -u www-data python -c "from gluon.main import save_password; save_password(\"$WEB2PY_PASSWD\",443)"
-	cd -
 
 	su www-data -c "python web2py.py -K baadal:vm_task,baadal:vm_sanity,baadal:host_task,baadal:vm_rrd,baadal:snapshot_task &"
+	cd -
 
 	echo "Controller Installation Complete!!!"
 }
