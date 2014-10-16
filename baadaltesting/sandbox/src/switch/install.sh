@@ -3,10 +3,11 @@ function run
   check_root
 
   package_install dnsmasq
+  package_remove resolvconf
 
   libvirt_install
   virtmanager_install
-    
+
   libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
 
   dns_get
@@ -25,6 +26,8 @@ function run
   ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
 
   ovsvsctl_set_port $OVS_BRIDGE_INTERNAL "tag=1"
+
+  package_remove network-manager
 
   ifconfig $INTERFACE 0
   ifconfig_dhcp $OVS_BRIDGE_EXTERNAL
