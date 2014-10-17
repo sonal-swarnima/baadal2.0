@@ -113,6 +113,8 @@ def scheduler_task_update_callback(dbset, new_fields):
                     task_event_id = param_dict['task_event_id']
                     logger.debug("Task TimedOut with task_event_id: "+ str(task_event_id))
                     task_timeout_cleanup(task_event_id,row)
+                elif row.task_name in (TASK_VNC, TASK_HOST_SANITY):
+                    row.delete()
                 else:
                     logger.debug("Task TimedOut without cleanup")
           

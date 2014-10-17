@@ -190,9 +190,13 @@ def check_delete_security_domain(sd_id):
     elif db.security_domain[sd_id].name in ('Research', 'Private', 'Infrastructure'):
         return 'Security Domain %s can''t be deleted.' %(db.security_domain[sd_id].name)
     
-def check_delete_private_ip(private_ip_id):
-    if not db.private_ip_pool(id=private_ip_id, vm_id = None):
-        return PRIVATE_IP_DELETE_MESSAGE
+def is_ip_assigned(ip_pool_id, is_private):
+    if is_private:        
+        if not db.private_ip_pool(id=ip_pool_id, vm_id = None, host_id = None):
+            return PRIVATE_IP_DELETE_MESSAGE
+    else:
+        if not db.public_ip_pool(id=ip_pool_id, vm_id = None, host_id = None):
+            return PUBLIC_IP_DELETE_MESSAGE
 
 def get_all_pending_requests():
 

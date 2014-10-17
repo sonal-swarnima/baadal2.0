@@ -96,8 +96,13 @@ def log_vm_event(old_vm_data, task_queue_data):
                       'old_value' : old_vm_data.private_ip,
                       'new_value' : vm_data.private_ip}
             data_list.append(vm_log)
-            
-        db.vm_event_log.bulk_insert(data_list)        
+        db.vm_event_log.bulk_insert(data_list)
+    elif task_queue_data.task_type == TASK_TYPE_ATTACH_DISK:
+              db.vm_event_log.insert(vm_id = vm_data.id,
+                               attribute = 'Attach Disk',
+                               requester_id = task_queue_data.requester_id,
+                               old_value = str(old_vm_data.extra_HDD)+' GB',
+                               new_value = str(vm_data.extra_HDD)+' GB')
 
 # Invoked when scheduler runs task of type 'vm_task'
 def process_task_queue(task_event_id):
@@ -224,7 +229,7 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
         else:    
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
             for vm_data in vms:
-                vm_scheduler.queue_task('snapshot_vm', 
+                vm_scheduler.queue_task(TASK_SNAPSHOT, 
                                         group_name = 'snapshot_task', 
                                         pvars = {'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}, 
                                         start_time = request.now, 
@@ -335,7 +340,7 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
 
-vm_scheduler.queue_task('snapshot_vm', 
+vm_scheduler.queue_task(TASK_SNAPSHOT, 
                     pvars = dict(snapshot_type = SNAPSHOT_DAILY),
                     repeats = 0, # run indefinitely
                     start_time = midnight_time, 
@@ -344,7 +349,7 @@ vm_scheduler.queue_task('snapshot_vm',
                     uuid = UUID_SNAPSHOT_DAILY,
                     group_name = 'snapshot_task')
 
-vm_scheduler.queue_task('snapshot_vm', 
+vm_scheduler.queue_task(TASK_SNAPSHOT, 
                     pvars = dict(snapshot_type = SNAPSHOT_WEEKLY),
                     repeats = 0, # run indefinitely
                     start_time = midnight_time, 
@@ -353,7 +358,7 @@ vm_scheduler.queue_task('snapshot_vm',
                     uuid = UUID_SNAPSHOT_WEEKLY,
                     group_name = 'snapshot_task')
 
-vm_scheduler.queue_task('snapshot_vm', 
+vm_scheduler.queue_task(TASK_SNAPSHOT, 
                     pvars = dict(snapshot_type = SNAPSHOT_MONTHLY),
                     repeats = 0, # run indefinitely
                     start_time = midnight_time, 
@@ -362,7 +367,7 @@ vm_scheduler.queue_task('snapshot_vm',
                     uuid = UUID_SNAPSHOT_MONTHLY,
                     group_name = 'snapshot_task')
 
-vm_scheduler.queue_task('vm_sanity', 
+vm_scheduler.queue_task(TASK_VM_SANITY, 
                     repeats = 0, # run indefinitely
                     start_time = request.now, 
                     period = 30 * MINUTES, # every 30 minutes
@@ -370,7 +375,7 @@ vm_scheduler.queue_task('vm_sanity',
                     uuid = UUID_VM_SANITY_CHECK,
                     group_name = 'vm_sanity')
 
-vm_scheduler.queue_task('host_sanity', 
+vm_scheduler.queue_task(TASK_HOST_SANITY, 
                     repeats = 0, # run indefinitely
                     start_time = request.now, 
                     period = 10 * MINUTES, # every 10 minutes
@@ -392,7 +397,7 @@ active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
 
 for host in active_host_list:
 
-    vm_scheduler.queue_task('vm_util_rrd', 
+    vm_scheduler.queue_task(TASK_RRD, 
                      pvars = dict(host_ip = host['host_ip']),
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
@@ -401,7 +406,7 @@ for host in active_host_list:
                      uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']),
                     group_name = 'vm_rrd')
 
-vm_scheduler.queue_task('vnc_access', 
+vm_scheduler.queue_task(TASK_VNC, 
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 5 * MINUTES, # every 5 minutes

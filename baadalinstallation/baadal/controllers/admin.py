@@ -375,6 +375,14 @@ def delete_host():
 @check_moderator
 @handle_exception
 def manage_public_ip_pool():
+    req_type = request.args(0)
+    if req_type == 'delete' or request.vars['delete_this_record'] == 'on':
+        error_message = is_ip_assigned(request.args(2), private=False)
+        if error_message != None:
+            session.flash = error_message
+            redirect(URL(c='admin', f='manage_public_ip_pool'))
+        else:
+            session.flash = 'Public IP deleted successfully'
     form = get_manage_public_ip_pool_form()
     return dict(form=form)
 
@@ -411,7 +419,7 @@ def manage_private_ip_pool():
     
     req_type = request.args(0)
     if req_type == 'delete' or request.vars['delete_this_record'] == 'on':
-        error_message = check_delete_private_ip(request.args(2))
+        error_message = is_ip_assigned(request.args(2), is_private=True)
         if error_message != None:
             session.flash = error_message
             redirect(URL(c='admin', f='manage_private_ip_pool'))

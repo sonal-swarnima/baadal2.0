@@ -33,12 +33,24 @@ TASK_QUEUE_PRIORITY_NORMAL = 1
 TASK_QUEUE_PRIORITY_HIGH = 2
 TASK_QUEUE_PRIORITY_URGENT = 3
 
+#Scheduler task
+TASK_SNAPSHOT = 'snapshot_vm'
+TASK_VM_SANITY = 'vm_sanity'
+TASK_HOST_SANITY = 'host_sanity'
+TASK_RRD = 'vm_util_rrd'
+TASK_VNC = 'vnc_access'
+TASK_CLONE_VM = 'clone_task'
+TASK_VM = 'vm_task'
+
+
+#Request Status
 REQ_STATUS_REQUESTED = 1
 REQ_STATUS_REJECTED  = 2
 REQ_STATUS_VERIFIED  = 3
 REQ_STATUS_APPROVED  = 4
 REQ_STATUS_IN_QUEUE  = 5
 REQ_STATUS_FAILED    =-1
+
 #VM Status
 VM_STATUS_UNKNOWN   =-1
 VM_STATUS_IN_QUEUE  = 1
@@ -108,6 +120,7 @@ IP_ERROR_MESSAGE = 'Enter valid IP address'
 NAME_ERROR_MESSAGE = 'Name should start with alphanumeric and can only contain letters, numbers, dash and underscore'
 SECURITY_DOMAIN_DELETE_MESSAGE = 'There are VMs assigned to this security domain. It can''t be deleted.'
 PRIVATE_IP_DELETE_MESSAGE = 'Private IP is assigned to a VM. It can''t be deleted.'
+PUBLIC_IP_DELETE_MESSAGE = 'Public IP is assigned to a VM. It can''t be deleted.'
 
 SECONDS = 1
 MINUTES = 60 * SECONDS
