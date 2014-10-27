@@ -41,7 +41,7 @@ def verify_faculty():
 def add_collaborator():
 
     username = request.vars['keywords']
-    user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
+    user_info = get_user_info(username)
     if user_info != None:
         return user_info[1]
 

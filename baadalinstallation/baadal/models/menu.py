@@ -70,7 +70,8 @@ if auth.is_logged_in():
                 (T('Configure Datastore'), False, URL('admin','manage_datastore')),
                 (T('Configure Security Domain'), False, URL('admin','manage_security_domain')),
                 (T('Configure Private IP Pool'), False, URL('admin','manage_private_ip_pool')),
-                (T('Configure Public IP Pool'), False, URL('admin','manage_public_ip_pool'))
+                (T('Configure Public IP Pool'), False, URL('admin','manage_public_ip_pool')),
+                (T('Launch VM Image'), False, URL('admin','launch_vm_image'))
                 ])])
 
         baadal_status = get_constant('baadal_status')

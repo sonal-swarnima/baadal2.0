@@ -94,7 +94,8 @@ def choose_mac_ip(vm_properties):
 
 def choose_mac_ip_vncport(vm_properties):
     
-    choose_mac_ip(vm_properties)
+    if not vm_properties['private_ip']:
+        choose_mac_ip(vm_properties)
 
     start_range = int(get_constant('vncport_start_range')) 
     end_range = int(get_constant('vncport_end_range'))
@@ -1109,3 +1110,39 @@ def attach_extra_disk(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
+
+def get_vm_image_location(datastore_id, vm_identity):
+
+    datastore = current.db.datastore[datastore_id]
+    vm_directory_path = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_identity
+    vm_image_name = vm_directory_path + '/' + vm_identity + '.qcow2'
+    
+    image_present = True if os.path.exists(vm_image_name) else False
+    
+    return (vm_image_name, image_present)
+
+
+def launch_existing_vm_image(vm_details):
+    
+    logger.debug('Launch existing VM image')
+    vm_properties = []
+    vm_properties['ram'] = vm_details.RAM
+    vm_properties['vcpus'] = vm_details.vCPU
+    vm_properties['mac_addr'] = vm_details.mac_addr
+    vm_properties['security_domain'] = vm_details.security_domain
+    
+    #If Private IP was already chosen previously and DHCP entry is done
+    if vm_details.private_ip != None:
+        vm_properties['private_ip'] = vm_details.private_ip
+        vm_properties['mac_addr'] = vm_details.mac_addr
+    choose_mac_ip_vncport(vm_properties)
+    
+    vm_properties['template'] = current.db.template[vm_details.template_id]
+    vm_properties['host'] = find_new_host(vm_details.RAM, vm_details.vCPU)
+    
+    (vm_image_name, image_present) = get_vm_image_location(vm_details.datastore_id, vm_details.vm_identity)
+    if image_present:
+        launch_vm_on_host(vm_details, vm_image_name, vm_properties)
+        
+        
+    

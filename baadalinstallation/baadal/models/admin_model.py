@@ -6,15 +6,16 @@ if 0:
     from gluon import db, request, session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-# import time
+
 from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
-    remove_dhcp_entry, create_dhcp_bulk_entry
+    remove_dhcp_entry, create_dhcp_bulk_entry, is_valid_ipv4
 from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
     get_host_type, host_power_up, host_power_down
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS
 from log_handler import logger
+from vm_helper import launch_existing_vm_image, get_vm_image_location
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -498,7 +499,6 @@ def configure_host_by_mac(mac_addr):
                     & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
         if avl_ip.first():
             avl_private_ip = avl_ip.first()['private_ip']
-            
 
     if avl_private_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
@@ -552,15 +552,15 @@ def is_vm_running(vmid):
 
 def validate_user(form):
     username = request.post_vars.user_id
-    vm_id = request.args[0]
-    user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
+    user_info = get_user_info(username)
 
     if not user_info:
         form.errors.user_id = 'Username is not valid'
     else:
+        vm_id = request.args[0]
         if db((db.user_vm_map.user_id == user_info[0]) 
               & (db.user_vm_map.vm_id == vm_id)).select():
-            form.errors.user_id = 'User is already this vm user'
+            form.errors.user_id = 'User is an existing collaborator of VM'
     return form
 
 
@@ -751,4 +751,130 @@ def get_host_config(host_id):
     host_info.CPUs = str(host_info.CPUs) + ' CPU'
 
     return host_info
+
+def add_requester_user(form):
+
+    add_user_verify_row(form, 
+                        field_name = 'requester_user', 
+                        field_label = 'VM Requester', 
+                        verify_function = 'verify_requester()', 
+                        row_id = 'requester_row',
+                        is_required = True)
+
+def add_owner_user(form):
+
+    add_user_verify_row(form, 
+                        field_name = 'owner_user', 
+                        field_label = 'VM Owner', 
+                        verify_function = 'verify_owner()', 
+                        row_id = 'owner_row',
+                        is_required = True)
+
+def get_launch_vm_image_form():
+    
+    form_fields = ['vm_name','RAM','vCPU','template_id', 'datastore_id', 'vm_identity', 'purpose', 'security_domain', 'private_ip', 'public_ip']
+    form_labels = {'vm_name':'VM Name', 'vm_identity':'VM Image Name'}
+
+    db.vm_data.RAM.requires = IS_IN_SET(VM_RAM_SET, zero=None)
+    db.vm_data.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
+    db.vm_data.status.default = VM_STATUS_UNKNOWN
+    db.vm_data.security_domain.notnull = True
+    db.vm_data.template_id.notnull = True
+    db.vm_data.extra_HDD.default = 0
+
+    mark_required(db.vm_data)
+    form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_users='|'))
+    
+    add_requester_user(form)
+    add_owner_user(form)
+    add_collaborators(form)
+
+    return form
+
+def launch_vm_image_validation(form):
+    
+    requester_name = request.post_vars.requester_user    
+    requester_info = get_user_info(requester_name)
+
+    if requester_info != None:
+        form.vars.requester_id = requester_info[0]
+    else:
+        form.errors.requester_user='Requester Username is not valid'
+    
+    owner_name = request.post_vars.owner_user    
+    owner_info = get_user_info(owner_name)
+
+    if owner_info != None:
+        form.vars.owner_id = owner_info[0]
+    else:
+        form.errors.owner_user='Owner Username is not valid'
+    
+    vm_users = request.post_vars.vm_users
+    user_list = []
+    if vm_users and len(vm_users) > 1:
+        for vm_user in vm_users[1:-1].split('|'):
+            user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    
+    form.vars.collaborators = user_list
+
+    template_info = db.template[form.vars.template_id]
+    form.vars.HDD = template_info.hdd
+    
+    #Verify if qcow2 image is present
+    (vm_image_name, image_present) = get_vm_image_location(form.vars.datastore_id, form.vars.vm_identity)
+    if not image_present:
+        form.errors.vm_identity = vm_image_name + 'not found'
+    
+    if form.vars.private_ip != '':
+        #Verify if public IP is available
+        if is_valid_ipv4(form.vars.private_ip):
+            # Verify if IP valid in given security domain
+            security_domain = db.security_domain[form.vars.security_domain]
+            sd_ip_range = security_domain.vlan.vlan_addr
+            vlan_ip_prefix = sd_ip_range[:sd_ip_range.rindex('.')+1]
+            
+            if not form.vars.private_ip.startsWith(vlan_ip_prefix):
+                form.errors.private_ip = 'Private IP is not valid for given security domain'
+            else:
+                # Check if IP is already assigned
+                private_ip_info = db.private_ip_pool(private_ip = form.vars.private_ip)
+                if private_ip_info:
+                    if private_ip_info.vm_id != None:
+                        form.errors.private_ip = 'Private IP is not available'
+
+        else:
+            form.errors.private_ip = 'Private IP is not valid'
+    
+    if form.vars.public_ip != PUBLIC_IP_NOT_ASSIGNED:
+        if is_valid_ipv4(form.vars.public_ip):
+            public_ip_info = db.public_ip_pool(public_ip = form.vars.public_ip)
+            if public_ip_info:
+                if public_ip_info.vm_id != None:
+                    form.errors.public_ip = 'Public IP is not available'
+        else:
+            form.errors.private_ip = 'Public IP is not valid'
+            form.vars.public_ip = PUBLIC_IP_NOT_ASSIGNED
+    
+
+def exec_launch_vm_image(vm_id, vm_users):
+    
+    print vm_id
+    print vm_users
+    #Get VM details
+    vm_details = db.vm_data[vm_id]
+    #Make entry into user_vm_map
+    add_vm_users(vm_id, vm_details.requester_id, vm_details.owner_id, vm_users)
+
+    if vm_details.private_ip != None:
+        private_ip_info = db.private_ip_pool(private_ip = vm_details.private_ip)
+        if not private_ip_info:
+            vlan_id = db.security_domain[vm_details.security_domain].vlan.id
+            ip_pool_id = db.private_ip_pool.insert(private_ip=vm_details.private_ip, vlan=vlan_id)
+            #Add DHCP entry for private ip
+            add_private_ip(ip_pool_id)
+
+#   TODO:Make NAT Mapping for Public IP
+
+#   TODO:Call Launch VM Image
+    launch_existing_vm_image(vm_details)
 

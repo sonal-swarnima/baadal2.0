@@ -153,21 +153,34 @@ def request_vm_validation(form):
         form.errors.vm_name = 'VM name should be unique for the user. Choose another name.'
         
 
+def add_user_verify_row(form, field_name, field_label, verify_function, verify_label = 'Verify', row_id='user_row', is_required=False):
+
+    _input=INPUT(_name=field_name, _id=field_name) # create INPUT
+    _link = TD(A(verify_label, _href='#',_onclick=verify_function))
+    _label = LABEL(SPAN(field_label, ': ', SPAN('*', _class='fld_required'), ' ')) if is_required else LABEL(SPAN(field_label, ': '))
+
+    field_elem = TR(_label, _input, _link, _id=row_id)
+    form[0].insert(-1, field_elem)#insert tr element in the form
+
+
 def add_faculty_approver(form):
 
-    _input=INPUT(_name='faculty_user',_id='faculty_user') # create INPUT
-    _link = TD(A('Verify', _href='#',_onclick='verify_faculty()'))
-    _label = LABEL(SPAN('Faculty Approver:', ' ', SPAN('*', _class='fld_required'), ' '))
-    faculty_elem = TR(_label,_input,_link,_id='faculty_row')
-    form[0].insert(-1,faculty_elem)#insert tr element in the form
+    add_user_verify_row(form, 
+                        field_name = 'faculty_user', 
+                        field_label = 'Faculty Approver', 
+                        verify_function = 'verify_faculty()', 
+                        row_id = 'faculty_row',
+                        is_required = True)
 
 
 def add_collaborators(form):
 
-    _input=INPUT(_name='collaborator',_id='collaborator') # create INPUT
-    _link = TD(A('Add', _href='#',_onclick='check_collaborator()'))
-    collaborator_elem = TR(LABEL('Collaborators:'),_input,_link,_id='collaborator_row')
-    form[0].insert(-1, collaborator_elem)#insert tr element in the form
+    add_user_verify_row(form, 
+                        field_name = 'collaborator', 
+                        field_label = 'Collaborators', 
+                        verify_function = 'check_collaborator()', 
+                        verify_label = 'Add',
+                        row_id = 'collaborator_row')
 
 
 def get_request_vm_form():
@@ -192,7 +205,7 @@ def get_request_vm_form():
     return form
 
 
-def get_user_info(username, roles):
+def get_user_info(username, roles=[USER, FACULTY, ORGADMIN, ADMIN]):
 
     user_query = db((db.user.username == username) 
              & (db.user.id == db.user_membership.user_id)
