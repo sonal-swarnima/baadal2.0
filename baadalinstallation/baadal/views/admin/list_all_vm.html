@@ -22,8 +22,8 @@
         <th>Organisation</th>
         <th>Host</th>
         <th>Private IP</th>
-	<th>RAM</th>
-	<th>vCPUs</th>
+        <th>RAM</th>
+        <th>vCPUs</th>
         <th>Status</th>
         <th>Settings</th>
       </tr>
@@ -38,7 +38,7 @@
         <td>{{=vm['hostip']}}</td>
         <td>{{=vm['private_ip']}}</td>
         <td>{{=vm['RAM']}}</td>
-	<td>{{=vm['vcpus']}}</td>
+        <td>{{=vm['vcpus']}}</td>
         <td>{{=vm['status']}}</td>
 	        {{=TD(A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
 	        _href=URL(r=request, c='user',f='settings', args=[vm['id']]), _title="Settings", 

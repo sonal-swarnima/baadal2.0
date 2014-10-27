@@ -1,0 +1,123 @@
+{{extend 'layout.html'}}
+
+<div class="post">
+    <h2 class="subtitle">{{=T('Launch VM Image')}}</h2>
+    <div class="entry">
+        {{=form}}
+    </div>
+</div>
+    
+
+<script>
+jQuery(document).ready(function(){
+});
+
+function verify_requester() {
+	jQuery('.flash').hide().html('');
+    var verify_url = "{{=URL('verify_user')}}";
+    var requester_user = jQuery('#requester_user').val();
+    if(requester_user.trim() != '')
+    {
+        jQuery.post(verify_url, {keywords:requester_user},
+            function(result){
+                if(result != 'None'){
+                    if($('#requester_name_row'))
+                    {
+                        $('#requester_name_row').remove();
+                    }
+                    $('<tr id="requester_name_row"><td></td><td>'+result+'</td><td></td></tr>').insertAfter($('#requester_row'));
+                }else
+                {
+                    if($('#requester_name_row'))
+                    {
+                        $('#requester_name_row').remove();
+                    }
+                    jQuery('.flash').html('Requester Username is not valid').slideDown();
+                }
+            }
+        );
+    }
+}
+
+function verify_owner() {
+	jQuery('.flash').hide().html('');
+    var verify_url = "{{=URL('verify_user')}}";
+    var owner_user = jQuery('#owner_user').val();
+    if(owner_user.trim() != '')
+    {
+        jQuery.post(verify_url, {keywords:owner_user},
+            function(result){
+                if(result != 'None'){
+                    if($('#owner_name_row'))
+                    {
+                        $('#owner_name_row').remove();
+                    }
+                    $('<tr id="owner_name_row"><td></td><td>'+result+'</td><td></td></tr>').insertAfter($('#owner_row'));
+                }else
+                {
+                    if($('#owner_name_row'))
+                    {
+                        $('#owner_name_row').remove();
+                    }
+                    jQuery('.flash').html('Owner Username is not valid').slideDown();
+                }
+            }
+        );
+    }
+}
+
+function check_collaborator(){
+    var vm_users = jQuery('[name="vm_users"]').val();
+    var vm_username = jQuery('#collaborator').val();
+
+    var users_num = jQuery('[id^=user_]').length;
+    if(users_num == 5){
+        jQuery('.flash').html('Only upto 5 collaborators can be added to the VM').slideDown();
+        return;
+    }
+    if(vm_users.indexOf('|'+vm_username+'|') != -1)
+    {
+        $('.flash').html('A collaborator cannot be added twice').slideDown();
+        $('#collaborator').val('');
+        return;
+    }
+    
+    add_collaborator(vm_username, true)
+}
+
+function add_collaborator(vm_username, showmsg) {
+
+    var verify_url = "{{=URL('verify_user')}}";
+    jQuery.post(verify_url, {keywords:vm_username},
+        function(result){
+            if(result != 'None'){
+                jQuery('[name="vm_users"]').val($('[name="vm_users"]').val() + vm_username + '|');
+                
+                $('<tr id="user_'+vm_username+'"><td></td><td>'+result+'</td><td><a href="#" onclick="remove_collaborator(\''+vm_username+'\')">Remove</a></td></tr>').insertAfter($('#collaborator_row'));
+                
+                jQuery('#collaborator').val('');
+                if(showmsg){
+                    jQuery('.flash').html('Collaborator added').slideDown();
+                }
+            }else
+            {
+                if(showmsg){
+                    jQuery('.flash').html('Collaborator Username is not valid').slideDown();
+                }
+            }
+        }
+    );
+}
+
+function remove_collaborator(vm_user){
+    var vm_users = jQuery('[name="vm_users"]').val()
+    vm_users = vm_users.replace(vm_user+'|', '');
+    jQuery('[name="vm_users"]').val(vm_users);
+    $('#user_'+vm_user).remove();
+}
+
+jQuery('form').submit(function(){
+    $('#collaborator').val($('[name="vm_users"]').val())
+});
+
+</script>
