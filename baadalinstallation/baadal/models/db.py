@@ -160,11 +160,8 @@ db.define_table('security_domain',
     Field('visible_to_all', 'boolean', notnull = True, default = True),
     Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
     format = '%(name)s')
+
 db.security_domain.name.requires = [IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
-# vlan_query = (~db.vlan.id.belongs(db()._select(db.security_domain.vlan)))
-# db.security_domain.vlan.requires = IS_IN_DB(db(vlan_query), 'vlan.id', '%(name)s', zero=None)
-# db.security_domain.vlan.widget=SQLFORM.widgets.options.widget
-# db.security_domain.vlan.requires=[IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None), IS_NOT_IN_DB(db,'security_domain.vlan')]
 
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 100, notnull = True, label='Name'),
@@ -189,6 +186,8 @@ db.define_table('vm_data',
     Field('locked', 'boolean', default = False),
     Field('security_domain', db.security_domain),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
+
+db.vm_data.purpose.widget=SQLFORM.widgets.text.widget
 
 db.define_table('request_queue',
     Field('vm_name', 'string', length = 100, notnull = True, label='VM Name'),

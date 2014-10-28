@@ -539,6 +539,16 @@ def host_config():
     logger.debug(host_info)
     return dict(host_info=host_info)
 
+
+@check_moderator
+@handle_exception       
+def verify_user():
+    username = request.vars['keywords']
+    user_info = get_user_info(username)
+    if user_info != None:
+        return user_info[1]
+
+
 @check_moderator
 @handle_exception       
 def launch_vm_image():
@@ -546,7 +556,7 @@ def launch_vm_image():
     
     if form.accepts(request.vars, session, onvalidation=launch_vm_image_validation):
         
-        exec_launch_vm_image(form.vars.id, form.vars.vm_users)
+        exec_launch_vm_image(form.vars.id, form.vars.collaborators)
         
         logger.debug('VM image launched successfully')
         redirect(URL(c='default', f='index'))

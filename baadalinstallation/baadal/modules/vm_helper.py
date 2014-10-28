@@ -24,9 +24,9 @@ def choose_datastore():
         count = datastore_length
         available_datastores = {}
         while count != 0:
-             available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
-             available_datastores[datastores[datastore_length-count]] = available
-             count = count-1
+            available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
+            available_datastores[datastores[datastore_length-count]] = available
+            count = count-1
         z = [(i,available_datastores[i]) for i in available_datastores] 
         z.sort(key=lambda x: x[1])
         available_datastores = z
@@ -77,10 +77,11 @@ def get_private_ip_mac(security_domain_id):
 # Chooses mac address, ip address and vncport for a vm to be installed
 def choose_mac_ip(vm_properties):
 
-    private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
-    vm_properties['private_ip'] = private_ip_info[0]
-    vm_properties['mac_addr']   = private_ip_info[1]
-    vm_properties['vlan_name']  = private_ip_info[2]
+    if 'private_ip' not in vm_properties:
+        private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
+        vm_properties['private_ip'] = private_ip_info[0]
+        vm_properties['mac_addr']   = private_ip_info[1]
+        vm_properties['vlan_name']  = private_ip_info[2]
 
     if vm_properties['public_ip_req']:
         public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
@@ -94,8 +95,7 @@ def choose_mac_ip(vm_properties):
 
 def choose_mac_ip_vncport(vm_properties):
     
-    if not vm_properties['private_ip']:
-        choose_mac_ip(vm_properties)
+    choose_mac_ip(vm_properties)
 
     start_range = int(get_constant('vncport_start_range')) 
     end_range = int(get_constant('vncport_end_range'))
@@ -1125,7 +1125,7 @@ def get_vm_image_location(datastore_id, vm_identity):
 def launch_existing_vm_image(vm_details):
     
     logger.debug('Launch existing VM image')
-    vm_properties = []
+    vm_properties = {}
     vm_properties['ram'] = vm_details.RAM
     vm_properties['vcpus'] = vm_details.vCPU
     vm_properties['mac_addr'] = vm_details.mac_addr
@@ -1133,16 +1133,22 @@ def launch_existing_vm_image(vm_details):
     
     #If Private IP was already chosen previously and DHCP entry is done
     if vm_details.private_ip != None:
-        vm_properties['private_ip'] = vm_details.private_ip
-        vm_properties['mac_addr'] = vm_details.mac_addr
-    choose_mac_ip_vncport(vm_properties)
+        private_ip_info = current.db.private_ip_pool(private_ip = vm_details.private_ip)
+        if private_ip_info:
+            vm_properties['private_ip'] = private_ip_info.private_ip
+            vm_properties['mac_addr'] = private_ip_info.mac_addr
+            vm_properties['vlan_name']  = private_ip_info.vlan.name
     
+    vm_properties['public_ip_req'] = False if (vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED) else True
+    choose_mac_ip_vncport(vm_properties)
+
     vm_properties['template'] = current.db.template[vm_details.template_id]
+    vm_properties['datastore'] = current.db.datastore[vm_details.datastore_id]
     vm_properties['host'] = find_new_host(vm_details.RAM, vm_details.vCPU)
     
     (vm_image_name, image_present) = get_vm_image_location(vm_details.datastore_id, vm_details.vm_identity)
     if image_present:
         launch_vm_on_host(vm_details, vm_image_name, vm_properties)
-        
+        update_db_after_vm_installation(vm_details, vm_properties)
         
     

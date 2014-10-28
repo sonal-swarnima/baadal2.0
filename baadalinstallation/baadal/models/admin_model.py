@@ -833,7 +833,7 @@ def launch_vm_image_validation(form):
             sd_ip_range = security_domain.vlan.vlan_addr
             vlan_ip_prefix = sd_ip_range[:sd_ip_range.rindex('.')+1]
             
-            if not form.vars.private_ip.startsWith(vlan_ip_prefix):
+            if not form.vars.private_ip.startswith(vlan_ip_prefix):
                 form.errors.private_ip = 'Private IP is not valid for given security domain'
             else:
                 # Check if IP is already assigned
@@ -858,8 +858,6 @@ def launch_vm_image_validation(form):
 
 def exec_launch_vm_image(vm_id, vm_users):
     
-    print vm_id
-    print vm_users
     #Get VM details
     vm_details = db.vm_data[vm_id]
     #Make entry into user_vm_map
