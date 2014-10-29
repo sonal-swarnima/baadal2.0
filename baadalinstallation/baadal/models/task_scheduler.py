@@ -98,7 +98,7 @@ def log_vm_event(old_vm_data, task_queue_data):
             data_list.append(vm_log)
         db.vm_event_log.bulk_insert(data_list)
     elif task_queue_data.task_type == TASK_TYPE_ATTACH_DISK:
-              db.vm_event_log.insert(vm_id = vm_data.id,
+        db.vm_event_log.insert(vm_id = vm_data.id,
                                attribute = 'Attach Disk',
                                requester_id = task_queue_data.requester_id,
                                old_value = str(old_vm_data.extra_HDD)+' GB',
