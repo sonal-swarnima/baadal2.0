@@ -844,17 +844,20 @@ def launch_vm_image_validation(form):
 
         else:
             form.errors.private_ip = 'Private IP is not valid'
-    
+
     if form.vars.public_ip != PUBLIC_IP_NOT_ASSIGNED:
+        #Check if Valid IP
         if is_valid_ipv4(form.vars.public_ip):
             public_ip_info = db.public_ip_pool(public_ip = form.vars.public_ip)
             if public_ip_info:
                 if public_ip_info.vm_id != None:
                     form.errors.public_ip = 'Public IP is not available'
+            else:
+                form.errors.public_ip = 'Public IP is not configured'
+        elif form.vars.public_ip == '':
+            form.vars.public_ip = None
         else:
-            form.errors.private_ip = 'Public IP is not valid'
-            form.vars.public_ip = PUBLIC_IP_NOT_ASSIGNED
-    
+            form.errors.public_ip = 'Public IP is not valid'
 
 def exec_launch_vm_image(vm_id, vm_users):
     
@@ -871,8 +874,5 @@ def exec_launch_vm_image(vm_id, vm_users):
             #Add DHCP entry for private ip
             add_private_ip(ip_pool_id)
 
-#   TODO:Make NAT Mapping for Public IP
-
 #   TODO:Call Launch VM Image
     launch_existing_vm_image(vm_details)
-

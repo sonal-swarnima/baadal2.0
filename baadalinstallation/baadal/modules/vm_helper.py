@@ -84,11 +84,12 @@ def choose_mac_ip(vm_properties):
         vm_properties['vlan_name']  = private_ip_info[2]
 
     if vm_properties['public_ip_req']:
-        public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
-        if public_ip_pool:
-            vm_properties['public_ip'] = public_ip_pool.public_ip
-        else:
-            raise Exception("Available Public IPs are exhausted.")
+        if 'public_ip' not in vm_properties:
+            public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
+            if public_ip_pool:
+                vm_properties['public_ip'] = public_ip_pool.public_ip
+            else:
+                raise Exception("Available Public IPs are exhausted.")
     else:
         vm_properties['public_ip'] = current.PUBLIC_IP_NOT_ASSIGNED
 
@@ -1139,7 +1140,13 @@ def launch_existing_vm_image(vm_details):
             vm_properties['mac_addr'] = private_ip_info.mac_addr
             vm_properties['vlan_name']  = private_ip_info.vlan.name
     
-    vm_properties['public_ip_req'] = False if (vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED) else True
+    if vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED:
+        vm_properties['public_ip_req'] = False
+    else:
+        vm_properties['public_ip_req'] = True
+        if vm_details.public_ip != None:
+            vm_properties['public_ip'] = vm_details.public_ip
+
     choose_mac_ip_vncport(vm_properties)
 
     vm_properties['template'] = current.db.template[vm_details.template_id]
@@ -1149,6 +1156,8 @@ def launch_existing_vm_image(vm_details):
     (vm_image_name, image_present) = get_vm_image_location(vm_details.datastore_id, vm_details.vm_identity)
     if image_present:
         launch_vm_on_host(vm_details, vm_image_name, vm_properties)
+        if vm_properties['public_ip_req']:
+            create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
         update_db_after_vm_installation(vm_details, vm_properties)
         
     
