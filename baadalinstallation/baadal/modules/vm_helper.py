@@ -1122,8 +1122,21 @@ def get_vm_image_location(datastore_id, vm_identity):
     
     return (vm_image_name, image_present)
 
+def get_extra_disk_location(datastore_id, vm_identity, disk_name):
 
-def launch_existing_vm_image(vm_details):
+    datastore = current.db.datastore[datastore_id]
+    if datastore:
+        vm_extra_disks_directory_path = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
+                                        datastore.ds_name + '/' + vm_identity
+        disk_image_path = vm_extra_disks_directory_path + '/' + disk_name + '.qcow2'
+        image_present = True if os.path.exists(disk_image_path) else False
+    
+        return (disk_image_path, image_present)
+    else:
+        return (None, False)
+
+#Launch existing VM image
+def launch_existing_vm_image(vm_details, extra_disk_list):
     
     logger.debug('Launch existing VM image')
     vm_properties = {}

@@ -15,7 +15,8 @@ from host_helper import migrate_all_vms_from_host, is_host_available, get_host_m
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS
 from log_handler import logger
-from vm_helper import launch_existing_vm_image, get_vm_image_location
+from vm_helper import launch_existing_vm_image, get_vm_image_location,\
+    get_extra_disk_location
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -770,6 +771,15 @@ def add_owner_user(form):
                         row_id = 'owner_row',
                         is_required = True)
 
+def add_extra_disk(form):
+
+    add_user_verify_row(form, 
+                        field_name = 'attach_disks', 
+                        field_label = 'Attach Extra Disk', 
+                        verify_function = 'check_extra_disk()', 
+                        verify_label = 'Add',
+                        row_id = 'attach_disk_row')
+
 def get_launch_vm_image_form():
     
     form_fields = ['vm_name','RAM','vCPU','template_id', 'datastore_id', 'vm_identity', 'purpose', 'security_domain', 'private_ip', 'public_ip']
@@ -783,8 +793,9 @@ def get_launch_vm_image_form():
     db.vm_data.extra_HDD.default = 0
 
     mark_required(db.vm_data)
-    form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_users='|'))
+    form =SQLFORM(db.vm_data, fields = form_fields, labels = form_labels, hidden=dict(vm_users='|', extra_disks='|'))
     
+    add_extra_disk(form)
     add_requester_user(form)
     add_owner_user(form)
     add_collaborators(form)
@@ -809,16 +820,6 @@ def launch_vm_image_validation(form):
     else:
         form.errors.owner_user='Owner Username is not valid'
     
-    vm_users = request.post_vars.vm_users
-    user_list = []
-    if vm_users and len(vm_users) > 1:
-        for vm_user in vm_users[1:-1].split('|'):
-            user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
-    
-    form.vars.collaborators = user_list
-
-    template_info = db.template[form.vars.template_id]
-    form.vars.HDD = template_info.hdd
     
     #Verify if qcow2 image is present
     (vm_image_name, image_present) = get_vm_image_location(form.vars.datastore_id, form.vars.vm_identity)
@@ -859,7 +860,35 @@ def launch_vm_image_validation(form):
         else:
             form.errors.public_ip = 'Public IP is not valid'
 
-def exec_launch_vm_image(vm_id, vm_users):
+
+    if not form.errors:
+        vm_users = request.post_vars.vm_users
+        user_list = []
+        if vm_users and len(vm_users) > 1:
+            for vm_user in vm_users[1:-1].split('|'):
+                user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+        
+        form.vars.collaborators = user_list
+    
+        template_info = db.template[form.vars.template_id]
+        form.vars.HDD = template_info.hdd
+        
+        extra_disks = request.post_vars.extra_disks
+        disk_list = []
+        if extra_disks and len(extra_disks) > 1:
+            for extra_disk in extra_disks[1:-1].split('|'):
+                disk_list.append(extra_disk)
+        
+        form.vars.extra_disk_list = disk_list
+            
+
+def check_vm_extra_disk(vm_image_name, disk_name, datastore_id):
+    
+    (disk_path, image_present) = get_extra_disk_location(datastore_id, vm_image_name, disk_name)
+
+    return disk_path if image_present else None
+
+def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
     
     #Get VM details
     vm_details = db.vm_data[vm_id]
@@ -875,4 +904,4 @@ def exec_launch_vm_image(vm_id, vm_users):
             add_private_ip(ip_pool_id)
 
 #   TODO:Call Launch VM Image
-    launch_existing_vm_image(vm_details)
+    launch_existing_vm_image(vm_details, extra_disk_list)

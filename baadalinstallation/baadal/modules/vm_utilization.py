@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-""" vm_utilization.py:  Captures utilization data for virtual machines and stores 
-the information in a rrd database. 
+""" vm_utilization.py:  Captures utilization data for virtual machines & hosts;  
+and stores the information in a RRD database. 
 RRD is a Round Robin Database which is created for pre-defined time interval. 
 When new data reaches the starting point, it overwrites existing data. The RRDtool 
 database is structured in such a way that it needs data at predefined time intervals. 
@@ -9,15 +9,15 @@ Then graphs can be directly generated from the information by specifying the
 Consolidation Function.
 For more information on rrdtool visit http://oss.oetiker.ch/rrdtool/
 
-Following utilazion data is captured for each Host and VM:
+Following utilization data is captured for each Host and VM:
 Memory
 CPU
 Network(read & write)
 Disk (read & write)
 
 For virtual machines, CPU, network and disk utilization information is fetched from
-the respective domains on the hypervisor. Memory utilization is fetched from host, 
-as VMs run as processes on the host.
+the respective domain running on the hypervisor. Memory utilization is fetched from  
+host, since VMs run as processes on the host.
 
 """
 import os, re, time, rrdtool, libvirt

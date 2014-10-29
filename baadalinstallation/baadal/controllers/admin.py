@@ -556,9 +556,19 @@ def launch_vm_image():
     
     if form.accepts(request.vars, session, onvalidation=launch_vm_image_validation):
         
-        exec_launch_vm_image(form.vars.id, form.vars.collaborators)
+        exec_launch_vm_image(form.vars.id, form.vars.collaborators, form.vars.extra_disk_list)
         
         logger.debug('VM image launched successfully')
         redirect(URL(c='default', f='index'))
     return dict(form=form)
 
+@check_moderator
+@handle_exception       
+def verify_extra_disk():
+    vm_image_name = request.vars['vm_image_name']
+    disk_name = request.vars['disk_name']
+    datastore_id = request.vars['datastore_id']
+
+    disk_info = check_vm_extra_disk(vm_image_name, disk_name, datastore_id)
+    return disk_info
+    

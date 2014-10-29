@@ -6,12 +6,12 @@
         {{=form}}
     </div>
 </div>
-    
+
 <div>
     <p>
         <b>NOTE:</b><br/>
         <ul>
-            <li>VM Image should be present at &lt;Datastore_mounted_path&gt;/&lt;VM_Image_Name&gt;/&lt;VM_Image_Name.qcow2&gt; </li>
+            <li>VM Image should be present at &lt;Datastore_mounted_path&gt;/vm_images/&lt;VM_Image_Name&gt;/&lt;VM_Image_Name.qcow2&gt; </li>
             <li>If Public IP is not required, enter 'Not Assigned'. </li>
             <li>If Public IP is left blank, random public IP will be assigned, else requested public IP will be assigned.</li>
             <li>Private IP should belong to requested security domain. </li>
@@ -126,6 +126,53 @@ function remove_collaborator(vm_user){
     vm_users = vm_users.replace(vm_user+'|', '');
     jQuery('[name="vm_users"]').val(vm_users);
     $('#user_'+vm_user).remove();
+}
+
+function check_extra_disk(){
+    var extra_disks = jQuery('[name="extra_disks"]').val();
+    var disk_name = jQuery('#attach_disks').val();
+
+    if(extra_disks.indexOf('|'+disk_name+'|') != -1)
+    {
+        $('.flash').html('Disk cannot be added twice').slideDown();
+        $('#attach_disks').val('');
+        return;
+    }
+
+    var vm_image_name = jQuery('#vm_data_vm_identity').val();
+    var datastore_id = jQuery('#vm_data_datastore_id').val();
+    add_extra_disk(vm_image_name, disk_name, datastore_id, true)
+}
+
+function add_extra_disk(vm_image_name, disk_name, datastore_id, showmsg) {
+
+    var verify_disk_url = "{{=URL('verify_extra_disk')}}";
+    jQuery.post(verify_disk_url, {vm_image_name:vm_image_name, disk_name:disk_name, datastore_id:datastore_id},
+        function(result){
+            if(result != 'None'){
+                jQuery('[name="extra_disks"]').val($('[name="extra_disks"]').val() + disk_name + '|');
+                
+                $('<tr id="disk_'+disk_name+'"><td></td><td>'+result+'</td><td><a href="#" onclick="remove_extra_disk(\''+disk_name+'\')">Remove</a></td></tr>').insertAfter($('#attach_disk_row'));
+                
+                jQuery('#attach_disks').val('');
+                if(showmsg){
+                    jQuery('.flash').html('Extra Disk added').slideDown();
+                }
+            }else
+            {
+                if(showmsg){
+                    jQuery('.flash').html('Extra Disk name is not valid').slideDown();
+                }
+            }
+        }
+    );
+}
+
+function remove_extra_disk(disk_name){
+    var extra_disks = jQuery('[name="extra_disks"]').val()
+    extra_disks = extra_disks.replace(disk_name+'|', '');
+    jQuery('[name="extra_disks"]').val(extra_disks);
+    $('#disk_'+disk_name).remove();
 }
 
 jQuery('form').submit(function(){
