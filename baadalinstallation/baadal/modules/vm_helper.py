@@ -250,30 +250,34 @@ def generate_xml(diskpath,target_disk):
 
     return (etree.tostring(root_element))
       
+# create_extra_disk_image
+def create_extra_disk_image(vm_details, disk_name, size, datastore):
+
+    vm_extra_disks_directory_path = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
+                                    datastore.ds_name + '/' + vm_details.vm_identity
+
+    if not os.path.exists (vm_extra_disks_directory_path):
+        logger.debug("Making Directory")          
+        os.makedirs(vm_extra_disks_directory_path)
+
+    diskpath = vm_extra_disks_directory_path + '/' + disk_name
+
+    command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
+    output = os.system(command)
+    if output != 0:
+        return False
+
 # Attaches a disk with vm
-def attach_disk(vm_details, disk_name, size, hostip, datastore, already_attached_disks, new_vm):
+def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
    
     try:
         connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         #already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
+        
+        diskpath = get_extra_disk_location(vm_details.datastore_id, vm_details.vm_identity, disk_name)
 
-        vm_extra_disks_directory_path = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
-                                        datastore.ds_name + '/' + vm_details.vm_identity
-
-        if not os.path.exists (vm_extra_disks_directory_path):
-            logger.debug("Making Directory")          
-            os.makedirs(vm_extra_disks_directory_path)
-
-        diskpath = vm_extra_disks_directory_path + '/' + disk_name
-
-        # Create a new image for the new disk to be attached
-        command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
-        output = os.system(command)
-        if output != 0:
-            return False
-            
         # Attaching disk to vm using libvirt API
         target_disk = "vd" + chr(97 + already_attached_disks + 1)
         logger.debug(target_disk)
@@ -321,12 +325,15 @@ def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
     already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
     disk_name = vm_details.vm_identity + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
 
-    if (attach_disk(vm_details, disk_name, disk_size, host_ip, datastore, already_attached_disks, new_vm)):
-        current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size)
-        current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(disk_size)) 
-        return True
-    else:
-        return False
+    disk_created = create_extra_disk_image(vm_details, disk_name, disk_size, datastore) 
+    
+    if disk_created:
+        if (attach_disk(vm_details, disk_name, host_ip, already_attached_disks, new_vm)):
+            current.db.attached_disks.insert(vm_id = vm_details.id, datastore_id = datastore.id , attached_disk_name = disk_name, capacity = disk_size)
+            current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(disk_size)) 
+            return True
+
+    return False
 
 # Launches a vm on host
 def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
@@ -1136,7 +1143,7 @@ def get_extra_disk_location(datastore_id, vm_identity, disk_name):
         return (None, False)
 
 #Launch existing VM image
-def launch_existing_vm_image(vm_details, extra_disk_list):
+def launch_existing_vm_image(vm_details):
     
     logger.debug('Launch existing VM image')
     vm_properties = {}
@@ -1169,8 +1176,19 @@ def launch_existing_vm_image(vm_details, extra_disk_list):
     (vm_image_name, image_present) = get_vm_image_location(vm_details.datastore_id, vm_details.vm_identity)
     if image_present:
         launch_vm_on_host(vm_details, vm_image_name, vm_properties)
+        
+        #Check if extra disk needs to be attached
+        attached_disks = current.db((current.db.attached_disks.vm_id == vm_details.id)).select()
+        if attached_disks:
+            disk_counter = 1
+            for attached_disk in attached_disks:
+                attach_disk(vm_details, attached_disk.attached_disk_name, vm_details.host_id.host_ip, disk_counter, True)
+                disk_counter += 1
+                
+        #Create mapping of Private_IP and Public_IP
         if vm_properties['public_ip_req']:
             create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
+
         update_db_after_vm_installation(vm_details, vm_properties)
         
     

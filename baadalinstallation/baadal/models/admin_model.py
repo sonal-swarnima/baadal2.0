@@ -824,7 +824,7 @@ def launch_vm_image_validation(form):
     #Verify if qcow2 image is present
     (vm_image_name, image_present) = get_vm_image_location(form.vars.datastore_id, form.vars.vm_identity)
     if not image_present:
-        form.errors.vm_identity = vm_image_name + 'not found'
+        form.errors.vm_identity = vm_image_name + ' not found'
     
     if form.vars.private_ip != '':
         #Verify if public IP is available
@@ -902,6 +902,11 @@ def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
             ip_pool_id = db.private_ip_pool.insert(private_ip=vm_details.private_ip, vlan=vlan_id)
             #Add DHCP entry for private ip
             add_private_ip(ip_pool_id)
-
+    
+    for extra_disk in extra_disk_list:
+        db.vm_event_log.insert(vm_id = vm_details.id,
+                               datastore_id = vm_details.datastore_id,
+                               capacity = 0,
+                               attached_disk_name=extra_disk)
 #   TODO:Call Launch VM Image
-    launch_existing_vm_image(vm_details, extra_disk_list)
+    launch_existing_vm_image(vm_details)
