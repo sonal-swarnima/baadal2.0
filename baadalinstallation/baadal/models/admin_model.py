@@ -900,13 +900,14 @@ def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
         if not private_ip_info:
             vlan_id = db.security_domain[vm_details.security_domain].vlan.id
             ip_pool_id = db.private_ip_pool.insert(private_ip=vm_details.private_ip, vlan=vlan_id)
-            #Add DHCP entry for private ip
+            #Add DHCP entry for private IP
             add_private_ip(ip_pool_id)
     
     for extra_disk in extra_disk_list:
-        db.vm_event_log.insert(vm_id = vm_details.id,
-                               datastore_id = vm_details.datastore_id,
-                               capacity = 0,
-                               attached_disk_name=extra_disk)
-#   TODO:Call Launch VM Image
+#TODO: Find size of disk          
+        db.attached_disks.insert(vm_id = vm_details.id,
+                                 datastore_id = vm_details.datastore_id,
+                                 capacity = 0,
+                                 attached_disk_name=extra_disk)
+#   Call Launch VM Image
     launch_existing_vm_image(vm_details)

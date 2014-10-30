@@ -264,8 +264,8 @@ def create_extra_disk_image(vm_details, disk_name, size, datastore):
 
     command= "qemu-img create -f qcow2 "+ diskpath + " " + str(size) + "G"
     output = os.system(command)
-    if output != 0:
-        return False
+
+    return False if output != 0 else True
 
 # Attaches a disk with vm
 def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
@@ -276,8 +276,11 @@ def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
         #already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
         
-        diskpath = get_extra_disk_location(vm_details.datastore_id, vm_details.vm_identity, disk_name)
+        (diskpath, device_present) = get_extra_disk_location(vm_details.datastore_id, vm_details.vm_identity, disk_name)
 
+        if not device_present:
+            raise Exception('Device to be attached missing')
+        
         # Attaching disk to vm using libvirt API
         target_disk = "vd" + chr(97 + already_attached_disks + 1)
         logger.debug(target_disk)
@@ -1180,9 +1183,11 @@ def launch_existing_vm_image(vm_details):
         #Check if extra disk needs to be attached
         attached_disks = current.db((current.db.attached_disks.vm_id == vm_details.id)).select()
         if attached_disks:
+            #Extra disk to be attached to the VM
+            host_ip = current.db.host[vm_properties['host']].host_ip
             disk_counter = 1
             for attached_disk in attached_disks:
-                attach_disk(vm_details, attached_disk.attached_disk_name, vm_details.host_id.host_ip, disk_counter, True)
+                attach_disk(vm_details, attached_disk.attached_disk_name, host_ip, disk_counter, True)
                 disk_counter += 1
                 
         #Create mapping of Private_IP and Public_IP
