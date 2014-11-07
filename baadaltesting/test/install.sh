@@ -1,12 +1,12 @@
 #!/bin/sh
 sudo apt-get update  # To get the latest package lists
-sudo apt-get install python-pip
-sudo apt-get install python-MySQLdb
+sudo apt-get install -y python-pip
+sudo apt-get install -y python-MySQLdb
 sudo pip install selenium  
-sudo apt-get install python-paramiko
-sudo apt-get install xvfb
-sudo apt-get install xserver-xephyr
-sudo apt-get install tightvncserver
+sudo apt-get install -y python-paramiko
+sudo apt-get install -y xvfb
+sudo apt-get install -y xserver-xephyr
+sudo apt-get install -y tightvncserver
 sudo pip install pyvirtualdisplay
 
 
