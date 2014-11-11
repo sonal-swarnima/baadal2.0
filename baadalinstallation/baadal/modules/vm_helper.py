@@ -49,14 +49,30 @@ def host_resources_used(host_id):
     
     return (math.ceil(RAM),math.ceil(CPU))
 
-def set_portgroup_in_vm(domain, portgroup, host_ip):
+def set_portgroup_in_vm(domain, portgroup, host_ip, vlan_tag):
+    
     connection_object = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
     dom = connection_object.lookupByName(domain)
     xml = etree.fromstring(dom.XMLDesc(0))
-    source_network_element = xml.find('.//interface/source')
-    logger.debug("Source network is " + etree.tostring(source_network_element))
-    source_network_element.set('portgroup', portgroup)
-    logger.debug("Changed source network is " + etree.tostring(source_network_element))
+    source_network_element = xml.find('.//interface/source') 
+   
+    source_network_string=etree.tostring(source_network_element) 
+    logger.debug("Source network is " + source_network_string)
+
+    if source_network_string.find(" network=") != -1:
+       logger.debug("Source is set to network adding portgroup to the source tag ")
+       source_network_element.set('portgroup', portgroup)  
+       logger.debug("Changed source network is " + etree.tostring(source_network_element)) 
+    elif source_network_string.find(" bridge=") != -1:
+       logger.debug("Source is set to bridge adding <vlan><tag_id> to the interface tag ")
+       root_new  = xml.find('.//interface')  
+       root_new_vlan= etree.SubElement(root_new, 'vlan') 
+       root_new_tag=  etree.SubElement(root_new_vlan, 'tag')
+       root_new_tag.set('id',vlan_tag) 
+       logger.debug("After append root_new_vlan is " + etree.tostring(root_new_vlan))  
+    else:
+       logger.debug("Neither VM nor vlan tagId is added in the xml" )  
+		 
     domain = connection_object.defineXML(etree.tostring(xml))
     domain.destroy()
     domain.create()
@@ -69,7 +85,7 @@ def get_private_ip_mac(security_domain_id):
                          (current.db.private_ip_pool.vlan.belongs(vlans))).select(orderby='<random>').first()
 
     if private_ip_pool:
-        return(private_ip_pool.private_ip, private_ip_pool.mac_addr, private_ip_pool.vlan.name)
+        return(private_ip_pool.private_ip, private_ip_pool.mac_addr, private_ip_pool.vlan.name,private_ip_pool.vlan.vlan_tag)
     else:
         sd = current.db.security_domain[security_domain_id]
         raise Exception(("Available MACs are exhausted for security domain '%s'." % sd.name))
@@ -77,11 +93,13 @@ def get_private_ip_mac(security_domain_id):
 # Chooses mac address, ip address and vncport for a vm to be installed
 def choose_mac_ip(vm_properties):
 
+
     if 'private_ip' not in vm_properties:
         private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
         vm_properties['private_ip'] = private_ip_info[0]
         vm_properties['mac_addr']   = private_ip_info[1]
-        vm_properties['vlan_name']  = private_ip_info[2]
+        vm_properties['vlan_name']  = private_ip_info[2] 
+        vm_properties['vlan_tag']   = private_ip_info[3]
 
     if vm_properties['public_ip_req']:
         if 'public_ip' not in vm_properties:
@@ -147,7 +165,7 @@ def allocate_vm_properties(vm_details):
     choose_mac_ip_vncport(vm_properties)
 
     logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
-                          + str(vm_properties['vnc_port']))
+                          + str(vm_properties['vnc_port']) + " Vlan tag is " + str(vm_properties['vlan_tag']) )
     
     vm_properties['ram'] = vm_details.RAM
     vm_properties['vcpus'] = vm_details.vCPU
@@ -351,7 +369,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     command_output = execute_remote_cmd(host_ip, 'root', install_command)
     logger.debug(command_output)
     logger.debug("Starting to set portgroup in vm...")
-    set_portgroup_in_vm(vm_details['vm_identity'],vm_properties['vlan_name'],host_ip)
+    set_portgroup_in_vm(vm_details['vm_identity'],vm_properties['vlan_name'],host_ip,vm_properties['vlan_tag'])
     logger.debug("Portgroup set in vm")
 
     # Serving HDD request
