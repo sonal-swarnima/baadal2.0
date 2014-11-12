@@ -24,9 +24,9 @@ function run
    
   #Get the IP Address of Controller from ifconfig.
   controller_ip="$(/sbin/ifconfig $CONTROLLER_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
+  INTERNAL_GATEWAY_IP=$(ip route | awk '/default/{print $3}')
   ifconfig_noip $CONTROLLER_INTERFACE
   ifconfig_ip $OVS_BRIDGE_INTERNAL $controller_ip $VLAN_NETMASK
-  INTERNAL_GATEWAY_IP=$(ip route | awk '/default/{print $3}')
   route_add_net $INTERNAL_GATEWAY_IP 0.0.0.0 $OVS_BRIDGE_INTERNAL
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.
