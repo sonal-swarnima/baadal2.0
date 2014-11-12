@@ -114,6 +114,8 @@ function run
 
   file_backup /etc/network/interfaces
   echo -e $interfaces_str > /etc/network/interfaces
+  mkdir /etc/network/interfaces.d
+  echo -e $interfaces_str > /etc/network/interfaces.d/0_main.cfg
 
   package_install sqlite3
 }
