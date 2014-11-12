@@ -826,7 +826,7 @@ def launch_vm_image_validation(form):
     if not image_present:
         form.errors.vm_identity = vm_image_name + ' not found'
     
-    if form.vars.private_ip != '':
+    if form.vars.private_ip.strip() != '':
         #Verify if public IP is available
         if is_valid_ipv4(form.vars.private_ip):
             # Verify if IP valid in given security domain
@@ -845,6 +845,8 @@ def launch_vm_image_validation(form):
 
         else:
             form.errors.private_ip = 'Private IP is not valid'
+    else:
+        form.vars.private_ip = None
 
     if form.vars.public_ip != PUBLIC_IP_NOT_ASSIGNED:
         #Check if Valid IP
@@ -859,6 +861,8 @@ def launch_vm_image_validation(form):
             form.vars.public_ip = None
         else:
             form.errors.public_ip = 'Public IP is not valid'
+    else:
+        form.vars.public_ip = None
 
 
     if not form.errors:

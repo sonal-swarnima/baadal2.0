@@ -93,8 +93,7 @@ def get_private_ip_mac(security_domain_id):
 # Chooses mac address, ip address and vncport for a vm to be installed
 def choose_mac_ip(vm_properties):
 
-
-    if 'private_ip' not in vm_properties:
+    if not 'private_ip' in vm_properties:
         private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
         vm_properties['private_ip'] = private_ip_info[0]
         vm_properties['mac_addr']   = private_ip_info[1]
@@ -809,6 +808,13 @@ def snapshot(parameters):
         if is_pingable(str(vm_details.private_ip)):
 
             logger.debug("VM is pingable. Starting to start with snapshotting...")
+            if snapshot_type != current.SNAPSHOT_USER:
+                snapshots = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select()
+                #Delete the existing Daily/Monthly/Yearly snapshot
+                for snapshot_cron in snapshots:
+                    logger.debug(snapshot_cron)
+                    delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
+
             snapshot_name = get_datetime().strftime("%I:%M%p_%B%d,%Y")
             connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
             domain = connection_object.lookupByName(vm_details.vm_identity)
@@ -816,12 +822,6 @@ def snapshot(parameters):
             domain.snapshotCreateXML(xmlDesc, 0)
             connection_object.close()
             message = "Snapshotted successfully."
-            if snapshot_type != current.SNAPSHOT_USER:
-                snapshots = current.db((current.db.snapshot.vm_id == vm_id) & (current.db.snapshot.type == snapshot_type)).select()
-                #Delete the existing Daily/Monthly/Yearly snapshot
-                for snapshot_cron in snapshots:
-                    logger.debug(snapshot_cron)
-                    delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
             current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
             logger.debug("Task Status: SUCCESS Message: %s " % message)
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -1156,7 +1156,8 @@ def get_extra_disk_location(datastore_id, vm_identity, disk_name):
     if datastore:
         vm_extra_disks_directory_path = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
                                         datastore.ds_name + '/' + vm_identity
-        disk_image_path = vm_extra_disks_directory_path + '/' + disk_name + '.qcow2'
+        ext = '' if disk_name.endswith('.qcow2') else '.qcow2'
+        disk_image_path = vm_extra_disks_directory_path + '/' + disk_name + ext
         image_present = True if os.path.exists(disk_image_path) else False
     
         return (disk_image_path, image_present)

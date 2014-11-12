@@ -39,7 +39,7 @@ def update_constant(constant_name, constant_value):
 #Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
-    logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
+    logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
 
     output = None
     try:

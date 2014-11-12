@@ -1,5 +1,21 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
+""" nat_mapper.py: Manages NAT(Network Address Translation) machine so that;  
+a Linux machine can act as router
+
+Following scenarios are handled
+1. Create mapping between public IP and private IP by creating interface for public
+   IP and adding corresponding rules in IP tables
+2. Remove mapping between public IP and private IP by deleting interface for public
+   IP and removing corresponding rules from IP tables
+3. Create mapping between VNC_Server:VNC_port & Host_Server:VNC_Port_of_VM by creating
+   interface for VNC server if not present already and adding corresponding rules in 
+   IP tables
+4. Removing mapping between VNC_Server:VNC_port & Host_Server:VNC_Port_of_VM by deleting 
+   corresponding rules from IP tables
+5. Delete all VNC server mapping that has exceeded given duration
+"""
+
 from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception
 from gluon import current
 
@@ -7,10 +23,12 @@ from gluon import current
 NAT_TYPE_SOFTWARE = 'software_nat'
 NAT_TYPE_HARDWARE = 'hardware_nat'
 NAT_TYPE_MAPPING = 'mapping_nat'
+NAT_PUBLIC_INTERFACE = 'eth0'
 
 #VNC access status
 VNC_ACCESS_STATUS_ACTIVE = 'active'
 VNC_ACCESS_STATUS_INACTIVE = 'inactive'
+
 
 def get_nat_details():
     nat_type = config.get("GENERAL_CONF", "nat_type")
@@ -18,6 +36,59 @@ def get_nat_details():
     nat_user = config.get("GENERAL_CONF", "nat_user")
     
     return (nat_type, nat_ip, nat_user)
+
+#Construct command for updating IP tables
+def get_ip_tables_command(command_type, source_ip , destination_ip, source_port = -1, destination_port = -1):
+    
+    pre_command = "iptables -t nat -I PREROUTING " if command_type == "Add" else "iptables -t nat -D PREROUTING  "
+    
+    if source_port == -1 & destination_port == -1:
+        
+        pre_command += "-i %s -d %s -j DNAT --to-destination %s" %(NAT_PUBLIC_INTERFACE, source_ip, destination_ip)
+
+        post_command = "iptables -t nat -I POSTROUTING " if command_type == "Add" else "iptables -t nat -D POSTROUTING  "
+        post_command += "-s %s -o %s -j SNAT --to-source %s" %(destination_ip, NAT_PUBLIC_INTERFACE, source_ip)
+    else:
+        pre_command += "-i %s -p tcp -d %s --dport %s -j DNAT --to %s:%s" %(NAT_PUBLIC_INTERFACE, source_ip, source_port, destination_ip, destination_port)
+
+        post_command = "iptables -I FORWARD -p tcp " if command_type == "Add" else "iptables -D FORWARD -p tcp "
+        post_command += "-d %s --dport %s -j ACCEPT" %(destination_ip, destination_port)
+    
+    command = '''
+                %s
+                %s
+                /etc/init.d/iptables-persistent save
+                /etc/init.d/iptables-persistent reload
+                exit
+            ''' %(pre_command, post_command)
+
+    
+    return command
+
+#Construct command for updating interfaces file
+def get_interfaces_command(command_type, source_ip):
+
+    source_ip_octets = source_ip.split('.')
+    interface_alias = "%s:%s.%s.%s" %(NAT_PUBLIC_INTERFACE, source_ip_octets[1], source_ip_octets[2], source_ip_octets[3])
+    interfaces_merge_command = "cat /etc/network/interfaces.d/*.cfg > /etc/network/interfaces"
+
+    if command_type == 'Add':
+        interfaces_command = '''
+            ip_present=$(ifconfig | grep %s)
+            if test -z "$ip_present"; then
+                echo -e "auto %s\n iface %s inet static\n address %s\n netmask 255.255.255.255\n" > /etc/network/interfaces.d/2_%s.cfg
+                %s
+                ifconfig %s %s up
+            fi
+            ''' %(source_ip, interface_alias, interface_alias, source_ip, interface_alias, interfaces_merge_command, interface_alias, source_ip)
+    else:
+        interfaces_command = '''
+            rm /etc/network/interfaces.d/2_%s.cfg
+            ifconfig %s down
+            %s
+            ''' %(interface_alias, interface_alias, interfaces_merge_command)
+
+    return interfaces_command
 
 """Function to create mappings in NAT
  If NAT type is software_nat then for creating public - private IP mapping:
@@ -35,44 +106,24 @@ def create_mapping(source_ip , destination_ip, source_port = -1, destination_por
         
         if source_port == -1 & destination_port == -1:
             logger.debug("Adding public ip %s private ip %s mapping on NAT" %(source_ip, destination_ip))
-            # Create SSH session to execute all commands on NAT box
 
-            destination_ip_octets = destination_ip.split('.')
-            interfaces_entry_command = "echo -e 'auto eth0:%s.%s\niface eth0:%s.%s inet static\n\taddress %s' >> /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], source_ip)
-            interfaces_command = "ifconfig eth0:%s.%s %s up" %(destination_ip_octets[2], destination_ip_octets[3], source_ip)
-            iptables_command = "iptables -t nat -I PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -I POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(source_ip, destination_ip, destination_ip, source_ip)
+            interfaces_command = get_interfaces_command('Add', source_ip)
+            iptables_command = get_ip_tables_command('Add', source_ip , destination_ip)
             
-            command = '''
-                %s
-                %s
-                %s
-                /etc/init.d/iptables-persistent save
-                /etc/init.d/iptables-persistent reload
-                exit
-            ''' %(interfaces_entry_command, interfaces_command, iptables_command)
-            execute_remote_bulk_cmd(nat_ip, nat_user, command)
+            command = interfaces_command + iptables_command
 
         else:
             logger.debug("Creating VNC mapping on NAT box for public IP %s host IP %s public VNC port %s private VNC port %s duration %s" %(source_ip, destination_ip, source_port, destination_port, duration))
-            source_ip_octets = source_ip.split('.')
-            interfaces_alias = "%s%s%s" %(source_ip_octets[1], source_ip_octets[2], source_ip_octets[3])
             
-            # Create SSH session to execute all commands on NAT box.
             logger.debug("Creating SSH session on NAT box %s" %(nat_ip))
             
-            iptables_command = "iptables -I PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -I FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(source_ip, source_port,  destination_ip, destination_port, destination_ip, destination_port)
-            command = '''
-                ip_present=$(ifconfig | grep %s)
-                if test -z "$ip_present"; then
-                    echo -e "auto eth0:%s\niface eth0:%s inet static\n\taddress %s" >> /etc/network/interfaces
-                    ifconfig eth0:%s %s up
-                fi
-                %s
-                /etc/init.d/iptables-persistent save
-                /etc/init.d/iptables-persistent reload
-                exit
-                '''%(source_ip, interfaces_alias, interfaces_alias, source_ip, interfaces_alias, source_ip, iptables_command)
-            execute_remote_bulk_cmd(nat_ip, nat_user, command)
+            interfaces_command = get_interfaces_command('Add', source_ip)
+            iptables_command = get_ip_tables_command('Add', source_ip , destination_ip, source_port, destination_port)
+
+            command = interfaces_command + iptables_command
+
+        # Create SSH session to execute all commands on NAT box.
+        execute_remote_bulk_cmd(nat_ip, nat_user, command)
 
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
@@ -100,31 +151,19 @@ def remove_mapping(source_ip, destination_ip, source_port=-1, destination_port=-
         # source_port and destination_port are -1 when function is called for removing public IP - private IP mapping
         if source_port == -1 and destination_port == -1:
             logger.debug("Removing mapping for public IP: %s and private IP: %s" %(source_ip, destination_ip))
-            destination_ip_octets = destination_ip.split('.')
-            interfaces_entry_command = "sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g}' /etc/network/interfaces" %(destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], destination_ip_octets[2], destination_ip_octets[3], source_ip)
-            interfaces_command = "ifconfig eth0:%s.%s down" %(destination_ip_octets[2], destination_ip_octets[3])
-            iptables_command = "iptables -t nat -D PREROUTING -i eth0 -d %s -j DNAT --to-destination %s & iptables -t nat -D POSTROUTING -s %s -o eth0 -j SNAT --to-source %s" %(source_ip, destination_ip, destination_ip, source_ip)
-
-            command = '''
-                %s
-                %s
-                %s
-                /etc/init.d/iptables-persistent save
-                /etc/init.d/iptables-persistent reload
-                exit
-            ''' %(interfaces_entry_command, interfaces_command, iptables_command)
-            execute_remote_bulk_cmd(nat_ip, nat_user, command)
+            
+            interfaces_command = get_interfaces_command('Delete', source_ip)
+            iptables_command = get_ip_tables_command('Delete', source_ip , destination_ip)
+            
+            command = interfaces_command + iptables_command
+            
         else:
             logger.debug("Removing VNC mapping from NAT for public IP %s host IP %s public VNC port %s private VNC port %s" %(source_ip, destination_ip, source_port, destination_port))
-            iptables_command = "iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s  & iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT" %(source_ip, source_port,  destination_ip, destination_port, destination_ip, destination_port)
 
-            command = '''
-                %s
-                /etc/init.d/iptables-persistent save
-                /etc/init.d/iptables-persistent reload
-                exit
-            ''' %(iptables_command)
-            execute_remote_bulk_cmd(nat_ip, nat_user, command)
+            command = get_ip_tables_command('Delete', source_ip , destination_ip, source_port, destination_port)
+
+        # Create SSH session to execute all commands on NAT box.
+        execute_remote_bulk_cmd(nat_ip, nat_user, command)
 
     elif nat_type == NAT_TYPE_HARDWARE:
         #This function is to be implemented
@@ -149,12 +188,15 @@ def clear_all_nat_mappings(db):
         public_ip_mappings = db(db.vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED).select(db.vm_data.private_ip, db.vm_data.public_ip)
         for mapping in public_ip_mappings:
             logger.debug('Removing private to public IP mapping for private IP: %s and public IP:%s' %(mapping['private_ip'],mapping['public_ip']))
-            private_ip_octets = mapping['private_ip'].split('.')
+#             private_ip_octets = mapping['private_ip'].split('.')
+            public_ip_octets = mapping['public_ip'].split('.')
+            interface_alias = "%s:%s.%s.%s" %(NAT_PUBLIC_INTERFACE, public_ip_octets[1], public_ip_octets[2], public_ip_octets[3])
 
             command += '''
-                        sed -i '/auto.*eth0:%s.%s/ {N;N; s/auto.*eth0:%s.%s.*iface.*eth0:%s.%s.*inet.*static.*address.*%s//g} /etc/network/interfaces
-                        ifconfig eth0:%s.%S down
-                       ''' %(private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3], private_ip_octets[2], private_ip_octets[3])
+                        rm /etc/network/interfaces.d/2_%s.cfg
+                        ifconfig %s down
+                        cat /etc/network/interfaces.d/*.cfg > /etc/network/interfaces
+                       ''' %(interface_alias, interface_alias)
 
         # Flushing all rules from iptables
         command += '''
@@ -207,8 +249,8 @@ def clear_all_timedout_vnc_mappings():
                 host_ip = mapping.host_id.host_ip
                 # Delete rules from iptables on NAT box
                 command += '''
-                iptables -D PREROUTING -t nat -i eth0 -p tcp -d %s --dport %s -j DNAT --to %s:%s
-                iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT''' %(mapping.vnc_server_ip, mapping.vnc_source_port, host_ip, mapping.vnc_destination_port, host_ip, mapping.vnc_destination_port)
+                iptables -D PREROUTING -t nat -i %s -p tcp -d %s --dport %s -j DNAT --to %s:%s
+                iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT''' %(NAT_PUBLIC_INTERFACE, mapping.vnc_server_ip, mapping.vnc_source_port, host_ip, mapping.vnc_destination_port, host_ip, mapping.vnc_destination_port)
 
                 # Update DB for each VNC access
                 current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
