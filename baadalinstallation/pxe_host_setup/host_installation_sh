@@ -20,7 +20,8 @@ Network_Setup()
   cd /baadal/baadal/baadaltesting/sandbox
 
   apt-get update
-  apt-get -y install linux-headers-generic
+  apt-get -y install linux-headers-3.2.0-29-generic
+  apt-get -y install linux-headers-3.2.0-29-virtual
 
   make openvswitch | tee ~/.openvswitch.install.log
   make host-setup
