@@ -5,7 +5,7 @@ source ./controller_installation.cfg 2>> /dev/null
 NUMBER_OF_HOSTS=254
 
 NUMBER_OF_VLANS=255
-
+baa
 CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
 Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils)
@@ -785,7 +785,7 @@ Configure_Dhcp_Pxe()
 	sed -i -e 's@BAADAL_REPO_INSTALL@'"$ABSOLUTE_PATH_OF_PARENT_BAADALREPO/$BAADAL_REPO_DIR"'@g' $PXE_SETUP_FILES_PATH/host_installation.sh
 
 	cd $ABSOLUTE_PATH_OF_PARENT_BAADALREPO
-	tar -cvf /var/www/baadal2.0.tar $BAADAL_REPO_DIR/
+	tar -cvf /var/www/newbaadal.tar $BAADAL_REPO_DIR/
 	cd -
 
 }
