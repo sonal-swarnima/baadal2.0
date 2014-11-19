@@ -185,7 +185,8 @@ db.define_table('vm_data',
     Field('parent_id', 'reference vm_data'),
     Field('locked', 'boolean', default = False),
     Field('security_domain', db.security_domain),
-    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)))
+    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
+    Field('snapshot_flag', 'integer', default = 0))
 
 db.vm_data.purpose.widget=SQLFORM.widgets.text.widget
 

@@ -229,11 +229,15 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
         else:    
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
             for vm_data in vms:
-                vm_scheduler.queue_task(TASK_SNAPSHOT, 
-                                        group_name = 'snapshot_task', 
-                                        pvars = {'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}, 
-                                        start_time = request.now, 
-                                        timeout = 30 * MINUTES)
+                flag = vm_data.snapshot_flag
+                snapshot_type = snapshot_type & flag
+                if(snapshot_type):
+                    logger.debug("snapshot_type" + str(napshot_type))
+                    vm_scheduler.queue_task(TASK_SNAPSHOT, 
+                                            group_name = 'snapshot_task', 
+                                            pvars = {'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}, 
+                                            start_time = request.now, 
+                                            timeout = 60 * MINUTES)
     except:
         log_exception()
         pass

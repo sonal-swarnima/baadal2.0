@@ -272,3 +272,10 @@ def grant_vnc():
     session.flash = grant_vnc_access(vm_id)
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
+
+def configure_snapshot():
+
+    vm_id = int(request.args[0])
+    flag = request.vars['suggest']
+    if flag!=0:
+         save_flag_to_db(vm_id, flag) 
