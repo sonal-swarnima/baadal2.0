@@ -450,9 +450,6 @@ def grant_vnc_access(vm_id):
                 pass
     return msg
 
-def save_flag_to_db(vm_id, flag):
-    flag = int(flag)
-    row = db(db.vm_data.id==vm_id).select().first()
-    row.update_record(snapshot_flag=flag)
-    msg="success"
-    return msg
+def update_snapshot_flag(vm_id, flag):
+    vm_data = db.vm_data[vm_id]
+    vm_data.update_record(snapshot_flag=int(flag))

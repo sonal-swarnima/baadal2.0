@@ -232,7 +232,7 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
                 flag = vm_data.snapshot_flag
                 snapshot_type = snapshot_type & flag
                 if(snapshot_type):
-                    logger.debug("snapshot_type" + str(napshot_type))
+                    logger.debug("snapshot_type" + str(snapshot_type))
                     vm_scheduler.queue_task(TASK_SNAPSHOT, 
                                             group_name = 'snapshot_task', 
                                             pvars = {'snapshot_type' : SNAPSHOT_SYSTEM, 'vm_id' : vm_data.id, 'frequency' : snapshot_type}, 

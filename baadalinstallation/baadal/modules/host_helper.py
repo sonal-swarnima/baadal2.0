@@ -52,7 +52,7 @@ def get_host_ram(host_ip):
     command = "cat /proc/meminfo | grep MemTotal"
     ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. MemTotal:       32934972 kB
     ram_in_kb = ret[ret.index(' '):-3].strip()
-    ram_in_gb = int(round(int(ram_in_kb)/(1024*1024),0))
+    ram_in_gb = int(math.ceil(float(ram_in_kb)/(1024*1024)))
     return ram_in_gb
 
 

@@ -263,7 +263,6 @@ def vm_history():
     vm_history = get_vm_history(vm_id)        
     return dict(vm_id = vm_id, vm_history = vm_history)
 
-
 @check_vm_owner
 @handle_exception       
 def grant_vnc():
@@ -272,10 +271,10 @@ def grant_vnc():
     session.flash = grant_vnc_access(vm_id)
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
-
+@check_vm_owner
+@handle_exception       
 def configure_snapshot():
 
     vm_id = int(request.args[0])
-    flag = request.vars['suggest']
-    if flag!=0:
-         save_flag_to_db(vm_id, flag) 
+    flag = request.vars['snapshot_flag']
+    update_snapshot_flag(vm_id, flag) 

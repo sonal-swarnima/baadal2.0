@@ -90,37 +90,39 @@ function confirm_vm_deletion(){
 </div>
 {{pass}}
 
-<div class = "post">
-    
-        <h2 class = "title"> Snapshot(s) </h2>
-        <div>
-            <input type="checkbox" name="flag" id="daily" value="1">Daily</input>
-            <input type="checkbox" name="flag" id="weekly" value="2">Weekly</input>
-            <input type="checkbox" name="flag" id="monthly" value="4">Monthly</input>
-            <input type="checkbox" name="flag" id="yearly" value="8">Yearly</input>
-            <button onclick="configure_snapshot()">Configure Snapshotting</button>
-        </div>
+   <table width="100%" cellpadding="0" cellspacing="0" border="0">
+	   <tr>
+	   	<td><h2>Snapshot(s)</h2></td>
+	   	<td style="text-align:right;"><a href="#" onclick="$('#configure_block').toggle();">Configure Snapshots</a></td></tr>
+   </table> 
+   <hr style="display: block;border-width: 2px"/>
+        
+    <div id="configure_block" style="display:none">
+        <input type="checkbox" name="flag" id="daily" value="{{=SNAPSHOT_DAILY}}">Daily</input>
+        <input type="checkbox" name="flag" id="weekly" value="{{=SNAPSHOT_WEEKLY}}">Weekly</input>
+        <input type="checkbox" name="flag" id="monthly" value="{{=SNAPSHOT_MONTHLY}}">Monthly</input>
+        <input type="checkbox" name="flag" id="yearly" value="{{=SNAPSHOT_YEARLY}}">Yearly</input>
+        &nbsp;&nbsp;<img src="{{=URL('static','images/save.png')}}" onclick="configure_snapshot()" alt="Save Changes"/>
+    </div>
 
-        <table id="vm_snaps">  
-                {{if vmsnapshots:}}        
-                     {{for snapshot in vmsnapshots:}}
-                     <tr id="{{=snapshot['id']}}">
-                         <td>{{=snapshot['type']}}</td>
-                         <td>{{=snapshot['name']}}</td>
-                         <td>{{=snapshot['revert']}}</td>
-                         <td>{{=snapshot['delete']}}</td>
-                     </tr>
-                     {{pass}}
-                {{pass}}
-       </table>
-</div>
-
+    <table id="vm_snaps">  
+            {{if vmsnapshots:}}        
+                 {{for snapshot in vmsnapshots:}}
+                 <tr id="{{=snapshot['id']}}">
+                     <td>{{=snapshot['type']}}</td>
+                     <td>{{=snapshot['name']}}</td>
+                     <td>{{=snapshot['revert']}}</td>
+                     <td>{{=snapshot['delete']}}</td>
+                 </tr>
+                 {{pass}}
+            {{pass}}
+   </table>
 
 <script>
 function configure_snapshot() {
     var flag=0;
     av=document.getElementsByName("flag");
-    for (e=0;e<av.length;e++) {
+    for (e=0; e<av.length; e++) {
        if (av[e].checked==true) {
           flag= flag ^ parseInt(av[e].value,10);
        }
@@ -128,8 +130,8 @@ function configure_snapshot() {
 
     var snapshot_url = "{{=URL('configure_snapshot', args=[vminfo['id']])}}";
     
-    $.post(snapshot_url,{suggest:flag},function(result){
-      alert("Snapshotting Successfully Configured");
+    $.post(snapshot_url,{snapshot_flag:flag},function(result){
+      alert("Rolling snapshot frequency successfully configured");
   });}
 
 </script>

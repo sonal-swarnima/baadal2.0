@@ -60,19 +60,19 @@ def set_portgroup_in_vm(domain, portgroup, host_ip, vlan_tag):
     logger.debug("Source network is " + source_network_string)
 
     if source_network_string.find(" network=") != -1:
-       logger.debug("Source is set to network adding portgroup to the source tag ")
-       source_network_element.set('portgroup', portgroup)  
-       logger.debug("Changed source network is " + etree.tostring(source_network_element)) 
+        logger.debug("Source is set to network adding portgroup to the source tag ")
+        source_network_element.set('portgroup', portgroup)  
+        logger.debug("Changed source network is " + etree.tostring(source_network_element)) 
     elif source_network_string.find(" bridge=") != -1:
-       logger.debug("Source is set to bridge adding <vlan><tag_id> to the interface tag ")
-       root_new  = xml.find('.//interface')  
-       root_new_vlan= etree.SubElement(root_new, 'vlan') 
-       root_new_tag=  etree.SubElement(root_new_vlan, 'tag')
-       root_new_tag.set('id',vlan_tag) 
-       logger.debug("After append root_new_vlan is " + etree.tostring(root_new_vlan))  
+        logger.debug("Source is set to bridge adding <vlan><tag_id> to the interface tag ")
+        root_new  = xml.find('.//interface')  
+        root_new_vlan= etree.SubElement(root_new, 'vlan') 
+        root_new_tag=  etree.SubElement(root_new_vlan, 'tag')
+        root_new_tag.set('id',vlan_tag) 
+        logger.debug("After append root_new_vlan is " + etree.tostring(root_new_vlan))  
     else:
-       logger.debug("Neither VM nor vlan tagId is added in the xml" )  
-		 
+        logger.debug("Neither VM nor vlan tagId is added in the xml" )  
+
     domain = connection_object.defineXML(etree.tostring(xml))
     domain.destroy()
     domain.create()
@@ -754,10 +754,18 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
     try:    
         current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = current_host_connection_object.lookupByName(vm_details.vm_identity)
+        dom_snapshot_names = domain.snapshotListNames(0)
+        
         for snapshot in current.db(current.db.snapshot.vm_id == vm_id).select():
             logger.debug("snapshot:" + str(snapshot.snapshot_name))
             domain_snapshots_list.append(snapshot.snapshot_name)
+            dom_snapshot_names.remove(snapshot.snapshot_name)
         logger.debug("domain snapshot list is " + str(domain_snapshots_list))
+        
+        for dom_snapshot in dom_snapshot_names:
+            logger.debug("Deleting orphan snapshot %s" %(dom_snapshot))
+            snapshot = domain.snapshotLookupByName(dom_snapshot, 0)        
+            snapshot.delete(0)
     
         if domain_snapshots_list:
             current_snapshot = domain.snapshotCurrent(0)
