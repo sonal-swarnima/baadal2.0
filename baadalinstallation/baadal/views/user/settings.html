@@ -98,10 +98,11 @@ function confirm_vm_deletion(){
    <hr style="display: block;border-width: 2px"/>
         
     <div id="configure_block" style="display:none">
-        <input type="checkbox" name="flag" id="daily" value="{{=SNAPSHOT_DAILY}}">Daily</input>
-        <input type="checkbox" name="flag" id="weekly" value="{{=SNAPSHOT_WEEKLY}}">Weekly</input>
-        <input type="checkbox" name="flag" id="monthly" value="{{=SNAPSHOT_MONTHLY}}">Monthly</input>
-        <input type="checkbox" name="flag" id="yearly" value="{{=SNAPSHOT_YEARLY}}">Yearly</input>
+        
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_DAILY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_DAILY) else False)}}Daily
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_WEEKLY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_WEEKLY) else False)}}Weekly
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_MONTHLY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_MONTHLY) else False)}}Monthly
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_YEARLY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_YEARLY) else False)}}Yearly
         &nbsp;&nbsp;<img src="{{=URL('static','images/save.png')}}" onclick="configure_snapshot()" alt="Save Changes"/>
     </div>
 

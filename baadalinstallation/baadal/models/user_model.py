@@ -254,6 +254,7 @@ def get_vm_config(vm_id):
                    'purpose'          : str(vminfo.vm_data.purpose),
                    'private_ip'       : str(vminfo.vm_data.private_ip),
                    'public_ip'        : str(vminfo.vm_data.public_ip),
+                   'snapshot_flag'    : int(vminfo.vm_data.snapshot_flag),
                    'security_domain'  : str(vminfo.vm_data.security_domain.name)}
 
     if is_moderator():
