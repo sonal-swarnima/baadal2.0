@@ -296,7 +296,7 @@ def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
         (diskpath, device_present) = get_extra_disk_location(vm_details.datastore_id, vm_details.vm_identity, disk_name)
 
         if not device_present:
-            raise Exception('Device to be attached missing')
+            raise Exception("Device to be attached %s missing" %(diskpath))
         
         # Attaching disk to vm using libvirt API
         target_disk = "vd" + chr(97 + already_attached_disks + 1)
@@ -1189,6 +1189,7 @@ def launch_existing_vm_image(vm_details):
             vm_properties['private_ip'] = private_ip_info.private_ip
             vm_properties['mac_addr'] = private_ip_info.mac_addr
             vm_properties['vlan_name']  = private_ip_info.vlan.name
+            vm_properties['vlan_tag'] = private_ip_info.vlan.vlan_tag
     
     if vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED:
         vm_properties['public_ip_req'] = False

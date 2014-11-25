@@ -144,13 +144,21 @@ def create_dhcp_bulk_entry(dhcp_info_list):
     
     if len(dhcp_info_list) == 0: return
     dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")
-    entry_cmd = "echo -e  '"
+    entry_cmd = ""
     
     for dhcp_info in dhcp_info_list:
         host_name = dhcp_info[0] if dhcp_info[0] != None else ('IP_' + dhcp_info[2].replace(".", '_'))
-        entry_cmd += "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" %(host_name, dhcp_info[1], dhcp_info[2])
+        dhcp_cmd = '''
+            ip_present=$(grep 'host %s ' /etc/dhcp/dhcpd.conf)
+            if test -z "$ip_present"; then
+                echo "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" >> /etc/dhcp/dhcpd.conf
+            else
+                echo %s
+            fi
+            ''' %(host_name, host_name, dhcp_info[1], dhcp_info[2], dhcp_info[2])
 
-    entry_cmd += "' >> /etc/dhcp/dhcpd.conf"    
+        entry_cmd += dhcp_cmd
+        
     restart_cmd = "/etc/init.d/isc-dhcp-server restart"
 
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)

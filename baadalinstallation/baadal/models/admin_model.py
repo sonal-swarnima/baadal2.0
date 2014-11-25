@@ -861,9 +861,6 @@ def launch_vm_image_validation(form):
             form.vars.public_ip = None
         else:
             form.errors.public_ip = 'Public IP is not valid'
-    else:
-        form.vars.public_ip = None
-
 
     if not form.errors:
         vm_users = request.post_vars.vm_users
