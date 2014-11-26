@@ -9,6 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import config, logger
+from datetime import timedelta
 
 #Email templates and subject constants
 REGISTRATION_SUCCESSFUL_SUBJECT = "Baadal Registration Successful"
@@ -50,6 +51,13 @@ VNC_ACCESS_SUBJECT="VNC Access to your VM activated"
 VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was activated on {0[requestTime]}. Details follow:\n"\
                 "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
                 "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
+
+
+DELETE_WARNING_SUBJECT="Delete Warning to the Shutdown VM" 
+DELETE_WARNING_BODY="Dear {0[userName]},\n\nIt has been noticed that your VM {0[vmName]} is being shutdown from {0[vmShutdownDate]}.\n"\
+                   "Kindly use the VM/delete the VM if not required. \n" \
+                   "If no action is taken on the VM, the VM will be automatically deleted on {0[vmDeleteDate]}. \n\n"\
+                   "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin" 
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
 
@@ -127,6 +135,20 @@ def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_t
                            requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
     
+
+#KANIKA:- Adding sendmail function for delete VM Warning
+def send_email_delete_vm_warning(vm_users,vm_name,vm_shutdown_time):
+    vm_delete_time= get_datetime() + timedelta(days=15)   
+    for vm_user in vm_users:
+        user_info = get_user_details(vm_user)
+        if user_info[1] != None:
+            context = dict(vmName = vm_name, 
+                           userName = user_info[0],
+                           vmShutdownDate=vm_shutdown_time,
+                           vmDeleteDate=vm_delete_time)
+            logger.debug("Inside send mail delete vm warning function:" +vm_name+ ", userName:" +user_info[0]+ ", vmShutdownDate:" + str(vm_shutdown_time) + ", vmDeleteDate:" + str(vm_delete_time))
+        send_email(user_info[1],DELETE_WARNING_SUBJECT,DELETE_WARNING_BODY,context) 
+        return vm_delete_time
 
 def send_email_to_admin(email_subject, email_message, email_type):
     if email_type == 'report_bug':
