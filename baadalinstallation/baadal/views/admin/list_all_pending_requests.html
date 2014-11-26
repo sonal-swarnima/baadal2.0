@@ -67,7 +67,7 @@
             {{else:}}<i>Pre-Approved</i>&nbsp;{{=IMG(_src=URL('static','images/greenlight.gif'), _style='height:14px;width:14px;border:0px')}}
             {{pass}}
             </td>
-            <td>
+            <td id={{=str(pend_request['id'])}}>
                 {{if pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
                     {{=A(IMG(_src=URL('static','images/vm_add.png'), _height=18, _width=18), _href='#', 
                         _title="Task in Progress", _alt="Task in Progress")}}&nbsp;
