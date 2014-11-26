@@ -24,9 +24,9 @@ def choose_datastore():
         count = datastore_length
         available_datastores = {}
         while count != 0:
-            available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
-            available_datastores[datastores[datastore_length-count]] = available
-            count = count-1
+             available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
+             available_datastores[datastores[datastore_length-count]] = available
+             count = count-1
         z = [(i,available_datastores[i]) for i in available_datastores] 
         z.sort(key=lambda x: x[1])
         available_datastores = z
@@ -204,9 +204,12 @@ def create_vm_image(vm_details, datastore):
     storage_type = config.get("GENERAL_CONF","storage_type")
 
     copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
-
+    #template_dir = get_constant('vm_templates_datastore')
+    template_dir = template.datastore_id.path
+    logger.debug(template_dir)
+    
     logger.debug("Copy in progress when storage type is " + str(storage_type))
-    command_to_execute = copy_command + datastore.path + '/' + get_constant("templates_dir") + '/' +  \
+    command_to_execute = copy_command + template_dir + '/' + get_constant("templates_dir") + '/' +  \
                          template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
                          vm_details.vm_identity
     logger.debug("ndmpcopy command: " + str(command_to_execute))
