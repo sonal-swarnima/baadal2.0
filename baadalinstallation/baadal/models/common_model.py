@@ -206,7 +206,8 @@ def get_full_name(user_id):
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.template_id==db.template.id) & (db.vm_data.locked == False)).select()
+    ##vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.template_id==db.template.id) & (db.vm_data.locked == False)).select()
+    vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.template_id==db.template.id)).select()
     
     if not vm_info:
         return None

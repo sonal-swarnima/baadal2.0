@@ -92,7 +92,14 @@ def check_vm_sanity(host_id = 0):
                         if vm_state_map[vm_state] != vm.status:
                             #If not in sync with actual state of VM; status of VM updated in DB
                             db(db.vm_data.vm_identity == domain_name).update(status = vm_state_map[vm_state])
-                            
+
+                            #kanika adding into vm_event_log about the vm details
+                            db.vm_event_log.insert(vm_id = vm.id,
+                                                   attribute = 'VM Status',
+                                                   requester_id = '-1',
+                                                   old_value = get_vm_status(vm.status),
+                                                   new_value = get_vm_status(vm_state_map[vm_state]))
+
                         vm_list.append(vm.vm_identity)
                             
                     elif vm_state != VIR_DOMAIN_CRASHED:

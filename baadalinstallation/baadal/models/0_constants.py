@@ -41,6 +41,10 @@ TASK_RRD = 'vm_util_rrd'
 TASK_VNC = 'vnc_access'
 TASK_CLONE_VM = 'clone_task'
 TASK_VM = 'vm_task'
+TASK_DAILY_CHECKS = 'vm_daily_checks'
+TASK_PURGE_UNUSEDVM = 'vm_purge_unused'
+#kanika:- add new task here 
+
 
 
 #Request Status
@@ -107,7 +111,9 @@ UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
 UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
 UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
 UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
-UUID_LOAD_BALANCING = 'scheduler-uuid-load_balance'
+#Kanika:- Adding UUID for new task
+UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
+UUID_PURGE_UNUSEDVM = 'scheduler-uuid-purge-unusedvm'
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
