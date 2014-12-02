@@ -78,7 +78,7 @@ def get_interfaces_command(command_type, source_ip):
             if test -z "$ip_present"; then
                 echo -e "auto %s\n iface %s inet static\n address %s\n netmask 255.255.255.255\n" > /etc/network/interfaces.d/2_%s.cfg
                 %s
-                ifconfig %s %s up
+                ifconfig %s %s netmask 255.255.255.255 up
             fi
             ''' %(source_ip, interface_alias, interface_alias, source_ip, interface_alias, interfaces_merge_command, interface_alias, source_ip)
     else:

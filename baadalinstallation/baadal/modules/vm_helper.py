@@ -454,6 +454,7 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
 
     # Update vm_data table
     current.db(current.db.vm_data.id == vm_details.id).update( host_id = hostid, 
+                                                               extra_HDD = vm_details.extra_HDD,
                                                                datastore_id = datastore.id, 
                                                                private_ip = vm_properties['private_ip'], 
                                                                vnc_port = vm_properties['vnc_port'],
@@ -1225,7 +1226,10 @@ def launch_existing_vm_image(vm_details):
             disk_counter = 1
             for attached_disk in attached_disks:
                 disk_size = attach_disk(vm_details, attached_disk.attached_disk_name, host_ip, disk_counter, True)
-                attached_disk.update_record(capacity=disk_size)
+                current.db(current.db.attached_disks.vm_id == attached_disk.vm_id and 
+                           current.db.attached_disks.attached_disk_name==attached_disk.attached_disk_name
+                           ).update(capacity = disk_size)
+                vm_details.extra_HDD += disk_size
                 disk_counter += 1
                 
         #Create mapping of Private_IP and Public_IP
