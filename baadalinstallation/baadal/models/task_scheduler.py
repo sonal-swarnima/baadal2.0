@@ -5,7 +5,7 @@ if 0:
     from gluon import db,request, cache
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd
+from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd, config
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
@@ -44,8 +44,7 @@ def send_task_complete_mail(task_event):
         vm_users.append(task_event.requester_id)
     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
     
-#Logs action data into vm_event_log table
-
+"""Logs action data into vm_event_log table"""
 def log_vm_event(old_vm_data, task_queue_data):
 
     vm_data = db.vm_data[old_vm_data.id]
@@ -104,7 +103,7 @@ def log_vm_event(old_vm_data, task_queue_data):
                                old_value = str(old_vm_data.extra_HDD)+' GB',
                                new_value = str(vm_data.extra_HDD)+' GB')
 
-# Invoked when scheduler runs task of type 'vm_task'
+"""Invoked when scheduler runs task of type 'vm_task'"""
 def process_task_queue(task_event_id):
 
     logger.info("\n ENTERING VM_TASK........")
@@ -142,7 +141,6 @@ def process_task_queue(task_event_id):
             if task_event_data.task_type != TASK_TYPE_MIGRATE_VM:
                 send_task_complete_mail(task_event_data)
         
-        
     except:
         msg = log_exception()
         task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
@@ -153,7 +151,7 @@ def process_task_queue(task_event_id):
 
 
 
-# Invoked when scheduler runs task of type 'clone_task'
+"""Invoked when scheduler runs task of type 'clone_task'"""
 def process_clone_task(task_event_id, vm_id):
 
     vm_data = db.vm_data[vm_id]
@@ -215,8 +213,8 @@ def process_clone_task(task_event_id, vm_id):
         logger.debug("EXITING CLONE_TASK........")
 
 
-# Handles snapshot task
-# Invoked when scheduler runs task of type 'snapshot_vm'
+"""Handles snapshot task
+   Invoked when scheduler runs task of type 'snapshot_vm'"""
 def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
 
     logger.debug("ENTERING SNAPSHOT VM TASK........")
@@ -245,8 +243,8 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
         db.commit()
         logger.debug("EXITING SNAPSHOT VM TASK........")
           
-# Handles periodic VM sanity check
-# Invoked when scheduler runs task of type 'vm_sanity'
+"""Handles periodic VM sanity check
+   Invoked when scheduler runs task of type 'vm_sanity'"""
 def vm_sanity_check():
     logger.info("ENTERNING VM SANITY CHECK........")
     try:
@@ -257,8 +255,8 @@ def vm_sanity_check():
     finally:
         logger.debug("EXITING VM SANITY CHECK........")
 
-# Handles periodic Host sanity check
-# Invoked when scheduler runs task of type 'host_sanity'
+"""Handles periodic Host sanity check
+   Invoked when scheduler runs task of type 'host_sanity'"""
 def host_sanity_check():
     logger.info("ENTERNING HOST SANITY CHECK........")
     try:
@@ -269,8 +267,8 @@ def host_sanity_check():
     finally:
         logger.debug("EXITING HOST SANITY CHECK........")
 
-# Clears all timed out VNC Mappings
-# Invoked when scheduler runs task of type 'vnc_access'
+"""Clears all timed out VNC Mappings
+   Invoked when scheduler runs task of type 'vnc_access'"""
 def check_vnc_access():
     logger.info("ENTERNING CLEAR ALL TIMEDOUT VNC MAPPINGS")
     try:
@@ -281,7 +279,7 @@ def check_vnc_access():
     finally: 
         logger.debug("EXITING CLEAR ALL TIMEDOUT VNC MAPPINGS........")
 
-# Handles periodic collection of VM and Host utilization data and updation of respective RRD file.
+"""Handles periodic collection of VM and Host utilization data and updation of respective RRD file."""
 def vm_utilization_rrd(host_ip):
     logger.info("ENTERING RRD UPDATION/CREATION........")
     logger.debug("RRDs to be updated for VMs on host: %s" % host_ip)
@@ -305,7 +303,7 @@ def vm_utilization_rrd(host_ip):
         logger.debug("EXITING RRD UPDATION/CREATION........")
 
 
-#Kanika:- Below function will check for the shutdown VM's and sends email to the user
+"""Function will check for the shutdown VM's and sends email to the user"""
 def process_vmdaily_checks():
     logger.info("Entering VM's Daily Checks........")
 
@@ -330,11 +328,11 @@ def process_vmdaily_checks():
                         vm_name=user.vm_data.vm_name
                    
                     if (send_email == 1):
-                        vm_delete_time=send_email_delete_vm_warning(vm_users,vm_name,vm_shutdown_time) 
+                        vm_delete_time = send_email_delete_vm_warning(vm_users,vm_name,vm_shutdown_time) 
                         logger.debug("Mail sent for vm_name:"+str(vm_name)+"|delete time returned from the function:"+ str(vm_delete_time)) 
-                        db(db.vm_data.id == vm_details.vm_id).update(locked=T,delete_warning_date=vm_delete_time) 
+                        db(db.vm_data.id == vm_details.vm_id).update(locked=True, delete_warning_date=vm_delete_time) 
                     else:
-			logger.debug("Email has already been sent to VM_ID:"+str(vm_details.vm_id))
+                        logger.debug("Email has already been sent to VM_ID:"+str(vm_details.vm_id))
                 else:
                     logger.info("VM:"+str(vm_details.vm_id)+" is not shutdown ..") 
     except:
@@ -350,7 +348,7 @@ def process_unusedvm_purge():
 
     try:
         # Fetch all the VM's which are locked and whose delete warning date=today. 
-        for vm_data in db(db.vm_data.locked == T).select(db.vm_data.ALL):
+        for vm_data in db(db.vm_data.locked == True).select(db.vm_data.ALL):
             for vm_details in db(db.vm_event_log.vm_id==vm_data.id).select(db.vm_event_log.ALL,orderby = ~db.vm_event_log.id,limitby=(0,1)):
                 daysDiff=(get_datetime()-vm_data.delete_warning_date).days
                 if(vm_details.new_value == "Shutdown" and daysDiff >= 0):
@@ -373,8 +371,7 @@ def overload_memory():
     logger.debug(type(file_path))
     host_ips_rows=db(db.host.status==1).select(db.host.host_ip)
     logger.debug(host_ips_rows)
-#    command1 = 'gcc '+str(file_path)+'/memhog.c -o '+str(file_path)+'/hello'
-#    command1 = 'scp '+ str(file_path) +'/memhog root@192.168.0.50:/'
+
     command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
     for host_ip_row in host_ips_rows:
         logger.debug("overloading memory of")
@@ -399,9 +396,9 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
                                         vm_util_rrd=vm_utilization_rrd,
-					vm_daily_checks=process_vmdaily_checks,
-                                        vm_purge_unused=process_unusedvm_purge),
-#					                    memory_overload=overload_memory), 
+                                        vm_daily_checks=process_vmdaily_checks,
+                                        vm_purge_unused=process_unusedvm_purge,
+					                    memory_overload=overload_memory), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -450,7 +447,7 @@ vm_scheduler.queue_task(TASK_HOST_SANITY,
                     uuid = UUID_HOST_SANITY_CHECK,
                     group_name = 'host_task')
 
-#Kanika:- Adding new task for scheduler to monitor unused VM's
+# Adding task for scheduler to monitor unused VM's
 vm_scheduler.queue_task(TASK_DAILY_CHECKS,
                     repeats = 0, # run indefinitely
                     start_time = request.now,
@@ -459,8 +456,7 @@ vm_scheduler.queue_task(TASK_DAILY_CHECKS,
                     uuid = UUID_DAILY_CHECKS,
                     group_name = 'vm_sanity')
 
-
-#Kanika:- Adding new task for scheduler to delete unused VM's
+# Adding task for scheduler to delete unused VM's
 vm_scheduler.queue_task(TASK_PURGE_UNUSEDVM,
                     repeats = 0, # run indefinitely
                     start_time = request.now,
@@ -469,15 +465,13 @@ vm_scheduler.queue_task(TASK_PURGE_UNUSEDVM,
                     uuid = UUID_PURGE_UNUSEDVM,
                     group_name = 'vm_sanity')
 
-'''
 vm_scheduler.queue_task('memory_overload',
-                    repeats = 0, # run indefinitely^M
+                    repeats = 0, # run indefinitely
                     start_time = request.now,
                     period = 1 * HOURS, # every hour
                     timeout = 5 * MINUTES,
                     uuid = UUID_MEMORY_OVERLOAD,
                     group_name = 'host_task')
-'''
 
 active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
 

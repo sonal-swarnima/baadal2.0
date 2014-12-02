@@ -204,7 +204,7 @@ def is_pingable(ip):
     
     return not(response)
 
-
+"""Custom validator to check if string is a valid mac address"""
 class IS_MAC_ADDRESS(Validator):
     
     regex = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')

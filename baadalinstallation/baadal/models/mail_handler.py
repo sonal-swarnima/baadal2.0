@@ -8,67 +8,79 @@ if 0:
     global mail; mail = gluon.tools.Mail()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import config, logger
+from helper import config, logger, get_datetime
 from datetime import timedelta
 
 #Email templates and subject constants
 REGISTRATION_SUCCESSFUL_SUBJECT = "Baadal Registration Successful"
 
-REGISTRATION_SUCCESSFUL_BODY = "Dear {0[userName]},\n\nYour account with username {0[loginName]} has been activated."\
-                                "\n\nWelcome to Baadal!\n\nRegards,\nBaadal Admin"
+REGISTRATION_SUCCESSFUL_BODY = "Dear {0[userName]},\n\n"\
+    "Your account with username {0[loginName]} has been activated.\n\n"\
+    "Welcome to Baadal!"
                                 
 REGISTRATION_DENIED_SUBJECT = "Baadal Registration Denied"
 
-REGISTRATION_DENIED_BODY = "Dear {0[userName]},\n\nYour registration to Baadal has been denied. "\
-                            "For any query, send an email to {0[supportMail]}\n\nRegards,\nBaadal Admin"
+REGISTRATION_DENIED_BODY = "Dear {0[userName]},\n\n"\
+    "Your registration to Baadal has been denied. "\
+    "For any query, send an email to {0[supportMail]}"
                             
 VM_REQUEST_SUBJECT = "VM request successful"
 
-VM_REQUEST_BODY="Dear {0[userName]},\n\nYour request for VM({0[vmName]}) creation has been successfully registered. "\
-                    "Please note that you will be getting a separate email on successful VM creation.\n\nRegards,\nBaadal Admin"
+VM_REQUEST_BODY="Dear {0[userName]},\n\n"\
+    "Your request for VM({0[vmName]}) creation has been successfully registered. "\
+    "Please note that you will be getting a separate email on successful VM creation."
                     
 APPROVAL_REMINDER_SUBJECT = "Request waiting for your approval"
 
-APPROVAL_REMINDER_BODY ="Dear {0[approverName]},\n\n{0[userName]} has made a '{0[requestType]}' request on {0[requestTime]}. "\
-                            "It is waiting for your approval.\n\nRegards,\nBaadal Admin"
+APPROVAL_REMINDER_BODY = "Dear {0[approverName]},\n\n"\
+    "{0[userName]} has made a '{0[requestType]}' request on {0[requestTime]}. "\
+    "It is waiting for your approval."
                     
 VM_CREATION_SUBJECT = "VM created successfully"
 
-VM_CREATION_BODY="Dear {0[userName]},\n\nThe VM {0[vmName]} requested on {0[requestTime]} is "\
-                    "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
-                    "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\nDefault credentials for VM:\nUsername:root/baadalservervm/baadaldesktopvm\nPassword:baadal\n\n"\
-                    "To access VM using assigned private IP; SSH to baadal gateway machine using your GCL credential.\n"\
-                    "username@baadalgateway.cse.iitd.ernet.in\n"\
-                    "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
+VM_CREATION_BODY="Dear {0[userName]},\n\n"\
+    "The VM {0[vmName]} requested on {0[requestTime]} is "\
+    "successfully created and is now available for use. The following operations are allowed on the VM:\n"\
+    "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\n"\
+    "Default credentials for VM:\nUsername:root/baadalservervm/baadaldesktopvm\nPassword:baadal\n\n"\
+    "To access VM using assigned private IP; SSH to baadal gateway machine using your GCL credential.\n"\
+    "username@{0[gatewayVM]}\n"\
+    "For other details, Please login to baadal WEB interface."
 
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
 
-TASK_COMPLETE_BODY="Dear {0[userName]},\n\nThe '{0[taskType]}' task for VM({0[vmName]}) requested on {0[requestTime]} is complete."\
-                    "\n\nRegards,\nBaadal Admin "
+TASK_COMPLETE_BODY="Dear {0[userName]},\n\n"\
+    "The '{0[taskType]}' task for VM({0[vmName]}) requested on {0[requestTime]} is complete."
 
 VNC_ACCESS_SUBJECT="VNC Access to your VM activated"
 
-VNC_ACCESS_BODY="Dear {0[userName]},\n\nVNC Access to your VM {0[vmName]} was activated on {0[requestTime]}. Details follow:\n"\
-                "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
-                "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin"
-
+VNC_ACCESS_BODY="Dear {0[userName]},\n\n"\
+    "VNC Access to your VM {0[vmName]} was activated on {0[requestTime]}. Details follow:\n"\
+    "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
+    "For other details, Please login to baadal WEB interface."
 
 DELETE_WARNING_SUBJECT="Delete Warning to the Shutdown VM" 
-DELETE_WARNING_BODY="Dear {0[userName]},\n\nIt has been noticed that your VM {0[vmName]} is being shutdown from {0[vmShutdownDate]}.\n"\
-                   "Kindly use the VM/delete the VM if not required. \n" \
-                   "If no action is taken on the VM, the VM will be automatically deleted on {0[vmDeleteDate]}. \n\n"\
-                   "For other details, Please login to baadal WEB interface.\n\nRegards,\nBaadal Admin" 
+
+DELETE_WARNING_BODY="Dear {0[userName]},\n\n"\
+    "It has been noticed that your VM {0[vmName]} is being shutdown from {0[vmShutdownDate]}.\n"\
+    "Kindly use the VM/delete the VM if not required. \n" \
+    "If no action is taken on the VM, the VM will be automatically deleted on {0[vmDeleteDate]}. \n\n"\
+    "For other details, Please login to baadal WEB interface." 
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
 
-BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\nBaadal services will be shutting down tomorrow at 3:00 PM for planned maintenance.We will shutdown your VM {0[vmName]}({0[vmIp]}) to avoid any corruption of data.\n"\
-             "Please save your work accordingly.\n\nVM will be brought up as soon as possible.\n\nRegards,\nBaadal Admin"
+BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\n"\
+    "Baadal services will be shutting down tomorrow at 3:00 PM for planned maintenance."\
+    "We will shutdown your VM {0[vmName]}({0[vmIp]}) to avoid any corruption of data.\n"\
+    "Please save your work accordingly.\n\nVM will be brought up as soon as possible."
 
-MAIL_FOOTER = "\n\n\nNOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
-             "If you have any queries, send an email to {0[adminEmail]}."
+MAIL_FOOTER = "\n\nRegards,\nBaadal Admin\n\n\n"\
+    "NOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
+    "If you have any queries, send an email to {0[adminEmail]}."
 
 def push_email(to_address, email_subject, email_message, reply_to_address, cc_addresses=[]):
     if config.getboolean("MAIL_CONF","mail_active"):
+        logger.debug("Sending mail to %s with subject %s" %(to_address, email_subject))
         rtn = mail.send(to=to_address, subject=email_subject, message = email_message, reply_to=reply_to_address, cc=cc_addresses)
         logger.error("ERROR:: " + str(mail.error))
         logger.info("EMAIL STATUS:: " + str(rtn))
@@ -118,6 +130,7 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
                            requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
             if task_type == TASK_TYPE_CREATE_VM:
                 cc_addresses = []
+                context.update({'gatewayVM':config.get("GENERAL_CONF","gateway_vm")})
                 send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
             else:
                 subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
@@ -136,7 +149,7 @@ def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_t
             send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
     
 
-#KANIKA:- Adding sendmail function for delete VM Warning
+""""Send VM delete warning mail to VM users"""
 def send_email_delete_vm_warning(vm_users,vm_name,vm_shutdown_time):
     vm_delete_time= get_datetime() + timedelta(days=15)   
     for vm_user in vm_users:

@@ -25,7 +25,7 @@
       {{for util_data in vm_util_data:}}
        <tr>
        		<td>{{=A(util_data['vm_name'],_href=URL(r=request, c='user',f='show_vm_performance', args=[util_data['vm_id']]))}}</td>
-            <td>{{=util_data['memory']}}</td>
+            <td>{{=util_data['memory']}}%</td>
             <td>{{=util_data['cpu']}}%</td>
             <td>{{=util_data['diskr']}}</td>
             <td>{{=util_data['diskw']}}</td>

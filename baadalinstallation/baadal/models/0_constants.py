@@ -43,9 +43,6 @@ TASK_CLONE_VM = 'clone_task'
 TASK_VM = 'vm_task'
 TASK_DAILY_CHECKS = 'vm_daily_checks'
 TASK_PURGE_UNUSEDVM = 'vm_purge_unused'
-#kanika:- add new task here 
-
-
 
 #Request Status
 REQ_STATUS_REQUESTED = 1
@@ -111,7 +108,6 @@ UUID_HOST_SANITY_CHECK = 'scheduler-uuid-host-sanity-check'
 UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
 UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
 UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
-#Kanika:- Adding UUID for new task
 UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
 UUID_PURGE_UNUSEDVM = 'scheduler-uuid-purge-unusedvm'
 
@@ -133,6 +129,11 @@ SECONDS = 1
 MINUTES = 60 * SECONDS
 HOURS = 60 * MINUTES
 DAYS = 24 * HOURS
+
+BYTE = 1
+KILOBYTE = 1024 * BYTE
+MEGABYTE = 1024 * KILOBYTE
+GIGABYTE = 1024 * MEGABYTE
 
 HOST_VLAN_ID=1
 

@@ -147,11 +147,11 @@ def get_performance_graph(graph_type, vm, graph_period):
 def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
     rrd_file = get_rrd_file(rrd_file_name)
 
-    start_time = 'now - ' + str(24*60*60)
+    start_time = 'now-' + str(24*60*60)
     end_time = 'now'
     
     if period == VM_UTIL_10_MINS:
-        start_time = 'now - ' + str(10*60)
+        start_time = 'now-' + str(10*60)
     elif period == VM_UTIL_ONE_WEEK:
         start_time = '-1w'
     elif period == VM_UTIL_ONE_MNTH:

@@ -30,7 +30,7 @@ __all__ =['add_faculty_approver', 'add_orphan_vm', 'add_private_ip', 'add_privat
             'get_host_config','send_shutdown_email_to_all','check_vm_snapshot_sanity','delete_orphan_snapshot','delete_snapshot_info',
             'get_snapshot_type','get_host_sanity_form','get_host_util_data','edit_vm_config_validation','get_launch_vm_image_form',
             'add_user_verify_row', 'add_collaborators','launch_vm_image_validation','exec_launch_vm_image','check_vm_extra_disk',
-            'update_snapshot_flag']
+            'update_snapshot_flag','send_email_delete_vm_warning']
 
 if 0:
     from admin_model import *

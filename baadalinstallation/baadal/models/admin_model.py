@@ -656,7 +656,7 @@ def get_vm_util_data(util_period):
         util_result = fetch_rrd_data(vm.vm_identity, util_period)
         element = {'vm_id' : vm.id,
                    'vm_name' : vm.vm_name,
-                   'memory' : round(util_result[0], 2),
+                   'memory' : round(util_result[0]/(vm.RAM * MEGABYTE), 2),
                    'cpu' : round(util_result[1], 2),
                    'diskr' : round(util_result[2], 2),
                    'diskw' : round(util_result[3], 2),
@@ -671,8 +671,8 @@ def get_host_util_data(util_period):
     host_util_dict = {}
     for host_info in hosts:
         host_identity = str(host_info.host_ip).replace('.','_')
-        util_result = fetch_rrd_data(host_identity, util_period)
-        total_mem_kb=(host_info.RAM)*1024*1024*1024
+        util_result = fetch_rrd_data(host_identity, int(util_period))
+        total_mem_kb = host_info.RAM * GIGABYTE
         
         mem_util=(util_result[0]/float(total_mem_kb))*100
 
@@ -885,9 +885,9 @@ def launch_vm_image_validation(form):
 
 def check_vm_extra_disk(vm_image_name, disk_name, datastore_id):
     
-    (disk_path, image_present) = get_extra_disk_location(datastore_id, vm_image_name, disk_name)
-
-    return disk_path if image_present else None
+    (disk_path, image_present, disk_size) = get_extra_disk_location(datastore_id, vm_image_name, disk_name, True)
+    disk_info = "%s: %sG" %(disk_path, str(disk_size)) if image_present else None
+    return disk_info
 
 def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
     
@@ -905,7 +905,7 @@ def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
             add_private_ip(ip_pool_id)
     
     for extra_disk in extra_disk_list:
-#TODO: Find size of disk          
+
         db.attached_disks.insert(vm_id = vm_details.id,
                                  datastore_id = vm_details.datastore_id,
                                  capacity = 0,

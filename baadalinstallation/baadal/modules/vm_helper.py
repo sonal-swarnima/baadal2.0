@@ -24,9 +24,9 @@ def choose_datastore():
         count = datastore_length
         available_datastores = {}
         while count != 0:
-             available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
-             available_datastores[datastores[datastore_length-count]] = available
-             count = count-1
+            available = datastores[datastore_length-count].capacity - datastores[datastore_length-count].used
+            available_datastores[datastores[datastore_length-count]] = available
+            count = count-1
         z = [(i,available_datastores[i]) for i in available_datastores] 
         z.sort(key=lambda x: x[1])
         available_datastores = z
@@ -296,7 +296,7 @@ def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
         #already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
         
-        (diskpath, device_present) = get_extra_disk_location(vm_details.datastore_id, vm_details.vm_identity, disk_name)
+        (diskpath, device_present, disk_size) = get_extra_disk_location(vm_details.datastore_id, vm_details.vm_identity, disk_name, True)
 
         if not device_present:
             raise Exception("Device to be attached %s missing" %(diskpath))
@@ -334,10 +334,10 @@ def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
         logger.debug("VM XML redefined")
 
         connection_object.close()
-        return True
+        return disk_size
     except:
         logger.exception('Exception: ') 
-        return False
+        return 0
 
 # Serves extra disk request and updates db
 def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
@@ -850,10 +850,10 @@ def snapshot(parameters):
 def revert(parameters):
     
     logger.debug("Inside revert snapshot() function")
-    vm_id = parameters['vm_id']
-    snapshotid = parameters['snapshot_id']
-    vm_details = current.db.vm_data[vm_id]
     try:
+        vm_id = parameters['vm_id']
+        snapshotid = parameters['snapshot_id']
+        vm_details = current.db.vm_data[vm_id]
         connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
         domain = connection_object.lookupByName(vm_details.vm_identity)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
@@ -1161,7 +1161,7 @@ def get_vm_image_location(datastore_id, vm_identity):
     
     return (vm_image_name, image_present)
 
-def get_extra_disk_location(datastore_id, vm_identity, disk_name):
+def get_extra_disk_location(datastore_id, vm_identity, disk_name, get_disk_size=False):
 
     datastore = current.db.datastore[datastore_id]
     if datastore:
@@ -1171,9 +1171,15 @@ def get_extra_disk_location(datastore_id, vm_identity, disk_name):
         disk_image_path = vm_extra_disks_directory_path + '/' + disk_name + ext
         image_present = True if os.path.exists(disk_image_path) else False
     
-        return (disk_image_path, image_present)
+        disk_size = 0
+        if image_present & get_disk_size:
+            command = "qemu-img info " + disk_image_path + " | grep 'virtual size'"
+            ret = ret = os.popen(command).read() # Returns e.g. virtual size: 40G (42949672960 bytes)
+            disk_size = int(ret[ret.index(':')+1:ret.index('G ')].strip())
+            
+        return (disk_image_path, image_present, disk_size)
     else:
-        return (None, False)
+        return (None, False, 0)
 
 #Launch existing VM image
 def launch_existing_vm_image(vm_details):
@@ -1218,7 +1224,8 @@ def launch_existing_vm_image(vm_details):
             host_ip = current.db.host[vm_properties['host']].host_ip
             disk_counter = 1
             for attached_disk in attached_disks:
-                attach_disk(vm_details, attached_disk.attached_disk_name, host_ip, disk_counter, True)
+                disk_size = attach_disk(vm_details, attached_disk.attached_disk_name, host_ip, disk_counter, True)
+                attached_disk.update_record(capacity=disk_size)
                 disk_counter += 1
                 
         #Create mapping of Private_IP and Public_IP
