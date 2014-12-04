@@ -49,8 +49,8 @@ Installation setup
 Version Support
 ---------------
 
-- Libvirt 1.2.9
-- Qemu 2.0
-- Openvswitch 2.0.2
-- Ubuntu 14.04 (For sandbox script)
+- Libvirt **1.2.9**
+- Qemu **2.0**
+- Openvswitch **2.0.2**
+- Ubuntu **14.04** (For sandbox script)
 
