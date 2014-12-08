@@ -178,6 +178,9 @@ def send_email_to_user_manual(email_subject, email_message, vm_id):
     cc_addresses = []
     cc_addresses.append(config.get("MAIL_CONF","mail_admin_request"))
     vm_users = []
+    email_message += MAIL_FOOTER
+    context = dict(adminEmail = config.get("MAIL_CONF","mail_admin_request"))
+    email_message = email_message.format(context)
     for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
         vm_users.append(user['user_id'])
     for vm_user in vm_users:
