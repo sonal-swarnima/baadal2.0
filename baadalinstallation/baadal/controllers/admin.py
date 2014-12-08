@@ -39,7 +39,19 @@ def approve_users():
     types = get_user_role_types()
     return dict(users = users,
                 type_options = types)
-                
+ 
+@auth.requires_login()
+@handle_exception
+def mail_user():
+    vm_id = request.args[0]
+    form = get_mail_user_form()
+    if form.accepts(request.vars, session):
+        email_subject = form.vars.email_subject
+        email_message = form.vars.email_message
+        send_email_to_user_manual(email_subject, email_message, vm_id)
+        redirect(URL(c='default', f='index'))
+    return dict(form = form)
+              
 @check_moderator
 @handle_exception
 def modify_user_role():
@@ -571,4 +583,3 @@ def verify_extra_disk():
 
     disk_info = check_vm_extra_disk(vm_image_name, disk_name, datastore_id)
     return disk_info
-    

@@ -174,6 +174,18 @@ def send_email_to_admin(email_subject, email_message, email_type):
     logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
     push_email(email_address, email_subject, email_message, user_email_address)
 
+def send_email_to_user_manual(email_subject, email_message, vm_id):
+    cc_addresses = []
+    cc_addresses.append(config.get("MAIL_CONF","mail_admin_request"))
+    vm_users = []
+    for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
+        vm_users.append(user['user_id'])
+    for vm_user in vm_users:
+        user_info = get_user_details(vm_user)
+        if user_info[1] != None:
+            logger.info("MAIL USER: User Name: "+ user_info[0])
+            push_email(user_info[1], email_subject, email_message, [], cc_addresses)
+
 def send_email_on_successful_registration(user_id):
     user_info = get_user_details(user_id)
     if user_info[1] != None:

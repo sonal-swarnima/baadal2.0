@@ -353,7 +353,8 @@ def get_vm_operations(vm_id):
                      'grant_vnc'             : ('user', 'vnc.jpg', 'Grant VNC Access'),
                      'confirm_vm_deletion()' : ( None, 'delete.png', 'Delete this virtual machine'),
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
-                     'user_details'          : ('admin', 'user_add.png', 'Add User to VM')}
+                     'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
+                     'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM')}
 
     valid_operations_list = []
     
@@ -378,6 +379,7 @@ def get_vm_operations(vm_id):
             valid_operations.extend(['confirm_vm_deletion()'])
             if is_moderator():
                 valid_operations.extend(['user_details'])
+                valid_operations.extend(['mail_user'])
                 
                 if (db(db.host.id > 0).count() >= 2):
                     valid_operations.extend(['migrate_vm'])

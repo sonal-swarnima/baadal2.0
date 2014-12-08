@@ -912,3 +912,11 @@ def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
                                  attached_disk_name=extra_disk)
 #   Call Launch VM Image
     launch_existing_vm_image(vm_details)
+
+def get_mail_user_form():
+    form = FORM(TABLE(TR('Subject:'),
+                TR(TEXTAREA(_name='email_subject',_style='height:50px; width:100%', _cols='30', _rows='20',requires=IS_NOT_EMPTY())),TR('Message:'),
+                TR(TEXTAREA(_name='email_message',_style='height:100px; width:100%', _cols='30', _rows='20',requires=IS_NOT_EMPTY())),
+                
+                TR(INPUT(_type = 'submit', _value = 'Send Email')),_style='width:100%; border:0px'))
+    return form
