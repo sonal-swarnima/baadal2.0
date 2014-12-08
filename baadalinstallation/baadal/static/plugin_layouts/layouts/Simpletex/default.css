@@ -179,6 +179,7 @@ input.task_num{width:30px;}
 	float: left;
 	display: block;
 	height: 40px;
+	background:none;
 }
 
 #menu li:hover {
@@ -194,6 +195,18 @@ input.task_num{width:30px;}
 	text-decoration: none;
 	font-weight: bold;
 	color: #000000;
+}
+
+#menu li a { 
+	backgroud:none;
+} 
+
+#menu li.active {
+	background: #EDEBD5 url(/baadal/static/images/img05.gif) no-repeat;
+} 
+
+#menu li.active a {
+	background: url(/baadal/static/images/img06.gif) no-repeat right top;
 }
 
 html>body #menu a {

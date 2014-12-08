@@ -11,28 +11,22 @@
 
   <script>
     jQuery(document).ready(function(){
-	
-      if(window.location.pathname=='/'){
-	    var css = document.createElement('style');
-            css.type = 'text/css';
-            css.rel = 'stylesheet';
-            css.innerHTML = '#menu li a { backgroud:none;} #menu li {background:none;} #menu li.active {background: #EDEBD5 url(/baadal/static/images/img05.gif) no-repeat;} #menu li.active a {background: url(/baadal/static/images/img06.gif) no-repeat right top;}';
-            document.getElementsByTagName('head')[0].appendChild(css);
-	       
-	  } else if (window.location.pathname=='/team'){
-	    var css = document.createElement('style');
-            css.type = 'text/css';
-            css.rel = 'stylesheet';
-            css.innerHTML = '#menu li:hover{background: #EDEBD5 url(/baadal/static/images/img05.gif) no-repeat;} #menu li {background: #EDEBD5 url(/baadal/static/images/img05.gif) no-repeat;} #menu li a {background: url(/baadal/static/images/img06.gif) no-repeat right top;} #menu li.active{background:none;} #menu li.active:hover {background: #F9F8F1;} #menu li.contact{background:none;} #menu li.contact:hover {background: #F9F8F1;} #menu li.active a {background:none;} #menu li.contact a {background:none;}';
-            document.getElementsByTagName('head')[0].appendChild(css);
-	        
-	  } else if (window.location.pathname=='/contact'){
-	    var css = document.createElement('style');
-            css.type = 'text/css';
-            css.rel = 'stylesheet';
-            css.innerHTML = '#menu li a { backgroud:none;} #menu li {background:none;} #menu li.contact {background: #EDEBD5 url(/baadal/static/images/img05.gif) no-repeat;} #menu li.contact a {background: url(/baadal/static/images/img06.gif) no-repeat right top;}';
-            document.getElementsByTagName('head')[0].appendChild(css);
+
+      if (window.location.pathname != '/')
+      {
+	      menu_links = document.getElementsByXPath("//div[@id='menu']/ul/li")
+			
+	      for ( var i=0 ; i < menu_links.length; i++ ){
+		      menu_href = menu_links[i].getElementsByTagName('a')[0].href
+		      if (menu_href.indexOf(window.location.pathname) != -1){
+		      	menu_links[i].setAttribute("class","active");
+		      }else
+		      {
+		      	menu_links[i].setAttribute("class","");
+		      }
+	      }
       }
+
       {{if not response.flash:}}
 	    jQuery('.flash').hide();
       {{pass}}
@@ -85,7 +79,7 @@
 
 <div id="menu">
   {{if response.top_menu:}}
-    {{=MENU(response.top_menu, _class='nav', li_first="active", li_last="contact")}}
+    {{=MENU(response.top_menu, _class='nav', li_first="active")}}
   {{pass}}
 </div>
 

@@ -16,8 +16,7 @@ response.google_analytics_id = None
 
 response.top_menu = [
     (T('About'), False, URL('default','index')),
-#    (T('Blog'), False, URL('default','page_under_construction')),
-#    (T('Photos'), False, URL('default','page_under_construction')),
+    (T('FAQ'), False, URL('default','faq')),
     (T('Team Baadal'), False, URL('default','team')),
     (T('Contact'), False, URL('default','contact'))
     ]

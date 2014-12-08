@@ -1,0 +1,66 @@
+{{extend 'layout.html'}}
+
+<h2 class="title">Frequently asked questions:</h2>
+
+<div class="entry"><br/>
+Here are some of frequently asked questions. For specific queries write to <b>baadalsupport@cse.iitd.ernet.in</b>
+
+<ul type="1">
+<li>
+<b>How can I register to access baadal interface?</b><br/>
+<p>Click on the Register link at top right corner; and submit the form.
+You will receive a confirmation mail after admin accepts your request.<br/>
+Then, you can login to Baadal interface using your credentials.
+</p></li>
+<li>
+<b>Which operating systems are supported by Baadal?</b><br/>
+<p>Currently, Baadal has template for Ubuntu12.04, Ubuntu14.04, Centos6.4 & Windows 2008 R2.<br/>
+If you need any other operating system or version, you can separately request for the same.
+</p></li>
+<li>
+<b>How can I request for a Virtual Machine using baadal interface?</b><br/>
+<p>After you login, goto USER MENU > Request VM.<br/>
+Submit the form with appropriate values. Your VM will be created once request is approved by admin.
+</p></li>
+<li>
+<b>After VM is created, how can I access my VM?</b><br/>
+<p>After VM is created, you will receive a mail with all the details.
+By default VMs are created with a private IP; hence can be accessed from within Baadal network only.<br/>
+To access VM using assigned private IP; SSH to baadal gateway machine using given credential. Once successfully logged in you can ssh to your VM using private IP.<br/>
+Alternatively, you can request for a public IP. Then you can directly access your virtual machine using public IP.<br/>
+</p></li>
+<li>
+<b>What types of applications can I run on my virtual machine?</b><br/>
+<p>Any application that will run on a standard PC will run inside a virtual machine on Baadal. Each virtual machine has its own CPU, memory, disks, I/O devices, etc. This allows you to run any application that runs on the supported guest operating systems.
+</p></li>
+<li>
+<b>Can I take snapshot of my virtual machine?</b><br/>
+<p>You can snapshot a VM to save its state and revert to it at a future time.<br/> 
+Moreover, for better reliability, you can configure system to automatically snapshots your VM on a daily, weekly, monthly or yearly basis
+</p></li>
+<li>
+<b>What is VNC and how can I request for a VNC access?</b><br/>
+<p>VNC is a graphical desktop sharing system that uses the Remote Frame Buffer protocol (RFB) to remotely control another computer.
+User can request for VNC for troubleshooting. By default VNC access is provided for 30 minutes only.
+</p></li>
+<li>
+<b>How can i check performance/utilization of my virtual machine?</b><br/>
+<p>Memory, CPU, Network and disk Utilization of VMs are periodically recorded.<br/>
+User can check the performance graph of its VM by going to USER MENU > My VMs > Settings > Check VM Performance</li>
+</p><li>
+<b>Can I change configuration of my virtual machine after it is created?</b><br/>
+<p>Request can be submitted to upgrade RAM and CPU of VM. As virtual machine needs to be restarted for the change to take effect; editing configuration is allowed only if VM is Shut-off.
+</p></li>
+<li>
+<b>Can I request for additional harddisk?</b><br/>
+<p>You can request for additional disk space at any point of time. As virtual machine needs to be restarted for the change to take effect; attaching disk is allowed only if VM is Shut-off.<br/>
+Goto USER MENU > My VMs > Settings > Attach Disk
+You mail receive mail with instructions to mount additional disk space.
+</p></li>
+<li>
+<b>Is my virtual machine secure?</b><br/>
+<p>Baadal is a multi-tenant implementation, which means that different organizations are protected from each other from network and system-level security attacks.<br/>
+User chooses a security domain at time of creation of VM. This is to isolate VM from other untrusted users. Only users within the same security domain need to trust each other. 
+</p></li>
+</ul>
+</div>

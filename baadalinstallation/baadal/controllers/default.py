@@ -41,6 +41,9 @@ def contact():
 def team():
     return dict()
 
+def faq():
+    return dict()
+
 def error():
     return dict(error=request.vars['error'])
 
