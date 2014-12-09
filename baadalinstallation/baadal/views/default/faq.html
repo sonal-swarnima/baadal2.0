@@ -7,10 +7,10 @@ Here are some of frequently asked questions. For specific queries write to <b>ba
 
 <ul type="1">
 <li>
-<b>How can I register to access baadal interface?</b><br/>
-<p>Click on the Register link at top right corner; and submit the form.
+<b>How can I register to access Baadal interface?</b><br/>
+<p>Click on Register link at top right corner; fill the details and submit the form.
 You will receive a confirmation mail after admin accepts your request.<br/>
-Then, you can login to Baadal interface using your credentials.
+You can then login to Baadal interface using your credentials.
 </p></li>
 <li>
 <b>Which operating systems are supported by Baadal?</b><br/>
@@ -18,16 +18,17 @@ Then, you can login to Baadal interface using your credentials.
 If you need any other operating system or version, you can separately request for the same.
 </p></li>
 <li>
-<b>How can I request for a Virtual Machine using baadal interface?</b><br/>
-<p>After you login, goto USER MENU > Request VM.<br/>
-Submit the form with appropriate values. Your VM will be created once request is approved by admin.
+<b>How can I request for a Virtual Machine?</b><br/>
+<p>After login, goto <i>USER MENU > Request VM</i>.<br/>
+Fill the form according to your requirement. Your virtual machine will be created once request is approved by admin.
 </p></li>
 <li>
-<b>After VM is created, how can I access my VM?</b><br/>
+<b>After Virtual machine is created, how can I access my VM?</b><br/>
 <p>After VM is created, you will receive a mail with all the details.
 By default VMs are created with a private IP; hence can be accessed from within Baadal network only.<br/>
 To access VM using assigned private IP; SSH to baadal gateway machine using given credential. Once successfully logged in you can ssh to your VM using private IP.<br/>
-Alternatively, you can request for a public IP. Then you can directly access your virtual machine using public IP.<br/>
+Alternatively, you can request for a public IP, in which case you can directly access your virtual machine using public IP.<br/>
+<i>Right now, Baadal is in Pilot phase. So, services are open only to NKN, ERNET or NMEICT BSNL network.</i>
 </p></li>
 <li>
 <b>What types of applications can I run on my virtual machine?</b><br/>
@@ -46,21 +47,29 @@ User can request for VNC for troubleshooting. By default VNC access is provided 
 <li>
 <b>How can i check performance/utilization of my virtual machine?</b><br/>
 <p>Memory, CPU, Network and disk Utilization of VMs are periodically recorded.<br/>
-User can check the performance graph of its VM by going to USER MENU > My VMs > Settings > Check VM Performance</li>
-</p><li>
+User can check the resource utilization graph of its virtual machine by going to <i>USER MENU > My VMs > Settings > Check VM Performance</i>
+</p></li>
+<li>
 <b>Can I change configuration of my virtual machine after it is created?</b><br/>
 <p>Request can be submitted to upgrade RAM and CPU of VM. As virtual machine needs to be restarted for the change to take effect; editing configuration is allowed only if VM is Shut-off.
 </p></li>
 <li>
+<b>How much storage will be allocated with the virtual machine?</b>
+<p>Currently, templates are available with 30GB and 80GB storage. Harddisk will be allocated as per your request.
+</p></li>
+<li>
 <b>Can I request for additional harddisk?</b><br/>
-<p>You can request for additional disk space at any point of time. As virtual machine needs to be restarted for the change to take effect; attaching disk is allowed only if VM is Shut-off.<br/>
-Goto USER MENU > My VMs > Settings > Attach Disk
-You mail receive mail with instructions to mount additional disk space.
+<p>You can request for additional disk when requesting for VM. This disk will be mounted seperately on the VM<br/> 
+You can also request for additional disk space at any point of time if VM is Shut-off.<br/>
+Goto <i>USER MENU > My VMs > Settings > Attach Disk</i>.<br/>
+User will receive mail with instructions to mount additional disk space.
 </p></li>
 <li>
 <b>Is my virtual machine secure?</b><br/>
 <p>Baadal is a multi-tenant implementation, which means that different organizations are protected from each other from network and system-level security attacks.<br/>
-User chooses a security domain at time of creation of VM. This is to isolate VM from other untrusted users. Only users within the same security domain need to trust each other. 
+User chooses a security domain at time of creation of VM. This is to isolate VM from other untrusted users. Only users within the same security domain need to trust each other.<br/> 
+User should also secure its virtual machine as it would with any other PC.
 </p></li>
 </ul>
 </div>
+
