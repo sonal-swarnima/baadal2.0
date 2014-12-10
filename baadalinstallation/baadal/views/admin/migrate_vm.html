@@ -1,9 +1,92 @@
 {{extend 'layout.html'}}
 
-<div class="post">
-	<h1 class="title">{{=T('Migrate VM')}}</h1>
-	<div class="entry">
-		{{=form}}
-	</div>
+<div id="tabs-task">
+
+  <ul>
+    <li><a href="#hostTab", onclick="set_tab_cookie(0);">Migrate Host</a></li>
+    <li><a href="#datastoreTab", onclick="set_tab_cookie(1);">Migrate Datastore</a></li>
+  </ul>
+
+  <div id="hostTab">
+    {{if len(vm_details['available_hosts']) != 0:}}
+        <form action="{{=vm_details['vm_id']}}/migrate_vm_hosts">
+        <hidden name="nn" value="vv" />
+        <table>
+          <tr>
+            <td>VM Name:</td>
+            <td><b>{{=vm_details['vm_name']}}</b></td>
+          </tr>
+          <tr>
+            <td>Current Host:</td>
+            <td>{{=vm_details['current_host']}}</td>
+          </tr>
+          <tr>
+            <td>Destination Host:</td>
+            <td>
+                {{=SELECT([OPTION(vm_details['available_hosts'][key], _value = key) for key in vm_details['available_hosts'].keys()], _name='selected_host')}}
+            </td>
+          </tr>
+    
+          {{if vm_details['vm_status'] == VM_STATUS_RUNNING:}}
+              <tr>
+                <td>Live Migration:</td>
+                <td><input name="live_migration" type="checkbox"/></td>
+              </tr>
+          {{pass}}
+    
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Migrate Host" /></td>
+          </tr>
+        </table>
+        </form>
+    {{else:}}
+        No Host available to migrate
+    {{pass}}
+  </div>
+  <div id="datastoreTab">
+    {{if len(vm_details['available_datastores']) != 0:}}
+        <form action="{{=vm_details['vm_id']}}/migrate_vm_datastores">
+        <table>
+          <tr>
+            <td>VM Name:</td>
+            <td><b>{{=vm_details['vm_name']}}</b></td>
+          </tr>
+          <tr>
+            <td>Current Datastore:</td>
+            <td>{{=vm_details['current_datastore']}}</td>
+          </tr>
+          <tr>
+            <td>Destination Datastore:</td>
+            <td>
+                {{=SELECT([OPTION(vm_details['available_datastores'][key], _value = key) for key in vm_details['available_datastores'].keys()], _name='selected_datastore')}}
+            </td>
+          </tr>
+    
+          {{if vm_details['vm_status'] == VM_STATUS_RUNNING:}}
+              <tr>
+                <td>Live Migration:</td>
+                <td><input name="live_migration" type="checkbox"/></td>
+              </tr>
+          {{pass}}
+    
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Migrate Datastore" /></td>
+          </tr>
+        </table>
+        </form>
+    {{else:}}
+        No Datastore available to migrate
+    {{pass}}
+  </div>
 </div>
 
+<script>
+$(document).keypress(function(e) {
+  if(e.which == 13) {
+    tab_refresh();
+    $(this).closest('form').submit()
+  }
+})
+</script>

@@ -293,7 +293,7 @@ def create_clone_task(req_data, params):
         cnt = cnt+1
         
     params.update({'clone_vm_id':vm_id_list})
-    add_vm_task_to_queue(req_data.parent_id, TASK_TYPE_CLONE_VM, params=params, requested_by=req_data.requester_id)
+    add_vm_task_to_queue(req_data.parent_id, VM_TASK_CLONE, params=params, requested_by=req_data.requester_id)
 
 def create_install_task(req_data, params):
 
@@ -313,7 +313,7 @@ def create_install_task(req_data, params):
                   status = VM_STATUS_IN_QUEUE)
         
     add_vm_users(vm_id, req_data.requester_id, req_data.owner_id, req_data.collaborators)
-    add_vm_task_to_queue(vm_id, TASK_TYPE_CREATE_VM, params=params, requested_by=req_data.requester_id)
+    add_vm_task_to_queue(vm_id, VM_TASK_CREATE, params=params, requested_by=req_data.requester_id)
 
 def create_edit_config_task(req_data, params):
     
@@ -333,13 +333,13 @@ def enqueue_vm_request(request_id):
     req_data = db.request_queue[request_id]
     params={'request_id' : request_id}
     
-    if req_data.request_type == TASK_TYPE_CLONE_VM:
+    if req_data.request_type == VM_TASK_CLONE:
         create_clone_task(req_data, params)
-    elif req_data.request_type == TASK_TYPE_CREATE_VM:
+    elif req_data.request_type == VM_TASK_CREATE:
         create_install_task(req_data, params)
-    elif req_data.request_type == TASK_TYPE_EDITCONFIG_VM:
+    elif req_data.request_type == VM_TASK_EDIT_CONFIG:
         create_edit_config_task(req_data, params)
-    elif req_data.request_type == TASK_TYPE_ATTACH_DISK:
+    elif req_data.request_type == VM_TASK_ATTACH_DISK:
         params.update({'disk_size' : req_data.attach_disk})
         add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params, requested_by=req_data.requester_id)
     
@@ -407,9 +407,9 @@ def update_task_retry(event_id):
         if db.request_queue[request_id]:
             db.request_queue[request_id] = dict(status=REQ_STATUS_IN_QUEUE)
     
-    if task_event_data.task_type == TASK_TYPE_CREATE_VM:
+    if task_event_data.task_type == VM_TASK_CREATE:
         db.vm_data[task_event_data.vm_id] = dict(status=VM_STATUS_IN_QUEUE)
-    elif task_event_data.task_type == TASK_TYPE_CLONE_VM:
+    elif task_event_data.task_type == VM_TASK_CLONE:
         vm_list = task_queue_data.parameters['clone_vm_id']
         for vm in vm_list:
             db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
@@ -430,9 +430,9 @@ def update_task_ignore(event_id):
         if db.request_queue[request_id]:
             del db.request_queue[request_id]
     
-    if task_event_data.task_type == TASK_TYPE_CREATE_VM:
+    if task_event_data.task_type == VM_TASK_CREATE:
         if db.vm_data[task_event_data.vm_id]: del db.vm_data[task_event_data.vm_id]
-    elif task_event_data.task_type == TASK_TYPE_CLONE_VM:
+    elif task_event_data.task_type == VM_TASK_CLONE:
         vm_list = task_event_data.parameters['clone_vm_id']
         for vm in vm_list:
             if db.vm_data[vm]: del db.vm_data[vm]
@@ -520,27 +520,22 @@ def add_live_migration_option(form):
     form[0].insert(3, live_migration_element)      
 
 
-def get_migrate_vm_form(vm_id):
+def get_migrate_vm_details(vm_id):
 
-    form = None
-    host_id = db(db.vm_data.id == vm_id).select(db.vm_data.host_id).first()['host_id']
-    host_options = [OPTION(host.host_ip, _value = host.id) for host in db((db.host.id != host_id) & (db.host.status == 1)).select()]
-    if host_options:
-        form = FORM(TABLE(TR('VM Name:', INPUT(_name = 'vm_name', _readonly = True)), 
-                      TR('Current Host:', INPUT(_name = 'current_host', _readonly = True)),
-                      TR('Destination Host:' , SELECT(*host_options, **dict(_name = 'destination_host', requires = IS_IN_DB(db, 'host.id')))),
-                      TR('', INPUT(_type='submit', _value = 'Migrate'))))
+    vm_data = db.vm_data[vm_id]
 
-        form.vars.vm_name = db(db.vm_data.id == vm_id).select(db.vm_data.vm_name).first()['vm_name']  
-        form.vars.current_host = db(db.host.id == host_id).select(db.host.host_ip).first()['host_ip']
+    vm_details = {}
+    vm_details['vm_id'] = vm_id
+    vm_details['vm_name'] = vm_data.vm_identity
+    vm_details['vm_status'] = vm_data.status
+    vm_details['current_host'] = "%s (%s)" %(vm_data.host_id.host_name, vm_data.host_id.host_ip)
+    vm_details['current_datastore'] = "%s (%s:%s)" %(vm_data.datastore_id.ds_name, vm_data.datastore_id.ds_ip, vm_data.datastore_id.path)
+    vm_details['available_hosts'] = dict((host.id, "%s (%s)"%(host.host_name, host.host_ip)) 
+                                         for host in db((db.host.id != vm_data.host_id) & (db.host.status == 1)).select())
+    vm_details['available_datastores'] = dict((ds.id, "%s (%s:%s)" %(ds.ds_name, ds.ds_ip, ds.path)) 
+                                              for ds in db((db.datastore.id != vm_data.datastore_id)).select())
 
-        if is_vm_running(vm_id):
-            add_live_migration_option(form)
-
-    else:
-        session.flash = "No host available right now"
-        
-    return form
+    return vm_details
 
 # Check if vm is running
 def is_vm_running(vmid):
@@ -692,7 +687,7 @@ def check_vm_resource(request_id):
     avl_ip = db((db.private_ip_pool.vm_id == None) & (db.private_ip_pool.vlan.belongs(vlans))).count()
     
     message = None
-    if req_data.request_type == TASK_TYPE_CREATE_VM:
+    if req_data.request_type == VM_TASK_CREATE:
         if avl_ip == 0:
             message = "No private IPs available for security domain '%s" % req_data.security_domain.name
         if req_data.public_ip:
@@ -701,7 +696,7 @@ def check_vm_resource(request_id):
                 message = "" if message == None else message + ", "
                 message += "No public IP available"
             
-    elif req_data.request_type == TASK_TYPE_CLONE_VM:
+    elif req_data.request_type == VM_TASK_CLONE:
         if avl_ip < req_data.clone_count:
             message = "%s private IP(s) available for security domain '%s" % (str(avl_ip), req_data.security_domain.name)
 

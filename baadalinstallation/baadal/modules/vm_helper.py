@@ -794,7 +794,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
  
 
-# Migrates a vm to a new host
+# Migrates VM to new host
 def migrate(parameters):
 
     logger.debug("Inside migrate() function")
@@ -805,6 +805,19 @@ def migrate(parameters):
     else:
         live_migration = False
     return migrate_domain(vmid, destination_host_id, live_migration)
+  
+# Migrates VM to new datastore
+def migrate_datastore(parameters):
+
+    logger.debug("Inside migrate_datastore() function")
+    vmid = parameters['vm_id']
+    destination_host_id = parameters['destination_ds']
+    if parameters['live_migration'] == 'on':
+        live_migration = True
+    else:
+        live_migration = False
+#     TODO: Implementation of Migrate between datastores
+    return
   
 
 # Snapshots a vm

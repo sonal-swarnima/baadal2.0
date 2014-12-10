@@ -6,7 +6,8 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd, config
-from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot, revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk
+from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot,\
+    revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
@@ -18,20 +19,21 @@ current.cache = cache
 
 import os
 
-task = {TASK_TYPE_CREATE_VM               :    install,
-        TASK_TYPE_START_VM                :    start,
-        TASK_TYPE_STOP_VM                 :    destroy,
-        TASK_TYPE_SUSPEND_VM              :    suspend,
-        TASK_TYPE_RESUME_VM               :    resume,
-        TASK_TYPE_DESTROY_VM              :    destroy,
-        TASK_TYPE_DELETE_VM               :    delete,
-        TASK_TYPE_MIGRATE_VM              :    migrate,
-        TASK_TYPE_SNAPSHOT_VM             :    snapshot,
-        TASK_TYPE_REVERT_TO_SNAPSHOT      :    revert,
-        TASK_TYPE_DELETE_SNAPSHOT         :    delete_snapshot,
-        TASK_TYPE_EDITCONFIG_VM           :    edit_vm_config,
-        TASK_TYPE_CLONE_VM                :    clone,
-        TASK_TYPE_ATTACH_DISK             :    attach_extra_disk
+task = {VM_TASK_CREATE               :    install,
+        VM_TASK_START                :    start,
+        VM_TASK_STOP                 :    destroy,
+        VM_TASK_SUSPEND              :    suspend,
+        VM_TASK_RESUME               :    resume,
+        VM_TASK_DESTROY              :    destroy,
+        VM_TASK_DELETE               :    delete,
+        VM_TASK_MIGRATE_HOST         :    migrate,
+        VM_TASK_MIGRATE_DS           :    migrate_datastore,
+        VM_TASK_SNAPSHOT             :    snapshot,
+        VM_TASK_REVERT_TO_SNAPSHOT   :    revert,
+        VM_TASK_DELETE_SNAPSHOT      :    delete_snapshot,
+        VM_TASK_EDIT_CONFIG          :    edit_vm_config,
+        VM_TASK_CLONE                :    clone,
+        VM_TASK_ATTACH_DISK          :    attach_extra_disk
        }
 
 def send_task_complete_mail(task_event):
@@ -48,17 +50,17 @@ def send_task_complete_mail(task_event):
 def log_vm_event(old_vm_data, task_queue_data):
 
     vm_data = db.vm_data[old_vm_data.id]
-    if task_queue_data.task_type in (TASK_TYPE_START_VM, 
-                                     TASK_TYPE_STOP_VM, 
-                                     TASK_TYPE_SUSPEND_VM, 
-                                     TASK_TYPE_RESUME_VM, 
-                                     TASK_TYPE_DESTROY_VM):
+    if task_queue_data.task_type in (VM_TASK_START, 
+                                     VM_TASK_STOP, 
+                                     VM_TASK_SUSPEND, 
+                                     VM_TASK_RESUME, 
+                                     VM_TASK_DESTROY):
         db.vm_event_log.insert(vm_id = vm_data.id,
                                attribute = 'VM Status',
                                requester_id = task_queue_data.requester_id,
                                old_value = get_vm_status(old_vm_data.status),
                                new_value = get_vm_status(vm_data.status))
-    elif task_queue_data.task_type == TASK_TYPE_EDITCONFIG_VM:
+    elif task_queue_data.task_type == VM_TASK_EDIT_CONFIG:
         parameters = task_queue_data.parameters
         data_list = []
         if 'vcpus' in parameters:
@@ -96,7 +98,7 @@ def log_vm_event(old_vm_data, task_queue_data):
                       'new_value' : vm_data.private_ip}
             data_list.append(vm_log)
         db.vm_event_log.bulk_insert(data_list)
-    elif task_queue_data.task_type == TASK_TYPE_ATTACH_DISK:
+    elif task_queue_data.task_type == VM_TASK_ATTACH_DISK:
         db.vm_event_log.insert(vm_id = vm_data.id,
                                attribute = 'Attach Disk',
                                requester_id = task_queue_data.requester_id,
@@ -138,7 +140,7 @@ def process_task_queue(task_event_id):
             if 'request_id' in task_queue_data.parameters:
                 del db.request_queue[task_queue_data.parameters['request_id']]
             
-            if task_event_data.task_type != TASK_TYPE_MIGRATE_VM:
+            if task_event_data.task_type not in (VM_TASK_MIGRATE_HOST, VM_TASK_MIGRATE_DS):
                 send_task_complete_mail(task_event_data)
         
     except:
@@ -166,7 +168,7 @@ def process_clone_task(task_event_id, vm_id):
         if task_event.attention_time == None:
             task_event.update_record(attention_time=get_datetime())
         logger.debug("Starting VM Cloning...")
-        ret = task[TASK_TYPE_CLONE_VM](vm_id)
+        ret = task[VM_TASK_CLONE](vm_id)
         logger.debug("Completed VM Cloning...")
 
         if ret[0] == TASK_QUEUE_STATUS_FAILED:
@@ -222,7 +224,7 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
     try:
         if snapshot_type == SNAPSHOT_SYSTEM:
             params={'snapshot_type' : frequency, 'vm_id' : vm_id}
-            task[TASK_TYPE_SNAPSHOT_VM](params)
+            task[VM_TASK_SNAPSHOT](params)
 
         else:    
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
@@ -353,7 +355,7 @@ def process_unusedvm_purge():
                 daysDiff=(get_datetime()-vm_data.delete_warning_date).days
                 if(vm_details.new_value == "Shutdown" and daysDiff >= 0):
                     logger.info("Need to delete the VM ID:"+str(vm_data.id)) 
-                    add_vm_task_to_queue(vm_data.id,TASK_TYPE_DELETE_VM)
+                    add_vm_task_to_queue(vm_data.id,VM_TASK_DELETE)
                     # make an entry in task queue so that scheduler can pick up and delete the VM.
     except:
         log_exception()

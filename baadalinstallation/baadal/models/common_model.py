@@ -140,13 +140,13 @@ def get_pending_request_list(vm_requests):
                    'request_type' : vm_request.request_type,
                    'status' : vm_request.status}
         
-        if vm_request.request_type == TASK_TYPE_CREATE_VM:
+        if vm_request.request_type == VM_TASK_CREATE:
             update_install_vm_request(vm_request, element)
-        elif vm_request.request_type == TASK_TYPE_CLONE_VM:
+        elif vm_request.request_type == VM_TASK_CLONE:
             update_clone_vm_request(vm_request, element)
-        elif vm_request.request_type == TASK_TYPE_ATTACH_DISK:
+        elif vm_request.request_type == VM_TASK_ATTACH_DISK:
             update_attach_disk_request(vm_request, element)
-        elif vm_request.request_type == TASK_TYPE_EDITCONFIG_VM:
+        elif vm_request.request_type == VM_TASK_EDIT_CONFIG:
             update_edit_config_request(vm_request, element)
         
         request_list.append(element)
@@ -159,13 +159,13 @@ def get_segregated_requests(request_list):
     disk_requests = []
     edit_requests = []
     for req in request_list:
-        if req['request_type'] == TASK_TYPE_CREATE_VM:
+        if req['request_type'] == VM_TASK_CREATE:
             install_requests.append(req)
-        elif req['request_type'] == TASK_TYPE_CLONE_VM:
+        elif req['request_type'] == VM_TASK_CLONE:
             clone_requests.append(req)
-        elif req['request_type'] == TASK_TYPE_ATTACH_DISK:
+        elif req['request_type'] == VM_TASK_ATTACH_DISK:
             disk_requests.append(req)
-        elif req['request_type'] == TASK_TYPE_EDITCONFIG_VM:
+        elif req['request_type'] == VM_TASK_EDIT_CONFIG:
             edit_requests.append(req)
     return (install_requests, clone_requests, disk_requests, edit_requests)
    
@@ -369,8 +369,8 @@ def get_vm_operations(vm_id):
             valid_operations.extend(['resume_vm'])
         elif vm_status == VM_STATUS_SHUTDOWN:
             #Start VM option is not valid if edit VM or attach disk option is in queue
-            if not (is_request_in_queue(vm_id, TASK_TYPE_EDITCONFIG_VM) | 
-                    is_request_in_queue(vm_id, TASK_TYPE_ATTACH_DISK)):
+            if not (is_request_in_queue(vm_id, VM_TASK_EDIT_CONFIG) | 
+                    is_request_in_queue(vm_id, VM_TASK_ATTACH_DISK)):
                 valid_operations.extend(['start_vm'])
 
             valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk'])
@@ -378,16 +378,14 @@ def get_vm_operations(vm_id):
         if not is_vm_user():
             valid_operations.extend(['confirm_vm_deletion()'])
             if is_moderator():
+                valid_operations.extend(['migrate_vm'])
                 valid_operations.extend(['user_details'])
                 valid_operations.extend(['mail_user'])
-                
-                if (db(db.host.id > 0).count() >= 2):
-                    valid_operations.extend(['migrate_vm'])
 
         valid_operations.extend(['grant_vnc', 'vm_history'])
         
         #Disable all links if Delete VM option is in queue
-        link_disabled = True if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM) else False
+        link_disabled = True if is_request_in_queue(vm_id, VM_TASK_DELETE) else False
         for valid_operation in valid_operations:
             
             op_data = vm_operations[valid_operation]

@@ -88,11 +88,11 @@ def push_email(to_address, email_subject, email_message, reply_to_address, cc_ad
 
 def send_email(to_address, email_subject, email_template, context, cc_addresses=[]):
 
-    email_template += MAIL_FOOTER
-    context['adminEmail'] = config.get("MAIL_CONF","mail_admin_request")
     if to_address != None:
+        email_template += MAIL_FOOTER
+        context['adminEmail'] = config.get("MAIL_CONF","mail_admin_request")
         email_message = email_template.format(context)
-    
+        cc_addresses.append(config.get("MAIL_CONF","mail_sender"))
         push_email(to_address, email_subject, email_message, [], cc_addresses)
 
 
@@ -119,8 +119,6 @@ def send_email_to_requester(vm_name):
     
 def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
 
-    cc_addresses = []
-    cc_addresses.append(config.get("MAIL_CONF","mail_admin_request"))
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
         if user_info[1] != None:
@@ -128,13 +126,12 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
                            userName = user_info[0],
                            taskType = task_type,
                            requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
-            if task_type == TASK_TYPE_CREATE_VM:
-                cc_addresses = []
+            if task_type == VM_TASK_CREATE:
                 context.update({'gatewayVM':config.get("GENERAL_CONF","gateway_vm")})
-                send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context, cc_addresses)
+                send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
             else:
                 subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
-                send_email(user_info[1], subject, TASK_COMPLETE_BODY, context, cc_addresses)
+                send_email(user_info[1], subject, TASK_COMPLETE_BODY, context)
         
 
 def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_time):
@@ -175,19 +172,16 @@ def send_email_to_admin(email_subject, email_message, email_type):
     push_email(email_address, email_subject, email_message, user_email_address)
 
 def send_email_to_user_manual(email_subject, email_message, vm_id):
-    cc_addresses = []
-    cc_addresses.append(config.get("MAIL_CONF","mail_admin_request"))
     vm_users = []
-    email_message += MAIL_FOOTER
     context = dict(adminEmail = config.get("MAIL_CONF","mail_admin_request"))
-    email_message = email_message.format(context)
+
     for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
         vm_users.append(user['user_id'])
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
         if user_info[1] != None:
             logger.info("MAIL USER: User Name: "+ user_info[0])
-            push_email(user_info[1], email_subject, email_message, [], cc_addresses)
+            send_email(user_info[1], email_subject, email_message, context)
 
 def send_email_on_successful_registration(user_id):
     user_info = get_user_details(user_id)

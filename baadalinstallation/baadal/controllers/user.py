@@ -71,7 +71,7 @@ def settings():
 
 def handle_vm_operation(vm_id, task_type):
 
-    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_VM):
+    if is_request_in_queue(vm_id, VM_TASK_DELETE):
         session.flash = "Delete request is in queue. No operation can be performed"
     elif is_request_in_queue(vm_id, task_type):
         session.flash = "%s request already in queue." %task_type
@@ -83,41 +83,41 @@ def handle_vm_operation(vm_id, task_type):
 @check_vm_owner
 @handle_exception
 def start_vm():
-    handle_vm_operation(request.args[0], TASK_TYPE_START_VM)
+    handle_vm_operation(request.args[0], VM_TASK_START)
 
 @check_vm_owner
 @handle_exception
 def stop_vm():
-    handle_vm_operation(request.args[0], TASK_TYPE_STOP_VM)
+    handle_vm_operation(request.args[0], VM_TASK_STOP)
 
 @check_vm_owner
 @handle_exception
 def resume_vm():
-    handle_vm_operation(request.args[0], TASK_TYPE_RESUME_VM)
+    handle_vm_operation(request.args[0], VM_TASK_RESUME)
 
 @check_vm_owner
 @handle_exception
 def suspend_vm():
-    handle_vm_operation(request.args[0], TASK_TYPE_SUSPEND_VM)
+    handle_vm_operation(request.args[0], VM_TASK_SUSPEND)
 
 @check_vm_owner
 @handle_exception
 def destroy_vm():
-    handle_vm_operation(request.args[0], TASK_TYPE_DESTROY_VM)
+    handle_vm_operation(request.args[0], VM_TASK_DESTROY)
 
 @check_vm_owner
 @handle_exception
 def delete_vm():
-    handle_vm_operation(request.args[0], TASK_TYPE_DELETE_VM)
+    handle_vm_operation(request.args[0], VM_TASK_DELETE)
 
 @check_vm_owner
 @handle_exception       
 def snapshot():
     vm_id = int(request.args[0])
-    if is_request_in_queue(vm_id, TASK_TYPE_SNAPSHOT_VM):
+    if is_request_in_queue(vm_id, VM_TASK_SNAPSHOT):
         session.flash = "Snapshot request already in queue."
     elif check_snapshot_limit(vm_id):
-        add_vm_task_to_queue(vm_id, TASK_TYPE_SNAPSHOT_VM, {'snapshot_type': SNAPSHOT_USER})
+        add_vm_task_to_queue(vm_id, VM_TASK_SNAPSHOT, {'snapshot_type': SNAPSHOT_USER})
         session.flash = "Your request to snapshot VM has been queued"
     else:
         session.flash = "Snapshot Limit Reached. Delete Previous Snapshots to take new snapshot."
@@ -128,10 +128,10 @@ def snapshot():
 def delete_snapshot():
     vm_id = int(request.args[0])
     snapshot_id = int(request.args[1])
-    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, snapshot_id=snapshot_id):
+    if is_request_in_queue(vm_id, VM_TASK_DELETE_SNAPSHOT, snapshot_id=snapshot_id):
         session.flash = "Delete Snapshot request already in queue."
     else:
-        add_vm_task_to_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, {'snapshot_id':snapshot_id})
+        add_vm_task_to_queue(vm_id, VM_TASK_DELETE_SNAPSHOT, {'snapshot_id':snapshot_id})
         session.flash = "Your delete snapshot request has been queued"
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
@@ -140,12 +140,12 @@ def delete_snapshot():
 def revert_to_snapshot():
     vm_id = int(request.args[0])
     snapshot_id = int(request.args[1])
-    if is_request_in_queue(vm_id, TASK_TYPE_DELETE_SNAPSHOT, snapshot_id=snapshot_id):
+    if is_request_in_queue(vm_id, VM_TASK_DELETE_SNAPSHOT, snapshot_id=snapshot_id):
         session.flash = "Delete Snapshot request in queue. Revert operation aborted."
-    elif is_request_in_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, snapshot_id=snapshot_id):
+    elif is_request_in_queue(vm_id, VM_TASK_REVERT_TO_SNAPSHOT, snapshot_id=snapshot_id):
         session.flash = "Revert to Snapshot request already in queue."
     else:
-        add_vm_task_to_queue(vm_id, TASK_TYPE_REVERT_TO_SNAPSHOT, {'snapshot_id':snapshot_id})
+        add_vm_task_to_queue(vm_id, VM_TASK_REVERT_TO_SNAPSHOT, {'snapshot_id':snapshot_id})
         session.flash = "Your revert to snapshot request has been queued"
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 

@@ -187,7 +187,7 @@ def get_request_vm_form():
     
     form_fields = ['vm_name','template_id','extra_HDD','purpose', 'security_domain', 'public_ip']
 
-    db.request_queue.request_type.default = TASK_TYPE_CREATE_VM
+    db.request_queue.request_type.default = VM_TASK_CREATE
     db.request_queue.requester_id.default = auth.user.id
     _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
     db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
@@ -317,7 +317,7 @@ def get_clone_vm_form(vm_id):
     db.request_queue.HDD.default = vm_data.HDD
     db.request_queue.RAM.default = vm_data.RAM
     db.request_queue.vCPU.default = vm_data.vCPU
-    db.request_queue.request_type.default = TASK_TYPE_CLONE_VM
+    db.request_queue.request_type.default = VM_TASK_CLONE
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
@@ -340,7 +340,7 @@ def get_attach_extra_disk_form(vm_id):
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.HDD.default = vm_data.HDD
     db.request_queue.extra_HDD.default = vm_data.extra_HDD
-    db.request_queue.request_type.default = TASK_TYPE_ATTACH_DISK
+    db.request_queue.request_type.default = VM_TASK_ATTACH_DISK
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id
@@ -367,7 +367,7 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.HDD.default = vm_data.HDD
     db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
     db.request_queue.security_domain.default = vm_data.security_domain
-    db.request_queue.request_type.default = TASK_TYPE_EDITCONFIG_VM
+    db.request_queue.request_type.default = VM_TASK_EDIT_CONFIG
     db.request_queue.status.default = get_request_status()
     db.request_queue.requester_id.default = auth.user.id
     db.request_queue.owner_id.default = vm_data.owner_id

@@ -30,7 +30,7 @@ def schedule_task(fields, _id):
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     #Schedule the task in the scheduler 
-    if fields['task_type'] == TASK_TYPE_CLONE_VM:
+    if fields['task_type'] == VM_TASK_CLONE:
         # In case of clone vm, Schedule as many task as the number of clones
         for clone_vm_id in fields['parameters']['clone_vm_id']:
             vm_scheduler.queue_task('clone_task', 
@@ -78,7 +78,7 @@ def task_queue_update_callback(dbset, new_fields):
         # If task queue status is set to retry is set to failed, 
         elif new_fields['status'] == TASK_QUEUE_STATUS_FAILED:
             # 1. update vm_data status to -1 if task is Create VM
-            if fields['task_type'] == TASK_TYPE_CREATE_VM:
+            if fields['task_type'] == VM_TASK_CREATE:
                 db.vm_data[fields['vm_id']] = dict(status = VM_STATUS_UNKNOWN)
             # 2. update request_queue status to -1 if task has request_id
             if 'request_id' in fields['parameters']:

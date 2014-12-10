@@ -3,7 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import request,response,session
+    from gluon import request,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from simplejson import dumps
@@ -40,7 +40,7 @@ def approve_users():
     return dict(users = users,
                 type_options = types)
  
-@auth.requires_login()
+@check_moderator
 @handle_exception
 def mail_user():
     vm_id = request.args[0]
@@ -199,46 +199,37 @@ def delete_user_vm():
 @handle_exception
 def migrate_vm():
 
-    if_redirect = False
     vm_id = request.args[0]
-    
-    form = get_migrate_vm_form(vm_id)
 
-    if form == None:
-        if_redirect = True
-        
-    elif form.accepts(request.vars,session,keepvalues = True):
+    if len(request.args) > 1:
+        params={}
+        if request.args[1] == 'migrate_vm_hosts':
 
-        migrate_vm = True
+            params['destination_host'] = request.vars['selected_host']
+            params['live_migration'] = request.vars['live_migration']
+            add_vm_task_to_queue(1, VM_TASK_MIGRATE_HOST, params)
 
-        if form.vars.live_migration == None:
-            if is_vm_running(vm_id):
-                response.flash = "Your VM is already running. Kindly turn it off and then retry!!!"
-                migrate_vm = False
+        elif request.args[1] == 'migrate_vm_datastores':
 
-        if migrate_vm:
-            params={}
-            params['destination_host'] = form.vars.destination_host
-            params['live_migration'] = form.vars.live_migration
-            add_vm_task_to_queue(vm_id, TASK_TYPE_MIGRATE_VM, params)
-            session.flash = 'Your task has been queued. Please check your task list for status.'
-            if_redirect = True
+            params['destination_ds'] = request.vars['selected_datastore']
+            params['live_migration'] = request.vars['live_migration']
+            add_vm_task_to_queue(1, VM_TASK_MIGRATE_DS, params)
 
-    elif form.errors:
-        response.flash = 'Error in form'
-
-    if if_redirect :
+        session.flash = 'Your task has been queued. Please check your task list for status.'
         redirect(URL(c = 'admin', f = 'hosts_vms'))
-    return dict(form=form)
+    else:
+        vm_details = get_migrate_vm_details(vm_id)
+
+    return dict(vm_details=vm_details)
         
-    
+   
 @check_moderator
 @handle_exception
 def lockvm():
     vm_id=request.args[0]
     vminfo=get_vm_info(vm_id)
     if(not vminfo.locked):
-        add_vm_task_to_queue(vm_id, TASK_TYPE_DESTROY_VM)
+        add_vm_task_to_queue(vm_id, VM_TASK_DESTROY)
         session.flash = "VM will be force Shutoff and locked. Check the task queue."
         update_vm_lock(vm_id,True)
     else:
@@ -283,7 +274,7 @@ def retry_task():
 @handle_exception
 def delete_machine():   
     vm_id=request.args[0]
-    add_vm_task_to_queue(vm_id,TASK_TYPE_DELETE_VM)    
+    add_vm_task_to_queue(vm_id, VM_TASK_DELETE)    
 
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
