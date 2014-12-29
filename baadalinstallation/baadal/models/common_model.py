@@ -256,6 +256,8 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
             requested_by = -1
 
     params.update({'vm_id' : vm_id})
+    logger.debug("vm_id" + str(vm_id))
+    logger.debug(params)
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
                          requester_id=requested_by,

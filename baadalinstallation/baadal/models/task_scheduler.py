@@ -6,7 +6,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd, config
-from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot,\
+from vm_helper import install, shutdown, start, suspend, resume, destroy, delete, migrate, snapshot,\
     revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
@@ -21,7 +21,7 @@ import os
 
 task = {VM_TASK_CREATE               :    install,
         VM_TASK_START                :    start,
-        VM_TASK_STOP                 :    destroy,
+        VM_TASK_STOP                 :    shutdown,
         VM_TASK_SUSPEND              :    suspend,
         VM_TASK_RESUME               :    resume,
         VM_TASK_DESTROY              :    destroy,
@@ -230,8 +230,8 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
             for vm_data in vms:
                 flag = vm_data.snapshot_flag
-                snapshot_type = snapshot_type & flag
-                if(snapshot_type):
+                trueorfalse = snapshot_type & flag
+                if(trueorfalse):
                     logger.debug("snapshot_type" + str(snapshot_type))
                     vm_scheduler.queue_task(TASK_SNAPSHOT, 
                                             group_name = 'snapshot_task', 
@@ -484,7 +484,7 @@ for host in active_host_list:
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 5 * MINUTES, # every 5 minutes
-                     timeout = 5  * MINUTES,
+                     timeout = 5 * MINUTES,
                      uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']),
                     group_name = 'vm_rrd')
 

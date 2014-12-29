@@ -63,7 +63,7 @@
             </td>
           </tr>
     
-          {{if vm_details['vm_status'] == VM_STATUS_RUNNING:}}
+          {{if(vm_details['vm_status'] == VM_STATUS_RUNNING or vm_details['vm_status'] == VM_STATUS_SUSPENDED):}}
               <tr>
                 <td>Live Migration:</td>
                 <td><input name="live_migration" type="checkbox"/></td>

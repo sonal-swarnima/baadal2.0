@@ -207,13 +207,13 @@ def migrate_vm():
 
             params['destination_host'] = request.vars['selected_host']
             params['live_migration'] = request.vars['live_migration']
-            add_vm_task_to_queue(1, VM_TASK_MIGRATE_HOST, params)
+            add_vm_task_to_queue(vm_id, VM_TASK_MIGRATE_HOST, params)
 
         elif request.args[1] == 'migrate_vm_datastores':
 
             params['destination_ds'] = request.vars['selected_datastore']
             params['live_migration'] = request.vars['live_migration']
-            add_vm_task_to_queue(1, VM_TASK_MIGRATE_DS, params)
+            add_vm_task_to_queue(vm_id, VM_TASK_MIGRATE_DS, params)
 
         session.flash = 'Your task has been queued. Please check your task list for status.'
         redirect(URL(c = 'admin', f = 'hosts_vms'))

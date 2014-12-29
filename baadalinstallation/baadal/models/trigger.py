@@ -105,8 +105,17 @@ def scheduler_task_update_callback(dbset, new_fields):
 
     if 'status' in new_fields and 'next_run_time' in new_fields:
         if new_fields['status']=='TIMEOUT':
-            
-            rows = dbset.select()
+            logger.debug("status is timeout")
+            logger.debug(dbset)
+            set_fields = dbset.select().first()
+            logger.debug(set_fields)
+            #task_id = set_fields[id]
+            #logger.debug("task_id" + str(task_id))
+            next_run_time = str(new_fields['next_run_time'])
+            next_run_time = next_run_time.split(".")
+            logger.debug(next_run_time[0])
+            rows =db((db.scheduler_task.status==new_fields['status']) & (db.scheduler_task.next_run_time==next_run_time[0])).select()
+
             for row in rows:
                 if 'task_event_id' in row.vars:
                     param_dict = ast.literal_eval(row.vars)
@@ -115,6 +124,8 @@ def scheduler_task_update_callback(dbset, new_fields):
                     task_timeout_cleanup(task_event_id,row)
                 elif row.task_name in (TASK_VNC, TASK_HOST_SANITY):
                     row.delete()
+                elif row.task_name=="snapshot_vm"
+                    logger.debug("Snapshot task timeout")
                 else:
                     logger.debug("Task TimedOut without cleanup")
           
@@ -132,7 +143,7 @@ def task_timeout_cleanup(task_event_id, scheduler_row):
         #On return, update the status and end time in task event table
         msg = ""
         if scheduler_row.status == 'TIMEOUT':
-            msg = "Task Timeout"
+            msg = "Task Timeout " + task_event_data['message']
         elif scheduler_row.status == 'FAILED':
             rows = db(db.scheduler_run.task_id==scheduler_row.id).select()
             rows.sort(lambda row: row.stop_time, reverse=True)

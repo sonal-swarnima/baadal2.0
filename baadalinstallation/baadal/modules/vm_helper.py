@@ -5,7 +5,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
 ###################################################################################
 
-import sys, math, shutil, paramiko, traceback, libvirt, os
+import sys, math, shutil, paramiko, traceback, libvirt, os, time
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
@@ -594,6 +594,28 @@ def destroy(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
+# Destroys a vm gracefully
+def shutdown(parameters):
+
+    logger.debug("Inside shutdown() function")
+    vm_id = parameters['vm_id']
+    vm_details = current.db.vm_data[vm_id]
+    logger.debug(str(vm_details))
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_identity)
+        if domain.info()[0] == VIR_DOMAIN_SHUTOFF:
+            raise Exception("VM is already shutoff. Check vm status on host.")
+        domain.managedSave()
+        connection_object.close()
+        current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SHUTDOWN)
+        message = vm_details.vm_identity + " is shutdown successfully."
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
+
 # Function to clean up database after vm deletion
 def clean_up_database_after_vm_deletion(vm_details):
     
@@ -792,7 +814,97 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         undo_migration(vm_details, domain_snapshots_list, current_snapshot_name, vm_backup_during_migration)
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
- 
+
+def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=False): 
+    logger.debug(sys.path)
+    vm_details = current.db.vm_data[vmid]
+    datastore_id = vm_details["datastore_id"]
+    logger.debug("Inside live disk migration block")
+
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_identity)
+        
+        datastore = current.db.datastore[destination_datastore_id]
+        vm_directory_path = datastore.system_mount_point + get_constant('vms') + '/' + vm_details.vm_identity
+        logger.debug("Creating vm directory on other datastore...")
+        if not os.path.exists (vm_directory_path):
+            os.makedirs(vm_directory_path)
+        diskpath = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
+
+        current_disk_path = vm_details.datastore_id.system_mount_point + get_constant('vms') + '/' + vm_details.vm_identity
+        current_disk_file = current_disk_path + '/' + vm_details.vm_identity + '.qcow2'
+        logger.debug(current_disk_file)
+
+        xmlfile = domain.XMLDesc(0)
+
+        if(live_migration==False):
+            rc = os.system("cp %s %s" % (current_disk_file, diskpath))
+
+            if rc != 0:
+               logger.error("Copy not successful")
+               raise Exception("Copy not successful")
+            else:
+               logger.debug("Copied successfully")
+
+        else:
+            domain.undefine()
+
+            root = etree.fromstring(xmlfile)
+            target_elem = root.find("devices/disk/target")
+            target_disk = target_elem.get('dev')
+#
+#           destxml = generate_blockcopy_xml(diskpath,target_disk)
+            flag = VIR_DOMAIN_BLOCK_REBASE_SHALLOW | VIR_DOMAIN_BLOCK_REBASE_COPY
+            domain.blockRebase(target_disk, diskpath, 0, flag)
+
+            block_info_list = domain.blockJobInfo(current_disk_file,0)
+
+            while(block_info_list['end'] != block_info_list['cur']):
+                logger.debug("time to sleep")
+                time.sleep(60)
+                block_info_list = domain.blockJobInfo(current_disk_file,0)
+
+            domain.blockJobAbort(current_disk_file, VIR_DOMAIN_BLOCK_JOB_ABORT_PIVOT)
+
+        source_elem = root.find("devices/disk/source")
+        source_elem.set('file',diskpath)
+        newxml_file = etree.tostring(root)
+        domain = connection_object.defineXML(newxml_file)
+        
+        vm_details.update_record(datastore_id=destination_datastore_id)
+
+        if os.path.exists (diskpath):
+            os.remove(current_disk_file)
+            os.rmdir(current_disk_path)
+        connection_object.close()
+
+        message = vm_details.vm_identity + " is migrated successfully to new datastore."
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+    except:
+        undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm_directory_path, datastore_id)
+        connection_object.close()
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
+
+
+def undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm_directory_path, datastore_id):
+    # undo databse changes
+    vm_details.update_record(datastore_id=datastore_id)
+    
+    block_info_list = domain.blockJobInfo(current_disk_file,0)
+    if(bool(block_info_list) == TRUE):
+        while(block_info_list['end'] != block_info_list['cur']):
+            logger.debug("time to sleep")
+            time.sleep(60)
+            block_info_list = domain.blockJobInfo(current_disk_file,0)
+        if(block_info_list['end'] == block_info_list['cur']):
+            domain.blockJobAbort(current_disk_file)
+    if os.path.exists (diskpath):
+        os.remove(diskpath)
+        os.rmdir(vm_directory_path)
+
 
 # Migrates VM to new host
 def migrate(parameters):
@@ -816,8 +928,7 @@ def migrate_datastore(parameters):
         live_migration = True
     else:
         live_migration = False
-#     TODO: Implementation of Migrate between datastores
-    return
+    return migrate_domain_datastore(vmid, destination_datastore_id, live_migration) 
   
 
 # Snapshots a vm
