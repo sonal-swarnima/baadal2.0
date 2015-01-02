@@ -144,8 +144,8 @@ db.define_table('template',
     Field('hdd', 'integer', notnull = True, label='Harddisk(GB)'),
     Field('hdfile', 'string', length = 255, notnull = True, label='HD File'),
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
-    Field('datastore_id', db.datastore, notnull = True, label='Datastore'),
-    format = '%(os_name)s %(os_version)s %(os_type)s %(arch)s %(hdd)sGB')
+    Field('tag','string',length = 50,notnull = False, label='Tag'),
+    Field('datastore_id', db.datastore, notnull = True, label='Datastore'))
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('vlan',
@@ -216,7 +216,9 @@ db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
 db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
-db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', '%(os_name)s %(os_version)s %(os_type)s %(arch)s %(hdd)sGB', zero=None)
+db.request_queue.template_id.requires = IS_IN_DB(db, 'template.id', 
+                                                 lambda r: '%s %s %s %s %sGB'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd) if r.tag == None 
+                                                        else '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag), zero=None)
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
 db.define_table('vm_event_log',
