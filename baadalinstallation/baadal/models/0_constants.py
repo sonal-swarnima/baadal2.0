@@ -27,6 +27,9 @@ VM_TASK_CLONE = 'Clone VM'
 VM_TASK_ATTACH_DISK = 'Attach Disk'
 VM_TASK_MIGRATE_HOST = 'Migrate VM Between Hosts'
 VM_TASK_MIGRATE_DS = 'Migrate VM Between Datastores'
+VM_TASK_SAVE_AS_TEMPLATE = 'Save As Template'
+VM_TASK_DELETE_TEMPLATE = 'Delete Template'
+
 
 #Task Queue Priority
 TASK_QUEUE_PRIORITY_LOW = 0
@@ -143,6 +146,7 @@ VM_CONFIGURATION = [(1,0.25),(1,0.5),(1,1),(1,2),(2,2),(2,4),(4,4),(4,8),(8,8),(
 
 MAX_VNC_ALLOWED_IN_A_DAY = 10
 
+SYSTEM_USER = -1
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
 

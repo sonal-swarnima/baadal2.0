@@ -253,18 +253,16 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
         if auth.user:
             requested_by = auth.user.id
         else:
-            requested_by = -1
+            requested_by = SYSTEM_USER
 
     params.update({'vm_id' : vm_id})
-    logger.debug("vm_id" + str(vm_id))
-    logger.debug(params)
     db.task_queue.insert(task_type=task_type,
                          vm_id=vm_id, 
                          requester_id=requested_by,
                          parameters=params, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
-    
+
 
 def add_vm_users(_vm_id, requester_id, owner_id, vm_users=None):
     user_list = [requester_id, owner_id]
@@ -356,6 +354,7 @@ def get_vm_operations(vm_id):
                      'confirm_vm_deletion()' : ( None, 'delete.png', 'Delete this virtual machine'),
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
+                     'save_as_template'      : ('user', 'save.png', 'Save as Template'),
                      'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM')}
 
     valid_operations_list = []
@@ -375,7 +374,7 @@ def get_vm_operations(vm_id):
                     is_request_in_queue(vm_id, VM_TASK_ATTACH_DISK)):
                 valid_operations.extend(['start_vm'])
 
-            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk'])
+            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk', 'save_as_template'])
 
         if not is_vm_user():
             valid_operations.extend(['confirm_vm_deletion()'])

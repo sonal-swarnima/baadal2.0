@@ -1,11 +1,18 @@
 {{extend 'layout.html'}}
-<h2 class="subtitle">{{=T('My VMs')}}</h2>
 
-{{
-  if not hosted_vm:
-}}
-<h3>No VM Running</h3>
-{{else:}}
+<div id="tabs-task">
+
+  <ul>
+    <li><a href="#vmTab", onclick="set_tab_cookie(0);">My VMs</a></li>
+    <li><a href="#templateTab", onclick="set_tab_cookie(1);">My Templates</a></li>
+  </ul>
+  
+  <div id="vmTab">
+  {{
+    if not hosted_vm:
+  }}
+  <h3>No Available VM</h3>
+  {{else:}}
   <table id="myvms" class="tablesorter">
     <thead>
       <tr>
@@ -45,7 +52,55 @@
     {{pass}}
     </tbody>
   </table>
-{{pass}}
+  {{pass}}
+
+  </div>
+  
+  <div id="templateTab">
+  {{
+    if not saved_templates:
+  }}
+  <h3>No Available Template</h3>
+  {{else:}}
+  <table id="mytemp" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Name of Template</th>
+        <th>Operating System</th>
+        <th>OS Name</th>
+        <th>OS Version</th>
+        <th>OS Type</th>
+		<th>Architecture</th>
+		<th>Harddisk(GB)</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{for temp in saved_templates:}}
+      <tr>
+        <td>{{=temp['name']}}</td>
+        <td>{{=(temp['os'])}}</td>
+		<td>{{=temp['os_name']}}</td>
+        <td>{{=temp['os_version']}}</td>
+        <td>{{=temp['os_type']}}</td>
+        <td>{{=temp['arch']}}</td>
+        <td>{{=temp['hdd']}}</td>
+        <td>
+        {{=A(IMG(_src=URL('static','images/delete.png'), _height=18, _width=18),
+        _href=URL(r=request, f='delete_template', args=[temp['id']]), 
+        _title="Delete Template", 
+        _alt="Delete Template")}}
+        </td>
+      </tr>
+    {{pass}}
+    </tbody>
+  </table>
+  {{pass}}
+  </div>
+</div>
+
+
+
 
 <script>
 jQuery(document).ready(function(){

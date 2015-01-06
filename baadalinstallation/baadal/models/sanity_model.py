@@ -96,7 +96,7 @@ def check_vm_sanity(host_id = 0):
                             #Adding into vm_event_log about the vm details
                             db.vm_event_log.insert(vm_id = vm.id,
                                                    attribute = 'VM Status',
-                                                   requester_id = -1,
+                                                   requester_id = SYSTEM_USER,
                                                    old_value = get_vm_status(vm.status),
                                                    new_value = get_vm_status(vm_state_map[vm_state]))
 
@@ -184,8 +184,8 @@ def add_orphan_vm(vm_name, host_id):
         host_id = host_id,
         template_id = 1, #TBD
         datastore_id = 1, #TBD
-        owner_id = -1,
-        requester_id = -1,
+        owner_id = SYSTEM_USER,
+        requester_id = SYSTEM_USER,
         private_ip = ip_address,
         mac_addr = mac_address,
         vnc_port = vnc_port,

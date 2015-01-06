@@ -48,8 +48,9 @@ def add_collaborator():
 @auth.requires_login()
 @handle_exception
 def list_my_vm():
-    hosted_vm = get_my_hosted_vm()        
-    return dict(hosted_vm = hosted_vm)
+    hosted_vm = get_my_hosted_vm()
+    saved_templates = get_my_saved_templates()   
+    return dict(hosted_vm = hosted_vm, saved_templates = saved_templates)
 
 @check_vm_owner
 @handle_exception
@@ -231,6 +232,30 @@ def edit_vm_config():
         session.flash = "Error in form!!!"
 
     return dict(form=form)
+
+@check_vm_owner
+@handle_exception       
+def save_as_template():
+    vm_id = int(request.args[0])
+    if is_request_in_queue(vm_id, VM_TASK_SAVE_AS_TEMPLATE):    
+        session.flash = "Request to save VM as template already in queue."
+    elif check_vm_template_limit(vm_id):
+        add_vm_task_to_queue(vm_id, VM_TASK_SAVE_AS_TEMPLATE)
+        session.flash = "Your request to save VM as template is queued"
+    else:
+        session.flash = "Limit Reached. Delete a previous template to save new template."
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+
+@check_vm_owner
+@handle_exception       
+def delete_template():
+    
+    vm_id = int(request.args[0])
+    params = {'template_id' : request.args[1]}
+    add_vm_task_to_queue(vm_id, VM_TASK_SAVE_AS_TEMPLATE, params)
+    session.flash = "Your request to delete template is queued"
+    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+
 
 @auth.requires_login()
 @handle_exception

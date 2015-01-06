@@ -99,10 +99,10 @@ function confirm_vm_deletion(){
         
     <div id="configure_block" style="display:none">
         
-        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_DAILY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_DAILY) else False)}}Daily
-        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_WEEKLY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_WEEKLY) else False)}}Weekly
-        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_MONTHLY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_MONTHLY) else False)}}Monthly
-        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_YEARLY, _checked=True if (vminfo['snapshot_flag'] & SNAPSHOT_YEARLY) else False)}}Yearly
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_DAILY, _checked=True if (int(vminfo['snapshot_flag']) & SNAPSHOT_DAILY) else False)}}Daily
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_WEEKLY, _checked=True if (int(vminfo['snapshot_flag']) & SNAPSHOT_WEEKLY) else False)}}Weekly
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_MONTHLY, _checked=True if (int(vminfo['snapshot_flag']) & SNAPSHOT_MONTHLY) else False)}}Monthly
+        {{=INPUT(_type="checkbox", _name="flag", _value=SNAPSHOT_YEARLY, _checked=True if (int(vminfo['snapshot_flag']) & SNAPSHOT_YEARLY) else False)}}Yearly
         &nbsp;&nbsp;<img src="{{=URL('static','images/save.png')}}" onclick="configure_snapshot()" alt="Save Changes"/>
     </div>
 

@@ -7,7 +7,8 @@ if 0:
 ###################################################################################
 from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd, config
 from vm_helper import install, shutdown, start, suspend, resume, destroy, delete, migrate, snapshot,\
-    revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore
+    revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore,\
+    save_as_template, delete_template
 from host_helper import host_status_sanity_check
 from vm_utilization import update_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
@@ -33,7 +34,9 @@ task = {VM_TASK_CREATE               :    install,
         VM_TASK_DELETE_SNAPSHOT      :    delete_snapshot,
         VM_TASK_EDIT_CONFIG          :    edit_vm_config,
         VM_TASK_CLONE                :    clone,
-        VM_TASK_ATTACH_DISK          :    attach_extra_disk
+        VM_TASK_ATTACH_DISK          :    attach_extra_disk,
+        VM_TASK_SAVE_AS_TEMPLATE     :    save_as_template,
+        VM_TASK_DELETE_TEMPLATE      :    delete_template
        }
 
 def send_task_complete_mail(task_event):
@@ -230,8 +233,8 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
             vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
             for vm_data in vms:
                 flag = vm_data.snapshot_flag
-                trueorfalse = snapshot_type & flag
-                if(trueorfalse):
+
+                if(snapshot_type & flag):
                     logger.debug("snapshot_type" + str(snapshot_type))
                     vm_scheduler.queue_task(TASK_SNAPSHOT, 
                                             group_name = 'snapshot_task', 

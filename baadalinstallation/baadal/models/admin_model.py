@@ -3,12 +3,12 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import db, request, session
+    from gluon import db, request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import IS_MAC_ADDRESS, create_dhcp_entry, get_ips_in_range, generate_random_mac,\
-    remove_dhcp_entry, create_dhcp_bulk_entry, is_valid_ipv4
+from helper import IS_MAC_ADDRESS, get_ips_in_range, generate_random_mac, is_valid_ipv4
+from dhcp_helper import create_dhcp_entry, remove_dhcp_entry, create_dhcp_bulk_entry
 from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
     get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
     get_host_type, host_power_up, host_power_down
@@ -63,7 +63,7 @@ def get_manage_public_ip_pool_form():
 
     #Creating the grid object
     grid = SQLFORM.grid(db.public_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
-                        csv=False, searchable=False, details=False, showbuttontext=False, 
+                        csv=False, searchable=True, details=False, showbuttontext=False, 
                         links=[dict(header='Assigned to', body=get_vm_link)])
 
     if grid.create_form:
@@ -91,7 +91,7 @@ def get_manage_private_ip_pool_form():
     default_sort_order=[db.private_ip_pool.id]
     #Creating the grid object
     grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
-                        csv=False, searchable=False, details=False, showbuttontext=False, 
+                        csv=False, searchable=True, details=False, showbuttontext=False, 
                         links=[dict(header='Assigned to', body=get_vm_link)], 
                         ondelete=lambda _table, _id: private_ip_on_delete(_id))
 

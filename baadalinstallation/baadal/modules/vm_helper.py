@@ -749,7 +749,6 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name, vm_
 
     return
 
-
 # Migrate domain
 def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
@@ -842,10 +841,10 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
             rc = os.system("cp %s %s" % (current_disk_file, diskpath))
 
             if rc != 0:
-               logger.error("Copy not successful")
-               raise Exception("Copy not successful")
+                logger.error("Copy not successful")
+                raise Exception("Copy not successful")
             else:
-               logger.debug("Copied successfully")
+                logger.debug("Copied successfully")
 
         else:
             domain.undefine()
@@ -894,7 +893,7 @@ def undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm
     vm_details.update_record(datastore_id=datastore_id)
     
     block_info_list = domain.blockJobInfo(current_disk_file,0)
-    if(bool(block_info_list) == TRUE):
+    if(bool(block_info_list) == True):
         while(block_info_list['end'] != block_info_list['cur']):
             logger.debug("time to sleep")
             time.sleep(60)
@@ -923,12 +922,13 @@ def migrate_datastore(parameters):
 
     logger.debug("Inside migrate_datastore() function")
     vmid = parameters['vm_id']
-    destination_host_id = parameters['destination_ds']
+    destination_ds_id = parameters['destination_ds']
     if parameters['live_migration'] == 'on':
         live_migration = True
     else:
         live_migration = False
-    return migrate_domain_datastore(vmid, destination_datastore_id, live_migration) 
+    
+    return migrate_domain_datastore(vmid, destination_ds_id, live_migration)
   
 
 # Snapshots a vm
@@ -1362,4 +1362,33 @@ def launch_existing_vm_image(vm_details):
 
         update_db_after_vm_installation(vm_details, vm_properties)
         
+def save_as_template(parameters):
+    
+    logger.debug("Inside save_as_template() function")
+    vmid = parameters['vm_id']
+    vm_data = current.db.vm_data[vmid]
+    user_list = []
+    for user in current.db(current.db.user_vm_map.vm_id == vmid).select(current.db.user_vm_map.user_id):
+        user_list.append(user.user_id)
+        
+    current.db.template.insert(name = vm_data.vm_name + "_template" , 
+                               os = vm_data.template_id.name , 
+                               os_name = vm_data.template_id.os_name , 
+                               os_version = vm_data.template_id.os_version , 
+                               os_type = vm_data.template_id.os_type , 
+                               arch = vm_data.template_id.arch , 
+                               hdd = vm_data.template_id.hdd , 
+                               hdfile = vm_data.template_id.hdfile , 
+                               type = vm_data.template_id.type , 
+                               tag = vm_data.vm_name + "_template" , 
+                               datastore_id = vm_data.template_id.datastore_id,
+                               owner = user_list)
+    
+    return (current.TASK_QUEUE_STATUS_SUCCESS, "")
+
+def delete_template(parameters):
+    logger.debug("Inside delete_template() function")
+    template_id = parameters['template_id']
+    
+    return (current.TASK_QUEUE_STATUS_SUCCESS, "")
     

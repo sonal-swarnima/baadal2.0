@@ -189,8 +189,8 @@ def get_request_vm_form():
 
     db.request_queue.request_type.default = VM_TASK_CREATE
     db.request_queue.requester_id.default = auth.user.id
-    _query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
-    db.request_queue.security_domain.requires = IS_IN_DB(db(_query), 'security_domain.id', '%(name)s', zero=None)
+    sd_query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
+    db.request_queue.security_domain.requires = IS_IN_DB(db(sd_query), 'security_domain.id', '%(name)s', zero=None)
     db.request_queue.security_domain.default = 2
     db.request_queue.security_domain.notnull = True
     db.request_queue.template_id.notnull = True
@@ -303,6 +303,11 @@ def check_snapshot_limit(vm_id):
         return True
     else:
         return False
+
+#TBD: To be implemented
+def check_vm_template_limit(vm_id):
+    return True
+
 
 def get_clone_vm_form(vm_id):
     vm_data = db.vm_data[vm_id]
@@ -454,3 +459,7 @@ def grant_vnc_access(vm_id):
 def update_snapshot_flag(vm_id, flag):
     vm_data = db.vm_data[vm_id]
     vm_data.update_record(snapshot_flag=int(flag))
+    
+def get_my_saved_templates():
+    templates = db(db.template.owner.contains(auth.user.id)).select(db.template.ALL)
+    return templates
