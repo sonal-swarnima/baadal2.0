@@ -225,7 +225,9 @@ if not auth.user:
     tmp_query = (db.template.owner == None)
 else:
     tmp_query = db((db.template.owner == None) | (db.template.owner.contains(auth.user.id)))
-db.request_queue.template_id.requires = IS_IN_DB(tmp_query, 'template.id', zero=None)
+db.request_queue.template_id.requires = IS_IN_DB(tmp_query, 'template.id', lambda r: 
+                                                 '%s %s %s %s %sGB'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd) if r.tag == None else 
+                                                 '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag), zero=None)
     
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
