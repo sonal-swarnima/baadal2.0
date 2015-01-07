@@ -146,7 +146,11 @@ db.define_table('template',
     Field('type', 'string', notnull = True, requires = IS_IN_SET(('QCOW2', 'RAW', 'ISO')), label='Template type'),
     Field('tag','string',length = 50,notnull = False, label='Tag'),
     Field('datastore_id', db.datastore, notnull = True, label='Datastore'),
-    Field('owner', 'list:reference user', readable=False, writable=False))
+    Field('owner', 'list:reference user', readable=False, writable=False),
+    Field('is_active', 'boolean', notnull = True, default = True),
+    format = lambda r: 
+            '%s %s %s %s %sGB'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd) if r.tag == None else 
+            '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag))
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
 db.define_table('vlan',
@@ -221,10 +225,8 @@ if not auth.user:
     tmp_query = (db.template.owner == None)
 else:
     tmp_query = db((db.template.owner == None) | (db.template.owner.contains(auth.user.id)))
+db.request_queue.template_id.requires = IS_IN_DB(tmp_query, 'template.id', zero=None)
     
-db.request_queue.template_id.requires = IS_IN_DB(tmp_query, 'template.id', 
-                                                 lambda r: '%s %s %s %s %sGB'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd) if r.tag == None 
-                                                        else '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag), zero=None)
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
 
 db.define_table('vm_event_log',
