@@ -187,44 +187,43 @@ def create_vm_image(vm_details, datastore):
     template = current.db.template[vm_details.template_id]
     vm_image_name = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
 
-    """
-    template_location = datastore.system_mount_point + '/' + get_constant('templates_dir') + '/' + template.hdfile
-    rc = os.system("cp %s %s" % (template_location, vm_image_name))
-
-    if rc != 0:
-        logger.error("Copy not successful")
-        raise Exception("Copy not successful")
-    else:
-        logger.debug("Copied successfully")
-
-    
-    """
-
+   
     # Copies the template image from its location to new vm directory
     storage_type = config.get("GENERAL_CONF","storage_type")
 
     copy_command = 'ndmpcopy ' if storage_type == current.STORAGE_NETAPP_NFS else 'cp '
     #template_dir = get_constant('vm_templates_datastore')
-    template_dir = template.datastore_id.path
-    logger.debug(template_dir)
-    
-    logger.debug("Copy in progress when storage type is " + str(storage_type))
-    command_to_execute = copy_command + template_dir + '/' + get_constant("templates_dir") + '/' +  \
-                         template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
-                         vm_details.vm_identity
-    logger.debug("ndmpcopy command: " + str(command_to_execute))
-    command_output = execute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
-    logger.debug(command_output)
-    logger.debug("Copied successfully.")
-      
+    if copy_command == 'cp ':
+        template_location = datastore.system_mount_point + '/' + get_constant('templates_dir') + '/' + template.hdfile
+        logger.debug("cp %s %s" % (template_location, vm_image_name))
+        rc = os.system("cp %s %s" % (template_location, vm_image_name))
 
-    try:
-        vm_template_name = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_details.vm_identity + '/' + template.hdfile
-        os.rename(vm_template_name, vm_image_name)
-        logger.debug("Template renamed successfully")
-    except:
-        logger.debug("Template rename not successful")
-        raise Exception("Template rename not successful")
+        if rc != 0:
+            logger.error("Copy not successful")
+            raise Exception("Copy not successful")
+        else:
+            logger.debug("Copied successfully")
+
+    elif copy_command == 'ndmpcopy ':
+        template_dir = template.datastore_id.path
+        logger.debug(template_dir)
+        
+        logger.debug("Copy in progress when storage type is " + str(storage_type))
+        command_to_execute = copy_command + template_dir + '/' + get_constant("templates_dir") + '/' +  \
+                             template.hdfile + ' ' + datastore.path + '/' + get_constant('vms') + '/' + \
+                             vm_details.vm_identity
+        logger.debug("ndmpcopy command: " + str(command_to_execute))
+        command_output = execute_remote_cmd(datastore.ds_ip, datastore.username, command_to_execute, datastore.password)
+        logger.debug(command_output)
+        logger.debug("Copied successfully.")
+        
+        try:
+            vm_template_name = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_details.vm_identity + '/' + template.hdfile
+            os.rename(vm_template_name, vm_image_name)
+            logger.debug("Template renamed successfully")
+        except:
+            logger.debug("Template rename not successful")
+            raise Exception("Template rename not successful")
 
     return (template, vm_image_name)
 
@@ -847,6 +846,7 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
                 logger.debug("Copied successfully")
 
         else:
+          if domain.isActive:
             domain.undefine()
 
             root = etree.fromstring(xmlfile)
@@ -1368,27 +1368,112 @@ def save_as_template(parameters):
     vmid = parameters['vm_id']
     vm_data = current.db.vm_data[vmid]
     user_list = []
-    for user in current.db(current.db.user_vm_map.vm_id == vmid).select(current.db.user_vm_map.user_id):
-        user_list.append(user.user_id)
-        
-    current.db.template.insert(name = vm_data.vm_name + "_template" , 
-                               os = vm_data.template_id.name , 
-                               os_name = vm_data.template_id.os_name , 
-                               os_version = vm_data.template_id.os_version , 
-                               os_type = vm_data.template_id.os_type , 
-                               arch = vm_data.template_id.arch , 
-                               hdd = vm_data.template_id.hdd , 
-                               hdfile = vm_data.template_id.hdfile , 
-                               type = vm_data.template_id.type , 
-                               tag = vm_data.vm_name + "_template" , 
-                               datastore_id = vm_data.template_id.datastore_id,
+    vm_details = current.db.vm_data[vmid]
+    logger.debug(str(vm_details))
+
+    try:
+        if (create_new_template(vm_details)):
+            for user in current.db(current.db.user_vm_map.vm_id == vmid).select(current.db.user_vm_map.user_id):
+                user_list.append(user.user_id)
+            
+            current.db.template.insert(name = vm_data.vm_name + "_template" ,\
+                               os = vm_data.template_id.name ,\
+                               os_name = vm_data.template_id.os_name ,\
+                               os_version = vm_data.template_id.os_version ,\
+                               os_type = vm_data.template_id.os_type ,\
+                               arch = vm_data.template_id.arch ,\
+                               hdd = vm_data.template_id.hdd ,\
+                               hdfile = vm_data.template_id.hdfile ,\
+                               type = vm_data.template_id.type ,\
+                               tag = vm_data.vm_name + "_template" ,\
+                               datastore_id = vm_data.template_id.datastore_id,\
                                owner = user_list)
-    
-    return (current.TASK_QUEUE_STATUS_SUCCESS, "")
+
+            message = "User Template saved successfully"
+            logger.debug(message)
+            return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+        else:
+            message = " Vm Template not saved "
+            logger.debug("Task Status: %s " % message)
+            return (current.TASK_QUEUE_STATUS_FAILED, message)
+    except:
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 def delete_template(parameters):
     logger.debug("Inside delete_template() function")
     template_id = parameters['template_id']
     
     return (current.TASK_QUEUE_STATUS_SUCCESS, "")
-    
+   
+def create_new_template(vm_details):
+    try:
+        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
+        domain = connection_object.lookupByName(vm_details.vm_identity)
+        xmlfile = domain.XMLDesc(0)
+        logger.debug("connection object created")
+        datastore = choose_datastore()
+        logger.debug(datastore)
+        new_template_dir = datastore.system_mount_point + '/' +get_constant('templates_dir') + '/' + vm_details.requester_id.first_name
+        logger.debug("Creating user template directory...")
+        if not os.path.exists (new_template_dir):
+            os.makedirs(new_template_dir)
+        template = new_template_dir + '/' + vm_details.vm_identity + '_template.qcow2'
+        if os.path.exists (template):
+            # move template to some other path
+            looger.debug("move template to some other file")
+                    
+        logger.debug("template " + template)
+
+        current_disk_path = vm_details.datastore_id.system_mount_point + get_constant('vms') + '/' + vm_details.vm_identity
+        current_disk_file = current_disk_path + '/' + vm_details.vm_identity + '.qcow2'
+        
+        if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
+           logger.debug("vm is active in db")
+           if domain.isActive():
+              
+              domain.undefine()
+
+              root = etree.fromstring(xmlfile)
+              target_elem = root.find("devices/disk/target")
+              target_disk = target_elem.get('dev')
+
+              flag = VIR_DOMAIN_BLOCK_REBASE_SHALLOW | VIR_DOMAIN_BLOCK_REBASE_COPY
+              domain.blockRebase(target_disk, template, 0, flag)
+              block_info_list = domain.blockJobInfo(current_disk_file,0)
+
+              while(block_info_list['end'] != block_info_list['cur']):
+                  logger.debug("time to sleep")
+                  time.sleep(60)
+                  block_info_list = domain.blockJobInfo(current_disk_file,0)
+
+              domain.blockJobAbort(current_disk_file)
+              domain = connection_object.defineXML(xmlfile)
+
+              connection_object.close()
+              return True
+           else:
+              logger.debug("domain is not running on host")
+              return False
+
+        elif(vm_details.status == current.VM_STATUS_SHUTDOWN):
+            if domain.isActive():
+               logger.debug("Domain is still active...Please try again after some time!!!")
+               return False
+            else:
+               logger.debug("copying")
+               rc = os.system("cp %s %s" % (current_disk_file, template))
+
+               if rc != 0:
+                  logger.error("Copy not successful")
+                  raise Exception("Copy not successful")
+                  return False
+               else:
+                  logger.debug("Copied successfully")
+                  return True
+    except:
+        if not domain.isPersistent():
+            domain = connection_object.defineXML(xmlfile)
+        connection_object.close()
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
+        return False 

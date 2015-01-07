@@ -111,7 +111,7 @@ def log_vm_event(old_vm_data, task_queue_data):
 """Invoked when scheduler runs task of type 'vm_task'"""
 def process_task_queue(task_event_id):
 
-    logger.info("\n ENTERING VM_TASK........")
+    logger.debug("\n ENTERING VM_TASK........")
     
     task_event_data = db.task_queue_event[task_event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
