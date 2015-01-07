@@ -26,9 +26,20 @@ def get_manage_template_form(req_type):
     if req_type in ('new','edit'):
         mark_required(db.template)
     #Creating the grid object
-    form = SQLFORM.grid(db.template, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+    query = ((db.template.is_active == True))
+    form = SQLFORM.grid(query, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
                         csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
+
+"""Checks if template can be deleted. If a VM is created with given template;
+   it is marked is_active=False instead of deleting"""
+def check_delete_template(template_id):
+
+    if db.vm_data(template_id = template_id):
+        db(db.template.id== template_id).update(is_active=False)
+        return False
+    
+    return True
 
 def get_manage_datastore_form(req_type):
 
@@ -185,7 +196,9 @@ def get_security_domain_form():
                         links=[dict(header='Visibility', body=get_org_visibility)])
     return form
 
-# Check if the security domain can be deleted
+"""Check if the security domain can be deleted. If a VM is present in given security domain;
+   error message is returned. Also special secuity domains like 
+   'Research', 'Private', 'Infrastructure' can not be deleted"""
 def check_delete_security_domain(sd_id):
     if db.vm_data(security_domain = sd_id):
         return SECURITY_DOMAIN_DELETE_MESSAGE

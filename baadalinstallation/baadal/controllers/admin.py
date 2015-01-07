@@ -95,6 +95,12 @@ def get_host_utilization_data():
 @check_moderator
 @handle_exception
 def manage_template():
+    req_type = request.args(0)
+    if req_type == 'delete' or request.vars['delete_this_record'] == 'on':
+        can_delete = check_delete_template(request.args(2))
+        if not can_delete:
+            redirect(URL(c='admin', f='manage_template'))
+
     form = get_manage_template_form(request.args(0))
     return dict(form = form)
 
