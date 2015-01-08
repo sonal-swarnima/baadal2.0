@@ -1372,22 +1372,27 @@ def save_as_template(parameters):
     logger.debug(str(vm_details))
 
     try:
-        if (create_new_template(vm_details)):
-            for user in current.db(current.db.user_vm_map.vm_id == vmid).select(current.db.user_vm_map.user_id):
-                user_list.append(user.user_id)
+        (is_templated_created, new_template, old_template) = create_new_template(vm_details)
+        if (is_templated_created):
+            #remove old template
+            if os.path.exists (old_template):
+                os.remove(old_template)
+            else:
+                for user in current.db(current.db.user_vm_map.vm_id == vmid).select(current.db.user_vm_map.user_id):
+                    user_list.append(user.user_id)
             
-            current.db.template.insert(name = vm_data.vm_name + "_template" ,\
-                               os = vm_data.template_id.name ,\
-                               os_name = vm_data.template_id.os_name ,\
-                               os_version = vm_data.template_id.os_version ,\
-                               os_type = vm_data.template_id.os_type ,\
-                               arch = vm_data.template_id.arch ,\
-                               hdd = vm_data.template_id.hdd ,\
-                               hdfile = vm_data.template_id.hdfile ,\
-                               type = vm_data.template_id.type ,\
-                               tag = vm_data.vm_name + "_template" ,\
-                               datastore_id = vm_data.template_id.datastore_id,\
-                               owner = user_list)
+                current.db.template.insert(name = vm_data.vm_name + "_template" ,
+                                   os = vm_data.template_id.name ,
+                                   os_name = vm_data.template_id.os_name ,
+                                   os_version = vm_data.template_id.os_version ,
+                                   os_type = vm_data.template_id.os_type ,
+                                   arch = vm_data.template_id.arch ,
+                                   hdd = vm_data.template_id.hdd ,
+                                   hdfile = new_template ,
+                                   type = vm_data.template_id.type ,
+                                   tag = vm_data.vm_name + "_template" ,
+                                   datastore_id = vm_data.template_id.datastore_id,
+                                   owner = user_list)
 
             message = "User Template saved successfully"
             logger.debug(message)
@@ -1419,10 +1424,11 @@ def create_new_template(vm_details):
         if not os.path.exists (new_template_dir):
             os.makedirs(new_template_dir)
         template = new_template_dir + '/' + vm_details.vm_identity + '_template.qcow2'
+        old_template = new_template_dir + '/' + vm_details.vm_identity + '_template_old.qcow2'
         if os.path.exists (template):
             # move template to some other path
-            looger.debug("move template to some other file")
-                    
+            logger.debug("move template to some other file")
+            shutil.move(template, old_template)       
         logger.debug("template " + template)
 
         current_disk_path = vm_details.datastore_id.system_mount_point + get_constant('vms') + '/' + vm_details.vm_identity
@@ -1451,15 +1457,15 @@ def create_new_template(vm_details):
               domain = connection_object.defineXML(xmlfile)
 
               connection_object.close()
-              return True
+              return (True, template, old_template)
            else:
               logger.debug("domain is not running on host")
-              return False
+              return (False, template, old_template)
 
         elif(vm_details.status == current.VM_STATUS_SHUTDOWN):
             if domain.isActive():
                logger.debug("Domain is still active...Please try again after some time!!!")
-               return False
+               return (False, template, old_template)
             else:
                logger.debug("copying")
                rc = os.system("cp %s %s" % (current_disk_file, template))
@@ -1467,13 +1473,13 @@ def create_new_template(vm_details):
                if rc != 0:
                   logger.error("Copy not successful")
                   raise Exception("Copy not successful")
-                  return False
+                  return (False, template, old_template)
                else:
                   logger.debug("Copied successfully")
-                  return True
+                  return (True, template, old_template)
     except:
         if not domain.isPersistent():
             domain = connection_object.defineXML(xmlfile)
         connection_object.close()
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
-        return False 
+        return (False, template, old_template)
