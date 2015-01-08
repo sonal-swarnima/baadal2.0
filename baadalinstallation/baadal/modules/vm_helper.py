@@ -5,7 +5,7 @@ if 0:
     from gluon import *  # @UnusedWildImport
 ###################################################################################
 
-import sys, math, shutil, paramiko, traceback, libvirt, os, time
+import sys, math, shutil, libvirt, os, time
 import xml.etree.ElementTree as etree
 from libvirt import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
@@ -49,11 +49,28 @@ def host_resources_used(host_id):
     
     return (math.ceil(RAM),math.ceil(CPU))
 
-def set_portgroup_in_vm(domain, portgroup, host_ip, vlan_tag):
+def getVirshDomainConn(vm_details, host_ip=None, domain_name=None):
     
+    if vm_details != None:
+        host_ip = vm_details.host_id.host_ip 
+        domain_name = vm_details.vm_identity
     connection_object = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
-    dom = connection_object.lookupByName(domain)
-    xml = etree.fromstring(dom.XMLDesc(0))
+    connection_object = libvirt_dummy.open("test")
+
+    domain = connection_object.lookupByName(domain_name)
+
+    return (connection_object, domain)
+
+def getVirshDomain(vm_details):
+    
+    (connection_object, domain) = getVirshDomainConn(vm_details)
+    connection_object.close()
+    return domain
+    
+def set_portgroup_in_vm(domain_name, portgroup, host_ip, vlan_tag):
+    
+    (connection_object, domain) = getVirshDomainConn(None, host_ip, domain_name)
+    xml = etree.fromstring(domain.XMLDesc(0))
     source_network_element = xml.find('.//interface/source') 
    
     source_network_string=etree.tostring(source_network_element) 
@@ -290,8 +307,8 @@ def create_extra_disk_image(vm_details, disk_name, size, datastore):
 def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
    
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + hostip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        (connection_object, domain) = getVirshDomainConn(None, hostip, vm_details.vm_identity)
+
         #already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm.id).select()) 
         logger.debug("Value of alreadyattached is : " + str(already_attached_disks))
         
@@ -370,7 +387,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     command_output = execute_remote_cmd(host_ip, 'root', install_command)
     logger.debug(command_output)
     logger.debug("Starting to set portgroup in vm...")
-    set_portgroup_in_vm(vm_details['vm_identity'],vm_properties['vlan_name'],host_ip,vm_properties['vlan_tag'])
+    set_portgroup_in_vm(vm_details['vm_identity'], vm_properties['vlan_name'], host_ip, vm_properties['vlan_tag'])
     logger.debug("Portgroup set in vm")
 
     # Serving HDD request
@@ -388,8 +405,8 @@ def check_if_vm_defined(hostip, vmname):
 
     vm_defined = False
     try:
-        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ hostip +'/system')
-        domain = connection_object.lookupByName(vmname)
+        (connection_object, domain) = getVirshDomainConn(None, hostip, vmname)
+
         if domain.ID() in connection_object.listDomainsID():
             vm_defined = True
         connection_object.close()
@@ -405,9 +422,9 @@ def free_vm_properties(vm_details, vm_properties):
     if vm_properties:
         host_ip_of_vm = current.db.host[vm_properties['host']].host_ip
         logger.debug("Host IP of vm is " + str(host_ip_of_vm))
-        if check_if_vm_defined(host_ip_of_vm, vm_details.vm_identity):
-            connection_object = libvirt.open('qemu+ssh://root@'+ host_ip_of_vm +'/system')
-            domain = connection_object.lookupByName(vm_details.vm_identity)
+        (connection_object, domain) = getVirshDomainConn(None, host_ip_of_vm, vm_details.vm_identity)
+
+        if domain.ID() in connection_object.listDomainsID():
             logger.debug("Starting to delete vm from host..")
             domain.destroy()
             domain.undefine()
@@ -515,12 +532,11 @@ def start(parameters):
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         if domain.info()[0] == VIR_DOMAIN_RUNNING:
             raise Exception("VM is already running. Check vm status on host.")
         domain.create()
-        connection_object.close()  
+        
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING)
         message = vm_details.vm_identity + " is started successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -536,12 +552,11 @@ def suspend(parameters):
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         if domain.info()[0] == VIR_DOMAIN_PAUSED:
             raise Exception("VM is already paused. Check vm status on host.")
         domain.suspend()
-        connection_object.close()
+        
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SUSPENDED)       
         message = vm_details.vm_identity + " is suspended successfully." 
         logger.debug("Task Status: SUCCESS Message: %s " % message)     
@@ -557,12 +572,11 @@ def resume(parameters):
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         if domain.info()[0] == VIR_DOMAIN_RUNNING:
             raise Exception("VM is already running. Check vm status on host.")
         domain.resume()
-        connection_object.close()
+        
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_RUNNING) 
         message = vm_details.vm_identity + " is resumed successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -579,12 +593,11 @@ def destroy(parameters):
     vm_details = current.db.vm_data[vm_id]
     logger.debug(str(vm_details))
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         if domain.info()[0] == VIR_DOMAIN_SHUTOFF:
             raise Exception("VM is already shutoff. Check vm status on host.")
         domain.destroy()
-        connection_object.close()
+
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SHUTDOWN) 
         message = vm_details.vm_identity + " is destroyed successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -601,12 +614,11 @@ def shutdown(parameters):
     vm_details = current.db.vm_data[vm_id]
     logger.debug(str(vm_details))
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         if domain.info()[0] == VIR_DOMAIN_SHUTOFF:
             raise Exception("VM is already shutoff. Check vm status on host.")
         domain.managedSave()
-        connection_object.close()
+
         current.db(current.db.vm_data.id == vm_id).update(status = current.VM_STATUS_SHUTDOWN)
         message = vm_details.vm_identity + " is shutdown successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -659,15 +671,14 @@ def delete(parameters):
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         logger.debug(str(vm_details.status))
         if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
             logger.debug("Vm is not shutoff. Shutting it off first.")
             domain.destroy()
         logger.debug("Starting to delete it...")
         domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
-        connection_object.close()
+
         if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
             remove_mapping(vm_details.public_ip, vm_details.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
@@ -776,8 +787,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
     logger.debug("Flags: " + str(flags))   
 
     try:    
-        current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = current_host_connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         dom_snapshot_names = domain.snapshotListNames(0)
         
         for snapshot in current.db(current.db.snapshot.vm_id == vm_id).select():
@@ -798,7 +808,6 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         else:
             domain.migrateToURI("qemu+ssh://root@" + destination_host_ip + "/system", flags , None, 0)
 
-        current_host_connection_object.close()
         vm_details.update_record(host_id = destination_host_id)
         current.db.commit()
         
@@ -820,8 +829,7 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
     logger.debug("Inside live disk migration block")
 
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        (connection_object, domain) = getVirshDomainConn(vm_details)
         
         datastore = current.db.datastore[destination_datastore_id]
         vm_directory_path = datastore.system_mount_point + get_constant('vms') + '/' + vm_details.vm_identity
@@ -952,11 +960,9 @@ def snapshot(parameters):
                     delete_snapshot({'vm_id':vm_id, 'snapshot_id':snapshot_cron.id})
 
             snapshot_name = get_datetime().strftime("%I:%M%p_%B%d,%Y")
-            connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-            domain = connection_object.lookupByName(vm_details.vm_identity)
+            domain = getVirshDomain(vm_details)
             xmlDesc = "<domainsnapshot><name>%s</name></domainsnapshot>" % (snapshot_name)
             domain.snapshotCreateXML(xmlDesc, 0)
-            connection_object.close()
             message = "Snapshotted successfully."
             current.db.snapshot.insert(vm_id = vm_id, datastore_id = vm_details.datastore_id, snapshot_name = snapshot_name, type = snapshot_type)
             logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -975,16 +981,16 @@ def snapshot(parameters):
 def revert(parameters):
     
     logger.debug("Inside revert snapshot() function")
+    vm_id = parameters['vm_id']
+    snapshotid = parameters['snapshot_id']
+    vm_details = current.db.vm_data[vm_id]
+
     try:
-        vm_id = parameters['vm_id']
-        snapshotid = parameters['snapshot_id']
-        vm_details = current.db.vm_data[vm_id]
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         snapshot = domain.snapshotLookupByName(snapshot_name, 0)
         domain.revertToSnapshot(snapshot, 0)
-        connection_object.close()
+
         message = "Reverted to snapshot successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -1001,8 +1007,7 @@ def delete_snapshot(parameters):
     vm_details = current.db.vm_data[vm_id]
     logger.debug(str(vm_details))
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         snapshot_name = current.db(current.db.snapshot.id == snapshotid).select().first()['snapshot_name']
         
         snapshot = None
@@ -1013,8 +1018,6 @@ def delete_snapshot(parameters):
         
         if snapshot != None:
             snapshot.delete(0)        
-
-        connection_object.close()
 
         message = "Deleted snapshot successfully."
         logger.debug(message)
@@ -1056,8 +1059,7 @@ def edit_vm_config(parameters):
     vm_details = current.db.vm_data[vm_id]
     message = ""
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        connection_object, domain = getVirshDomainConn(vm_details) 
 
         if 'vcpus' in parameters:
             new_vcpus = int(parameters['vcpus'])
@@ -1167,10 +1169,11 @@ def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_clo
         logger.debug("New host ip for cloned vm is: " + str(new_host_ip_for_cloned_vm))
         flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE|VIR_MIGRATE_OFFLINE|VIR_MIGRATE_UNSAFE
         logger.debug("Clone currently on: " + str(vm_details.host_id.host_ip))
-        current_host_connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = current_host_connection_object.lookupByName(cloned_vm_details.vm_identity)
+        (current_host_connection_object, domain) = getVirshDomainConn(None, vm_details.host_id.host_ip, cloned_vm_details.vm_identity)
         logger.debug("Starting to migrate cloned vm to host " + str(new_host_ip_for_cloned_vm))
+
         domain.migrateToURI("qemu+ssh://root@" + new_host_ip_for_cloned_vm + "/system", flags , None, 0)
+        current_host_connection_object.close()
         logger.debug("Successfully migrated cloned vm to host " + str(new_host_ip_for_cloned_vm))
         cloned_vm_details.update_record(host_id = new_host_id_for_cloned_vm)
         vm_properties['host'] = new_host_id_for_cloned_vm
@@ -1188,11 +1191,10 @@ def clone(vmid):
     cloned_vm_details = current.db.vm_data[vmid]
     vm_details = current.db(current.db.vm_data.id == cloned_vm_details.parent_id).select().first()
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        domain = getVirshDomain(vm_details)
         if domain.info()[0] != VIR_DOMAIN_SHUTOFF:
             raise Exception("VM is not shutoff. Check vm status.")
-        connection_object.close()
+
         clone_file_parameters = get_clone_properties(vm_details, cloned_vm_details, vm_properties)
         logger.debug("cloned vm properties after clone_file_parameters" + str(vm_properties))
         host = vm_properties['vm_host_details']
@@ -1365,10 +1367,10 @@ def launch_existing_vm_image(vm_details):
 def save_as_template(parameters):
     
     logger.debug("Inside save_as_template() function")
-    vmid = parameters['vm_id']
-    vm_data = current.db.vm_data[vmid]
+    vm_id = parameters['vm_id']
+    vm_data = current.db.vm_data[vm_id]
     user_list = []
-    vm_details = current.db.vm_data[vmid]
+    vm_details = current.db.vm_data[vm_id]
     logger.debug(str(vm_details))
 
     try:
@@ -1378,11 +1380,11 @@ def save_as_template(parameters):
             if os.path.exists (old_template):
                 os.remove(old_template)
             else:
-                for user in current.db(current.db.user_vm_map.vm_id == vmid).select(current.db.user_vm_map.user_id):
+                for user in current.db(current.db.user_vm_map.vm_id == vm_id).select(current.db.user_vm_map.user_id):
                     user_list.append(user.user_id)
             
-                current.db.template.insert(name = vm_data.vm_name + "_template" ,
-                                   os = vm_data.template_id.name ,
+                new_template_id = current.db.template.insert(name = vm_data.vm_name + "_template" ,
+                                   os = vm_data.template_id.os ,
                                    os_name = vm_data.template_id.os_name ,
                                    os_version = vm_data.template_id.os_version ,
                                    os_type = vm_data.template_id.os_type ,
@@ -1394,6 +1396,7 @@ def save_as_template(parameters):
                                    datastore_id = vm_data.template_id.datastore_id,
                                    owner = user_list)
 
+            current.db.vm_data[vm_id] = dict(saved_template = new_template_id)
             message = "User Template saved successfully"
             logger.debug(message)
             return (current.TASK_QUEUE_STATUS_SUCCESS, message)
@@ -1412,13 +1415,17 @@ def delete_template(parameters):
     template_path = template_details["hdfile"]
     if os.path.exists(template_path):
         os.remove(template_path)
-        # set value in db also
+
+    # set value in db also
+    parent_vm = current.db.vm_data(saved_template = template_id)
+    if parent_vm:
+        parent_vm.update_record(saved_template = None)
+        
     return (current.TASK_QUEUE_STATUS_SUCCESS, "")
    
 def create_new_template(vm_details):
     try:
-        connection_object = libvirt.open("qemu+ssh://root@" + vm_details.host_id.host_ip + "/system")
-        domain = connection_object.lookupByName(vm_details.vm_identity)
+        (connection_object, domain) = getVirshDomainConn(vm_details)
         xmlfile = domain.XMLDesc(0)
         logger.debug("connection object created")
         datastore = choose_datastore()
@@ -1439,48 +1446,48 @@ def create_new_template(vm_details):
         current_disk_file = current_disk_path + '/' + vm_details.vm_identity + '.qcow2'
         
         if (vm_details.status == current.VM_STATUS_RUNNING or vm_details.status == current.VM_STATUS_SUSPENDED):
-           logger.debug("vm is active in db")
-           if domain.isActive():
+            logger.debug("vm is active in db")
+            if domain.isActive():
               
-              domain.undefine()
+                domain.undefine()
+                
+                root = etree.fromstring(xmlfile)
+                target_elem = root.find("devices/disk/target")
+                target_disk = target_elem.get('dev')
+                
+                flag = VIR_DOMAIN_BLOCK_REBASE_SHALLOW | VIR_DOMAIN_BLOCK_REBASE_COPY
+                domain.blockRebase(target_disk, template, 0, flag)
+                block_info_list = domain.blockJobInfo(current_disk_file,0)
+                
+                while(block_info_list['end'] != block_info_list['cur']):
+                    logger.debug("time to sleep")
+                    time.sleep(60)
+                    block_info_list = domain.blockJobInfo(current_disk_file,0)
 
-              root = etree.fromstring(xmlfile)
-              target_elem = root.find("devices/disk/target")
-              target_disk = target_elem.get('dev')
+                domain.blockJobAbort(current_disk_file)
+                domain = connection_object.defineXML(xmlfile)
 
-              flag = VIR_DOMAIN_BLOCK_REBASE_SHALLOW | VIR_DOMAIN_BLOCK_REBASE_COPY
-              domain.blockRebase(target_disk, template, 0, flag)
-              block_info_list = domain.blockJobInfo(current_disk_file,0)
-
-              while(block_info_list['end'] != block_info_list['cur']):
-                  logger.debug("time to sleep")
-                  time.sleep(60)
-                  block_info_list = domain.blockJobInfo(current_disk_file,0)
-
-              domain.blockJobAbort(current_disk_file)
-              domain = connection_object.defineXML(xmlfile)
-
-              connection_object.close()
-              return (True, template, old_template)
-           else:
-              logger.debug("domain is not running on host")
-              return (False, template, old_template)
+                connection_object.close()
+                return (True, template, old_template)
+            else:
+                logger.debug("domain is not running on host")
+                return (False, template, old_template)
 
         elif(vm_details.status == current.VM_STATUS_SHUTDOWN):
             if domain.isActive():
-               logger.debug("Domain is still active...Please try again after some time!!!")
-               return (False, template, old_template)
+                logger.debug("Domain is still active...Please try again after some time!!!")
+                return (False, template, old_template)
             else:
-               logger.debug("copying")
-               rc = os.system("cp %s %s" % (current_disk_file, template))
+                logger.debug("copying")
+                rc = os.system("cp %s %s" % (current_disk_file, template))
 
-               if rc != 0:
-                  logger.error("Copy not successful")
-                  raise Exception("Copy not successful")
-                  return (False, template, old_template)
-               else:
-                  logger.debug("Copied successfully")
-                  return (True, template, old_template)
+                if rc != 0:
+                    logger.error("Copy not successful")
+                    raise Exception("Copy not successful")
+                    return (False, template, old_template)
+                else:
+                    logger.debug("Copied successfully")
+                    return (True, template, old_template)
     except:
         if not domain.isPersistent():
             domain = connection_object.defineXML(xmlfile)

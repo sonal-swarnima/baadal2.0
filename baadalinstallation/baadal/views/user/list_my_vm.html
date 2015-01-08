@@ -87,7 +87,7 @@
         <td>{{=temp['hdd']}}</td>
         <td>
         {{=A(IMG(_src=URL('static','images/delete.png'), _height=18, _width=18),
-        _href=URL(r=request, f='delete_template', args=[temp['id']]), 
+        _href=URL(r=request, f='delete_template', args=[temp['vm_id'], temp['id']]), 
         _title="Delete Template", 
         _alt="Delete Template")}}
         </td>

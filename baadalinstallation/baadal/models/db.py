@@ -192,6 +192,7 @@ db.define_table('vm_data',
     Field('security_domain', db.security_domain),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
     Field('snapshot_flag', 'integer', default = 0),
+    Field('saved_template', db.template),
     Field('delete_warning_date', 'datetime'))
 
 db.vm_data.purpose.widget=SQLFORM.widgets.text.widget
@@ -222,9 +223,12 @@ db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 if not auth.user:
-    tmp_query = (db.template.owner == None)
+    tmp_query = db.template
+elif is_moderator():
+    tmp_query = db((db.template.is_active == True))
 else:
-    tmp_query = db((db.template.owner == None) | (db.template.owner.contains(auth.user.id)))
+    tmp_query = db((db.template.is_active == True) & ((db.template.owner == None) | (db.template.owner.contains(auth.user.id))))
+    
 db.request_queue.template_id.requires = IS_IN_DB(tmp_query, 'template.id', lambda r: 
                                                  '%s %s %s %s %sGB'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd) if r.tag == None else 
                                                  '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag), zero=None)

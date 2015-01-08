@@ -34,6 +34,9 @@ def get_manage_template_form(req_type):
 """Checks if template can be deleted. If a VM is created with given template;
    it is marked is_active=False instead of deleting"""
 def check_delete_template(template_id):
+    
+    if db.vm_data(saved_template = template_id):
+        add_vm_task_to_queue(-1, VM_TASK_DELETE_TEMPLATE, {'template_id' : template_id})
 
     if db.vm_data(template_id = template_id):
         db(db.template.id== template_id).update(is_active=False)

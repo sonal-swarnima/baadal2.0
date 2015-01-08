@@ -243,16 +243,15 @@ def save_as_template():
         add_vm_task_to_queue(vm_id, VM_TASK_SAVE_AS_TEMPLATE)
         session.flash = "Your request to save VM as template is queued"
     else:
-        session.flash = "Limit Reached. Delete a previous template to save new template."
+        session.flash = "Template for this VM already present. Delete a previous template to save new template."
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
-@check_vm_owner
 @handle_exception       
 def delete_template():
     
     vm_id = int(request.args[0])
     params = {'template_id' : request.args[1]}
-    add_vm_task_to_queue(vm_id, VM_TASK_SAVE_AS_TEMPLATE, params)
+    add_vm_task_to_queue(vm_id, VM_TASK_DELETE_TEMPLATE, params)
     session.flash = "Your request to delete template is queued"
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 

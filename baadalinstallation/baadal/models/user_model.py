@@ -304,8 +304,12 @@ def check_snapshot_limit(vm_id):
     else:
         return False
 
-#TBD: To be implemented
+
 def check_vm_template_limit(vm_id):
+    vm_data = db.vm_data[vm_id]
+    if vm_data.saved_template != None:
+        return False
+    
     return True
 
 
@@ -462,4 +466,8 @@ def update_snapshot_flag(vm_id, flag):
     
 def get_my_saved_templates():
     templates = db(db.template.owner.contains(auth.user.id)).select(db.template.ALL)
+    for template in templates:
+        parent_vm = db.vm_data(saved_template = template.id)
+        template['vm_id'] = parent_vm.id if parent_vm else -1
+    
     return templates

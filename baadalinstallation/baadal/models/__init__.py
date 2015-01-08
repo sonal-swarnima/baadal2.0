@@ -32,7 +32,8 @@ __all__ =['add_collaborators', 'add_faculty_approver', 'add_orphan_vm', 'add_pri
           'send_email_vnc_access_granted', 'send_remind_faculty_email', 'send_remind_orgadmin_email', 
           'send_shutdown_email_to_all', 'set_configuration_elem', 'specify_user_roles', 'update_host_status', 
           'update_snapshot_flag', 'update_task_ignore', 'update_task_retry', 'update_vm_lock', 'validate_user', 
-          'verify_vm_request', 'vm_has_snapshots', 'check_vm_template_limit', 'get_my_saved_templates']
+          'verify_vm_request', 'vm_has_snapshots', 'check_vm_template_limit', 'get_my_saved_templates',
+          'check_delete_template']
 
 if 0:
     from admin_model import *
