@@ -1408,7 +1408,11 @@ def save_as_template(parameters):
 def delete_template(parameters):
     logger.debug("Inside delete_template() function")
     template_id = parameters['template_id']
-    
+    template_details = current.db.template[template_id]
+    template_path = template_details["hdfile"]
+    if os.path.exists(template_path):
+        os.remove(template_path)
+        # set value in db also
     return (current.TASK_QUEUE_STATUS_SUCCESS, "")
    
 def create_new_template(vm_details):
