@@ -31,6 +31,7 @@ VM_UTIL_24_HOURS = 2
 VM_UTIL_ONE_WEEK = 3
 VM_UTIL_ONE_MNTH = 4
 VM_UTIL_ONE_YEAR = 5
+VM_UTIL_20_DAYS=20
 
 STEP         = 300
 TIME_DIFF_MS = 550
@@ -191,8 +192,71 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
             sum(dskw_data)/float(len(dskw_data)) if len(dskw_data) > 0 else 0,
             sum(nwr_data)/float(len(nwr_data)) if len(nwr_data) > 0 else 0,
             sum(nww_data)/float(len(nww_data)) if len(nww_data) > 0 else 0)
-   
-"""Create the RRD file"""
+  
+
+''' check last 20 days data and compare against threshold.'''
+
+def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
+     
+    start_time = 'now - ' + str(VM_UTIL_20_DAYS*24*60*60)
+    ''' start_time = 'now - ' + str(60*60) '''
+    end_time = 'now'
+    rrd_file = get_rrd_file(rrd_file_name)
+
+    cpu_data = []
+    mem_data = []
+    dskr_data = []
+    dskw_data = []
+    nwr_data = []
+    nww_data = []
+
+    rrd_logger.info("inside compare_rrd_data_with_threshold function rrd file is :"+str(rrd_file_name))
+    if os.path.exists(rrd_file):
+        rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)
+
+        fld_info = rrd_ret[1]
+        data_info = rrd_ret[2]
+        cpu_idx = fld_info.index('cpu')
+        mem_idx = fld_info.index('ram')
+        dskr_idx = fld_info.index('dr')
+        dskw_idx = fld_info.index('dw')
+        nwr_idx = fld_info.index('tx')
+        nww_idx = fld_info.index('rx')
+
+        cpu_threshold='N'
+        read_threshold='N'
+        write_threshold='N'
+        CPUNoneIdentifier='Y'
+        NWRNoneIdentifier='Y'
+        NWWNoneIdentifier='Y'
+
+        for row in data_info:
+            rrd_logger.info("Info about the VM:%s,row[cpu_idx]:%s,row[nwr_idx]:%s,row[nww_idx]:%s" %(rrd_file_name,row[cpu_idx],row[nwr_idx],row[nww_idx])) 
+            if (row[cpu_idx] != None) : 
+                CPUNoneIdentifier='N'
+                if int(row[cpu_idx]) > int(thresholdcontext['CPUThreshold']) : cpu_threshold='Y'
+            
+            if (row[nwr_idx] != None) : 
+                NWRNoneIdentifier='N'
+                if int(row[nwr_idx]) > int(thresholdcontext['ReadThreshold']) : read_threshold='Y' 
+
+            if (row[nww_idx] != None) : 
+                NWWNoneIdentifier='N'
+                if int(row[nww_idx]) > int(thresholdcontext['WriteThreshold']) : write_threshold='Y'
+		
+            if (cpu_threshold=='Y' or read_threshold=='Y' or write_threshold=='Y') :
+                rrd_logger.info("Threshold is reached once.. VM:"+str(rrd_file_name)+" is in use") 
+                return False
+           
+        ## If only none values are read from the rrd .. do not send a warning email                  
+        if(CPUNoneIdentifier=='N' and  NWRNoneIdentifier=='N' and NWWNoneIdentifier =='N'):
+            rrd_logger.info("Returning true to send warning email as threshold is never reached for VM:%s" %(rrd_file_name) )
+            return True
+        else:
+            rrd_logger.info("RRD capturing is not correct... returning all null values only for VM:%s" %(rrd_file_name) )
+            return False 
+
+
 def create_rrd(rrd_file):
 
     ret = rrdtool.create( rrd_file, "--step", str(STEP) ,"--start", str(int(time.time())),

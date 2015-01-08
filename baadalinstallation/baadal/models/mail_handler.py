@@ -64,8 +64,15 @@ DELETE_WARNING_SUBJECT="Delete Warning to the Shutdown VM"
 DELETE_WARNING_BODY="Dear {0[userName]},\n\n"\
     "It has been noticed that your VM {0[vmName]} is being shutdown from {0[vmShutdownDate]}.\n"\
     "Kindly use the VM/delete the VM if not required. \n" \
-    "If no action is taken on the VM, the VM will be automatically deleted on {0[vmDeleteDate]}. \n\n"\
+    "If no action is taken on the VM, the VM will be automatically deleted on {0[vmActionDate]}. \n\n"\
     "For other details, Please login to baadal WEB interface." 
+
+SHUTDOWN_WARNING_SUBJECT="Shutdown Warning to the unused VM"
+SHUTDOWN_WARNING_BODY="Dear {0[userName]},\n\nIt has been noticed that your VM {0[vmName]} is not in used from a long time.\n"\
+                   "Kindly use the VM/delete the VM if not required. \n" \
+                   "If no action is taken on the VM, the VM will be automatically shutdown on {0[vmActionDate]}. \n\n"\
+                   "For other details, Please login to baadal WEB interface."
+
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
 
@@ -146,19 +153,27 @@ def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_t
             send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
     
 
-""""Send VM delete warning mail to VM users"""
-def send_email_delete_vm_warning(vm_users,vm_name,vm_shutdown_time):
-    vm_delete_time= get_datetime() + timedelta(days=15)   
+#sendmail function to send warning mails to unused or shutdown vm
+def send_email_vm_warning(task_type,vm_users,vm_name,vm_shutdown_time):
+    vm_action_time= get_datetime() + timedelta(days=20)   
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
         if user_info[1] != None:
             context = dict(vmName = vm_name, 
                            userName = user_info[0],
                            vmShutdownDate=vm_shutdown_time,
-                           vmDeleteDate=vm_delete_time)
-            logger.debug("Inside send mail delete vm warning function:" +vm_name+ ", userName:" +user_info[0]+ ", vmShutdownDate:" + str(vm_shutdown_time) + ", vmDeleteDate:" + str(vm_delete_time))
-        send_email(user_info[1],DELETE_WARNING_SUBJECT,DELETE_WARNING_BODY,context) 
-        return vm_delete_time
+                           vmActionDate=vm_action_time)
+            logger.debug("Inside send warning e-mail for vm:" +vm_name+ ", userName:" +user_info[0]+ ", vmShutdownDate:" + str(vm_shutdown_time) + ", vmDeleteDate:" + str(vm_action_time))
+        
+        if task_type == VM_TASK_WARNING_SHUTDOWN:
+            #send_email(user_info[1],SHUTDOWN_WARNING_SUBJECT,SHUTDOWN_WARNING_BODY,context) 
+            logger.debug("uncomment send_email once need to configure the mailing VM_TASK_WARNING_SHUTDOWN")
+        elif task_type == VM_TASK_WARNING_DELETE: 
+            send_email(user_info[1],DELETE_WARNING_SUBJECT,DELETE_WARNING_BODY,context) 
+        else:
+            logger.debug("Not a valid task type")
+
+        return vm_action_time
 
 def send_email_to_admin(email_subject, email_message, email_type):
     if email_type == 'report_bug':
