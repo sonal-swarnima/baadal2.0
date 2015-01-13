@@ -144,7 +144,9 @@ def choose_mac_ip_vncport(vm_properties):
 def find_new_host(RAM, vCPU):
     hosts = current.db(current.db.host.status == 1).select()
     hosts = hosts.as_list(True,False) 
-    while hosts:
+    count = 3 
+    selected_hosts = []
+    while count != 0 and hosts:
         host = random.choice(hosts)
         logger.debug("Checking host =" + host['host_name'])
         (used_ram, used_cpu) = host_resources_used(host['id'])
@@ -155,10 +157,15 @@ def find_new_host(RAM, vCPU):
         logger.debug("ram available: %s cpu available: %s cpu < max cpu: %s" % ((( host_ram_after_200_percent_overcommitment - used_ram) >= RAM), ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vCPU), (vCPU <= host['CPUs']) ))
 
         if((( host_ram_after_200_percent_overcommitment - used_ram) >= RAM) and ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vCPU) and (vCPU <= host['CPUs'])):
-            return host['id']
+            selected_hosts.append(host)
+            hosts.remove(host)
+            count = count-1
         else:
             hosts.remove(host)
-            
+    if selected_hosts:
+            #Sort selected host list by Ram first then Cpu
+            selected_host = selected_hosts.sort(key=lambda k: k['RAM'])[0] 
+            return selected_host['id'] 
     #If no suitable host found
     raise Exception("No active host is available for a new vm.")
     
@@ -202,7 +209,6 @@ def create_vm_image(vm_details, datastore):
     # Finds the location of template image that the user has requested for its vm.               
     template = current.db.template[vm_details.template_id]
     vm_image_name = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
-
    
     # Copies the template image from its location to new vm directory
     storage_type = config.get("GENERAL_CONF","storage_type")
