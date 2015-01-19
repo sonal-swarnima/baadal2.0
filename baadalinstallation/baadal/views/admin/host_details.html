@@ -38,7 +38,7 @@
 		{{=A(IMG(_src=URL('static','images/repaired.jpg'), _height=15, _width=15),
                     _href=URL(r=request, f='boot_up_host', args=[host['id']]), 
                     _title="Host is fit now.",
-                    _alt="Host is fit now.")}}
+                    _alt="Host is fit now.",_id=host['id'])}}
 	 {{pass}}
         {{ if host['status'] == HOST_STATUS_UP:}} 
         <a href=# alt="Put host to maintenance mode." title="Put host to maintenance mode." onClick="if(confirm('Are you sure you want to put this host in maintenance mode? All off vms will be put on first active host and migration request will be queued for all running vms.'))
@@ -46,18 +46,18 @@
                                     window.location ='{{=URL(r=request, f='maintenance_host', args=[host['id']])}}'
                                 }
           ">{{=IMG(_src=URL('static','images/maintenance.png'), _height=15, _width=15)}}
-                {{=A(_title="Put host to maintenance mode.",_alt="Put host to maintenance mode.")}}</a>
+                {{=A(_title="Put host to maintenance mode.",_alt="Put host to maintenance mode.",_id=host['id'])}}</a>
         {{pass}}
 
         {{ if host['status'] == HOST_STATUS_MAINTENANCE:}} 
           {{=A(IMG(_src=URL('static','images/repaired.jpg'), _height=15, _width=15),
                     _href=URL(r=request, f='boot_up_host', args=[host['id']]), 
                     _title="Host is fit now.",
-                    _alt="Host is fit now.")}}
+                    _alt="Host is fit now.",_id=host['id'])}}
           {{=A(IMG(_src=URL('static','images/shutdown2.png'), _height=15, _width=15),
                    _href=URL(r=request, f='shut_down_host', args=[host['id']]), 
                    _title="Shut down this host",
-                   _alt="Shut down this host")}}
+                   _alt="Shut down this host",_id=host['id'])}}
 
         <a href=# alt="Delete the host from the database" title="Delete the host from the database" onClick="if(confirm('Are you sure you want to delete this host from baadal database.'))
         {
@@ -65,7 +65,7 @@
         }
       ">
       {{=IMG(_src=URL('static','images/delete.png'), _height=15, _width=15)}}
-            {{=A(_title="Delete the host from the database",_alt="Delete the host from the database")}}</a>
+            {{=A(_title="Delete the host from the database",_alt="Delete the host from the database",_id=host['id'])}}</a>
        {{pass}}
 
 
