@@ -123,7 +123,7 @@ def respawn_dangling_vms(host_id):
         vm_properties['host'] = find_new_host(vm_data.RAM, vm_data.vCPU)
         vm_properties['ram'] = vm_data.RAM
         vm_properties['vcpus'] = vm_data.vCPU
-        vm_properties['mac_addr'] = vm_data.mac_addr
+        vm_properties['mac_addr'] = vm_data.private_ip.mac_addr
         vm_properties['vnc_port'] = vm_data.vnc_port
         vm_properties['template'] = current.db.template[vm_data.template_id]
         vm_properties['vlan_name'] = current.db(current.db.private_ip_pool.private_ip == vm_data.private_ip).select()[0].vlan.name
@@ -256,7 +256,7 @@ def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=None):
     
     params={'vm_id' : vm_id, 'destination_host' : dest_host_id, 'live_migration' : live_migration}
 
-    current.db.task_queue.insert(task_type='Migrate VM',
+    current.db.task_queue.insert(task_type=current.VM_TASK_MIGRATE_HOST,
                          vm_id=vm_id, 
                          requester_id=-1,
                          parameters=params, 

@@ -57,28 +57,32 @@ def get_manage_datastore_form(req_type):
                         csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
 
+def get_public_ip_ref_link(row):
+    """Returns link to VM settings page if public IP is assigned to a VM
+    or to host details page if public IP is assigned to a Host"""
+    vm_data = db.public_ip_pool(public_ip=row.id)
+    host_data = db.host(public_ip=row.id)
 
-def get_vm_link(row):
-    if (row.vm_id == None) & (row.host_id==None):
-        return 'Unassigned'
-    elif row.vm_id != None:
-        vm_data = db.vm_data[row.vm_id]
+    if vm_data:
         return A(vm_data.vm_name, _href=URL(r=request, c='user',f='settings', args=vm_data.id))
-    elif row.host_id != None:
-        host_data = db.host[row.host_id]
+    elif host_data:
         return A(host_data.host_name, _href=URL(r=request, c='admin',f='host_config', args=host_data.id))
+    else:
+        return 'Unassigned'
 
 
 def get_manage_public_ip_pool_form():
     db.public_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
-    db.public_ip_pool.vm_id.readable=False
+    db.public_ip_pool.is_active.readable=False 
+    db.public_ip_pool.is_active.writable=False 
 
     default_sort_order=[db.public_ip_pool.id]
 
+    query = ((db.public_ip_pool.is_active == True))
     #Creating the grid object
-    grid = SQLFORM.grid(db.public_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+    grid = SQLFORM.grid(query, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
                         csv=False, searchable=True, details=False, showbuttontext=False, 
-                        links=[dict(header='Assigned to', body=get_vm_link)])
+                        links=[dict(header='Assigned to', body=get_public_ip_ref_link)])
 
     if grid.create_form:
         grid.create_form[0].insert(-1, TR(SPAN(
@@ -93,20 +97,36 @@ def get_manage_public_ip_pool_form():
 
     return grid
 
+
 def private_ip_on_delete(private_ip_pool_id):
     private_ip_data = db.private_ip_pool[private_ip_pool_id]
     if private_ip_data.vlan != HOST_VLAN_ID:
         remove_dhcp_entry(None, private_ip_data.mac_addr ,private_ip_data.private_ip)
+
+def get_private_ip_ref_link(row):
+    """Returns link to VM settings page if IP is assigned to a VM
+    or to host details page if IP is assigned to a Host"""
+    vm_data = db.private_ip_pool(private_ip=row.id)
+    host_data = db.host(host_ip=row.id)
+    if vm_data:
+        return A(vm_data.vm_name, _href=URL(r=request, c='user',f='settings', args=vm_data.id))
+    elif host_data:
+        return A(host_data.host_name, _href=URL(r=request, c='admin',f='host_config', args=host_data.id))
+    else:
+        return 'Unassigned'
     
 def get_manage_private_ip_pool_form():
     db.private_ip_pool.id.readable=False # Since we do not want to expose the id field on the grid
-    db.private_ip_pool.vm_id.readable=False
+    db.private_ip_pool.is_active.readable=False 
+    db.private_ip_pool.is_active.writable=False 
 
     default_sort_order=[db.private_ip_pool.id]
+
+    query = ((db.private_ip_pool.is_active == True))
     #Creating the grid object
-    grid = SQLFORM.grid(db.private_ip_pool, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
+    grid = SQLFORM.grid(query, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
                         csv=False, searchable=True, details=False, showbuttontext=False, 
-                        links=[dict(header='Assigned to', body=get_vm_link)], 
+                        links=[dict(header='Assigned to', body=get_private_ip_ref_link)], 
                         ondelete=lambda _table, _id: private_ip_on_delete(_id))
 
     if grid.create_form:
@@ -209,11 +229,13 @@ def check_delete_security_domain(sd_id):
         return 'Security Domain %s can''t be deleted.' %(db.security_domain[sd_id].name)
     
 def is_ip_assigned(ip_pool_id, is_private):
-    if is_private:        
-        if not db.private_ip_pool(id=ip_pool_id, vm_id = None, host_id = None):
+    if is_private:
+        private_ip_pool = db.db.private_ip_pool[ip_pool_id]
+        if (db.vm_data(private_ip = private_ip_pool.private_ip)) or (db.host(host_ip = private_ip_pool.private_ip)):
             return PRIVATE_IP_DELETE_MESSAGE
     else:
-        if not db.public_ip_pool(id=ip_pool_id, vm_id = None, host_id = None):
+        public_ip_pool = db.db.public_ip_pool[ip_pool_id]
+        if (db.vm_data(public_ip = public_ip_pool.public_ip)) or (db.host(host_ip = public_ip_pool.public_ip)):
             return PUBLIC_IP_DELETE_MESSAGE
 
 def get_all_pending_requests():
@@ -294,7 +316,7 @@ def create_clone_task(req_data, params):
                           owner_id = vm_data.owner_id,
                           requester_id = req_data.requester_id,
                           parent_id = req_data.parent_id,
-                          public_ip = PUBLIC_IP_NOT_ASSIGNED,
+                          public_ip = None,
                           security_domain = vm_data.security_domain,
                           purpose = req_data.purpose,
                           status = VM_STATUS_IN_QUEUE)
@@ -324,7 +346,7 @@ def create_install_task(req_data, params):
                   requester_id = req_data.requester_id,
                   owner_id = req_data.owner_id,
                   purpose = req_data.purpose,
-                  public_ip = PUBLIC_IP_NOT_ASSIGNED if not(req_data.public_ip) else None,
+                  public_ip = -1 if req_data.public_ip else None,
                   security_domain = req_data.security_domain,
                   status = VM_STATUS_IN_QUEUE)
         
@@ -337,7 +359,7 @@ def create_edit_config_task(req_data, params):
     
     if vm_data.RAM != req_data.RAM : params['ram'] = req_data.RAM
     if vm_data.vCPU != req_data.vCPU : params['vcpus'] = req_data.vCPU
-    if (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED) ^ req_data.public_ip:
+    if (vm_data.public_ip != None) ^ req_data.public_ip:
         params['public_ip'] = req_data.public_ip
     
     if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
@@ -416,6 +438,8 @@ def update_task_retry(event_id):
 
     task_event_data = db.task_queue_event[event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
+
+    vm_id = task_queue_data.parameters['vm_id'] if 'vm_id' in task_queue_data.parameters else None
     
     if 'request_id' in task_queue_data.parameters:
         #Mark status for request as 'In Queue'
@@ -423,12 +447,13 @@ def update_task_retry(event_id):
         if db.request_queue[request_id]:
             db.request_queue[request_id] = dict(status=REQ_STATUS_IN_QUEUE)
     
-    if task_event_data.task_type == VM_TASK_CREATE:
-        db.vm_data[task_event_data.vm_id] = dict(status=VM_STATUS_IN_QUEUE)
-    elif task_event_data.task_type == VM_TASK_CLONE:
-        vm_list = task_queue_data.parameters['clone_vm_id']
-        for vm in vm_list:
-            db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
+    if vm_id:
+        if task_event_data.task_type == VM_TASK_CREATE:
+            db.vm_data[vm_id] = dict(status=VM_STATUS_IN_QUEUE)
+        elif task_event_data.task_type == VM_TASK_CLONE:
+            vm_list = task_queue_data.parameters['clone_vm_id']
+            for vm in vm_list:
+                db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
 
     #Mark current task event for the task as IGNORE. 
     task_event_data.update_record(status=TASK_QUEUE_STATUS_RETRY)
@@ -441,17 +466,20 @@ def update_task_ignore(event_id):
     task_event_data = db.task_queue_event[event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
 
+    vm_id = task_queue_data.parameters['vm_id'] if 'vm_id' in task_queue_data.parameters else None
+
     if 'request_id' in task_event_data.parameters:
         request_id = task_event_data.parameters['request_id']
         if db.request_queue[request_id]:
             del db.request_queue[request_id]
     
-    if task_event_data.task_type == VM_TASK_CREATE:
-        if db.vm_data[task_event_data.vm_id]: del db.vm_data[task_event_data.vm_id]
-    elif task_event_data.task_type == VM_TASK_CLONE:
-        vm_list = task_event_data.parameters['clone_vm_id']
-        for vm in vm_list:
-            if db.vm_data[vm]: del db.vm_data[vm]
+    if vm_id:
+        if task_event_data.task_type == VM_TASK_CREATE:
+            if db.vm_data[vm_id]: del db.vm_data[vm_id]
+        elif task_event_data.task_type == VM_TASK_CLONE:
+            vm_list = task_event_data.parameters['clone_vm_id']
+            for vm in vm_list:
+                if db.vm_data[vm]: del db.vm_data[vm]
 
     task_event_data.update_record(task_id = None, status=TASK_QUEUE_STATUS_IGNORE)
 
@@ -512,16 +540,17 @@ def configure_host_by_mac(mac_addr):
     if ip_info:
         avl_private_ip = ip_info.private_ip
     else:
-        avl_ip = db((~db.private_ip_pool.private_ip.belongs(db()._select(db.host.host_ip)))
+        avl_ip = db((~db.private_ip_pool.id.belongs(db()._select(db.host.host_ip)))
                     & (db.private_ip_pool.vlan == HOST_VLAN_ID)).select(db.private_ip_pool.private_ip)
         if avl_ip.first():
-            avl_private_ip = avl_ip.first()['private_ip']
+            ip_info = avl_ip.first()
+            avl_private_ip = ip_info['private_ip']
 
     if avl_private_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
         host_name = 'host'+str(avl_private_ip.split('.')[3])
         create_dhcp_entry(host_name, mac_addr, avl_private_ip)
-        db.host[0] = dict(host_ip=avl_private_ip, 
+        db.host[0] = dict(host_ip=ip_info['id'], 
                           host_name=host_name, 
                           mac_addr=mac_addr, 
                           status=HOST_STATUS_DOWN)
@@ -694,21 +723,25 @@ def get_host_util_data(util_period):
 
     return host_util_dict
 
+"""Check if following resources are available for given VM request:
+1. Private IP in given security domain
+2. Public IP if requested for
+3. Enough private IPs in case of clone request """
 def check_vm_resource(request_id):
     
     req_data = db.request_queue[request_id]
     security_domain_id = req_data.security_domain
     
     vlans = db(db.security_domain.id == security_domain_id)._select(db.security_domain.vlan)
-    avl_ip = db((db.private_ip_pool.vm_id == None) & (db.private_ip_pool.vlan.belongs(vlans))).count()
-    
+    avl_ip = db((~db.private_ip_pool.id.belongs(db(db.vm_data.private_ip != None)._select(db.vm_data.private_ip)))
+                & (db.private_ip_pool.vlan.belongs(vlans))).count()
+
     message = None
     if req_data.request_type == VM_TASK_CREATE:
         if avl_ip == 0:
             message = "No private IPs available for security domain '%s" % req_data.security_domain.name
         if req_data.public_ip:
-            
-            if db(db.public_ip_pool.vm_id == None).count() == 0:
+            if db(~db.public_ip_pool.id.belongs(db(db.vm_data.public_ip != None)._select(db.vm_data.public_ip))).count() == 0:
                 message = "" if message == None else message + ", "
                 message += "No public IP available"
             

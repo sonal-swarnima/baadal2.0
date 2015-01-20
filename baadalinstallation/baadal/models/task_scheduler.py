@@ -42,15 +42,16 @@ task = {VM_TASK_CREATE               :    install,
 def send_task_complete_mail(task_event):
     
     vm_users = []
-    if task_event.vm_id != None:
-        for user in db(db.user_vm_map.vm_id == task_event.vm_id).select(db.user_vm_map.user_id):
+    vm_id = task_event.parameters['vm_id'] if 'vm_id' in task_event.parameters else None
+    if vm_id:
+        for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
             vm_users.append(user['user_id'])
     else:
         vm_users.append(task_event.requester_id)
     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
     
-"""Logs action data into vm_event_log table"""
 def log_vm_event(old_vm_data, task_queue_data):
+    """Logs action data into vm_event_log table"""
 
     vm_data = db.vm_data[old_vm_data.id]
     if task_queue_data.task_type in (VM_TASK_START, 
@@ -108,14 +109,16 @@ def log_vm_event(old_vm_data, task_queue_data):
                                old_value = str(old_vm_data.extra_HDD)+' GB',
                                new_value = str(vm_data.extra_HDD)+' GB')
 
-"""Invoked when scheduler runs task of type 'vm_task'"""
 def process_task_queue(task_event_id):
+    """Invoked when scheduler runs task of type 'vm_task'
+    For every task, function calls the corresponding handler
+    and updates the database on the basis of the response """
 
     logger.info("\n ENTERING VM_TASK........")
     
     task_event_data = db.task_queue_event[task_event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
-    vm_data = db.vm_data[task_event_data.vm_id]
+    vm_id = task_queue_data.parameters['vm_id'] if 'vm_id' in task_queue_data.parameters else None
     try:
         #Update attention_time for task in the event table
         task_event_data.update_record(attention_time=get_datetime(), status=TASK_QUEUE_STATUS_PROCESSING)
@@ -136,7 +139,9 @@ def process_task_queue(task_event_id):
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # Create log event for the task
             logger.debug("VM_TASK SUCCESSFUL")
-            log_vm_event(vm_data, task_queue_data)
+            if vm_id:
+                vm_data = db.vm_data[vm_id]
+                log_vm_event(vm_data, task_queue_data)
             # For successful task, delete the task from queue 
             if db.task_queue[task_queue_data.id]:
                 del db.task_queue[task_queue_data.id]
@@ -156,8 +161,13 @@ def process_task_queue(task_event_id):
 
 
 
-"""Invoked when scheduler runs task of type 'clone_task'"""
 def process_clone_task(task_event_id, vm_id):
+    """
+    Invoked when scheduler runs task of type 'clone_task'
+    When multiple clones of a VM is requested, multiple tasks are created in scheduler,
+    so that they can run concurrently. 
+    This function ensures that the status of clone request is updated on the basis of all 
+    corresponding asynchronous tasks """
 
     vm_data = db.vm_data[vm_id]
     logger.debug("ENTERING CLONE_TASK.......")
@@ -180,7 +190,7 @@ def process_clone_task(task_event_id, vm_id):
             message = message + '\n' + vm_data.vm_name + ': ' + ret[1]
             vm_data.update_record(status = VM_STATUS_UNKNOWN)
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
-            logger.debug("VM Cloning Successfull")
+            logger.debug("VM Cloning Successful")
             params = task_queue.parameters
             # Delete successful vms from list. So, that in case of retry, only failed requests are retried.
             params['clone_vm_id'].remove(vm_id)
@@ -217,13 +227,12 @@ def process_clone_task(task_event_id, vm_id):
         db.commit()
         logger.debug("EXITING CLONE_TASK........")
 
-
-"""Handles snapshot task
-   Invoked when scheduler runs task of type 'snapshot_vm'"""
 def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
-
-    logger.debug("ENTERING SNAPSHOT VM TASK........")
-    logger.debug("Snapshot Type: %s" % snapshot_type)
+    """
+    Handles snapshot task
+    Invoked when scheduler runs task of type 'snapshot_vm'"""
+    
+    logger.debug("ENTERING SNAPSHOT VM TASK........Snapshot Type: %s"% snapshot_type)
     try:
         if snapshot_type == SNAPSHOT_SYSTEM:
             params={'snapshot_type' : frequency, 'vm_id' : vm_id}
@@ -248,9 +257,11 @@ def process_snapshot_vm(snapshot_type, vm_id = None, frequency=None):
         db.commit()
         logger.debug("EXITING SNAPSHOT VM TASK........")
           
-"""Handles periodic VM sanity check
-   Invoked when scheduler runs task of type 'vm_sanity'"""
 def vm_sanity_check():
+    """
+    Handles periodic VM sanity check
+    Invoked when scheduler runs task of type 'vm_sanity'"""
+    
     logger.info("ENTERNING VM SANITY CHECK........")
     try:
         check_vm_sanity()
@@ -260,9 +271,11 @@ def vm_sanity_check():
     finally:
         logger.debug("EXITING VM SANITY CHECK........")
 
-"""Handles periodic Host sanity check
-   Invoked when scheduler runs task of type 'host_sanity'"""
 def host_sanity_check():
+    """
+    Handles periodic Host sanity check
+    Invoked when scheduler runs task of type 'host_sanity'"""
+    
     logger.info("ENTERNING HOST SANITY CHECK........")
     try:
         host_status_sanity_check()
@@ -272,9 +285,11 @@ def host_sanity_check():
     finally:
         logger.debug("EXITING HOST SANITY CHECK........")
 
-"""Clears all timed out VNC Mappings
-   Invoked when scheduler runs task of type 'vnc_access'"""
 def check_vnc_access():
+    """
+    Clears all timed out VNC Mappings
+    Invoked when scheduler runs task of type 'vnc_access'"""
+    
     logger.info("ENTERNING CLEAR ALL TIMEDOUT VNC MAPPINGS")
     try:
         clear_all_timedout_vnc_mappings()
@@ -284,10 +299,11 @@ def check_vnc_access():
     finally: 
         logger.debug("EXITING CLEAR ALL TIMEDOUT VNC MAPPINGS........")
 
-"""Handles periodic collection of VM and Host utilization data and updation of respective RRD file."""
 def vm_utilization_rrd(host_ip):
-    logger.info("ENTERING RRD UPDATION/CREATION........")
-    logger.debug("RRDs to be updated for VMs on host: %s" % host_ip)
+    """
+    Handles periodic collection of VM and Host utilization data and updation of respective RRD file."""
+    
+    logger.info("ENTERING RRD UPDATION/CREATION........on host: %s" % host_ip)
     try:
         
         rrd_logger.debug("Starting RRD Processing for Host: %s" % host_ip)
@@ -308,8 +324,10 @@ def vm_utilization_rrd(host_ip):
         logger.debug("EXITING RRD UPDATION/CREATION........")
 
 
-"""Function will check for the shutdown VM's and sends email to the user"""
 def process_vmdaily_checks():
+    """
+    Function will check for the shutdown VM's and sends email to the user"""
+    
     logger.info("Entering VM's Daily Checks........")
 
     try: 

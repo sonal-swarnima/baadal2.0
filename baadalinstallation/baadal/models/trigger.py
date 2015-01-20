@@ -21,11 +21,12 @@ from helper import logger, get_datetime
 
 def schedule_task(fields, _id):
     #Add entry into task_queue_event
-    vm_data = db.vm_data[fields['vm_id']]
+    vm_id = fields['parameters']['vm_id'] if 'vm_id' in fields['parameters'] else None
+    vm_name = db.vm_data[vm_id].vm_name if vm_id else ""
+
     task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
-                            vm_id = fields['vm_id'],
-                            vm_name = vm_data.vm_name,
+                            vm_name = vm_name,
                             requester_id = fields['requester_id'],
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
@@ -79,7 +80,8 @@ def task_queue_update_callback(dbset, new_fields):
         elif new_fields['status'] == TASK_QUEUE_STATUS_FAILED:
             # 1. update vm_data status to -1 if task is Create VM
             if fields['task_type'] == VM_TASK_CREATE:
-                db.vm_data[fields['vm_id']] = dict(status = VM_STATUS_UNKNOWN)
+                vm_id = fields['parameters']['vm_id']
+                db.vm_data[vm_id] = dict(status = VM_STATUS_UNKNOWN)
             # 2. update request_queue status to -1 if task has request_id
             if 'request_id' in fields['parameters']:
                 db.request_queue[fields['parameters']['request_id']] = dict(status = REQ_STATUS_FAILED)
@@ -90,12 +92,8 @@ db.task_queue._after_update = [task_queue_update_callback]
 def vm_data_delete_callback(dbset):
 
     for vm_data in dbset.select():
-        logger.debug('Deleting references for ' + vm_data.vm_identity)
-        
-        db(db.private_ip_pool.vm_id == vm_data.id).update(vm_id = None)
-        db(db.public_ip_pool.vm_id == vm_data.id).update(vm_id = None)
+        logger.debug('Deleting references for ' + vm_data.vm_identity)        
         db(db.vm_data.parent_id == vm_data.id).update(parent_id = None)
-        db(db.task_queue_event.vm_id == vm_data.id).update(vm_id = None)
 
 db.vm_data._before_delete = [vm_data_delete_callback]
 

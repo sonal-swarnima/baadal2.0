@@ -29,7 +29,7 @@ VM_TASK_MIGRATE_HOST = 'Migrate VM Between Hosts'
 VM_TASK_MIGRATE_DS = 'Migrate VM Between Datastores'
 VM_TASK_SAVE_AS_TEMPLATE = 'Save As Template'
 VM_TASK_DELETE_TEMPLATE = 'Delete Template'
-
+current.VM_TASK_MIGRATE_HOST = VM_TASK_MIGRATE_HOST
 
 #Task Queue Priority
 TASK_QUEUE_PRIORITY_LOW = 0
@@ -116,7 +116,6 @@ UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
 UUID_PURGE_UNUSEDVM = 'scheduler-uuid-purge-unusedvm'
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
-current.PUBLIC_IP_NOT_ASSIGNED = PUBLIC_IP_NOT_ASSIGNED
 
 ITEMS_PER_PAGE=20
 

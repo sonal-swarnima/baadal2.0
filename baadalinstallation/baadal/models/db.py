@@ -108,10 +108,44 @@ else:
     auth.settings.registration_requires_approval = True
 ###############################################################################
 
+db.define_table('vlan',
+    Field('name', 'string', length = 30, notnull = True, unique = True),
+    Field('vlan_tag', 'string', length = 30, notnull = True),
+    Field('vlan_addr', 'string', length = 15, notnull = True, requires=IS_IPV4()),
+    format = '%(name)s')
+
+db.define_table('security_domain',
+    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
+    Field('vlan', 'reference vlan', unique = True),
+    Field('visible_to_all', 'boolean', notnull = True, default = True),
+    Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
+    format = '%(name)s')
+
+db.security_domain.name.requires = [IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
+
+db.define_table('public_ip_pool',
+    Field('public_ip', 'string', length = 15, notnull = True, unique = True),
+    Field('is_active', 'boolean', notnull = True, default = True),
+    format = '%(public_ip)s')
+
+db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
+
+db.define_table('private_ip_pool',
+    Field('private_ip', 'string', length = 15, notnull = True, unique = True),
+    Field('mac_addr', 'string', length = 20, unique = True),
+    Field('vlan', db.vlan, notnull = True),
+    Field('is_active', 'boolean', notnull = True, default = True),
+    format = '%(private_ip)s')
+
+db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]
+db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_UPPER(), IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
+db.private_ip_pool.vlan.requires = IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None)
+
+
 db.define_table('host',
-    Field('host_ip', 'string', length = 15, notnull = True, unique = True, requires=[IS_IPV4(error_message=IP_ERROR_MESSAGE)]),
     Field('host_name', 'string', length = 30, notnull = True, unique = True),
-    Field('mac_addr', 'string', length = 20, notnull = True, unique = True, requires=IS_MAC_ADDRESS()),
+    Field('host_ip', db.private_ip_pool),
+    Field('public_ip', db.public_ip_pool, label='Public IP', notnull = False),
     Field('HDD', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('CPUs', 'integer', notnull = True, requires=IS_INT_IN_RANGE(1,None)),
     Field('RAM', 'integer', requires=IS_INT_IN_RANGE(1,None), default=0),
@@ -153,21 +187,6 @@ db.define_table('template',
             '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag))
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
-db.define_table('vlan',
-    Field('name', 'string', length = 30, notnull = True, unique = True),
-    Field('vlan_tag', 'string', length = 30, notnull = True),
-    Field('vlan_addr', 'string', length = 15, notnull = True, requires=IS_IPV4()),
-    format = '%(name)s')
-
-db.define_table('security_domain',
-    Field('name', 'string', length = 30, notnull = True, unique = True, label='Name'),
-    Field('vlan', 'reference vlan', unique = True),
-    Field('visible_to_all', 'boolean', notnull = True, default = True),
-    Field('org_visibility', 'list:reference organisation', requires = IS_IN_DB(db, 'organisation.id', '%(details)s', multiple=True)),
-    format = '%(name)s')
-
-db.security_domain.name.requires = [IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1), IS_NOT_IN_DB(db,'security_domain.name')]
-
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 100, notnull = True, label='Name'),
     Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
@@ -179,9 +198,8 @@ db.define_table('vm_data',
     Field('template_id', db.template),
     Field('requester_id',db.user, label='Requester'),
     Field('owner_id', db.user, label='Owner'),
-    Field('mac_addr', 'string',length = 20 , requires=IS_MAC_ADDRESS()),
-    Field('private_ip', 'string',length = 15, label='Private IP'),
-    Field('public_ip', 'string',length = 15, label='Public IP', default=PUBLIC_IP_NOT_ASSIGNED),
+    Field('private_ip', db.private_ip_pool, label='Private IP'),
+    Field('public_ip', db.public_ip_pool, label='Public IP'),
     Field('vnc_port', 'integer'),
     Field('datastore_id', db.datastore),
     Field('purpose', 'string', length = 512),
@@ -260,7 +278,6 @@ db.define_table('vm_data_event',
     Field('template_id', db.template),
     Field('requester_id',db.user),
     Field('owner_id', db.user),
-    Field('mac_addr', 'string',length = 20),
     Field('private_ip', 'string',length = 15),
     Field('public_ip', 'string',length = 15),
     Field('vnc_port', 'integer'),
@@ -289,7 +306,6 @@ db.define_table('snapshot',
 
 db.define_table('task_queue',
     Field('task_type', 'string',length = 30,notnull = True),
-    Field('vm_id', db.vm_data),
     Field('requester_id', db.user),
     Field('parameters', 'text', default={}),
     Field('priority', 'integer', default = 1, notnull = True),
@@ -301,7 +317,6 @@ db.task_queue.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 db.define_table('task_queue_event',
     Field('task_id', 'integer', notnull = False),
     Field('task_type', 'string', length = 30, notnull = True),
-    Field('vm_id', db.vm_data, notnull = False),
     Field('vm_name', 'string', length = 100, notnull = True),
     Field('requester_id', db.user),
     Field('parameters', 'text', default={}),
@@ -324,22 +339,4 @@ db.define_table('vnc_access',
     Field('status', 'string', length = 15, notnull = True, default = 'inactive'),
     Field('time_requested', 'datetime', default = get_datetime()),
     Field('expiry_time', compute=lambda r: r['time_requested']+ timedelta(seconds=r['duration'])))
-
-db.define_table('public_ip_pool',
-    Field('public_ip', 'string', length = 15, notnull = True, unique = True),
-    Field('vm_id', db.vm_data, writable = False),
-    Field('host_id', db.host, readable = False, writable = False))
-
-db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
-
-db.define_table('private_ip_pool',
-    Field('private_ip', 'string', length = 15, notnull = True, unique = True),
-    Field('mac_addr', 'string', length = 20, unique = True),
-    Field('vlan', db.vlan, notnull = True),
-    Field('vm_id', db.vm_data, writable = False),
-    Field('host_id', db.host, readable = False, writable = False))
-
-db.private_ip_pool.private_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'private_ip_pool.private_ip')]
-db.private_ip_pool.mac_addr.requires = [IS_EMPTY_OR([IS_UPPER(), IS_MAC_ADDRESS(), IS_NOT_IN_DB(db,'private_ip_pool.mac_addr')])]
-db.private_ip_pool.vlan.requires = IS_IN_DB(db, 'vlan.id', '%(name)s', zero=None)
 

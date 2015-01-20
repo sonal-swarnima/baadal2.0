@@ -97,34 +97,38 @@ def set_portgroup_in_vm(domain_name, portgroup, host_ip, vlan_tag):
     
 def get_private_ip_mac(security_domain_id):
     vlans = current.db(current.db.security_domain.id == security_domain_id)._select(current.db.security_domain.vlan)
-    private_ip_pool = current.db((current.db.private_ip_pool.vm_id == None) & (current.db.private_ip_pool.host_id == None) & 
-                         (current.db.private_ip_pool.vlan.belongs(vlans))).select(orderby='<random>').first()
+    private_ip_pool = current.db((~current.db.private_ip_pool.id.belongs(current.db(current.db.vm_data.private_ip != None)._select(current.db.vm_data.private_ip))) 
+                                 & (~current.db.private_ip_pool.id.belongs(current.db(current.db.host.host_ip != None)._select(current.db.host.host_ip))) 
+                                 & (current.db.private_ip_pool.vlan.belongs(vlans))).select(current.db.private_ip_pool.ALL, orderby='<random>').first()
 
     if private_ip_pool:
-        return(private_ip_pool.private_ip, private_ip_pool.mac_addr, private_ip_pool.vlan.name,private_ip_pool.vlan.vlan_tag)
+        return private_ip_pool 
     else:
         sd = current.db.security_domain[security_domain_id]
         raise Exception(("Available MACs are exhausted for security domain '%s'." % sd.name))
 
-# Chooses mac address, ip address and vncport for a vm to be installed
 def choose_mac_ip(vm_properties):
+    """Chooses mac address, ip address and vncport for a vm to be installed"""
 
     if not 'private_ip' in vm_properties:
         private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
-        vm_properties['private_ip'] = private_ip_info[0]
-        vm_properties['mac_addr']   = private_ip_info[1]
-        vm_properties['vlan_name']  = private_ip_info[2] 
-        vm_properties['vlan_tag']   = private_ip_info[3]
+        vm_properties['private_ip'] = private_ip_info.private_ip
+        vm_properties['mac_addr']   = private_ip_info.mac_addr
+        vm_properties['vlan_name']  = private_ip_info.vlan.name
+        vm_properties['vlan_tag']   = private_ip_info.vlan.vlan_tag
 
     if vm_properties['public_ip_req']:
         if 'public_ip' not in vm_properties:
-            public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
+            public_ip_pool = current.db((~current.db.public_ip_pool.id.belongs(current.db(current.db.vm_data.public_ip != None)._select(current.db.vm_data.public_ip))) 
+                                      & (~current.db.public_ip_pool.id.belongs(current.db(current.db.host.public_ip != None)._select(current.db.host.public_ip)))) \
+                                    .select(current.db.public_ip_pool.ALL, orderby='<random>').first()
+
             if public_ip_pool:
                 vm_properties['public_ip'] = public_ip_pool.public_ip
             else:
                 raise Exception("Available Public IPs are exhausted.")
     else:
-        vm_properties['public_ip'] = current.PUBLIC_IP_NOT_ASSIGNED
+        vm_properties['public_ip'] = None
 
 
 def choose_mac_ip_vncport(vm_properties):
@@ -182,7 +186,7 @@ def allocate_vm_properties(vm_details):
     vm_properties['host'] = find_new_host(vm_details.RAM, vm_details.vCPU)
     logger.debug("Host selected is: " + str(vm_properties['host']))
 
-    vm_properties['public_ip_req'] = False if (vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED) else True
+    vm_properties['public_ip_req'] = False if (vm_details.public_ip == None) else True
     vm_properties['security_domain'] = vm_details.security_domain
     choose_mac_ip_vncport(vm_properties)
 
@@ -209,6 +213,7 @@ def create_vm_image(vm_details, datastore):
     # Finds the location of template image that the user has requested for its vm.               
     template = current.db.template[vm_details.template_id]
     vm_image_name = vm_directory_path + '/' + vm_details.vm_identity + '.qcow2'
+
    
     # Copies the template image from its location to new vm directory
     storage_type = config.get("GENERAL_CONF","storage_type")
@@ -370,6 +375,7 @@ def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
     disk_name = vm_details.vm_identity + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
 
     disk_created = create_extra_disk_image(vm_details, disk_name, disk_size, datastore) 
+    vm_details.datastore_id = datastore.id
     
     if disk_created:
         if (attach_disk(vm_details, disk_name, host_ip, already_attached_disks, new_vm)):
@@ -385,7 +391,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     attach_disk_status_message = ''
     install_command = get_install_command(vm_details, vm_image_location, vm_properties)  
     # Starts installing a vm
-    host_ip = current.db.host[vm_properties['host']].host_ip
+    host_ip = current.db.host[vm_properties['host']].host_ip.private_ip
     logger.debug("Installation started...")
     logger.debug("Host is "+ host_ip)
     logger.debug("Installation command : " + install_command)
@@ -458,16 +464,17 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     datastore = vm_properties['datastore']
     template_hdd = vm_properties['template'].hdd
     logger.debug("Inside update db after installation")
-    logger.debug(str(hostid))
+    logger.debug(vm_properties)
 
     # Updating the used entry of datastore
     current.db(current.db.datastore.id == datastore.id).update(used = int(datastore.used) + int(vm_details.extra_HDD) +        
                                                                 int(template_hdd))
 
-    current.db(current.db.private_ip_pool.private_ip == vm_properties['private_ip']).update(vm_id = vm_details.id)
-    if vm_properties['public_ip_req']:
-        current.db(current.db.public_ip_pool.public_ip == vm_properties['public_ip']).update(vm_id = vm_details.id)
-    # vm_status (function : status) :- (install : running) ; (clone : shutdown)
+    private_ip_id = current.db.private_ip_pool(private_ip=vm_properties['private_ip']).id
+    public_ip_id = None
+    if vm_properties['public_ip'] != None:
+        public_ip_id = current.db.public_ip_pool(public_ip=vm_properties['public_ip']).id
+        
     if parent_id:
         vm_status = current.VM_STATUS_SHUTDOWN
     else:
@@ -477,10 +484,9 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     current.db(current.db.vm_data.id == vm_details.id).update( host_id = hostid, 
                                                                extra_HDD = vm_details.extra_HDD,
                                                                datastore_id = datastore.id, 
-                                                               private_ip = vm_properties['private_ip'], 
                                                                vnc_port = vm_properties['vnc_port'],
-                                                               mac_addr = vm_properties['mac_addr'],
-                                                               public_ip = vm_properties['public_ip'], 
+                                                               private_ip = private_ip_id, 
+                                                               public_ip = public_ip_id, 
                                                                start_time = get_datetime(), 
                                                                parent_id = parent_id,
                                                                status = vm_status)
@@ -684,8 +690,8 @@ def delete(parameters):
         logger.debug("Starting to delete it...")
         domain.undefineFlags(VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA )
 
-        if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
-            remove_mapping(vm_details.public_ip, vm_details.private_ip)
+        if vm_details.public_ip:
+            remove_mapping(vm_details.public_ip.public_ip, vm_details.private_ip.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
         logger.debug(message)
         clean_up_database_after_vm_deletion(vm_details)
@@ -1034,30 +1040,32 @@ def delete_snapshot(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 
+"""Get new IP for given security domain.
+Update the VM XML with new mac_address and update the information in DB"""
 def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
     # fetch new private IP from db from given security domain
     private_ip_info = get_private_ip_mac(security_domain_id)
+    
     # update vm config to add new mac address.
     root = etree.fromstring(xmlDesc)
-    mac_elem = root.find("devices/interface[@type='network']/mac")
-    mac_elem.set('address', private_ip_info[1])
+    mac_elem = root.find("devices/interface[@type='bridge']/mac")
+    mac_elem.set('address', private_ip_info.mac_addr)
+    vlan_tag_elem = root.find("devices/interface[@type='bridge']/vlan/tag")
+    vlan_tag_elem.set('id', private_ip_info.vlan.vlan_tag)
     
     # update NAT IP mapping, if public IP present
-    if vm_details.public_ip != current.PUBLIC_IP_NOT_ASSIGNED:
-        remove_mapping(vm_details.public_ip, vm_details.private_ip)
-        create_mapping(vm_details.public_ip, private_ip_info[0])
+    if vm_details.public_ip:
+        remove_mapping(vm_details.public_ip.public_ip, vm_details.private_ip.private_ip)
+        create_mapping(vm_details.public_ip.public_ip, private_ip_info.private_ip)
     
-    # update vm_data, private_ip_pool
-    current.db(current.db.private_ip_pool.private_ip == vm_details.private_ip).update(vm_id = None)
-    current.db(current.db.private_ip_pool.private_ip == private_ip_info[0]).update(vm_id = vm_details.id)
+    # update vm_data
     current.db(current.db.vm_data.id == vm_details.id).update(security_domain = security_domain_id, 
-                                                              private_ip = private_ip_info[0], 
-                                                              mac_addr = private_ip_info[1])
+                                                              private_ip = private_ip_info.id)
     
     return etree.tostring(root)
 
-# Edits vm configuration
 def edit_vm_config(parameters):
+    """Edits vm configuration"""
 
     logger.debug("Inside edit vm config() function")
     vm_id = parameters['vm_id']    
@@ -1084,19 +1092,21 @@ def edit_vm_config(parameters):
         if 'public_ip' in parameters:
             enable_public_ip = parameters['public_ip']
             if enable_public_ip:
-                public_ip_pool = current.db(current.db.public_ip_pool.vm_id == None).select(orderby='<random>').first()
+                public_ip_pool = current.db((~current.db.public_ip_pool.id.belongs(current.db(current.db.vm_data.public_ip != None)._select(current.db.vm_data.public_ip))) 
+                                          & (~current.db.public_ip_pool.id.belongs(current.db(current.db.host.public_ip != None)._select(current.db.host.public_ip)))
+                                          & (current.db.public_ip_pool.is_active == True)) \
+                                        .select(current.db.public_ip_pool.ALL, orderby='<random>').first()
+
                 if public_ip_pool:
                     create_mapping(public_ip_pool.public_ip, vm_details.private_ip)
-                    current.db.public_ip_pool[public_ip_pool.id] = dict(vm_id=vm_id)
-                    current.db.vm_data[vm_id] = dict(public_ip=public_ip_pool.public_ip)
+                    current.db.vm_data[vm_id] = dict(public_ip=public_ip_pool.id)
                     message += "Edited Public IP successfully."
                     
                 else:
                     raise Exception("Available Public IPs are exhausted.")
             else:
                 remove_mapping(vm_details.public_ip, vm_details.private_ip)
-                current.db(current.db.public_ip_pool.public_ip == vm_details.public_ip).update(vm_id = None)
-                current.db.vm_data[vm_id] = dict(public_ip=current.PUBLIC_IP_NOT_ASSIGNED)
+                current.db.vm_data[vm_id] = dict(public_ip = None)
         
         if 'security_domain' in parameters:
             logger.debug('Updating security domain')
@@ -1161,12 +1171,11 @@ def get_clone_properties(vm_details, cloned_vm_details, vm_properties):
                                           datastore_id = datastore.id , 
                                           attached_disk_name = disk_name, 
                                           capacity = disk_details_of_cloning_vm[count - already_attached_disks].capacity)
-        #logger.debug(db._lastsql)
         already_attached_disks -= 1
 
     return (clone_file_parameters)
                 
-# Migrates cloned vm to new host
+"""Migrates cloned vm to new host"""
 def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm,vm_properties):
 
     try:
@@ -1259,7 +1268,7 @@ def free_cloned_vm_properties(cloned_vm_details, vm_properties):
     return
 '''
 
-# Attaches extra disk to VM
+"""Attaches extra disk to VM"""
 def attach_extra_disk(parameters):
 
     logger.debug("Inside attach extra disk() function")
@@ -1332,12 +1341,12 @@ def launch_existing_vm_image(vm_details):
             vm_properties['vlan_name']  = private_ip_info.vlan.name
             vm_properties['vlan_tag'] = private_ip_info.vlan.vlan_tag
     
-    if vm_details.public_ip == current.PUBLIC_IP_NOT_ASSIGNED:
+    if vm_details.public_ip == None:
         vm_properties['public_ip_req'] = False
     else:
         vm_properties['public_ip_req'] = True
-        if vm_details.public_ip != None:
-            vm_properties['public_ip'] = vm_details.public_ip
+        if vm_details.public_ip.is_active:
+            vm_properties['public_ip'] = vm_details.public_ip.public_ip
 
     choose_mac_ip_vncport(vm_properties)
 

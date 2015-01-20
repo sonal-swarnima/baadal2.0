@@ -34,16 +34,16 @@ def get_request_status(iStatus):
 def get_hosted_vm_list(vms):
     vmlist = []
     for vm in vms:
-        element = {'id' : vm.id,
-                   'name' : vm.vm_name,
+        element = {'id'           : vm.id,
+                   'name'         : vm.vm_name,
                    'organisation' : vm.owner_id.organisation_id.name if vm.owner_id > 0 else 'System',
-                   'owner' : vm.owner_id.first_name + ' ' + vm.owner_id.last_name if vm.owner_id > 0 else 'System User', 
-                   'private_ip' : vm.private_ip, 
-                   'public_ip' : vm.public_ip, 
-                   'hostip' : vm.host_id.host_ip,
-                   'RAM' : str(round((vm.RAM/1024.0),2)) + ' GB',
-                   'vcpus' : str(vm.vCPU) + ' CPU',
-                   'status' : get_vm_status(vm.status)}
+                   'owner'        : vm.owner_id.first_name + ' ' + vm.owner_id.last_name if vm.owner_id > 0 else 'System User', 
+                   'private_ip'   : vm.private_ip.private_ip, 
+                   'public_ip'    : vm.public_ip.public_ip if vm.public_ip else PUBLIC_IP_NOT_ASSIGNED, 
+                   'hostip'       : vm.host_id.host_ip.private_ip,
+                   'RAM'          : str(round((vm.RAM/1024.0),2)) + ' GB',
+                   'vcpus'        : str(vm.vCPU) + ' CPU',
+                   'status'       : get_vm_status(vm.status)}
         vmlist.append(element)
     return vmlist
 
@@ -88,7 +88,7 @@ def update_edit_config_request(vm_request, element):
     if vm_request.vCPU == vm_data.vCPU:
         element['vCPUs'] = 'Same'
 
-    element['old_public_ip'] = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
+    element['old_public_ip'] = (vm_data.public_ip == None)
     element['public_ip'] = vm_request.public_ip
 
     element['old_security_domain'] = vm_data.security_domain.name if vm_data.security_domain != None else '-';
@@ -206,7 +206,6 @@ def get_full_name(user_id):
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
-    ##vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.template_id==db.template.id) & (db.vm_data.locked == False)).select()
     vm_info = db((db.vm_data.id == _vm_id) & (db.vm_data.template_id==db.template.id)).select()
     
     if not vm_info:
@@ -255,9 +254,8 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
         else:
             requested_by = SYSTEM_USER
 
-    params.update({'vm_id' : vm_id})
+    params.update({'vm_id' : long(vm_id)})
     db.task_queue.insert(task_type=task_type,
-                         vm_id=vm_id, 
                          requester_id=requested_by,
                          parameters=params, 
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  

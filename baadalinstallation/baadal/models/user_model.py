@@ -15,20 +15,22 @@ from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
 from datetime import timedelta
 
 def get_my_requests():
+    """Get list of pending requests from request_queue"""
 
     requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
     return get_pending_request_list(requests)
 
 
 def get_my_hosted_vm():
+    """Get list of hosted virtual machines for a user"""
     vms = db((~db.vm_data.status.belongs(VM_STATUS_IN_QUEUE, VM_STATUS_UNKNOWN)) 
              & (db.vm_data.id==db.user_vm_map.vm_id) 
              & (db.user_vm_map.user_id==auth.user.id)).select(db.vm_data.ALL)
 
     return get_hosted_vm_list(vms)
 
-#Create configuration dropdowns
 def get_configuration_elem(form):
+    """Create configuration dropdowns"""
     
     templates = db().select(db.template.ALL)
     _label = LABEL(SPAN('Configuration:', ' ', SPAN('*', _class='fld_required'), ' '))
@@ -46,8 +48,8 @@ def get_configuration_elem(form):
         config_elem = TR(_label,select,TD(),_id='config_row__'+str(_id))
         form[0].insert(2,config_elem)#insert tr element in the form
 
-# Gets CPU, RAM and HDD information on the basis of template selected.
 def set_configuration_elem(form):
+    """Gets CPU, RAM and HDD information on the basis of template selected."""
 
     configVal = form.vars.configuration_0 #Default configuration dropdown
     template = form.vars.template_id
@@ -66,6 +68,7 @@ def set_configuration_elem(form):
 
 
 def validate_approver(form):
+    """Validate if the approver user belongs to group FACULTY."""
 
     faculty_user_name = request.post_vars.faculty_user
     
@@ -102,8 +105,11 @@ def get_request_status():
 
     return status
 
-
 def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
+    """
+    Check if VM name is unique for the user.
+    This function checks both user's existing virtual machine 
+    and pending requests in queue"""
     
     if vm_id != None:
         vm_data = db.vm_data[vm_id]
@@ -120,10 +126,7 @@ def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
                    (db.request_queue.requester_id.belongs(user_set))) & 
                    (db.request_queue.vm_name.like(vm_name))).select()
     
-    if requests:
-        return False
-
-    return True
+    return False if requests else True
 
     
 def request_vm_validation(form):
@@ -229,11 +232,9 @@ def get_user_info(username, roles=[USER, FACULTY, ORGADMIN, ADMIN]):
 
 
 def get_my_task_list(task_status, task_num):
-    
+    """Gets list of tasks requested by the user"""
     task_query = db((db.task_queue_event.status.belongs(task_status)) 
-                    & ((db.task_queue_event.vm_id.belongs(
-                            db(auth.user.id == db.user_vm_map.user_id)._select(db.user_vm_map.vm_id))) 
-                     | (db.task_queue_event.requester_id == auth.user.id)))
+                    & (db.task_queue_event.requester_id == auth.user.id))
     events = task_query.select(db.task_queue_event.ALL, distinct=True, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)
@@ -252,8 +253,8 @@ def get_vm_config(vm_id):
                    'status'           : get_vm_status(vminfo.vm_data.status),
                    'os_type'          : str(vminfo.template.os_name) + ' ' + str(vminfo.template.os_version) + ' ' + str(vminfo.template.os_type) + ' ' + str(vminfo.template.arch),
                    'purpose'          : str(vminfo.vm_data.purpose),
-                   'private_ip'       : str(vminfo.vm_data.private_ip),
-                   'public_ip'        : str(vminfo.vm_data.public_ip),
+                   'private_ip'       : str(vminfo.vm_data.private_ip.private_ip),
+                   'public_ip'        : str(vminfo.vm_data.public_ip.public_ip) if vminfo.vm_data.public_ip else PUBLIC_IP_NOT_ASSIGNED,
                    'snapshot_flag'    : int(vminfo.vm_data.snapshot_flag),
                    'security_domain'  : str(vminfo.vm_data.security_domain.name)}
 
@@ -275,25 +276,27 @@ def get_vm_user_list(vm_id) :
     return user_id_lst
 
 def is_request_in_queue(vm_id, task_type, snapshot_id=None):
-
-    #Check if request is present in task_queue table
-    _data =  db((db.task_queue.vm_id == vm_id) & (db.task_queue.task_type == task_type) 
+    """
+    Generic function to check if for a given VM, task of given type is 
+    already present in task_queue table"""
+    #Check task_queue table
+    task_data =  db((db.task_queue.task_type == task_type) 
                    & db.task_queue.status.belongs(TASK_QUEUE_STATUS_PENDING, TASK_QUEUE_STATUS_PROCESSING)).select()
 
-    if _data:
-        if snapshot_id != None:
-            for req_data in _data:    
-                params = req_data.parameters
+    for task in task_data:
+        params = task.parameters
+        if params['vm_id'] == vm_id:
+            if snapshot_id != None:
                 if params['snapshot_id'] == snapshot_id:
                     return True
-        else:
-            return True
-    else:
-        #Check if request is present in request_queue table
-        _request = db((db.request_queue.parent_id == vm_id) & (db.request_queue.request_type == task_type) 
-                   & db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED)).select()
+            else:
+                return True
+        
+    #Check if request is present in request_queue table
+    _request = db((db.request_queue.parent_id == vm_id) & (db.request_queue.request_type == task_type) 
+               & db.request_queue.status.belongs(REQ_STATUS_REQUESTED, REQ_STATUS_VERIFIED, REQ_STATUS_APPROVED)).select()
 
-        return True if _request else False
+    return True if _request else False
 
 
 def check_snapshot_limit(vm_id):
@@ -374,7 +377,7 @@ def get_edit_vm_config_form(vm_id):
     db.request_queue.vCPU.default = vm_data.vCPU
     db.request_queue.vCPU.requires = IS_IN_SET(VM_vCPU_SET, zero=None)
     db.request_queue.HDD.default = vm_data.HDD
-    db.request_queue.public_ip.default = (vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED)
+    db.request_queue.public_ip.default = (vm_data.public_ip != None)
     db.request_queue.security_domain.default = vm_data.security_domain
     db.request_queue.request_type.default = VM_TASK_EDIT_CONFIG
     db.request_queue.status.default = get_request_status()
@@ -393,7 +396,7 @@ def edit_vm_config_validation(form):
     vm_id = request.args[0]
     vm_data = db.vm_data[vm_id]
     
-    curr_public_ip = False if vm_data.public_ip == PUBLIC_IP_NOT_ASSIGNED else True
+    curr_public_ip = False if vm_data.public_ip == None else True
     new_public_ip = True if form.vars.public_ip else False
     
     if ((long(form.vars.vCPU) == long(vm_data.vCPU)) & 

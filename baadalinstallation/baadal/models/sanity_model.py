@@ -204,10 +204,8 @@ def delete_vm_info(vm_identity):
     if vm_details.HDD != None:
         db(db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
                                                                          (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
-    db(db.private_ip_pool.vm_id == vm_details.id).update(vm_id = None)
-    db(db.public_ip_pool.vm_id == vm_details.id).update(vm_id = None)
 
-    if vm_details.public_ip != PUBLIC_IP_NOT_ASSIGNED:
+    if vm_details.public_ip != None:
         remove_mapping(vm_details.public_ip, vm_details.private_ip)
     #this will delete vm_data entry and also its references
     db(db.vm_data.id == vm_details.id).delete()

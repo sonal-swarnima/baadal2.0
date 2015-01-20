@@ -185,11 +185,12 @@ def clear_all_nat_mappings(db):
     
         command = ''
         # For all public IP - private IP mappings, Delete aliases
-        public_ip_mappings = db(db.vm_data.public_ip != PUBLIC_IP_NOT_ASSIGNED).select(db.vm_data.private_ip, db.vm_data.public_ip)
-        for mapping in public_ip_mappings:
-            logger.debug('Removing private to public IP mapping for private IP: %s and public IP:%s' %(mapping['private_ip'],mapping['public_ip']))
+        for vm_data_info in db(db.vm_data.public_ip != None).select():
+            private_ip = vm_data_info.private_ip.private_ip
+            public_ip = vm_data_info.public_ip.public_ip
+            logger.debug('Removing private to public IP mapping for private IP: %s and public IP:%s' %(private_ip, public_ip))
 #             private_ip_octets = mapping['private_ip'].split('.')
-            public_ip_octets = mapping['public_ip'].split('.')
+            public_ip_octets = public_ip.split('.')
             interface_alias = "%s:%s.%s.%s" %(NAT_PUBLIC_INTERFACE, public_ip_octets[1], public_ip_octets[2], public_ip_octets[3])
 
             command += '''
@@ -212,8 +213,7 @@ def clear_all_nat_mappings(db):
 
         # Updating DB
         logger.debug("Flushing all public Ip - private IP mappings and VNC mappings from DB")
-        db.vm_data.update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
-        db.public_ip_pool.update(vm_id = None)
+        db.vm_data.update(public_ip = None)
         db.vnc_access.update(status = VNC_ACCESS_STATUS_INACTIVE)
     elif nat_type == NAT_TYPE_HARDWARE:
         # This function is to be implemented
@@ -221,8 +221,7 @@ def clear_all_nat_mappings(db):
     elif nat_type == NAT_TYPE_MAPPING:
         logger.debug("Clearing all mapping information from DB")
 
-        db.vm_data.update(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
-        db.public_ip_pool.update(vm_id = None)
+        db.vm_data.update(public_ip = None)
         db.vnc_access.update(status = VNC_ACCESS_STATUS_INACTIVE)
 
     else:
@@ -344,8 +343,7 @@ def remove_public_ip_mapping_from_nat(vm_id):
         
         # Update DB 
         logger.debug("Updating DB")
-        current.db(current.db.public_ip_pool.public_ip == vm_data.public_ip).update(vm_id = None)
-        vm_data.update_record(public_ip = current.PUBLIC_IP_NOT_ASSIGNED)
+        vm_data.update_record(public_ip = None)
     except:
         log_exception()
 

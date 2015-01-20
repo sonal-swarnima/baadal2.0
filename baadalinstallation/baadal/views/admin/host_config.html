@@ -23,8 +23,8 @@
             <td>{{=host_info['HDD']}}</td>
             <td>{{=host_info['RAM']}}</td>
             <td>{{=host_info['CPUs']}}</td>
-            <td>{{=host_info['host_ip']}}</td>
-            <td>{{=host_info['mac_addr']}}</td>
+            <td>{{=host_info['host_ip'].private_ip}}</td>
+            <td>{{=host_info['host_ip'].mac_addr}}</td>
             <td>
             {{if host_info['status']== HOST_STATUS_UP :}}
                 Up <!-- #TODO Insert Image -->
