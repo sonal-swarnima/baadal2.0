@@ -386,7 +386,7 @@ def delete_host():
 def manage_public_ip_pool():
     req_type = request.args(0)
     if req_type == 'delete' or request.vars['delete_this_record'] == 'on':
-        error_message = is_ip_assigned(request.args(2), private=False)
+        error_message = is_ip_assigned(request.args(2), is_private=False)
         if error_message != None:
             session.flash = error_message
             redirect(URL(c='admin', f='manage_public_ip_pool'))

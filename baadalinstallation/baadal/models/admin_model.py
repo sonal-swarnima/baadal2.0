@@ -60,7 +60,7 @@ def get_manage_datastore_form(req_type):
 def get_public_ip_ref_link(row):
     """Returns link to VM settings page if public IP is assigned to a VM
     or to host details page if public IP is assigned to a Host"""
-    vm_data = db.public_ip_pool(public_ip=row.id)
+    vm_data = db.vm_data(public_ip=row.id)
     host_data = db.host(public_ip=row.id)
 
     if vm_data:
@@ -230,12 +230,12 @@ def check_delete_security_domain(sd_id):
     
 def is_ip_assigned(ip_pool_id, is_private):
     if is_private:
-        private_ip_pool = db.db.private_ip_pool[ip_pool_id]
-        if (db.vm_data(private_ip = private_ip_pool.private_ip)) or (db.host(host_ip = private_ip_pool.private_ip)):
+        private_ip_pool = db.private_ip_pool[ip_pool_id]
+        if (db.vm_data(private_ip = private_ip_pool.id)) or (db.host(host_ip = private_ip_pool.id)):
             return PRIVATE_IP_DELETE_MESSAGE
     else:
-        public_ip_pool = db.db.public_ip_pool[ip_pool_id]
-        if (db.vm_data(public_ip = public_ip_pool.public_ip)) or (db.host(host_ip = public_ip_pool.public_ip)):
+        public_ip_pool = db.public_ip_pool[ip_pool_id]
+        if (db.vm_data(public_ip = public_ip_pool.id)) or (db.host(public_ip = public_ip_pool.id)):
             return PUBLIC_IP_DELETE_MESSAGE
 
 def get_all_pending_requests():
