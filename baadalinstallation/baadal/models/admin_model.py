@@ -364,7 +364,7 @@ def create_edit_config_task(req_data, params):
     
     if vm_data.security_domain != req_data.security_domain : params['security_domain'] = req_data.security_domain
 
-    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params)
+    add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params, requested_by=req_data.requester_id)
 
 def enqueue_vm_request(request_id):
     

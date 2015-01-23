@@ -865,25 +865,25 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
                 logger.debug("Copied successfully")
 
         else:
-          if domain.isActive:
-            domain.undefine()
-
-            root = etree.fromstring(xmlfile)
-            target_elem = root.find("devices/disk/target")
-            target_disk = target_elem.get('dev')
-#
-#           destxml = generate_blockcopy_xml(diskpath,target_disk)
-            flag = VIR_DOMAIN_BLOCK_REBASE_SHALLOW | VIR_DOMAIN_BLOCK_REBASE_COPY
-            domain.blockRebase(target_disk, diskpath, 0, flag)
-
-            block_info_list = domain.blockJobInfo(current_disk_file,0)
-
-            while(block_info_list['end'] != block_info_list['cur']):
-                logger.debug("time to sleep")
-                time.sleep(60)
+            if domain.isActive:
+                domain.undefine()
+                
+                root = etree.fromstring(xmlfile)
+                target_elem = root.find("devices/disk/target")
+                target_disk = target_elem.get('dev')
+                #
+                #           destxml = generate_blockcopy_xml(diskpath,target_disk)
+                flag = VIR_DOMAIN_BLOCK_REBASE_SHALLOW | VIR_DOMAIN_BLOCK_REBASE_COPY
+                domain.blockRebase(target_disk, diskpath, 0, flag)
+                
                 block_info_list = domain.blockJobInfo(current_disk_file,0)
-
-            domain.blockJobAbort(current_disk_file, VIR_DOMAIN_BLOCK_JOB_ABORT_PIVOT)
+                
+                while(block_info_list['end'] != block_info_list['cur']):
+                    logger.debug("time to sleep")
+                    time.sleep(60)
+                    block_info_list = domain.blockJobInfo(current_disk_file,0)
+                
+                domain.blockJobAbort(current_disk_file, VIR_DOMAIN_BLOCK_JOB_ABORT_PIVOT)
 
         source_elem = root.find("devices/disk/source")
         source_elem.set('file',diskpath)
