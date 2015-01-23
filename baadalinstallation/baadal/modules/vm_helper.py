@@ -783,7 +783,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
     if destination_host_id == None:
         destination_host_id = find_new_host(vm_details.RAM, vm_details.vCPU)
 
-    destination_host_ip = current.db.host[destination_host_id]['host_ip']
+    destination_host_ip = current.db.host[destination_host_id].host_ip.private_ip
 
     flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE|VIR_MIGRATE_UNSAFE
     if live_migration:
@@ -1179,7 +1179,7 @@ def get_clone_properties(vm_details, cloned_vm_details, vm_properties):
 def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm,vm_properties):
 
     try:
-        new_host_ip_for_cloned_vm = current.db.host[new_host_id_for_cloned_vm]['host_ip']
+        new_host_ip_for_cloned_vm = current.db.host[new_host_id_for_cloned_vm].host_ip.private_ip
         logger.debug("New host ip for cloned vm is: " + str(new_host_ip_for_cloned_vm))
         flags = VIR_MIGRATE_PEER2PEER|VIR_MIGRATE_PERSIST_DEST|VIR_MIGRATE_UNDEFINE_SOURCE|VIR_MIGRATE_OFFLINE|VIR_MIGRATE_UNSAFE
         logger.debug("Clone currently on: " + str(vm_details.host_id.host_ip))

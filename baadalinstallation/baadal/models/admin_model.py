@@ -408,7 +408,7 @@ def get_all_hosts() :
     hosts = db().select(db.host.ALL) 
     results = []
     for host in hosts:
-        results.append({'ip'    :host.host_ip, 
+        results.append({'ip'    :host.host_ip.private_ip, 
                         'id'    :host.id, 
                         'name'  :host.host_name, 
                         'status':host.status, 
