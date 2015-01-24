@@ -107,6 +107,20 @@ def get_private_ip_mac(security_domain_id):
         sd = current.db.security_domain[security_domain_id]
         raise Exception(("Available MACs are exhausted for security domain '%s'." % sd.name))
 
+
+def choose_random_public_ip():
+    """Chooses a random Public IP from the pool, such that:
+       1. It is not assigned to any VM
+       2. It is not assigned to any host
+       3. IP is marked active."""
+    public_ip_pool = current.db((~current.db.public_ip_pool.id.belongs(current.db(current.db.vm_data.public_ip != None)._select(current.db.vm_data.public_ip))) 
+                              & (~current.db.public_ip_pool.id.belongs(current.db(current.db.host.public_ip != None)._select(current.db.host.public_ip)))
+                              & (current.db.public_ip_pool.is_active == True)) \
+                            .select(current.db.public_ip_pool.ALL, orderby='<random>').first()
+
+    return public_ip_pool
+
+
 def choose_mac_ip(vm_properties):
     """Chooses mac address, ip address and vncport for a vm to be installed"""
 
@@ -119,9 +133,7 @@ def choose_mac_ip(vm_properties):
 
     if vm_properties['public_ip_req']:
         if 'public_ip' not in vm_properties:
-            public_ip_pool = current.db((~current.db.public_ip_pool.id.belongs(current.db(current.db.vm_data.public_ip != None)._select(current.db.vm_data.public_ip))) 
-                                      & (~current.db.public_ip_pool.id.belongs(current.db(current.db.host.public_ip != None)._select(current.db.host.public_ip)))) \
-                                    .select(current.db.public_ip_pool.ALL, orderby='<random>').first()
+            public_ip_pool = choose_random_public_ip()
 
             if public_ip_pool:
                 vm_properties['public_ip'] = public_ip_pool.public_ip
@@ -1092,10 +1104,7 @@ def edit_vm_config(parameters):
         if 'public_ip' in parameters:
             enable_public_ip = parameters['public_ip']
             if enable_public_ip:
-                public_ip_pool = current.db((~current.db.public_ip_pool.id.belongs(current.db(current.db.vm_data.public_ip != None)._select(current.db.vm_data.public_ip))) 
-                                          & (~current.db.public_ip_pool.id.belongs(current.db(current.db.host.public_ip != None)._select(current.db.host.public_ip)))
-                                          & (current.db.public_ip_pool.is_active == True)) \
-                                        .select(current.db.public_ip_pool.ALL, orderby='<random>').first()
+                public_ip_pool = choose_random_public_ip()
 
                 if public_ip_pool:
                     create_mapping(public_ip_pool.public_ip, vm_details.private_ip)

@@ -118,7 +118,7 @@ def process_task_queue(task_event_id):
     
     task_event_data = db.task_queue_event[task_event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
-    vm_id = task_queue_data.parameters['vm_id'] if 'vm_id' in task_queue_data.parameters else None
+    vm_data = db.vm_data[task_event_data.vm_id] if task_event_data.vm_id != None else None
     try:
         #Update attention_time for task in the event table
         task_event_data.update_record(attention_time=get_datetime(), status=TASK_QUEUE_STATUS_PROCESSING)
@@ -139,8 +139,7 @@ def process_task_queue(task_event_id):
         elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
             # Create log event for the task
             logger.debug("VM_TASK SUCCESSFUL")
-            if vm_id:
-                vm_data = db.vm_data[vm_id]
+            if vm_data:
                 log_vm_event(vm_data, task_queue_data)
             # For successful task, delete the task from queue 
             if db.task_queue[task_queue_data.id]:

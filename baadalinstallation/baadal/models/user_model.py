@@ -232,9 +232,12 @@ def get_user_info(username, roles=[USER, FACULTY, ORGADMIN, ADMIN]):
 
 
 def get_my_task_list(task_status, task_num):
-    """Gets list of tasks requested by the user"""
+    """Gets list of tasks requested by the user or
+       task on any of users's VM"""
     task_query = db((db.task_queue_event.status.belongs(task_status)) 
-                    & (db.task_queue_event.requester_id == auth.user.id))
+                    & ((db.task_queue_event.vm_id.belongs(
+                            db(auth.user.id == db.user_vm_map.user_id)._select(db.user_vm_map.vm_id))) 
+                     | (db.task_queue_event.requester_id == auth.user.id)))
     events = task_query.select(db.task_queue_event.ALL, distinct=True, orderby = ~db.task_queue_event.start_time, limitby=(0,task_num))
 
     return get_task_list(events)

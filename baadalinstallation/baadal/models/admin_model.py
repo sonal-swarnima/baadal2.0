@@ -438,8 +438,6 @@ def update_task_retry(event_id):
 
     task_event_data = db.task_queue_event[event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
-
-    vm_id = task_queue_data.parameters['vm_id'] if 'vm_id' in task_queue_data.parameters else None
     
     if 'request_id' in task_queue_data.parameters:
         #Mark status for request as 'In Queue'
@@ -447,13 +445,12 @@ def update_task_retry(event_id):
         if db.request_queue[request_id]:
             db.request_queue[request_id] = dict(status=REQ_STATUS_IN_QUEUE)
     
-    if vm_id:
-        if task_event_data.task_type == VM_TASK_CREATE:
-            db.vm_data[vm_id] = dict(status=VM_STATUS_IN_QUEUE)
-        elif task_event_data.task_type == VM_TASK_CLONE:
-            vm_list = task_queue_data.parameters['clone_vm_id']
-            for vm in vm_list:
-                db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
+    if task_event_data.task_type == VM_TASK_CREATE:
+        db.vm_data[task_event_data.vm_id] = dict(status=VM_STATUS_IN_QUEUE)
+    elif task_event_data.task_type == VM_TASK_CLONE:
+        vm_list = task_queue_data.parameters['clone_vm_id']
+        for vm in vm_list:
+            db.vm_data[vm] = dict(status=VM_STATUS_IN_QUEUE)
 
     #Mark current task event for the task as IGNORE. 
     task_event_data.update_record(status=TASK_QUEUE_STATUS_RETRY)
@@ -466,22 +463,19 @@ def update_task_ignore(event_id):
     task_event_data = db.task_queue_event[event_id]
     task_queue_data = db.task_queue[task_event_data.task_id]
 
-    vm_id = task_queue_data.parameters['vm_id'] if 'vm_id' in task_queue_data.parameters else None
-
     if 'request_id' in task_event_data.parameters:
         request_id = task_event_data.parameters['request_id']
         if db.request_queue[request_id]:
             del db.request_queue[request_id]
     
-    if vm_id:
-        if task_event_data.task_type == VM_TASK_CREATE:
-            if db.vm_data[vm_id]: del db.vm_data[vm_id]
-        elif task_event_data.task_type == VM_TASK_CLONE:
-            vm_list = task_event_data.parameters['clone_vm_id']
-            for vm in vm_list:
-                if db.vm_data[vm]: del db.vm_data[vm]
+    if task_event_data.task_type == VM_TASK_CREATE:
+        if db.vm_data[task_event_data.vm_id]: del db.vm_data[task_event_data.vm_id]
+    elif task_event_data.task_type == VM_TASK_CLONE:
+        vm_list = task_event_data.parameters['clone_vm_id']
+        for vm in vm_list:
+            if db.vm_data[vm]: del db.vm_data[vm]
 
-    task_event_data.update_record(task_id = None, status=TASK_QUEUE_STATUS_IGNORE)
+    task_event_data.update_record(task_id = None, vm_id = None, status=TASK_QUEUE_STATUS_IGNORE)
 
     #Delete task from task_queue
     if task_queue_data:

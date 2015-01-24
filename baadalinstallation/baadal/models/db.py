@@ -317,6 +317,7 @@ db.task_queue.parameters.filter_out = lambda txt, loads=loads: loads(txt)
 db.define_table('task_queue_event',
     Field('task_id', 'integer', notnull = False),
     Field('task_type', 'string', length = 30, notnull = True),
+    Field('vm_id', db.vm_data, notnull = False),
     Field('vm_name', 'string', length = 100, notnull = True),
     Field('requester_id', db.user),
     Field('parameters', 'text', default={}),
