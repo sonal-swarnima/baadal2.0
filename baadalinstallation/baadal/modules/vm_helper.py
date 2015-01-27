@@ -529,7 +529,7 @@ def install(parameters):
             attach_disk_status_message = launch_vm_on_host(vm_details, vm_image_location, vm_properties)       
 
             # Checking if vm has been installed successfully
-            assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
+            assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip.private_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
 
             if vm_properties['public_ip_req']:
                 create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
