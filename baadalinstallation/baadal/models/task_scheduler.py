@@ -424,8 +424,7 @@ def host_networking():
     logger.debug( host_ip_list)
     logger.debug( host_name_list)
     collect_data_from_host(host_ip_list,host_name_list)
-    logger.debug("collected host networking data")  
-
+    logger.debug("collected host networking data")    
      
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler
@@ -438,8 +437,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_util_rrd=vm_utilization_rrd,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_purge_unused=process_unusedvm_purge,
-					                    memory_overload=overload_memory
-					                    ,networking_host=host_networking), 
+					memory_overload=overload_memory,
+					networking_host=host_networking), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -513,7 +512,7 @@ vm_scheduler.queue_task('memory_overload',
                     timeout = 5 * MINUTES,
                     uuid = UUID_MEMORY_OVERLOAD,
                     group_name = 'host_task')
-                    
+
 vm_scheduler.queue_task('networking_host',
                     repeats = 0, # run indefinitely
                     start_time = request.now,
@@ -521,6 +520,8 @@ vm_scheduler.queue_task('networking_host',
                     timeout = 30 * MINUTES,
                     uuid = UUID_HOST_NETWORKING,
                     group_name = 'host_task')
+
+
 
 active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
 
