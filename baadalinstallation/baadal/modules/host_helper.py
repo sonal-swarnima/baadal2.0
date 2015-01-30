@@ -5,6 +5,7 @@ from libvirt import *  # @UnusedWildImport
 from vm_helper import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
 
+from random import randrange
 #Host Status
 HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
@@ -421,3 +422,4 @@ def collect_data_from_host(host_ip_list,host_name_list):
         f.write(unicode(json.dumps(graph, ensure_ascii=False))) 
     shutil.move('/home/www-data/web2py/applications/baadal/static/sigma/graph.json','/home/www-data/web2py/applications/baadal/static/sigma/data.json') 
     logger.debug("done") 
+
