@@ -20,21 +20,24 @@ BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
 PROFILE = iitd
 # Please update this ip address after migration is complete, and make
 # sure it's reachable from any (all) subnets of IITD including hostels.
-PROFILE_PPA = http://10.237.20.240/openvswitch
+#PROFILE_PPA = http://10.208.20.131/openvswitch
+PROFILE_PPA = http://10.237.22.42/openvswitch
   
 HOST_ID = 1
   
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
-UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-alternate-amd64.iso
-UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-alternate-amd64.iso
-UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu12.04/ubuntu-12.04.1-server-amd64.iso
-UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/precise/ubuntu-12.04.3-server-amd64.iso
+UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu14.04/ubuntu-14.04-desktop-amd64.iso
+UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/trusty/ubuntu-14.04-alternate-amd64.iso
+UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu14.04/ubuntu-14.04-server-amd64.iso
+UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/trusty/ubuntu-14.04-server-amd64.iso
 UBUNTU_SOURCE = $(UBUNTU_SERVER)
 
-LIBVIRT = $(UTILS_DIR)/libvirt-1.2.1.tar.gz
-LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.1.tar.gz
-LIBVIRTPYTHON = $(UTILS_DIR)/libvirt-python
-LIBVIRTPYTHON_SOURCE = https://github.com/utkarshsins/baadal-libvirt-python.git
+LIBVIRT = $(UTILS_DIR)/libvirt-1.2.9.tar.gz
+LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.9.tar.gz
+
+LIBVIRTPYTHON = $(UTILS_DIR)/libvirt-python-1.2.9
+LIBVIRTPYTHON_SOURCE = http://libvirt.org/sources/python/libvirt-python-1.2.9.tar.gz
+LIBVIRTPYTHON_TAR=libvirt-python-1.2.9.tar.gz
 
 VIRTMANAGER = $(UTILS_DIR)/virt-manager-0.10.0.tar.gz
 VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot/virt-manager-0.10.0.tar.gz
@@ -84,9 +87,11 @@ $(LIBVIRT):
 	@ mkdir -p $(UTILS_DIR)
 	@ wget -c $(LIBVIRT_SOURCE) -O $@ || (rm $@ && false)
   
-$(LIBVIRTPYTHON):
+$(LIBVIRTPYTHON_TAR):
 	@ mkdir -p $(UTILS_DIR)
-	@ git clone $(LIBVIRTPYTHON_SOURCE) $@ || (rm $@ && false)
+	@ wget -c $(LIBVIRTPYTHON_SOURCE) -O $(UTILS_DIR)/$@ || (rm $@ && false)
+	@ cd $(UTILS_DIR) ; tar -xvzf $(LIBVIRTPYTHON_TAR)  1>/dev/null  
+
 
 $(VIRTMANAGER):
 	@ mkdir -p $(UTILS_DIR)
@@ -94,7 +99,7 @@ $(VIRTMANAGER):
 
 ubuntu: $(UBUNTU)
   
-libvirt: $(LIBVIRT) $(LIBVIRTPYTHON)
+libvirt: $(LIBVIRT) $(LIBVIRTPYTHON_TAR)
 
 virtmanager: $(VIRTMANAGER)
 
@@ -119,23 +124,26 @@ $(CONFIGURE):
 # Is one way necessarily better than the other? Yes, obviously.
 # Is this the better way? No.
 openvswitch: sources-list-setup
+	#apt-get update || true
+	#apt-get -y install python-software-properties
+	#if [[ "$(PROFILE)" == "iitd" ]]; then \
+	#	add-apt-repository -y 'deb [arch=amd64] $(PROFILE_PPA) precise main';\
+	#	wget $(PROFILE_PPA)/key.gpg; \
+	#	cat key.gpg | apt-key add - ;\
+	#	rm key.gpg ;\
+	#else \
+	#	add-apt-repository -y ppa:ivoks/ovs-saucy ;\
+	#fi
+
 	apt-get update || true
 	apt-get -y install python-software-properties
-	if [[ "$(PROFILE)" == "iitd" ]]; then \
-		add-apt-repository -y 'deb [arch=amd64] $(PROFILE_PPA) precise main';\
-		wget $(PROFILE_PPA)/key.gpg; \
-		cat key.gpg | apt-key add - ;\
-		rm key.gpg ;\
-		else \
-			add-apt-repository -y ppa:ivoks/ovs-saucy ;\
-		fi
-	apt-get update || true
-	apt-get -y install openvswitch-common=1.10.2-0ubuntu2~cloud0
-	apt-get -y install openvswitch-pki=1.10.2-0ubuntu2~cloud0
-	apt-get -y install openvswitch-controller=1.10.2-0ubuntu2~cloud0
-	apt-get -y install openvswitch-datapath-dkms=1.10.2-0ubuntu2~cloud0
-	apt-get -y install openvswitch-switch=1.10.2-0ubuntu2~cloud0
-	apt-get -y install python-openvswitch=1.10.2-0ubuntu2~cloud0
+	apt-get -y install openvswitch-switch
+	apt-get -y install openvswitch-common=2.0.2-0ubuntu0.14.04.1
+	apt-get -y install openvswitch-pki=2.0.2-0ubuntu0.14.04.1
+	apt-get -y install openvswitch-controller=2.0.2-0ubuntu0.14.04.1
+	apt-get -y install openvswitch-datapath-dkms=2.0.2-0ubuntu0.14.04.1
+	apt-get -y install openvswitch-switch=2.0.2-0ubuntu0.14.04.1
+	apt-get -y install python-openvswitch=2.0.2-0ubuntu0.14.04.1
 
 $(BIN_CONFIGURE): $(BIN_DIR) $(LOGS_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
@@ -341,7 +349,7 @@ clean-host:
 clean-transfer-tar:
 	sudo rm -f $(BAADAL_TRANSFER_TAR)
 
-clean: clean-config clean-controller clean-filer clean-nat clean-transfer-tar
+clean-setup: clean-config clean-controller clean-filer clean-nat clean-transfer-tar
 	sudo umount $(UTILS_DIR)/iso || true
 	sudo rm -rf $(UTILS_DIR)/iso
 	sudo rm -rf $(UTILS_DIR)/ubuntuiso

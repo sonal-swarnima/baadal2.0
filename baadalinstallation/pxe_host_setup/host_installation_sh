@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Normal_pkg_lst=(python sysstat qemu-kvm gconf2 librsvg2-common python-appindicator python-dbus python-glade2 python-gnome2 python-gtk-vnc python-gtk2 python-urlgrabber python-vte intltool libvirt-glib-1.0-dev nfs-common kvm-ipxe vim libnl-dev gcc pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude  openssh-server cgroup-bin libpciaccess-dev libglib2.0-dev python-libxml2 sysstat smem netperf)
+Normal_pkg_lst=(python sysstat qemu-kvm gconf2 librsvg2-common python-appindicator python-dbus python-glade2 python-gnome2 python-gtk-vnc python-gtk2 python-urlgrabber python-vte intltool libvirt-glib-1.0-dev nfs-common kvm-ipxe vim libnl-dev gcc pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude  openssh-server cgroup-bin libpciaccess-dev libglib2.0-dev python-libxml2 sysstat smem uuid-dev)
 
 ############################################################################################################################
  
@@ -17,17 +17,17 @@ Chk_Gateway()
 
 Network_Setup()
 {
+
   cd /baadal/baadal/baadaltesting/sandbox
 
-  apt-get update
-  apt-get -y install linux-headers-3.2.0-29-generic
-  apt-get -y install linux-headers-3.2.0-29-virtual
-
-  make openvswitch | tee ~/.openvswitch.install.log
-  make host-setup
-
+        apt-get update
+        apt-get -y install linux-headers-generic
+        make openvswitch | tee ~/.openvswitch.install.log
+        make host-setup
   cd -
+
 }
+
 
 
 #Function that install all the packages packages
@@ -66,46 +66,49 @@ Enbl_Modules()
 	modprobe kvm
 	modprobe kvm_intel
 	
-	cd /baadal/baadal/baadalinstallation
-	tar -xvzf libvirt-1.2.1.tar.gz -C /root/
-	cd /root/libvirt-1.2.1
-	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
-	make
-	make install
-	/usr/sbin/libvirtd -d 
-	if test $? -ne 0; then
-		echo "Unable to start libvirtd. Check installation and try again"
-		exit $?
-	fi
-	sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
+	cd /baadal/baadal/baadaltesting/sandbox/utils
 
-	#CREATE LIBVIRT NETWORK
-	virsh net-destroy default
-	virsh net-autostart --disable default
+		tar -xvzf libvirt-1.2.9.tar.gz -C /root/
+		cd /root/libvirt-1.2.9
+			./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
+			make
+			make install
+			/usr/sbin/libvirtd -d 
+			if test $? -ne 0; then
+				echo "Unable to start libvirtd. Check installation and try again"
+				exit $?
+			fi
+			sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
 
-	ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='OVS_BRIDGE_NAME'/>\n<virtualport type='openvswitch'/>\n"
-	for ((i=1;i<=255;i++))
-	do
-		ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
-	done
+			#CREATE LIBVIRT NETWORK
+			virsh net-destroy default
+			virsh net-autostart --disable default
 
-	ovs_net_config+="</network>"
-	echo -e $ovs_net_config > ovs-net.xml
+			ovs_net_config="<network>\n<name>ovs-net</name>\n<forward mode='bridge'/>\n<bridge name='OVS_BRIDGE_NAME'/>\n<virtualport type='openvswitch'/>\n"
+			for ((i=1;i<=255;i++))
+			do
+				ovs_net_config+="<portgroup name='vlan$i'>\n\t<vlan><tag id='$i'/></vlan>\n</portgroup>\n"
+			done
+
+			ovs_net_config+="</network>"
+			echo -e $ovs_net_config > ovs-net.xml
   
-	virsh net-define ovs-net.xml
-	virsh net-start ovs-net
-	virsh net-autostart ovs-net
+			virsh net-define ovs-net.xml
+			virsh net-start ovs-net
+			virsh net-autostart ovs-net
+		cd -
 
-	cd -
-	cd python-libvirt
-	python setup.py build
-	python setup.py install
+		cd libvirt-python-1.2.9
+                        /root/libvirt-1.2.9/run python setup.py build
+                        /root/libvirt-1.2.9/run python setup.py install
+        cd -
 
-	cd -
-	tar -xvzf virt-manager-0.10.0.tar.gz -C /root
-	cd /root/virt-manager-0.10.0
-	python setup.py install --prefix=/usr
-	
+		tar -xvzf virt-manager-0.10.0.tar.gz -C /root
+		cd /root/virt-manager-0.10.0
+		python setup.py install --prefix=/usr
+
+	cd -	
+
 	mkdir -p LOCAL_MOUNT_POINT
 	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
 	echo -e "STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
