@@ -567,9 +567,9 @@ def get_migrate_vm_details(vm_id):
     vm_details['vm_id'] = vm_id
     vm_details['vm_name'] = vm_data.vm_identity
     vm_details['vm_status'] = vm_data.status
-    vm_details['current_host'] = "%s (%s)" %(vm_data.host_id.host_name, vm_data.host_id.host_ip)
+    vm_details['current_host'] = "%s (%s)" %(vm_data.host_id.host_name, vm_data.host_id.host_ip.private_ip)
     vm_details['current_datastore'] = "%s (%s:%s)" %(vm_data.datastore_id.ds_name, vm_data.datastore_id.ds_ip, vm_data.datastore_id.path)
-    vm_details['available_hosts'] = dict((host.id, "%s (%s)"%(host.host_name, host.host_ip)) 
+    vm_details['available_hosts'] = dict((host.id, "%s (%s)"%(host.host_name, host.host_ip.private_ip)) 
                                          for host in db((db.host.id != vm_data.host_id) & (db.host.status == 1)).select())
     vm_details['available_datastores'] = dict((ds.id, "%s (%s:%s)" %(ds.ds_name, ds.ds_ip, ds.path)) 
                                               for ds in db((db.datastore.id != vm_data.datastore_id)).select())

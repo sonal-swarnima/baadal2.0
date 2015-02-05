@@ -262,7 +262,7 @@ def get_vm_config(vm_id):
                    'security_domain'  : str(vminfo.vm_data.security_domain.name)}
 
     if is_moderator():
-        vm_info_map.update({'host' : str(vminfo.vm_data.host_id.host_ip)})
+        vm_info_map.update({'host' : str(vminfo.vm_data.host_id.host_ip.private_ip)})
     
     vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
     if vnc_info:

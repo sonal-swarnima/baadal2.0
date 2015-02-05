@@ -206,7 +206,7 @@ def delete_vm_info(vm_identity):
                                                                          (int(vm_details.HDD) + int(vm_details.template_id.hdd)))
 
     if vm_details.public_ip != None:
-        remove_mapping(vm_details.public_ip, vm_details.private_ip)
+        remove_mapping(vm_details.public_ip.public_ip, vm_details.private_ip.private_ip)
     #this will delete vm_data entry and also its references
     db(db.vm_data.id == vm_details.id).delete()
     

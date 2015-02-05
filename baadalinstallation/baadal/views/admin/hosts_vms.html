@@ -5,7 +5,7 @@
 </div>
 
 {{for vmhosts in hostvmlist:}}
-<h2 class="title">{{=A('host :'+ str(vmhosts['host_ip'].private_ip), _href=URL(r=request,c='admin' ,f='host_config', args=[vmhosts['host_id']] ))}}</h2>
+<h2 class="title">{{=A('host :'+ str(vmhosts['host_ip']), _href=URL(r=request,c='admin' ,f='host_config', args=[vmhosts['host_id']] ))}}</h2>
 <div id="host_utilization_{{=vmhosts['host_id']}}"></div>
     <div class="TABLE">
     <table id="host_{{=vmhosts['host_ip']}}">

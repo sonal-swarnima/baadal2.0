@@ -425,15 +425,14 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
 
 # Checks if a newly created vm is defined
 def check_if_vm_defined(hostip, vmname):
-
     vm_defined = False
     try:
-        (connection_object, domain) = getVirshDomainConn(None, hostip, vmname)
-
+        connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ hostip +'/system')
+        domain = connection_object.lookupByName(vmname)
         if domain.ID() in connection_object.listDomainsID():
             vm_defined = True
-        connection_object.close()
-        return vm_defined
+            connection_object.close()
+            return vm_defined
     except:
         return False
 
@@ -443,11 +442,11 @@ def free_vm_properties(vm_details, vm_properties):
     logger.debug("VM installation fails..Starting to free vm properties")
 
     if vm_properties:
-        host_ip_of_vm = current.db.host[vm_properties['host']].host_ip
+        host_ip_of_vm = current.db.host[vm_properties['host']].host_ip.private_ip
         logger.debug("Host IP of vm is " + str(host_ip_of_vm))
-        (connection_object, domain) = getVirshDomainConn(None, host_ip_of_vm, vm_details.vm_identity)
-
-        if domain.ID() in connection_object.listDomainsID():
+        if check_if_vm_defined(host_ip_of_vm, vm_details.vm_identity):
+            connection_object = libvirt.open('qemu+ssh://root@'+ host_ip_of_vm +'/system')
+            domain = connection_object.lookupByName(vm_details.vm_identity)
             logger.debug("Starting to delete vm from host..")
             domain.destroy()
             domain.undefine()
@@ -529,7 +528,7 @@ def install(parameters):
             attach_disk_status_message = launch_vm_on_host(vm_details, vm_image_location, vm_properties)       
 
             # Checking if vm has been installed successfully
-            assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
+            assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip.private_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
 
             if vm_properties['public_ip_req']:
                 create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
