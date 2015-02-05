@@ -51,7 +51,7 @@ function package_remove
 function libvirt_install
 {
   VERSION=$(virsh --version 2>/dev/null)
-  if [[ $VERSION != "1.2.1" || ${LIBVIRT_INSTALL} == "yes" ]]; then
+  if [[ $VERSION != "1.2.9" || ${LIBVIRT_INSTALL} == "yes" ]]; then
     package_install libxml2-dev
     package_install libgnutls-dev
     package_install libyajl-dev
@@ -61,6 +61,7 @@ function libvirt_install
     package_install libnl-dev
     package_install libpciaccess-dev
     package_install python
+    package_install uuid-dev
 
     dir=$pwd
 
@@ -129,7 +130,7 @@ function libvirt_install
 
     cd $LIBVIRTPYTHON_DIR
 
-    $ECHO_PROGRESS "libvirt-python - build"
+    $ECHO_PROGRESS "libvirt-python-1.2.9 - build"
     python setup.py build 1>>$LOGS/log.out 2>>$LOGS/log.err
     status=$?
 

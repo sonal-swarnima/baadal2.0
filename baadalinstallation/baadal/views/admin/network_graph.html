@@ -1,0 +1,92 @@
+
+{{extend 'layout.html'}}
+
+<script src="{{=URL('static','sigma/src/sigma.core.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/conrad.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/utils/sigma.utils.js')}}" ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/utils/sigma.polyfills.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/sigma.settings.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/classes/sigma.classes.dispatcher.js')}}" ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/classes/sigma.classes.configurable.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/classes/sigma.classes.graph.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/classes/sigma.classes.camera.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/classes/sigma.classes.quad.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/classes/sigma.classes.edgequad.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/captors/sigma.captors.mouse.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/captors/sigma.captors.touch.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/sigma.renderers.canvas.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/sigma.renderers.webgl.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/sigma.renderers.svg.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/sigma.renderers.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/webgl/sigma.webgl.nodes.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/webgl/sigma.webgl.nodes.fast.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/webgl/sigma.webgl.edges.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/webgl/sigma.webgl.edges.fast.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/webgl/sigma.webgl.edges.arrow.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.labels.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.hovers.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.nodes.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edges.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edges.curve.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edges.arrow.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edges.curvedArrow.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edgehovers.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edgehovers.curve.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edgehovers.arrow.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.edgehovers.curvedArrow.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/canvas/sigma.canvas.extremities.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/svg/sigma.svg.utils.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/svg/sigma.svg.nodes.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/svg/sigma.svg.edges.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/svg/sigma.svg.edges.curve.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/svg/sigma.svg.labels.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/renderers/svg/sigma.svg.hovers.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/middlewares/sigma.middlewares.rescale.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/middlewares/sigma.middlewares.copy.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/misc/sigma.misc.animation.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/misc/sigma.misc.bindEvents.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/misc/sigma.misc.bindDOMEvents.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/src/misc/sigma.misc.drawHovers.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/plugins/sigma.renderers.edgeLabels/settings.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.def.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.curve.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/plugins/sigma.renderers.edgeLabels/sigma.canvas.edges.labels.curvedArrow.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/sigma.min.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','sigma/plugins/sigma.parsers.json.min.js')}}"  ,type="text/javascript"></script>
+
+
+<div id="container"></div>
+  <style type="text/css">
+  #container {
+    max-width: 600px;
+    height: 600px;
+    margin: auto;
+  }
+</style>
+ 
+
+
+
+<script>
+  sigma.parsers.json("{{=URL('static','sigma/data.json')}}", {
+    container: 'container',
+    renderer: {
+    container: document.getElementById('container'),
+    type: 'canvas'
+     },
+    settings: {
+      defaultNodeColor: '#ec5148',
+      edgeLabelSize: 'proportional'
+    }
+  });
+</script>
+
+
+<p><b>Host Networking Graph:</b></p>
+   <ul>
+     <li>Throughput unit is Mbits/sec</li>
+     <li>Latency unit is micro sec</li>
+     <li><b>M</b>:Megabits/sec</li>
+      <li><b>ms</b>:microsec</li>
+   </ul>
+

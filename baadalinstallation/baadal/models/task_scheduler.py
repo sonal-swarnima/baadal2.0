@@ -9,7 +9,7 @@ from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd,
 from vm_helper import install, shutdown, start, suspend, resume, destroy, delete, migrate, snapshot,\
     revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore,\
     save_as_template, delete_template
-from host_helper import host_status_sanity_check
+from host_helper import *
 from vm_utilization import update_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
 from log_handler import logger, rrd_logger
@@ -408,6 +408,23 @@ def overload_memory():
         logger.debug(ret)
     logger.debug("Completed overload memory task")
   
+#host networking graph
+def host_networking():
+    logger.debug("collecting host networking data")
+    active_host_list= db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
+    active_host_name=db(db.host.status == HOST_STATUS_UP).select(db.host.host_name)
+    logger.debug( "active_host_list:" + str(active_host_list))
+    logger.debug( "active_host_name:" + str(active_host_name))
+    active_host_no=len(active_host_list)
+    host_name_list=[]
+    host_ip_list=[]
+    for i in xrange(0,active_host_no):	
+        host_ip_list.append(active_host_list[i].host_ip)
+        host_name_list.append(active_host_name[i].host_name)
+    logger.debug( host_ip_list)
+    logger.debug( host_name_list)
+    collect_data_from_host(host_ip_list,host_name_list)
+    logger.debug("collected host networking data")    
      
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler
@@ -420,7 +437,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_util_rrd=vm_utilization_rrd,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_purge_unused=process_unusedvm_purge,
-					                    memory_overload=overload_memory), 
+					memory_overload=overload_memory,
+					networking_host=host_networking), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -494,6 +512,16 @@ vm_scheduler.queue_task('memory_overload',
                     timeout = 5 * MINUTES,
                     uuid = UUID_MEMORY_OVERLOAD,
                     group_name = 'host_task')
+
+vm_scheduler.queue_task('networking_host',
+                    repeats = 0, # run indefinitely
+                    start_time = request.now,
+                    period = 45 * MINUTES, # every 10 minutes
+                    timeout = 30 * MINUTES,
+                    uuid = UUID_HOST_NETWORKING,
+                    group_name = 'host_task')
+
+
 
 active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
 

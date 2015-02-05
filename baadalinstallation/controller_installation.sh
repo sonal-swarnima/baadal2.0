@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 baa
 CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2 python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson) 
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev ntpdate)
 
@@ -368,24 +368,27 @@ Instl_Pkgs()
 	done
 	# end of FOR loop / package installation from pkg_lst
 
-	tar -xvzf libvirt-1.2.1.tar.gz
-	mv libvirt-1.2.1 /tmp/libvirt-1.2.1
-	cd /tmp/libvirt-1.2.1
-	./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
-	make
-	make install
-	/usr/sbin/libvirtd -d
-        if test $? -ne 0; then
-                echo "Unable to start libvirtd. Check installation and try again"
-                exit $?
-        fi
-        sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
-	cd -
+        cd /baadal/baadal/baadaltesting/sandbox/utils	
+			tar -xvzf libvirt-1.2.9.tar.gz
+			mv libvirt-1.2.9 /tmp/libvirt-1.2.9
+	
+			cd /tmp/libvirt-1.2.9
+				./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
+				make
+				make install
+				/usr/sbin/libvirtd -d
+		    		if test $? -ne 0; then
+		            		echo "Unable to start libvirtd. Check installation and try again"
+				            exit $?
+		    		fi
+			    	sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
+			cd -
 
-	cd python-libvirt
-	python setup.py build
-	python setup.py install
-	cd -
+			cd libvirt-python-1.2.9
+		    	/tmp/libvirt-1.2.9/run python setup.py build
+				/tmp/libvirt-1.2.9/run python setup.py install
+			cd -
+        cd -
 
 	if test "$AUTH_TYPE" == "ldap"; then
 		Setup_Ldap_Kerberos
@@ -545,6 +548,8 @@ Enbl_Modules()
 	a2enmod rewrite
 	a2enmod headers
 	a2enmod expires
+    a2enmod wsgi
+    a2enmod rewrite
 
 	shopt -s nocasematch
 	case $DB_TYPE in
@@ -644,13 +649,14 @@ Rewrite_Apache_Conf()
 		
 		  <LocationMatch ^/admin>
 		    Order Deny,Allow
-                    Deny from all
+                    Allow from all
                     Allow from 127.0.0.1
                   </LocationMatch>		
 		  <Directory /home/www-data/web2py>
 		    AllowOverride None
 		    Order Allow,Deny
-		    Deny from all
+		    Allow from all
+                    Require all granted
 		    <Files wsgihandler.py>
 		      Allow from all
 		    </Files>
@@ -665,13 +671,16 @@ Rewrite_Apache_Conf()
 		    ExpiresDefault "access plus 1 hour"
 		    Order Allow,Deny
 		    Allow from all
+                    Require all granted
 		  </Directory>
 		
 		  CustomLog /var/log/apache2/access.log common
 		  ErrorLog /var/log/apache2/error.log
 		</VirtualHost>
-		' > /etc/apache2/sites-available/default
+		' > /etc/apache2/sites-available/default.conf
 
+        rm -rf /etc/apache2/sites-enabled/* 
+        a2ensite default
 	echo "Restarting Apache................................................"
 
 	/etc/init.d/apache2 restart
@@ -690,7 +699,8 @@ Configure_Tftp()
 
 mkdir -p $TFTP_DIR
 sed -i -e 's/^/^#/g' /etc/default/tftpd-hpa
-echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" >> /etc/default/tftpd-hpa
+echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" > /etc/default/tftpd-hpa
+echo -e "TFTP_USERNAME=\"tftp\"\nTFTP_DIRECTORY=\"$TFTP_DIR\"\nTFTP_ADDRESS=\"0.0.0.0:69\"\nTFTP_OPTIONS=\"-s -c -l\"" >> /etc/default/tftpd-hpa
 /etc/init.d/tftpd-hpa restart
 
 # tftpd-hpa is called from inetd. The options passed to tftpd-hpa when it starts are thus found in /etc/inetd.conf
@@ -708,7 +718,7 @@ if test $REMOUNT_FILES_TO_TFTP_DIRECTORY == 'y'; then
 	rm -rf $TFTP_DIR/pxelinux.cfg
         mkdir $TFTP_DIR/pxelinux.cfg
         echo -e "include mybootmenu.cfg\ndefault ../ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/vesamenu.c32\nprompt 0\ntimeout 100" >> $TFTP_DIR/pxelinux.cfg/default
-        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-12.04-server-amd64\nlabel ubuntu-12.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ksdevice=bootif ks=http://$CONTROLLER_IP/ks.cfg --\n\tIPAPPEND 2\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
+        echo -e "menu hshift 13\nmenu width 60\nmenu margin 8\nmenu title My Customised Network Boot Menu\ninclude ubuntu/install/netboot/ubuntu-installer/amd64/boot-screens/stdmenu.cfg\ndefault ubuntu-14.04-server-amd64\nlabel ubuntu-14.04-server-amd64\n\tkernel ubuntu/install/netboot/ubuntu-installer/amd64/linux\n\tappend vga=normal initrd=ubuntu/install/netboot/ubuntu-installer/amd64/initrd.gz ksdevice=bootif live-installer/net-image=http://$CONTROLLER_IP/ubuntu-14.04-server-amd64/install/filesystem.squashfs ks=http://$CONTROLLER_IP/ks.cfg --\n\tIPAPPEND 2\nlabel Boot from the first HDD\n\tlocalboot 0" >> $TFTP_DIR/mybootmenu.cfg
 
 fi
 
@@ -750,7 +760,7 @@ Configure_Dhcp_Pxe()
 
 	sed -i -e "s/INTERFACES=\"\"/INTERFACES=\"$OVS_BRIDGE_NAME $VLANS\"/" /etc/default/isc-dhcp-server
 
-	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-12.04-server-amd64
+	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-14.04-server-amd64
 	
 
 	if test $INSTALL_LOCAL_UBUNTU_REPO == 'y'; then
@@ -811,11 +821,13 @@ Start_Web2py()
 	fi
 
 	ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
-	
+	chsh -s /bin/bash www-data 
+
         mkdir /var/www/.ssh
         chown -R www-data:www-data /var/www/.ssh	
 	su www-data -c "ssh-keygen -t rsa -f /var/www/.ssh/id_rsa -N \"\""
 
+         
 	touch /root/.ssh/authorized_keys
 	cat /var/www/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 

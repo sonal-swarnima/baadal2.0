@@ -114,7 +114,7 @@ UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
 UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
 UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
 UUID_PURGE_UNUSEDVM = 'scheduler-uuid-purge-unusedvm'
-
+UUID_HOST_NETWORKING='scheduler-uuid-host-networking'
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 
 ITEMS_PER_PAGE=20

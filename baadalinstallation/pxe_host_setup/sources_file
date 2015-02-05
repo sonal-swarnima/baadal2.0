@@ -1,17 +1,17 @@
-deb http://REPO_IP/ubuntu precise main restricted universe multiverse
-deb-src http://REPO_IP/ubuntu precise main restricted universe multiverse
+deb http://REPO_IP/ubuntu trusty main restricted universe multiverse
+deb-src http://REPO_IP/ubuntu trusty main restricted universe multiverse
 
-deb http://REPO_IP/ubuntu precise-proposed main restricted universe multiverse
-deb-src http://REPO_IP/ubuntu precise-proposed main restricted universe multiverse
+deb http://REPO_IP/ubuntu trusty-proposed main restricted universe multiverse
+deb-src http://REPO_IP/ubuntu trusty-proposed main restricted universe multiverse
 
-deb http://REPO_IP/ubuntu precise-updates main restricted universe multiverse
-deb-src http://REPO_IP/ubuntu precise-updates main restricted universe multiverse
+deb http://REPO_IP/ubuntu trusty-updates main restricted universe multiverse
+deb-src http://REPO_IP/ubuntu trusty-updates main restricted universe multiverse
 
-deb http://REPO_IP/ubuntu precise-security main restricted universe multiverse
-deb-src http://REPO_IP/ubuntu precise-security main restricted universe multiverse
+deb http://REPO_IP/ubuntu trusty-security main restricted universe multiverse
+deb-src http://REPO_IP/ubuntu trusty-security main restricted universe multiverse
 
-deb http://REPO_IP/ubuntu precise-backports main restricted universe multiverse
-deb-src http://REPO_IP/ubuntu precise-backports main restricted universe multiverse
+deb http://REPO_IP/ubuntu trusty-backports main restricted universe multiverse
+deb-src http://REPO_IP/ubuntu trusty-backports main restricted universe multiverse
 
-deb http://REPO_IP/ubuntupartner precise partner
-deb-src http://REPO_IP/ubuntupartner precise partner
+deb http://REPO_IP/ubuntupartner trusty partner
+deb-src http://REPO_IP/ubuntupartner trusty partner

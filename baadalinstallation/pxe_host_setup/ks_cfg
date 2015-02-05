@@ -20,7 +20,7 @@ reboot
 #Install OS instead of upgrade
 install
 #Use Web installation
-url --url http://CONTROLLER_IP/ubuntu-12.04-server-amd64
+url --url http://CONTROLLER_IP/ubuntu-14.04-server-amd64
 #System bootloader configuration
 bootloader --location=mbr
 #Clear the Master Boot Record

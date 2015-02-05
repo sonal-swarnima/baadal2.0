@@ -5,6 +5,7 @@ from libvirt import *  # @UnusedWildImport
 from vm_helper import *  # @UnusedWildImport
 from helper import *  # @UnusedWildImport
 
+from random import randrange
 #Host Status
 HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
@@ -282,3 +283,143 @@ def delete_orhan_vm(vm_name, host_id):
 def get_active_hosts():
     
     return current.db(current.db.host.status == HOST_STATUS_UP).select(current.db.host.ALL)
+
+
+
+########################host networking graph################################
+
+data=[]
+graph={}
+node_list=[]
+edge_list=[]
+
+import math
+
+def get_latency_btw_hosts(next_host_ip,host_ip):
+    logger.debug("getting latency")
+    logger.debug("next_host_ip:" + str(next_host_ip))
+    latency_cmd="netperf -t TCP_RR  -H"+str(next_host_ip)+"| sed -n '7 p'  | tr -s ' '  | cut -f'6' -d' '"
+    logger.debug("host_ip:" + str(host_ip))
+    logger.debug("latency_cmd:" + str(latency_cmd))
+    l_output=execute_remote_cmd(host_ip, "root", latency_cmd)
+    lat=l_output
+    logger.debug("lat:"+ str(lat))
+    latency=1/float(lat)
+    '''l=len(str(latency))
+    m=str(latency)[:(l-15)]
+    y=float(m)*10
+    output=format(y, '.2f')'''
+    logger.debug("latency between host is :"+ str(latency))
+    ret=str(latency) 
+    return ret
+
+def get_bandwidth_of_host(host_ip):
+    logger.debug("host_ip:" + str(host_ip))
+    bandwidth_cmd='lshw | grep capacity | grep bit/s | sed -n "1 p" | tr -s " "  | cut -f"3" -d" "'
+    logger.debug("bandwidth_cmd:" + str(bandwidth_cmd))
+    bandwidth=execute_remote_cmd(host_ip,'root',bandwidth_cmd)
+    logger.debug("bandwidth:" + str(bandwidth))
+    m=str(bandwidth)
+    q=m.replace("['",' ')    
+    bandwidth=q.replace("']",' ')    
+    logger.debug("bandwidth of the host is:" + str(bandwidth))
+    return bandwidth
+
+
+def get_throughput_btw_hosts(next_host_ip,host_ip):   
+    logger.debug("host_ip:" + str(host_ip))
+    logger.debug("next_host_ip:" + str(next_host_ip))
+    throughput_cmd="netperf -t TCP_STREAM  -H "+str(next_host_ip)+"| sed -n '7 p'  | tr -s ' '  | cut -f'6' -d' '"
+    logger.debug("throughput_cmd:" + str(throughput_cmd))
+    throughput=execute_remote_cmd(host_ip, "root", throughput_cmd)
+    logger.debug("throughput between host is :"+ str(throughput))
+    t=str(throughput) + "M"
+    return t
+
+
+def generate_axis():
+    x_axis = randrange(0,20) 
+    y_axis = randrange(0,20)
+    sublist=[]
+    sublist.append(x_axis)
+    sublist.append(y_axis)
+    check=check_sublist(x_axis,y_axis,sublist)
+    if check:    
+	generate_axis()
+    else:
+	data.append(sublist)    
+    return sublist
+
+   
+def check_sublist(search1,search2,sublist):
+    for sublist in data:
+        if search1 in sublist and search2 in sublist:
+            return 1
+
+
+def node_attribute(i,host_name,host_ip):
+    logger.debug("host_ip:" + str(host_ip))
+    bandwidth=get_bandwidth_of_host(host_ip)
+    node_data={}
+    node_data['id']=str(i)
+    sublist=generate_axis()
+    node_data['x']=sublist[0]
+    node_data['y']=sublist[1]
+    node_label=str(host_name) +"(bandwidth: " + str(bandwidth) + ")"
+    node_data['label']=node_label
+    node_data['size']=4
+    node_list.append(node_data)
+    logger.debug("node_list:" + str(node_list))
+    return
+
+
+def edge_attribute(next_host_ip,host_ip,k,i,j):
+    latency=get_latency_btw_hosts(next_host_ip,host_ip)
+    throughput=get_throughput_btw_hosts(next_host_ip,host_ip)
+    edge_label= "latency: " + str(latency)+ ' , ' + "throughput: " + str(throughput)
+    edge_data={}
+    edge_data['id']=str(k)
+    edge_data['source']=i
+    edge_data['target']=j
+    edge_data['label']=edge_label
+    edge_list.append(edge_data)
+    logger.debug("edge_list:" + str(edge_list))
+    return 
+
+
+
+
+def collect_data_from_host(host_ip_list,host_name_list):
+    active_host_no=len(host_ip_list)
+    for i in xrange(0,active_host_no):	
+        host_ip=host_ip_list[i]
+        host_name=host_name_list[i]
+        logger.debug( "host_ip:" + str(host_ip))
+        if is_pingable(host_ip):
+	    node_attribute(i,host_name,host_ip)
+            for j in xrange(i,active_host_no):
+	        next_host_ip=host_ip_list[j]
+                logger.debug( "next host :" + str(next_host_ip))
+                if is_pingable(next_host_ip):
+		    if host_ip!=next_host_ip:
+                        k=str(i) + str(j)
+			logger.debug(k)
+			edge_attribute(next_host_ip,host_ip,k,i,j)
+		else :
+	            logger.debug( "host is unreachable")
+	else :
+	    logger.debug( "host is unreachable")
+    
+    graph['nodes']=node_list
+    graph['edges']=edge_list
+    
+    logger.debug("collected host networking data"+ str(graph))
+    '''import json
+    outfile=open('/home/www-data/web2py/applications/testapp/static/sigma/graph.json')
+    json.dump(graph, outfile, indent=4) "works only for python 3.x"  '''
+    import io, json
+    with io.open('/home/www-data/web2py/applications/baadal/static/sigma/graph.json', 'w', encoding='utf-8') as f:
+        f.write(unicode(json.dumps(graph, ensure_ascii=False))) 
+    shutil.move('/home/www-data/web2py/applications/baadal/static/sigma/graph.json','/home/www-data/web2py/applications/baadal/static/sigma/data.json') 
+    logger.debug("done") 
+

@@ -1,0 +1,82 @@
+     #### Wake-On-LAN setting on machines ####
+
+[1]. First of all enables the Wake-On-LAN setting on the system at booting time 
+
+-> Turn on the system and enter the wake on lan setting by pressing "ctrl +S" key combination
+
+-> The "device List" option setting displays in the screen.      // This list contains the information of NIC(including mac address) of the system. select the appropriate option 
+
+-> Click the appropriate option. Then "Main Menu" option setting displays in the screen. Which contains two options
+    - MBA configuration
+    - iSCSI Boot Configuration
+
+-> Click the "MBA configuration" option.
+
+-> Enable the "Pre-boot Wake On LAN" option setting. Then save it and log-in to system. 
+
+
+[2]. Enable Wake-On-LAN setting in host 
+
+-> Install ethtool by command
+     "sudo apt-get install ethtool" 
+
+-> To check whether Wake-On-LAN is enabled in the NIC, use command 
+     "sudo ethtool <NIC>"   ( where <NIC> is the name of ethernet interface (eth0/ em1) )
+        
+-> There are few options under the name "Settings for <NIC>:", which specifies:
+      
+      Supports Wake-on:   // specifies which Wake-On-LAN modes the network interface supports 
+      Wake-on:            // specifies which mode is currently enabled
+      Link detected:      // specifies LAN connectivity to ethernet interface. ( yes: connected , no: not connected)
+          
+             Wake-On-LAN modes are characters which specifies:
+                      p  Wake on phy activity
+                      u  Wake on unicast messages
+                      m  Wake on multicast messages
+                      b  Wake on broadcast messages
+                      a  Wake on ARP
+                      g  Wake on MagicPacket(tm)
+                      s  Enable SecureOn(tm) password for MagicPacket(tm)
+                      d  Disable (wake on nothing).
+
+-> The command used for enable wake on lan 
+      "ethtool -s <NIC> wol g"  ( command is not enable Wake-On-LAN setting permanently but only for current session)
+
+
+[3]. For permanently enable Wake-On-LAN setting
+
+-> Change the directory
+       "cd /etc/init.d/"
+
+-> Open a text editor with file named wakeonlanconfig
+       "pico wakeonlanconfig"
+
+-> Now write down these lines into file and save
+       " #!/bin/bash
+         ethtool -s <NIC> wol g         
+         exit  "                    ( where <NIC> is the name of ethernet interface (eth0/ em1) )
+
+-> Set the permissions of the file:
+      "chmod a+x wakeonlanconfig"
+
+-> Make the script run on startup by the command
+       "update-rc.d -f wakeonlanconfig defaults"
+
+-> Run the script by this command
+       "/etc/init.d/wakeonlanconfig"
+
+
+[4]. Here we choose to wake-up(turn-on) system by using MagicPacket(tm). To allow these functionality 
+
+-> Install wakeonlan by  
+       "apt-get install wakeonlan"
+
+-> Send the command to wake-up particular system by
+       "wakeonlan <MAC-ADDRESS>"           (Where <MAC-ADDRESS> is the mac address of the particular system to which we want to send MagicPacket(tm) ) 
+
+-> There are two ports specifies for Wake-On-LAN, port(7) and port(9). In which port(9) is by default. So if above command does not work try this 
+       "wakeonlan -p 7 <MAC-ADDRESS>"    ( Where 7 is a port number)
+               
+
+// * In the new "PowerEdge R720" server the first step is not Mandatary as it enables Wake-On-LAN setting automatically.
+

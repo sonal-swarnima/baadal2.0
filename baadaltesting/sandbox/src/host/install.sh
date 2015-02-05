@@ -2,7 +2,7 @@ function run
 {
   check_root
   #package_update_db
-  package_install qemu-kvm
+  package_install qemu-kvm virt-what
 
   echo "\n"
   echo $HOST_SPACE
