@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+# coding: utf8
+import os
+import ConfigParser
+import MySQLdb as mdb
+import xml.etree.ElementTree as ET
+
+def xml_connect():
+	tree = ET.parse(os.path.join(get_context_path(),'static/testdata.xml'))# parsing the xml file
+	root = tree.getroot()
+	return root
+
+def xml_connect_sys():
+    tree = ET.parse(os.path.join(get_context_path(),'static/systemdata.xml'))# parsing the xml file
+    root = tree.getroot()
+    return root
+
+def get_config_file():
+    config = ConfigParser.ConfigParser()
+    config.read(os.path.join(get_context_path(),'static/db.conf'));
+    return config
+    
+def get_context_path():
+    ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
+    print ctx_path
+    return ctx_path 
+    
+
+
+
+
+def get_app_name():
+    Config = ConfigParser.ConfigParser()
+    Config.read(os.path.join(get_context_path(),'static/db.conf'))
+    path=Config.get("web2py_app_name","path")
+    return path

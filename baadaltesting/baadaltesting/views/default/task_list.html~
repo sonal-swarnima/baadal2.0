@@ -1,0 +1,124 @@
+{{extend 'layout.html'}}
+<div style="text-align:right;padding-right:40px">
+{{=form}}
+</div>
+<div id="tabs-task">
+<ul>
+    <li><a href="#pendTab", onclick="set_tab_cookie(0);">Pending Tasks</a></li>
+    <li><a href="#compTab", onclick="set_tab_cookie(1);">Completed Tasks</a></li>
+    <li><a href="#failTab", onclick="set_tab_cookie(2);">Failed Tasks</a></li>
+</ul>
+
+<div id="pendTab">
+
+{{
+  if not pending:
+}}
+<h3>No Pending Tasks</h3>
+{{else:}}
+  <div class="TABLE">
+  <table id="pendingtasks">
+      <tr>
+        <th>Task</th>
+        <th>Tast Cases</th>
+        <th>Requested By</th>
+        <th>server Name</th>
+        <th>Request Time</th>
+      </tr>
+	{{for task in pending:}}
+      <tr>
+        <td>{{=task['task_type']}}</td>
+        <td>{{=task['test_case_list']}}</td>
+       	<td>{{=task['user_name']}}</td>
+        <td>{{=task['server_name']}}</td>
+        <td>{{=task['start_time']}}</td>
+        
+      </tr>
+	{{pass}}
+</table>
+</div>
+{{pass}}
+</div>
+
+<div id="compTab">
+{{
+  counter = 0;
+  if not success:
+}}
+<h3>No Completed Tasks</h3>
+{{else:}}
+  <div class="TABLE">
+  <table id="completedtasks">
+      <tr>
+        <th>Task</th>
+        <th>Tast Cases</th>
+        <th>Requested By</th>
+        <th>server Name</th>
+        <th>Request Time</th>
+        <th>Start Time</th>
+        <th>Final Time</th>
+        <th>Description</th>
+      </tr>
+	{{for task in success:}}
+      <tr>
+        <td>{{=task['task_type']}}</td>   
+        <td>{{=task['test_case_list']}}</td>     
+        <td>{{=task['user_name']}}</td>
+        <td>{{=task['server_name']}}</td>
+        <td>{{=task['start_time']}}</td>
+        <td>{{=task['attention_time']}}</td>
+        <td>{{=task['end_time']}}</td>
+        <td><a href="{{=URL(request.application,'default','task',args=[task['file_name']])}}" target="_blank">Description</a></td>
+      </tr>
+	{{pass}}
+</table>
+</div>
+{{pass}}
+</div>
+
+
+
+<div id="failTab">
+{{
+  counter = 0;
+  if not failed:
+}}
+<h3>No Failed Tasks</h3>
+{{else:}}
+  <div class="TABLE">
+  <table id="failedtasks">
+      <tr>
+        <th>Task</th>
+        <th>Tast Cases</th>
+        <th>Requested By</th>
+        <th>server Name</th>
+        <th>Request Time</th>
+        <th>Final Time</th>
+        <th>Description</th>
+      </tr>
+	{{for task in failed:}}
+      <tr>
+        <td>{{=task['task_type']}}</td>   
+        <td>{{=task['test_case_list']}}</td>  
+        <td>{{=task['user_name']}}</td>
+        <td>{{=task['server_name']}}</td>
+        <td>{{=task['attention_time']}}</td>
+        <td>{{=task['end_time']}}</td>
+        <td><a href="{{=URL(request.application,'default','task',args=[task['file_name']])}}" target="_blank">Description</a></td>
+      </tr>
+      
+	{{pass}}
+  </table>
+  </div>
+{{pass}}
+</div>
+</div>
+
+<script>
+$(document).keypress(function(e) {
+  if(e.which == 13) {
+    tab_refresh();
+    $(this).closest('form').submit()
+  }
+})
+</script>

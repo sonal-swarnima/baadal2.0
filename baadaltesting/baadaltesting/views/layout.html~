@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+  {{response.files.append(URL(request.application,'static','plugin_layouts/layouts/Simpletex/default.css'))}}
+  {{response.files.append(URL('static','plugin_layouts/superfish.js'))}}
+  {{include 'web2py_ajax.html'}}
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <script>
+    jQuery(document).ready(function(){
+
+      if (window.location.pathname != '/')
+      {
+	      menu_links = document.getElementsByXPath("//div[@id='menu']/ul/li")
+			
+	      for ( var i=0 ; i < menu_links.length; i++ ){
+		      menu_href = menu_links[i].getElementsByTagName('a')[0].href
+		      if (menu_href.indexOf(window.location.pathname) != -1){
+		      	menu_links[i].setAttribute("class","active");
+		      }else
+		      {
+		      	menu_links[i].setAttribute("class","");
+		      }
+	      }
+      }
+
+      {{if not response.flash:}}
+	    jQuery('.flash').hide();
+      {{pass}}
+      
+      displayMainMenu();
+
+      jQuery('#configure').click(function(){
+      	$(this).siblings().toggle();
+    	addToSubCookie($(this));
+      });
+
+      jQuery('[id^=menu_]').click(function(){
+    	$(this).parent().siblings().toggle();
+    	addToMainCookie($(this));
+      });        
+	
+      tab_index = 0;
+      if($.cookie('tab_index') != undefined){
+      	tab_index = $.cookie('tab_index');
+      }
+      jQuery('#tabs-task').tabs({active: tab_index});
+
+      jQuery("#sortTable").tablesorter(); 
+    });
+
+	$(function() {
+	    $('#sidebar').click(function() {
+	    	set_tab_cookie(0);
+	    });
+	});	
+  </script>
+
+  <title>
+    {{=response.title or request.application}}
+  </title>
+</head>
+
+<body>
+<div id="header">
+  <div id="logo">
+    <h1><a href="{{=URL('default','index')}}"><b>BAADAL</b></a></h1>
+    <h2><b>Testing Framework</b></h2>
+  </div>
+
+  <div id="login">
+    {{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','user'))}}{{except:pass}}
+  </div>
+</div>
+
+<div id="menu">
+  {{if response.top_menu:}}
+    {{=MENU(response.top_menu, _class='nav', li_first="active")}}
+  {{pass}}
+</div>
+
+<hr/>
+
+ <div id="sidebar">
+    <ul>
+    {{if response.main_menu:}}
+      <li>
+        {{=MENU(response.main_menu, _class='nav',no_link_url=request.url)}}
+      </li>
+    {{pass}}
+  
+	</ul>
+  </div>
+
+<div id="page">
+  <div id="content">
+    <div class="flash"><flash id="flash_message">{{=response.flash}} </flash>{{''}}
+    </div>
+    {{include}}
+  </div>
+
+  <div id ="line" style="clear: both;">
+		&nbsp;
+  </div>
+
+</div>
+
+<hr/>
+
+
+</body>
+</html>
