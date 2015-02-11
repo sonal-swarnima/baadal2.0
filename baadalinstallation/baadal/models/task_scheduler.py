@@ -9,7 +9,7 @@ from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd,
 from vm_helper import install, shutdown, start, suspend, resume, destroy, delete, migrate, snapshot,\
     revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore,\
     save_as_template, delete_template
-from host_helper import *
+from host_helper import host_status_sanity_check, collect_data_from_host
 from vm_utilization import update_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
 from log_handler import logger, rrd_logger
@@ -437,8 +437,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_util_rrd=vm_utilization_rrd,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_purge_unused=process_unusedvm_purge,
-					memory_overload=overload_memory,
-					networking_host=host_networking), 
+                    					memory_overload=overload_memory,
+                    					networking_host=host_networking), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 

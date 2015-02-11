@@ -293,8 +293,6 @@ graph={}
 node_list=[]
 edge_list=[]
 
-import math
-
 def get_latency_btw_hosts(next_host_ip,host_ip):
     logger.debug("getting latency")
     logger.debug("next_host_ip:" + str(next_host_ip))
@@ -344,10 +342,10 @@ def generate_axis():
     sublist.append(x_axis)
     sublist.append(y_axis)
     check=check_sublist(x_axis,y_axis,sublist)
-    if check:    
-	generate_axis()
+    if check:
+        generate_axis()
     else:
-	data.append(sublist)    
+        data.append(sublist)    
     return sublist
 
    
@@ -387,8 +385,6 @@ def edge_attribute(next_host_ip,host_ip,k,i,j):
     return 
 
 
-
-
 def collect_data_from_host(host_ip_list,host_name_list):
     active_host_no=len(host_ip_list)
     for i in xrange(0,active_host_no):	
@@ -396,19 +392,19 @@ def collect_data_from_host(host_ip_list,host_name_list):
         host_name=host_name_list[i]
         logger.debug( "host_ip:" + str(host_ip))
         if is_pingable(host_ip):
-	    node_attribute(i,host_name,host_ip)
+            node_attribute(i,host_name,host_ip)
             for j in xrange(i,active_host_no):
-	        next_host_ip=host_ip_list[j]
+                next_host_ip=host_ip_list[j]
                 logger.debug( "next host :" + str(next_host_ip))
                 if is_pingable(next_host_ip):
-		    if host_ip!=next_host_ip:
+                    if host_ip!=next_host_ip:
                         k=str(i) + str(j)
-			logger.debug(k)
-			edge_attribute(next_host_ip,host_ip,k,i,j)
-		else :
-	            logger.debug( "host is unreachable")
-	else :
-	    logger.debug( "host is unreachable")
+                        logger.debug(k)
+                        edge_attribute(next_host_ip,host_ip,k,i,j)
+                else :
+                    logger.debug( "host is unreachable")
+        else :
+            logger.debug( "host is unreachable")
     
     graph['nodes']=node_list
     graph['edges']=edge_list

@@ -22,7 +22,41 @@
 
 <script>
 jQuery(document).ready(function(){
+    populate_private_ip();
+    populate_public_ip();
 });
+
+jQuery('#vm_data_security_domain').change(function(){
+    populate_private_ip();
+});
+
+function populate_private_ip() {
+    var sdval = $('#vm_data_security_domain').val();
+    $('#vm_data_private_ip').empty();
+
+    var _url = "{{=URL('get_private_ip_list')}}";
+    if(sdval.trim() != '')
+    {
+        jQuery.post(_url, {keywords:sdval},
+            function(result){
+                if(result != ''){
+                     $("#vm_data_private_ip").append(result);
+                }
+            }
+        );
+    }
+}
+
+function populate_public_ip() {
+    $('#vm_data_public_ip').empty();
+    jQuery.post("{{=URL('get_public_ip_list')}}",
+        function(result){
+            if(result != ''){
+                 $("#vm_data_public_ip").append(result);
+            }
+        }
+    );
+}
 
 function verify_requester() {
 	jQuery('.flash').hide().html('');

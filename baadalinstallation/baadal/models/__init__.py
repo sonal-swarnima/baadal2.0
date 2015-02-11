@@ -33,7 +33,7 @@ __all__ =['add_collaborators', 'add_faculty_approver', 'add_orphan_vm', 'add_pri
           'send_shutdown_email_to_all', 'set_configuration_elem', 'specify_user_roles', 'update_host_status', 
           'update_snapshot_flag', 'update_task_ignore', 'update_task_retry', 'update_vm_lock', 'validate_user', 
           'verify_vm_request', 'vm_has_snapshots', 'check_vm_template_limit', 'get_my_saved_templates',
-          'check_delete_template']
+          'check_delete_template', 'get_private_ip_xml', 'get_public_ip_xml']
 
 if 0:
     from admin_model import *

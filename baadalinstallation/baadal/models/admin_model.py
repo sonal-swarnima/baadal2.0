@@ -106,7 +106,7 @@ def private_ip_on_delete(private_ip_pool_id):
 def get_private_ip_ref_link(row):
     """Returns link to VM settings page if IP is assigned to a VM
     or to host details page if IP is assigned to a Host"""
-    vm_data = db.private_ip_pool(private_ip=row.id)
+    vm_data = db.vm_data(private_ip=row.id)
     host_data = db.host(host_ip=row.id)
     if vm_data:
         return A(vm_data.vm_name, _href=URL(r=request, c='user',f='settings', args=vm_data.id))
@@ -192,6 +192,47 @@ def add_private_ip(ip_pool_id):
 
         create_dhcp_entry(None, mac_address, private_ip_pool.private_ip)
 
+
+def get_available_private_ip(security_domain_id):
+    vlans = db(db.security_domain.id == security_domain_id)._select(db.security_domain.vlan)
+    private_ip_pool = db((~db.private_ip_pool.id.belongs(db(db.vm_data.private_ip != None)._select(db.vm_data.private_ip))) 
+                                 & (~db.private_ip_pool.id.belongs(db(db.host.host_ip != None)._select(db.host.host_ip))) 
+                                 & (db.private_ip_pool.vlan.belongs(vlans))).select(db.private_ip_pool.ALL, orderby=db.private_ip_pool.private_ip)
+
+    return private_ip_pool if private_ip_pool else None
+    
+def get_private_ip_xml(security_domain_id):
+    
+    result = ""
+
+    if (security_domain_id != None and security_domain_id.strip() != ''):
+        private_ip_pool =  get_available_private_ip(int(security_domain_id))
+        if private_ip_pool:
+            result += "<option value=''>Random</option>"
+            for private_ip in private_ip_pool:
+                result += "<option value='" + str(private_ip.id) + "'>" + private_ip.private_ip + "</option>"
+
+    return XML(result)    
+
+def get_available_public_ip():
+    public_ip_pool = db((~db.public_ip_pool.id.belongs(db(db.vm_data.public_ip != None)._select(db.vm_data.public_ip))) 
+                              & (~db.public_ip_pool.id.belongs(db(db.host.public_ip != None)._select(db.host.public_ip)))
+                              & (db.public_ip_pool.is_active == True)) \
+                            .select(db.public_ip_pool.ALL, orderby=db.public_ip_pool.public_ip)
+
+    return public_ip_pool if public_ip_pool else None
+    
+def get_public_ip_xml():
+    
+    result = "<option value=''>Not Assigned</option>"
+
+    public_ip_pool =  get_available_public_ip()
+    if public_ip_pool:
+        result += "<option value='-1'>Random</option>"
+        for public_ip in public_ip_pool:
+                result += "<option value='" + str(public_ip.id) + "'>" + public_ip.public_ip + "</option>"
+
+    return XML(result)    
 
 def get_org_visibility(row):
     sec_domain = db.security_domain[row.id]
@@ -864,42 +905,6 @@ def launch_vm_image_validation(form):
     if not image_present:
         form.errors.vm_identity = vm_image_name + ' not found'
     
-    if form.vars.private_ip.strip() != '':
-        #Verify if public IP is available
-        if is_valid_ipv4(form.vars.private_ip):
-            # Verify if IP valid in given security domain
-            security_domain = db.security_domain[form.vars.security_domain]
-            sd_ip_range = security_domain.vlan.vlan_addr
-            vlan_ip_prefix = sd_ip_range[:sd_ip_range.rindex('.')+1]
-            
-            if not form.vars.private_ip.startswith(vlan_ip_prefix):
-                form.errors.private_ip = 'Private IP is not valid for given security domain'
-            else:
-                # Check if IP is already assigned
-                private_ip_info = db.private_ip_pool(private_ip = form.vars.private_ip)
-                if private_ip_info:
-                    if private_ip_info.vm_id != None:
-                        form.errors.private_ip = 'Private IP is not available'
-
-        else:
-            form.errors.private_ip = 'Private IP is not valid'
-    else:
-        form.vars.private_ip = None
-
-    if form.vars.public_ip != PUBLIC_IP_NOT_ASSIGNED:
-        #Check if Valid IP
-        if is_valid_ipv4(form.vars.public_ip):
-            public_ip_info = db.public_ip_pool(public_ip = form.vars.public_ip)
-            if public_ip_info:
-                if public_ip_info.vm_id != None:
-                    form.errors.public_ip = 'Public IP is not available'
-            else:
-                form.errors.public_ip = 'Public IP is not configured'
-        elif form.vars.public_ip == '':
-            form.vars.public_ip = None
-        else:
-            form.errors.public_ip = 'Public IP is not valid'
-
     if not form.errors:
         vm_users = request.post_vars.vm_users
         user_list = []
@@ -934,16 +939,7 @@ def exec_launch_vm_image(vm_id, vm_users, extra_disk_list):
     #Make entry into user_vm_map
     add_vm_users(vm_id, vm_details.requester_id, vm_details.owner_id, vm_users)
 
-    if vm_details.private_ip != None:
-        private_ip_info = db.private_ip_pool(private_ip = vm_details.private_ip)
-        if not private_ip_info:
-            vlan_id = db.security_domain[vm_details.security_domain].vlan.id
-            ip_pool_id = db.private_ip_pool.insert(private_ip=vm_details.private_ip, vlan=vlan_id)
-            #Add DHCP entry for private IP
-            add_private_ip(ip_pool_id)
-    
     for extra_disk in extra_disk_list:
-
         db.attached_disks.insert(vm_id = vm_details.id,
                                  datastore_id = vm_details.datastore_id,
                                  capacity = 0,

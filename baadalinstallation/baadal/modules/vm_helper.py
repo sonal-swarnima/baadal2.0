@@ -1337,12 +1337,11 @@ def launch_existing_vm_image(vm_details):
     vm_properties = {}
     vm_properties['ram'] = vm_details.RAM
     vm_properties['vcpus'] = vm_details.vCPU
-    vm_properties['mac_addr'] = vm_details.mac_addr
     vm_properties['security_domain'] = vm_details.security_domain
     
     #If Private IP was already chosen previously and DHCP entry is done
     if vm_details.private_ip != None:
-        private_ip_info = current.db.private_ip_pool(private_ip = vm_details.private_ip)
+        private_ip_info = current.db.private_ip_pool[vm_details.private_ip]
         if private_ip_info:
             vm_properties['private_ip'] = private_ip_info.private_ip
             vm_properties['mac_addr'] = private_ip_info.mac_addr

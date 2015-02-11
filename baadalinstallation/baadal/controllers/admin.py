@@ -573,6 +573,18 @@ def launch_vm_image():
 
 @check_moderator
 @handle_exception       
+def get_private_ip_list():
+    security_domain_id = request.vars['keywords']
+    return get_private_ip_xml(security_domain_id)
+
+
+@check_moderator
+@handle_exception       
+def get_public_ip_list():
+    return get_public_ip_xml()
+
+@check_moderator
+@handle_exception       
 def verify_extra_disk():
     vm_image_name = request.vars['vm_image_name']
     disk_name = request.vars['disk_name']

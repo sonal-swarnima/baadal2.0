@@ -214,6 +214,8 @@ db.define_table('vm_data',
     Field('delete_warning_date', 'datetime'))
 
 db.vm_data.purpose.widget=SQLFORM.widgets.text.widget
+db.vm_data.public_ip.requires = IS_EMPTY_OR(IS_IN_DB(db, 'public_ip_pool.id', '%(public_ip)s', zero=None))
+db.vm_data.private_ip.requires = IS_EMPTY_OR(IS_IN_DB(db, 'private_ip_pool.id', '%(private_ip)s', zero=None))
 
 db.define_table('request_queue',
     Field('vm_name', 'string', length = 100, notnull = True, label='VM Name'),
