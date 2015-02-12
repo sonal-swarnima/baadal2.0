@@ -1889,6 +1889,8 @@ def performance(vm_info,my_logger,vm_hdd):
     
     perf_root = xml_connect_perf()
     my_logger.debug(len(perf_root))
+    change_vm_paswd(vm_ip)
+    
     for i in xrange(0,len(perf_root)):
         my_logger.debug(i)
         if (cpu==perf_root[i].get("cpu")) & (ram==perf_root[i].get("ram")) & (hdd==perf_root[i].get("hdd")):
@@ -1925,7 +1927,7 @@ def check_cpu_performance(upper_limit,lower_limit,vm_ip,my_logger):
     time.sleep(300)
     import os 
     
-    change_vm_paswd(vm_ip)
+    
     ssh.connect(vm_ip,username="root", password="baadal123")
     my_logger.debug( "checking CPU performance ....")
     
@@ -2052,31 +2054,25 @@ def check_net_performance(upper_limit,lower_limit,vm_ip,my_logger):
 
 
 def check_memr_performance(upper_limit,lower_limit,vm_ip,my_logger):
-    ssh.connect(vm_ip,username="root", password="baadal123")
     my_logger.debug( "checking memory read performance ....")
-    stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=read prepare")
-    stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=read run | grep 'total time:' | cut  -d  ':'  -f   '2'")
-    data=stdout.readlines()
-    print data
+    command="sysbench --test=mutex --memory-total-size=1G --memory-oper=read prepare | sysbench --test=mutex --memory-total-size=1G --memory-oper=read run | grep 'total time:' | cut  -d  ':'  -f   '2'"
+    data=execute_remote_cmd(vm_ip,"root",command, "baadal123",my_logger, ret_list = False)
     my_logger.debug(data)
     memr_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(memr_output))
-
     if lower_limit <= float(memr_output) <= upper_limit:
 	my_logger.debug( "Memory Read performance is upto the mark!!!!!!!!!!")
     else:
 	my_logger.debug( "Memory Read performance is not upto the mark!!!!!!!!!!")
-    stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=read cleanup")
-    ssh.close()
+    command="sysbench --test=mutex --memory-total-size=1G --memory-oper=read cleanup"
+    execute_remote_cmd(vm_ip,"root",command, "baadal123",my_logger, ret_list = False)
     return
 
 def check_memw_performance(upper_limit,lower_limit,vm_ip,my_logger):
-    ssh.connect(vm_ip,username="root", password="baadal123")
     my_logger.debug( "checking memory write performance ....")
-    stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=write prepare")
-    stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=write run | grep 'total time:' | cut  -d  ':'  -f   '2'")
-    data=stdout.readlines()
-    print data
+    command="sysbench --test=mutex --memory-total-size=1G --memory-oper=write prepare | sysbench --test=mutex --memory-total-size=1G --memory-oper=write run | grep 'total time:' | cut  -d  ':'  -f   '2'"
+    data=execute_remote_cmd(vm_ip,"root",command, "baadal123",my_logger, ret_list = False)
+    my_logger.debug(data)
     memw_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(memw_output))
 
@@ -2084,8 +2080,8 @@ def check_memw_performance(upper_limit,lower_limit,vm_ip,my_logger):
 	my_logger.debug( "Memroy Write performance is upto the mark!!!!!!!!!!")
     else:
 	my_logger.debug( "Memroy Write performance is not upto the mark!!!!!!!!!!")
-    stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=write cleanup")
-    ssh.close()
+    command="sysbench --test=mutex --memory-total-size=1G --memory-oper=write cleanup"
+    execute_remote_cmd(vm_ip,"root",command, "baadal123",my_logger, ret_list = False)
     return
 
 
