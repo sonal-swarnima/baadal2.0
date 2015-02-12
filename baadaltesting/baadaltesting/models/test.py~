@@ -51,7 +51,7 @@ vm_status=2
 def test_script(test_case_no,host_ip,my_logger):
     
     baadal_path="https://"+str(host_ip)+"/baadal"
-    my_logger.debug("test case no is : "+ str(test_case_no))
+    my_logger.debug("Teesting has been started and test case no is : "+ str(test_case_no))
     baadal_db=db_connection(host_ip,my_logger)
     my_logger.debug(baadal_db)    
     root = xml_connect()
@@ -72,11 +72,11 @@ def test_script(test_case_no,host_ip,my_logger):
             	image=0
             	for k in xrange(0,len(root[i][j])):
                     if vm_status>1:
-                        field_type=root[i][j][k].get("type")
+                        
                         xml_parent=root[i]
                         xml_child=root[i][j]
                         xml_sub_child=root[i][j][k]
-                        my_logger.debug("field type is : " + str(field_type))
+                        
                     	if field_type=="input": #checking for text fields
                         	vm_name1=isInput(driver,xml_sub_child,my_logger)
                       
@@ -177,13 +177,13 @@ def other_operation_on_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger
 	
         print_result(field_text,result,xml_child,my_logger)
     else:
-        my_logger.debug(xml_child.get("value") + ":This VM has been deleted and its in pending task table,So this functionality has been disabled !!!!!!") 
+        my_logger.debug(":This VM has been deleted and its in pending task table,So this functionality has been disabled !!!!!!") 
 	limit=0	
     return limit
 
 #selecting operation to be perform    
 def click_on_operation(driver,xml_sub_child,xml_child,vm_name,vm_id,owner_name,baadal_db,my_logger): 
-    my_logger.debug("inside click on operation")   
+    my_logger.debug("Clicking on operation perform on a VM")   
     op_name=xml_sub_child.get("op") 
     my_logger.debug("op_name is : " + str(op_name))      
     if op_name=="user_details":
@@ -212,7 +212,7 @@ def vm_mode(xml_child,xml_sub_child,xml_parent,driver,my_logger):
         vm_id=vm_info['vm_id']
         vm_name=vm_info['vm_name']
         owner_name=vm_info['user_name']
-	
+	my_logger.debug("VM info" + str(vm_info))   
         vm_mode_op(xml_child,xml_sub_child,xml_parent,driver,vm_name,vm_id,owner_name,my_logger)
     else:
         my_logger.debug(xml_sub_child.get("print_mode"))
@@ -367,7 +367,7 @@ def get_vm_info_frm_mylist(xml_child,xml_sub_child,driver,vm_name,my_logger):
       
     else:
 	my_logger.debug("No VM exists")
-    my_logger.debug(vm_info)
+    my_logger.debug("FEtched VM info from MY VMs"+str(vm_info))
     return vm_info
 
 def get_vm_info_frm_alllist(xml_child,xml_sub_child,driver,vm_name,my_logger):
@@ -439,6 +439,7 @@ def get_vm_info_frm_alllist(xml_child,xml_sub_child,driver,vm_name,my_logger):
             c_count+=1
     else:
 	my_logger.debug("No VM exists")
+    my_logger.debug("FEtched VM info from All VMs"+str(vm_info))
     return vm_info
 
 
@@ -513,6 +514,7 @@ def get_vm_info_frm_setting(xml_child,xml_sub_child,driver,vm_name,my_logger):
     
     else:
 	    my_logger.debug("No VM exists")
+    my_logger.debug("FEtched VM info from setting page"+str(vm_info))
     return vm_info
 
 
@@ -537,11 +539,11 @@ def total_user(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
 	for user in field:
 	     vm_user_list.insert(count,user.text)
 	     count+=1
-    
+    my_logger.debug("Total user of this VM is "+ str(vm_user_list))
     return vm_user_list
 
 def select_testing_user(driver):
-    
+    my_logger.debug("Searching Baadal in ALL VMs")
     driver.find_element_by_id("search").send_keys("Baadal")
     
     return
@@ -583,7 +585,7 @@ def get_snapshot_id(driver,xml_sub_child,xml_child,vm_name,my_logger):
 	row_data=row.text.split()
         if "User"==row_data[0]:
 	    snap_id=row.get_attribute("id")
-	    
+    my_logger.debug("Snapshot id for this VM is "+ str(snap_id))    
     return snap_id
 #Checking data in task table
 
@@ -628,7 +630,7 @@ def get_user_id(driver,xml_sub_child,xml_child,vm_name,owner_name,my_logger):
 	        user_id=col.get_attribute("id")
 	    
 	        break
-	    
+    my_logger.debug("User id for this VM is "+ str(user_id))        
     return user_id
 
 
@@ -637,6 +639,7 @@ def get_user_id(driver,xml_sub_child,xml_child,vm_name,owner_name,my_logger):
 #performing add_user operation on vm
 def op_user(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
     op_name=xml_sub_child.get("op")
+    my_logger.debug("Performing operation on user field........")    
     path="//a[@title='Add User to VM']"
 
     limit=0
@@ -659,7 +662,7 @@ def op_user(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
 
 def op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
     limit=0
-
+    my_logger.debug("Deleting testing user VM....")  
     op_name=xml_sub_child.get("op")
     path=xml_sub_child.get("title")
     if isTablePresent(driver,xml_child,path,my_logger):
@@ -671,12 +674,13 @@ def op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
     	print_result(field_text,result,xml_child,my_logger)
 
     else:
-	my_logger.debug("This functionality is disabled")
+	my_logger.debug("This functionality is disabled as the VM has been deleted!!!!!!!!!!")
 
     return limit
 
 #add additional user to a VM
 def add_user(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
+    my_logger.debug("Adding user for this VM........")
     isInput_add(driver, xml_sub_child,xml_child,my_logger)
     value=xml_sub_child.get("add_submit")
     isButton_add(driver, xml_sub_child,value,xml_child,my_logger)
@@ -772,7 +776,7 @@ def total_snap(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name,my_logger):
         else:
 	     total=total_user_snap
 
-    print total
+    my_logger.debug("Total snapshot for this VM is :" + str(total))
     return total
 
 #printing result correspondence to snapshot
@@ -813,6 +817,7 @@ def op_attach_disk(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
 	my_logger.debug("No element exist")
 
 def op_migrate_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
+    my_logger.debug("Performing Migrate operation on this VM..............")
     op_name=xml_sub_child.get("op")
     limit=0
     op_name=xml_sub_child.get("op")
@@ -848,7 +853,7 @@ def op_migrate_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
 def op_del_user_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,owner_name,baadal_db,my_logger):
     limit=0
     op_name=xml_sub_child.get("op")
-
+    my_logger.debug("Deleting addtional user from user list on setting page........")
     path=xml_sub_child.get("xpath_user")
     if isElementPresent(driver,xml_child,path,my_logger):
         user_id=get_user_id(driver,xml_sub_child,xml_child,vm_name,owner_name)
@@ -872,7 +877,7 @@ def op_del_user_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,owner_name,baada
 
 def graph_test(driver,vm_ip,vm_name,xml_sub_child,xml_child,my_logger):
 #Checking memory utilizations
-    
+    my_logger.debug("Performing graph testing by fetching rrd data from controller before executing program on VM.........")
     ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))
     
     #vm_full_name='IITD_badalUFA_'+ str(vm_name) + '.rrd'
@@ -884,11 +889,15 @@ def graph_test(driver,vm_ip,vm_name,xml_sub_child,xml_child,my_logger):
 
     ini_data=str(initial_data[2])
     init_data=ini_data.split()
+    my_logger.debug("Fetched data from rrd before performing operations:"+ str(init_data))
     #os.system('sshpass -p "baadal123" scp -r root@'+str(vm_ip)+':/home /home/jyoti/Desktop/data')
     ssh.connect("10.237.20.221", username="root", password="baadal123")
+    my_logger.debug("Executing program on graph testing VM.....")
     stdin, stdout, stderr =ssh.exec_command(xml_child.get("cmd_run_prgrm"))
     data=stdout.readlines()
     time.sleep(300)
+    my_logger.debug("Executed program on graph testing VM")
+    my_logger.debug("Performing graph testing by fetching rrd data from controller after executing program on VM.........")
     ssh.connect(xml_child.get("ip_add"), username=xml_child.get("usrnam"), password=xml_child.get("password"))
     #stdin, stdout, stderr =ssh.exec_command('cd /mnt/datastore/vm_rrds/;rrdtool fetch' +str(vm_full_name)+'.rrd MIN -s -600s -e now')
     stdin, stdout, stderr =ssh.exec_command('cd /mnt/datastore/vm_rrds/;rrdtool fetch IITD_sjyoti_graph_testing.rrd MIN -s -600s -e now')
@@ -896,6 +905,7 @@ def graph_test(driver,vm_ip,vm_name,xml_sub_child,xml_child,my_logger):
    
     fin_data=str(final_data[2])
     finl_data=fin_data.split()
+    my_logger.debug("Fetched data from rrd after performing operations:"+ str(finl_data))
     print_graph_result(finl_data,init_data,xml_child,my_logger)
     
     
@@ -926,20 +936,24 @@ def print_graph_result(finl_data,init_data,xml_child,my_logger):
 		print "yes"'''
 	print i
         if  i==1:
-	    print "CPU"
+	    my_logger.debug("Checking data for CPU performance")
+            
             check_type_of_graph(i,diff,xml_child,fin_data,my_logger)
             break
         if i==2:
+            my_logger.debug("Checking data for RAM performance")
             check_type_of_graph(i,diff,xml_child,fin_data,my_logger)
-	    print "RAM"
+	    
             break
         if i==4| i==3:
+	    my_logger.debug("Checking data for DISK performance")
             check_type_of_graph(i,diff,xml_child,fin_data,my_logger)
-	    print "DISK"
+	    
             break
         if i==5 | i==6:
+            my_logger.debug("Checking data for NETWORK performance")
             check_type_of_graph(i,diff,xml_child,fin_data,my_logger)
-     	    print "NETWORK"
+     	    
             break     
             
     return
@@ -1040,6 +1054,7 @@ def open_error_page(driver,xml_parent,xml_child,row_count,my_logger):
         driver.find_element_by_link_text("CLOSE WINDOW").click()
     else:
         error_message="None"
+    my_logger.debug("Eroor message is :" + str(error_message))
     return error_message
 
 	
@@ -1082,17 +1097,6 @@ def org_task_status(status,xml_child,my_logger):
         result=task_status[2]
     return result
 
-#getting snapshot id of a VM
-
-def get_snapshot_id(driver,xml_sub_child,xml_child,vm_name,baadal_db,my_logger):
-    query_result=execute_query(baadal_db,xml_sub_child.get("query_snap_id"),(str(vm_name))).fetchone()
-    baadal_db.commit()
-    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_snap"))
-    for t in field:
-        if str(query_result[1]) in t.text:
-            snap_id=query_result[0]
-    return snap_id
-
 
 
 #checking whether username is in vm_users table or not
@@ -1124,7 +1128,7 @@ vm_mode_type=['vm_running_Setting_intgrtn','vm_paused_Setting_integrtn','vm_shut
 
 #checking whether user access removed for a vm or not
 def check_delete_user(driver,user_id,op_name,xml_child,xml_sub_child,my_logger):
-    
+    my_logger.debug("Checking whether user has been deleted or not... ")
     path="//a[@id='"+str(user_id)+"']"
     if isTablePresent(driver,xml_child,path,my_logger):
 	    my_logger.debug(xml_child.get("value")  +"User access is eradicated and its working ")
@@ -1464,14 +1468,14 @@ def isSanityCheck(driver, xml_parent, xml_child, xml_sub_child,baadal_db,my_logg
    
 
 def maintain_idompotency(driver,xml_sub_child,xml_child,my_logger):
-    #execute_query("FLUSH QUERY CACHE")
+    my_logger.debug("Deleting VM for maintaing idompotency.......")
     deletevm_from_pending_request_table(driver,xml_sub_child,xml_child,my_logger)
     delete_vm_from_allvms(driver,xml_sub_child,xml_child,my_logger)
     return
 
 
 def deletevm_from_pending_request_table(driver,xml_sub_child,xml_child,my_logger):
-    
+    my_logger.debug("Deleting VM from pending request table.............")
     data1=[]
     path_col="//table[@id='sortTable1']/tbody/tr/td"
     path_row="//table[@id='sortTable1']/tbody/tr"
@@ -1515,7 +1519,7 @@ def deletevm_from_pending_request_table(driver,xml_sub_child,xml_child,my_logger
 		select_row=0
 	c_count+=1    
     for vm_id in vm_id_list:
-        
+        my_logger.debug("DEleting VM having id" :str(vm_id))
         driver.refresh()
 	path="//a[@id='"+str(vm_id)+"']"
 	if isElementPresent(driver,xml_child,path,my_logger):	    
@@ -1526,6 +1530,7 @@ def deletevm_from_pending_request_table(driver,xml_sub_child,xml_child,my_logger
 
 def delete_vm_from_allvms(driver,xml_sub_child,xml_child):
     vm_exist=0
+    my_logger.debug("Deleting VM from all VMs..........")
     driver.find_element_by_link_text("All VMs").click()
     path="//table[@id='listallvm']/tbody/tr/td"
     counth=0
@@ -1670,19 +1675,23 @@ def vm_check_host(driver,xml_child,xml_sub_child,xml_parent,vm_name,my_logger):
     my_logger.debug(min_host)
     my_logger.debug(vm_name)
     vm_info=get_vm_info_frm_mylist(xml_child,xml_sub_child,driver,vm_name,my_logger)
-    vm_id=vm_info['vm_id']
+    
     vm_host=vm_info['host']
     my_logger.debug(vm_info)
     vm_ip=vm_info['public_ip']
     my_logger.debug(vm_host)
     my_logger.debug(min_host)
+    vm_id=vm_info['vm_id']
+    click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
+    vm_data=get_vm_info_frm_setting(xml_child,xml_sub_child,driver,vm_name,my_logger)
+    vm_hdd=vm_data['hdd']
     if str(vm_host)==str(min_host):
       my_logger.debug(vm_host)
       my_logger.debug("VM already running on host having minimum utilizations..No need to migrate this VM..")
     else :
       my_logger.debug("Checking for min host")
       migrate_on_specific_host_test(driver,xml_sub_child,xml_child,xml_parent,vm_name,vm_id, min_host,my_logger)
-    performance(vm_info,my_logger)
+    performance(vm_info,my_logger,vm_hdd)
     return
 
 
@@ -1846,7 +1855,7 @@ def migrate_on_specific_host_test(driver,xml_sub_child,xml_child,xml_parent,vm_n
     return limit'''
 
 
-def convert_into_float(data):
+def convert_into_float(data,my_logger):
     logger.debug(data)
     m=str(data)
     q=m.replace("['",' ')    
@@ -1854,19 +1863,19 @@ def convert_into_float(data):
     a=qa.strip()
     l=len(a)
     output=a[:(l-3)]    
-    logger.debug(output)
+    my_logger.debug(output)
     return output
 
 
 
-def performance(vm_info,my_logger):
-    my_logger.debug("inside performance")
-    my_logger.debug(vm_info)
+def performance(vm_info,my_logger,vm_hdd):
+    my_logger.debug("Checking performance.....")
+    my_logger.debug("VM info:"+ str(vm_info))
     vm_ip=vm_info['public_ip']
-    hdd="80 GB"
+    hdd=vm_hdd
     ram=vm_info['ram']
     cpu=vm_info['vcpu']
-    my_logger.debug("Checking performance.....")
+    
     perf_root = xml_connect_perf()
     my_logger.debug(len(perf_root))
     for i in xrange(0,len(perf_root)):
@@ -1921,7 +1930,7 @@ def check_cpu_performance(upper_limit,lower_limit,vm_ip,my_logger):
     data=stdout.readlines()
     
     
-    cpu_output=convert_into_float(data)
+    cpu_output=convert_into_float(data,my_logger)
 
     my_logger.debug( "time to run"+ str(cpu_output))
 
@@ -1942,7 +1951,7 @@ def check_seqr_performance(upper_limit,lower_limit,vm_ip,my_logger):
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=seqrd prepare")
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=seqrd run | grep 'total time:' | cut  -d  ':'  -f   '2'")
     data=stdout.readlines()
-    fseqr_output=convert_into_float(data)
+    fseqr_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(fseqr_output))
 
     if lower_limit <= float(fseqr_output) <= upper_limit:
@@ -1964,7 +1973,7 @@ def check_seqw_performance(upper_limit,lower_limit,vm_ip,my_logger):
     time.sleep(10)
     data=stdout.readlines()
     
-    fseqrd_output=convert_into_float(data)
+    fseqrd_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(fseqrd_output))
 
     if lower_limit <= float(fseqrd_output) <= upper_limit:
@@ -1983,7 +1992,7 @@ def check_ranr_performance(upper_limit,lower_limit,vm_ip,my_logger):
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=rndrd run | grep 'total time:' | cut  -d  ':'  -f   '2'")
     data=stdout.readlines()
     
-    frndrd_output=convert_into_float(data)
+    frndrd_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(frndrd_output))
     if lower_limit <= float(frndrd_output) <= upper_limit:
 	my_logger.debug( "File Random Read performance is upto the mark!!!!!!!!!!")
@@ -2001,7 +2010,7 @@ def check_ranw_performance(upper_limit,lower_limit,vm_ip,my_logger):
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=rndwr run | grep 'total time:' | cut  -d  ':'  -f   '2'")
     data=stdout.readlines()
     
-    frndwr_output=convert_into_float(data)
+    frndwr_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(frndwr_output))
 
     if lower_limit <= float(frndwr_output) <= upper_limit:
@@ -2020,7 +2029,7 @@ def check_net_performance(upper_limit,lower_limit,vm_ip,my_logger):
     stdin, stdout, stderr =ssh.exec_command('netperf | grep "^ " | tr -s " "  | cut -f"6" -d" "')
     data=stdout.readlines()
     print data
-    net_output=convert_into_float(data)
+    net_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(net_output))
     if lower_limit <= float(net_output) <= upper_limit:
 	my_logger.debug( "Network performance is upto the mark!!!!!!!!!!")
@@ -2039,7 +2048,7 @@ def check_memr_performance(upper_limit,lower_limit,vm_ip,my_logger):
     data=stdout.readlines()
     print data
     my_logger.debug(data)
-    memr_output=convert_into_float(data)
+    memr_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(memr_output))
 
     if lower_limit <= float(memr_output) <= upper_limit:
@@ -2057,7 +2066,7 @@ def check_memw_performance(upper_limit,lower_limit,vm_ip,my_logger):
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=write run | grep 'total time:' | cut  -d  ':'  -f   '2'")
     data=stdout.readlines()
     print data
-    memw_output=convert_into_float(data)
+    memw_output=convert_into_float(data,my_logger)
     my_logger.debug( "time to run"+ str(memw_output))
 
     if lower_limit <= float(memw_output) <= upper_limit:
