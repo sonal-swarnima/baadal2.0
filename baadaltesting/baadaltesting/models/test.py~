@@ -219,6 +219,17 @@ def vm_mode(xml_child,xml_sub_child,xml_parent,driver,my_logger):
 	test_script(48)
     return
 
+
+delete_specific_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
+    my_logger.debug("Deleting VM.............")
+    driver.find_element_by_link_text("All VMs").click()
+    click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
+    op_delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
+    my_logger.debug("Deleted VM.............")
+    return
+
+
+
 def vm_list(xml_child,xml_sub_child,driver,my_logger):
     vm_info={}
     path_col="//table[@id='listallvm']/tbody/tr/td"
