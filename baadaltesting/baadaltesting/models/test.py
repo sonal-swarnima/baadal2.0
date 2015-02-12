@@ -220,7 +220,7 @@ def vm_mode(xml_child,xml_sub_child,xml_parent,driver,my_logger):
     return
 
 
-delete_specific_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
+def delete_specific_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
     my_logger.debug("Deleting VM.............")
     driver.find_element_by_link_text("All VMs").click()
     click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
