@@ -103,7 +103,7 @@ def sys_test_script(test_case_no,host_ip,my_logger):
                         elif field_type=="task_table":
                          	operation_name=xml_sub_child.text
                                 my_logger.debug("operation name is : " + str(operation_name))
-                         	vm_status1=check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)#checking for data in table
+                         	vm_status1=check_data_in_task_table(driver,xml_sub_child,xml_child,xml_parent,vm_name,operation_name,my_logger)
 			elif field_type=="wait":
                         	isWait(driver,xml_parent,xml_child,xml_sub_child,my_logger)#checking for data in table
                         elif field_type=="wol":#checking for Wake on Lan
@@ -700,10 +700,7 @@ def delete_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger):
     	driver.find_element_by_xpath(path).click()
     	click_on_dialogbox(driver)
     	click_on_dialogbox(driver)
-    	field_text=message_flash(driver,xml_sub_child,xml_child)
-    	result=message_in_db(xml_sub_child)
-    	print_result(field_text,result,xml_child)
- 
+    	field_text=message_flash(driver,xml_sub_child,xml_child,my_logger)
     else:
 	my_logger.debug("No element exist")          
 
@@ -1091,7 +1088,7 @@ def vm_list_my_vm(driver,xml_child,xml_sub_child,my_logger):
     path_row="//table[@id='myvms']/tbody/tr"
     path_header="//table[@id='myvms']/thead/tr/th"
     #path=driver.find_element_by_id("menu_user").click()
-    path=driver.find_element_by_link_text("My VMs").click()
+    #path=driver.find_element_by_link_text("My VMs").click()
     #driver.find_element_by_partial_link_text("My VMs").click()
     countc=0
     if isTablePresent(driver,xml_child,path_col,my_logger):
@@ -1267,8 +1264,8 @@ def attach_disk(driver,xml_child,xml_sub_child,baadal_db,my_logger):
     public_ip=mapping(public_ip)
     public_ip=str(public_ip)
     my_logger.debug("public ip is : " + public_ip)
-    #os.system("expect /home/nalini/Desktop/web2py/applications/baadal/test.expect yes baadal baadal123 "+ str(public_ip)+ " root exit")
-    check=execute_remote_cmd(public_ip,"root","fdisk -l | egrep 'Disk.*bytes' | awk '{ sum +=$3;} END {print sum}'", "baadal",my_logger, ret_list = False)
+    change_vm_paswd(public_ip)
+    check=execute_remote_cmd(public_ip,"root","fdisk -l | egrep 'Disk.*bytes' | awk '{ sum +=$3;} END {print sum}'", "baadal123",my_logger, ret_list = False)
     my_logger.debug("before attach request disk size is : " + str(check))
     vm_mode_operation(xml_child,xml_sub_child,driver,vm_name,vm_id,baadal_db,my_logger)
     driver.find_element_by_partial_link_text("All VMs").click()
@@ -1277,7 +1274,7 @@ def attach_disk(driver,xml_child,xml_sub_child,baadal_db,my_logger):
     my_logger.debug(op_name)
     limit=click_on_operations(driver,xml_sub_child,xml_child,vm_name,vm_id,op_name,baadal_db,my_logger)
     time.sleep(60)
-    check1=execute_remote_cmd(public_ip,"root","fdisk -l | egrep 'Disk.*bytes' | awk '{ sum +=$3;} END {print sum}'", "baadal",my_logger, ret_list = False)
+    check1=execute_remote_cmd(public_ip,"root","fdisk -l | egrep 'Disk.*bytes' | awk '{ sum +=$3;} END {print sum}'", "baadal123",my_logger, ret_list = False)
     if check == check1:
 	   my_logger.error("error occur in attach disk operation please check logs ")
            my_logger.debug("before attach request disk size is : " + str(check))
@@ -1290,7 +1287,6 @@ def attach_disk(driver,xml_child,xml_sub_child,baadal_db,my_logger):
 def live_attach_disk(driver,xml_child,xml_sub_child,baadal_db,vm_name,my_logger):
     my_logger.debug("vm name is : " + str(vm_name))
     my_logger.debug("inside live attach disk function")
-    check_create_vm(driver,xml_sub_child,xml_child,vm_name)
     data = vm_list_my_vm(driver,xml_child,xml_sub_child,my_logger) #get public ip of vm
     if data!=['', '','','']:
         vm_id=data[0][3:]
@@ -1298,25 +1294,14 @@ def live_attach_disk(driver,xml_child,xml_sub_child,baadal_db,vm_name,my_logger)
         public_ip=data[2][0:]
     public_ip=mapping(public_ip)
     public_ip=str(public_ip)
+    click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
+    vm_info=get_vm_info_frm_setting(xml_child,xml_sub_child,driver,vm_name,my_logger)
+    privous_HDD=vm_info['hdd']
+    my_logger.debug("privous_HDD is : " + str(privous_HDD))
     my_logger.debug("public ip is : " + public_ip)
-    try:
-    	ssh = paramiko.SSHClient()
-    	my_logger.debug(ssh)
-    	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    	ssh.connect(public_ip,username="root", password="baadal")
-    	my_logger.debug("connect to server")
-    	stdin, stdout,stderr=ssh.exec_command("fdisk -l | egrep 'Disk.*bytes' | awk '{ sum +=$3;} END {print sum}'")
-    	check=stdout.readlines()
-    except:
-        my_logger.error("error in ssh connection NO route to host")
-        display.stop()
-        sys.exit()  
-    my_logger.debug(check)
-    my_logger.debug(type(check))
-    check=str(check)
-    my_logger.debug(type(check))
-    my_logger.debug("before attaching a disk " + str(check))
-    ssh.close()
+    change_vm_paswd(public_ip)
+    check=execute_remote_cmd(public_ip,"root","fdisk -l | egrep 'Disk.*bytes' | awk '{ sum +=$3;} END {print sum}'", "baadal123",my_logger, ret_list = False)
+    my_logger.debug("before attach request disk size is : " + str(check))
     if check in "10.7":
        my_logger.debug("error in attached disk")
     else:
@@ -1354,10 +1339,6 @@ def clone_vm_list(driver,xml_child,xml_sub_child,vm_name,my_logger):
 		private_ip_no=count
             count+=1
         col_count=count
-        my_logger.debug("vm name no is : " + str(vm_name_no))
-        my_logger.debug("user_name_no is : " + str(user_name_no))
-        my_logger.debug("status_no is : " + str(status_no))
-        my_logger.debug("private_ip_no is : " + str(private_ip_no))
         field=driver.find_elements_by_xpath(path_col)
         for data in field:
             if c_count%col_count==vm_name_no:

@@ -425,6 +425,301 @@ def check_pendingtasks_table(driver,xml_sub_child,xml_child,vm_name,operation_na
     return data1
 
 
+def get_vm_info_frm_setting(xml_child,xml_sub_child,driver,vm_name,my_logger):
+    vm_info={}
+    path_col="//table[@id='configuration']/tbody/tr/td"
+    path_row="//table[@id='configuration']/tbody/tr"
+    path_header="//table[@id='configuration']/thead/tr/th"
+    
+    if isTablePresent(driver,xml_child,path_col,my_logger):
+        countc=0
+        c_count=0
+        r_count=0
+        select_vm=0
+	select_user=0
+        header_field=driver.find_elements_by_xpath(path_header)
+        count=0
+        for hdata in header_field:
+            if hdata.text=="Name":
+                vm_name_no=count
+            if hdata.text=="HDD":
+                hdd_no=count
+            if hdata.text=="Security Domain":
+                security_domain_no=count
+	    if hdata.text=="Private IP":
+                private_ip_no=count
+	    if hdata.text=="Public IP":
+                public_ip_no=count
+	    if hdata.text=="VCPUs":
+                vcpu_no=count
+	    if hdata.text=="Status":
+                status_no=count
+            if hdata.text=="RAM":
+                ram_no=count
+   	    if hdata.text=="Organisation":
+                organisation_no=count 
+	    if hdata.text=="Operating System":
+                operating_sys_no=count
+            count+=1
+        col_count=count
+        field=driver.find_elements_by_xpath(path_col)
+        for data in field:
+            if c_count%col_count==organisation_no:
+		organisation=data.text
+	    if c_count%col_count==operating_sys_no:
+		operating_sys=data.text
+	    if c_count%col_count==security_domain_no:
+		security_domain=data.text
+	    if c_count%col_count==hdd_no:
+		hdd=data.text
+            if c_count%col_count==status_no:
+		status=data.text
+	    if c_count%col_count==private_ip_no:
+		private_ip=data.text
+	    if c_count%col_count==public_ip_no:
+		public_ip=data.text
+	    if c_count%col_count==vcpu_no:
+		vcpu=data.text
+	    if c_count%col_count==ram_no:
+		ram=data.text
+            if (c_count%col_count==col_count-1):
+	        vm_info['security_domain']=security_domain
+                vm_info['public_ip']=public_ip
+		vm_info['status']=status
+		vm_info['private_ip']=private_ip
+		vm_info['vcpu']=vcpu
+		vm_info['ram']=ram
+                vm_info['hdd']=hdd
+		vm_info['organisation']=organisation
+		vm_info['host']=host
+		vm_info['operating_sys']=operating_sys
+            c_count+=1
+    
+    else:
+	    my_logger.debug("No VM exists")
+    return vm_info
+
+
+def get_vm_info_frm_alllist(xml_child,xml_sub_child,driver,vm_name,my_logger):
+  
+    driver.find_element_by_link_text("All VMs").click()
+    vm_info={}
+    vm_id=0
+    path_col="//table[@id='listallvm']/tbody/tr/td"
+    path_row="//table[@id='listallvm']/tbody/tr"
+    path_header="//table[@id='listallvm']/thead/tr/th"
+    
+    if isTablePresent(driver,xml_child,path_col,my_logger):
+        countc=0
+        c_count=0
+        r_count=0
+        select_vm=0
+	select_user=0
+        header_field=driver.find_elements_by_xpath(path_header)
+        count=0
+        for hdata in header_field:
+            if hdata.text=="Name":
+                vm_name_no=count
+            if hdata.text=="Owner":
+                user_name_no=count
+            if hdata.text=="Host":
+                host_no=count
+	    if hdata.text=="Private IP":
+                private_ip_no=count
+	    if hdata.text=="vCPUs":
+                vcpu_no=count
+	    if hdata.text=="Status":
+                status_no=count
+            if hdata.text=="RAM":
+                ram_no=count
+   	    if hdata.text=="Organisation":
+                organisation_no=count
+            count+=1
+        col_count=count
+        field=driver.find_elements_by_xpath(path_col)
+        for data in field:
+            if c_count%col_count==vm_name_no:
+		
+                if str(vm_name)==str(data.text):
+		    select_vm=1
+	    if c_count%col_count==user_name_no:
+		i=xml_child[0].text
+		username=usrnm_list[i]
+		
+                if str(username)==str(data.text):
+		    select_user=1
+            if c_count%col_count==host_no:
+		host=data.text
+	    if c_count%col_count==private_ip_no:
+		private_ip=data.text
+	    if c_count%col_count==vcpu_no:
+		vcpu=data.text
+	    if c_count%col_count==ram_no:
+		ram=data.text
+            if (c_count%col_count==col_count-1):
+	        if (select_vm) & (select_user):
+                    vm_id=data.get_attribute("id")
+		    vm_info['vm_id']=vm_id
+		    vm_info['private_ip']=private_ip
+		    vm_info['vcpu']=vcpu
+		    vm_info['ram']=ram
+                    vm_info['organisation']=organisation
+		    vm_info['host']=host
+		    vm_info['public_ip']=host
+            c_count+=1
+    else:
+	my_logger.debug("No VM exists")
+    return vm_info
+
+
+def get_vm_info_frm_mylist(xml_child,xml_sub_child,driver,vm_name,my_logger):
+    time.sleep(10)
+    driver.find_element_by_link_text("My VMs").click()
+    vm_info={}
+    vm_id=0
+    path_col="//table[@id='myvms']/tbody/tr/td"
+    path_row="//table[@id='myvms']/tbody/tr"
+    path_header="//table[@id='myvms']/thead/tr/th"
+    driver.refresh()
+    if isTablePresent(driver,xml_child,path_col,my_logger):
+        countc=0
+        c_count=0
+        r_count=0
+        select_vm=0
+        header_field=driver.find_elements_by_xpath(path_header)
+        count=0
+        for hdata in header_field:
+            if hdata.text=="Name":
+                vm_name_no=count
+            if hdata.text=="Owner":
+                user_name_no=count
+            if hdata.text=="Status":
+                status_no=count
+            if hdata.text=="Host":
+                host_no=count
+	    if hdata.text=="Public IP":
+                public_ip_no=count
+            if hdata.text=="Private IP":
+                private_ip_no=count
+	    if hdata.text=="vCPUs":
+                vcpu_no=count
+            if hdata.text=="RAM":
+                ram_no=count  
+            count+=1
+        col_count=count
+        field=driver.find_elements_by_xpath(path_col)
+        my_logger.debug("collected header info")
+        for data in field:
+            if c_count%col_count==vm_name_no:
+		my_logger.debug(vm_name)
+		my_logger.debug(data.text)
+                if str(vm_name)==str(data.text):
+		    select_vm=1
+		    
+            if c_count%col_count==public_ip_no:
+		public_ip=data.text
+	    if c_count%col_count==private_ip_no:
+		private_ip=data.text
+	    if c_count%col_count==status_no:
+		status=data.text
+	    if c_count%col_count==vcpu_no:
+		vcpu=data.text
+	    if c_count%col_count==ram_no:
+		ram=data.text
+	    if c_count%col_count==host_no:
+		host=data.text
+            if (c_count%col_count==col_count-1):
+	        if select_vm:
+		    my_logger.debug("VM selected!!!!!!!!")
+                    vm_id=data.get_attribute("id")
+		    vm_info['vm_id']=vm_id
+		    vm_info['public_ip']=public_ip
+		    vm_info['private_ip']=private_ip
+		    vm_info['vcpu']=vcpu
+		    vm_info['ram']=ram
+		    vm_info['host']=host
+		    vm_info['status']=status                    
+            c_count+=1
+      
+    else:
+	my_logger.debug("No VM exists")
+    my_logger.debug(vm_info)
+    return vm_info
+
+def vm_list(xml_child,xml_sub_child,driver,my_logger):
+    vm_info={}
+    path_col="//table[@id='listallvm']/tbody/tr/td"
+    path_row="//table[@id='listallvm']/tbody/tr"
+    path_header="//table[@id='listallvm']/thead/tr/th"
+    select_testing_user(driver,my_logger)
+    if isTablePresent(driver,xml_child,path_col):
+        countc=0
+        c_count=0
+        r_count=0
+        select_row=0
+        header_field=driver.find_elements_by_xpath(path_header)
+        count=0
+        for hdata in header_field:
+            if hdata.text=="Name":
+                vm_name_no=count
+            if hdata.text=="Owner":
+                user_name_no=count
+            if hdata.text=="Host":
+                host_no=count
+	    if hdata.text=="Private IP":
+                private_ip_no=count
+	    if hdata.text=="vCPUs":
+                vcpu_no=count
+	    if hdata.text=="Status":
+                status_no=count
+            if hdata.text=="RAM":
+                ram_no=count
+   	    if hdata.text=="Organisation":
+                organisation_no=count
+            count+=1
+        col_count=count
+        field=driver.find_elements_by_xpath(path_col)
+        for data in field:
+            if c_count%col_count==vm_name_no:
+                vm_name=data.text
+            if c_count%col_count==user_name_no:
+                my_logger.debug("data text" + str(data.text))
+                if data.text in username_list:
+                    user_name=data.text
+                    select_row=1
+            if c_count%col_count==status_no:
+                status=data.text
+            if c_count%col_count==host_no:
+		host=data.text
+	    if c_count%col_count==private_ip_no:
+		private_ip=data.text
+	    
+	    if c_count%col_count==vcpu_no:
+		vcpu=data.text
+	    if c_count%col_count==ram_no:
+		ram=data.text
+            if (c_count%col_count==col_count-1):
+	        if select_row:
+                    if (str(status)==xml_sub_child.get("status")):
+                        field_data=driver.find_elements_by_xpath(path_row)
+                        vm_id=data.get_attribute("id")
+			vm_info['vm_id']=vm_id
+    			vm_info['vm_name']=vm_name
+    			vm_info['user_name']=user_name
+    			vm_info['host']=host
+    			vm_info['private_ip']=private_ip
+    			vm_info['vcpu']=vcpu
+    			vm_info['ram']=ram
+                        countc+=1
+                        break
+            c_count+=1
+    if countc==0:
+        my_logger.debug("No user of testing User.Please Create a VM!!!!")
+        
+    
+    print vm_info
+    return vm_info
+
 def vm_list_all_vm(xml_child,xml_sub_child,driver,my_logger):
     my_logger.debug("Inside vm_list")
     data1=[]
@@ -489,6 +784,16 @@ def vm_list_all_vm(xml_child,xml_sub_child,driver,my_logger):
     data1.insert(2,host)
     my_logger.debug(data1)
     return data1
+
+
+
+def change_vm_paswd(vm_ip):
+    import os
+    path=os.popen('pwd').read()
+    path=path.strip('\n')
+    os.system("expect " + str(path)+ "/test.expect yes baadal baadal123 " + str(vm_ip) + " root exit")
+    os.system("exit")
+    return
 
 # Function to find VM id of a given VM with name
 def find_vm_id(driver,xml_child,xml_sub_child,vm_name1,my_logger):
@@ -957,7 +1262,21 @@ def check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logge
     return task_value
 
 
+#Checking data in task table
 
+def check_data_in_task_table(driver,xml_sub_child,xml_child,xml_parent,vm_name,operation_name,my_logger):
+    my_logger.debug("Checking data in task table......")
+    value=0
+    driver.find_element_by_link_text("Tasks").click()
+    task_value=check_vm_task(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)
+    driver.find_element_by_partial_link_text("Pending Tasks").click()
+    task_n_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)
+    my_logger.debug("Before operations:"+str(task_value))
+    my_logger.debug("After operations:"+str(task_n_value))
+    if task_n_value!=[]:
+        value=compare_task_table(driver,xml_sub_child,xml_child,xml_parent,vm_name,operation_name,task_value,task_n_value,my_logger)
+    my_logger.debug("Checked data in task table......")
+    return value
 
 ############################################################################################################################################################################################################
 
