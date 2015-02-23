@@ -174,14 +174,14 @@ def find_new_host(RAM, vCPU):
 
         if((( host_ram_after_200_percent_overcommitment - used_ram) >= RAM) and ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vCPU) and (vCPU <= host['CPUs'])):
             selected_hosts.append(host)
-            hosts.remove(host)
-            count = count-1
-        else:
-            hosts.remove(host)
+            count = count -1
+
+        hosts.remove(host)
+    
     if selected_hosts:
-            #Sort selected host list by Ram first then Cpu
-            selected_host = selected_hosts.sort(key=lambda k: k['RAM'])[0] 
-            return selected_host['id'] 
+        #Sort selected host list by Ram first then Cpu
+        selected_hosts.sort(key=lambda k: k['RAM'])[0] 
+        return selected_hosts[0]['id'] 
     #If no suitable host found
     raise Exception("No active host is available for a new vm.")
     
@@ -1286,7 +1286,7 @@ def attach_extra_disk(parameters):
     logger.debug(str(vm_details))
 
     try:
-        if (serve_extra_disk_request(vm_details, disk_size, vm_details.host_id.host_ip)):
+        if (serve_extra_disk_request(vm_details, disk_size, vm_details.host_id.host_ip.private_ip)):
             current.db(current.db.vm_data.id == vmid).update(extra_HDD = vm_details.extra_HDD + disk_size)
             message = "Attached extra disk successfully"
             logger.debug(message)
@@ -1369,7 +1369,7 @@ def launch_existing_vm_image(vm_details):
         attached_disks = current.db((current.db.attached_disks.vm_id == vm_details.id)).select()
         if attached_disks:
             #Extra disk to be attached to the VM
-            host_ip = current.db.host[vm_properties['host']].host_ip
+            host_ip = current.db.host[vm_properties['host']].host_ip.private_ip
             disk_counter = 1
             for attached_disk in attached_disks:
                 disk_size = attach_disk(vm_details, attached_disk.attached_disk_name, host_ip, disk_counter, True)
