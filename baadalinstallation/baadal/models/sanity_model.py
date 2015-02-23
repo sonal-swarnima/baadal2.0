@@ -63,7 +63,7 @@ def check_vm_sanity(host_id = 0):
         try:
             logger.info('Starting sanity check for host %s' %(host.host_name))
             #Get list of the domains(running and not running) on the hypervisor
-            domains = get_host_domains(host.host_ip)
+            domains = get_host_domains(host.host_ip.private_ip)
             for dom in domains:
                 try:
                     domain_name = dom.name()
@@ -140,7 +140,8 @@ def check_vm_sanity(host_id = 0):
 def add_orphan_vm(vm_name, host_id):
 
     host_details = db.host[host_id]
-    connection_object = libvirt.openReadOnly("qemu+ssh://root@" + host_details.host_ip + "/system")
+    host_ip = host_details.host_ip.private_ip
+    connection_object = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
     domain = connection_object.lookupByName(vm_name)
     vm_state = domain.info()[0]
     vm_status = vm_state_map[vm_state]    
@@ -169,7 +170,7 @@ def add_orphan_vm(vm_name, host_id):
     template_file = template_elem.attrib['file']
     
     command = "qemu-img info " + template_file + " | grep 'virtual size'"
-    ret = execute_remote_cmd(host_details.host_ip, 'root', command) # Returns e.g. virtual size: 40G (42949672960 bytes)
+    ret = execute_remote_cmd(host_ip, 'root', command) # Returns e.g. virtual size: 40G (42949672960 bytes)
     hdd = int(ret[ret.index(':')+1:ret.index('G ')].strip())
 
     security_domain_row = db.security_domain(vlan=ip_addr['vlan'])
@@ -217,7 +218,7 @@ def check_vm_snapshot_sanity(vm_id):
     vm_data = db.vm_data[vm_id]
     snapshot_check = []
     try:
-        conn = libvirt.openReadOnly('qemu+ssh://root@'+vm_data.host_id.host_ip+'/system')
+        conn = libvirt.openReadOnly('qemu+ssh://root@'+vm_data.host_id.host_ip.private_ip+'/system')
         domain = conn.lookupByName(vm_data.vm_identity)
         
         dom_snapshot_names = domain.snapshotListNames(0)
@@ -257,7 +258,7 @@ def delete_orphan_snapshot(domain_name, snapshot_name):
     logger.debug('Deleting orphan snapshot %s of VM %s' %(snapshot_name, domain_name))
     vm_data = db(db.vm_data.vm_identity == domain_name).select().first()
 
-    conn = libvirt.open('qemu+ssh://root@'+vm_data.host_id.host_ip+'/system')
+    conn = libvirt.open('qemu+ssh://root@'+vm_data.host_id.host_ip.private_ip+'/system')
     domain = conn.lookupByName(vm_data.vm_identity)
     
     snapshot = domain.snapshotLookupByName(snapshot_name, 0)        

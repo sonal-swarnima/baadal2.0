@@ -391,27 +391,27 @@ def overload_memory():
     file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
     file_path = file_path_row.value
     logger.debug(type(file_path))
-    host_ips_rows=db(db.host.status==1).select(db.host.host_ip)
+    host_ips_rows = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     logger.debug(host_ips_rows)
 
     command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
     for host_ip_row in host_ips_rows:
         logger.debug("overloading memory of")
         logger.debug(host_ip_row)
-        logger.debug(type(host_ip_row['host_ip']))
+        logger.debug(type(host_ip_row['private_ip']))
         # ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1)
-        command1 = 'scp '+ str(file_path) +'/memhog root@'+ str(host_ip_row['host_ip']) +':/'
+        command1 = 'scp '+ str(file_path) +'/memhog root@'+ str(host_ip_row['private_ip']) +':/'
         logger.debug('executing' + command1) 
         ret = os.system(command1)
         logger.debug('os.system return value' + str(ret))
-        ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command2)
+        ret = execute_remote_cmd(host_ip_row['private_ip'], 'root', command2)
         logger.debug(ret)
     logger.debug("Completed overload memory task")
   
 #host networking graph
 def host_networking():
     logger.debug("collecting host networking data")
-    active_host_list= db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
+    active_host_list= db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     active_host_name=db(db.host.status == HOST_STATUS_UP).select(db.host.host_name)
     logger.debug( "active_host_list:" + str(active_host_list))
     logger.debug( "active_host_name:" + str(active_host_name))
@@ -419,7 +419,7 @@ def host_networking():
     host_name_list=[]
     host_ip_list=[]
     for i in xrange(0,active_host_no):	
-        host_ip_list.append(active_host_list[i].host_ip)
+        host_ip_list.append(active_host_list[i].private_ip)
         host_name_list.append(active_host_name[i].host_name)
     logger.debug( host_ip_list)
     logger.debug( host_name_list)
@@ -523,17 +523,17 @@ vm_scheduler.queue_task('networking_host',
 
 
 
-active_host_list = db(db.host.status == HOST_STATUS_UP).select(db.host.host_ip)
+active_host_list = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
 
 for host in active_host_list:
 
     vm_scheduler.queue_task(TASK_RRD, 
-                     pvars = dict(host_ip = host['host_ip']),
+                     pvars = dict(host_ip = host['private_ip']),
                      repeats = 0, # run indefinitely
                      start_time = request.now, 
                      period = 5 * MINUTES, # every 5 minutes
                      timeout = 5 * MINUTES,
-                     uuid = UUID_VM_UTIL_RRD + "-" + str(host['host_ip']),
+                     uuid = UUID_VM_UTIL_RRD + "-" + str(host['private_ip']),
                     group_name = 'vm_rrd')
 
 vm_scheduler.queue_task(TASK_VNC, 

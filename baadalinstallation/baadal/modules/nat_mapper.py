@@ -245,7 +245,7 @@ def clear_all_timedout_vnc_mappings():
             command = ''
             for mapping in vnc_mappings:
                 logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping.vm_id, mapping.host_id, mapping.vnc_server_ip, mapping.vnc_source_port, mapping.vnc_destination_port))
-                host_ip = mapping.host_id.host_ip
+                host_ip = mapping.host_id.host_ip.private_ip
                 # Delete rules from iptables on NAT box
                 command += '''
                 iptables -D PREROUTING -t nat -i %s -p tcp -d %s --dport %s -j DNAT --to %s:%s
@@ -290,7 +290,7 @@ def create_vnc_mapping_in_nat(vm_id):
     vm_data = current.db.vm_data[vm_id]
     vnc_host_ip = config.get("GENERAL_CONF", "vnc_ip")
     duration = 30 * 60 #30 minutes
-    host_ip = vm_data.host_id.host_ip
+    host_ip = vm_data.host_id.host_ip.private_ip
     vnc_port = vm_data.vnc_port
     
     vnc_id = current.db.vnc_access.insert(vm_id = vm_id,
@@ -324,7 +324,7 @@ def create_public_ip_mapping_in_nat(vm_id):
 def remove_vnc_mapping_from_nat(vm_id):
     vm_data = current.db.vm_data[vm_id]
     vnc_host_ip = config.get("GENERAL_CONF", "vnc_ip")
-    host_ip = vm_data.host_id.host_ip
+    host_ip = vm_data.host_id.host_ip.private_ip
     vnc_port = vm_data.vnc_port
 
     try:

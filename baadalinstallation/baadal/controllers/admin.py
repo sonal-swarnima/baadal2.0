@@ -519,7 +519,7 @@ def show_host_performance():
 
     host_id = request.args(0)
     host_info = get_host_config(host_id)
-    host_identity = str(host_info.host_ip).replace('.','_')
+    host_identity = str(host_info.host_ip.private_ip).replace('.','_')
     
     return dict(host_id=host_id, host_identity=host_identity)
 

@@ -728,7 +728,7 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
         dump_xml_path = vm_backup_during_migration + '/' + 'dump_' + domain_snapshot
         snapshot_dumpxml_command = 'virsh snapshot-dumpxml %s %s > %s' % ( vm_details.vm_identity, domain_snapshot, dump_xml_path)
         logger.debug("Taking xml dump of" + str(domain_snapshot))
-        command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', snapshot_dumpxml_command)
+        command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', snapshot_dumpxml_command)
         logger.debug(command_output)
         logger.debug("XML dump of " + str(domain_snapshot) + "succeeded.")
 
@@ -771,10 +771,10 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name, vm_
         for domain_snapshot in domain_snapshots_list:
             redefine_xml_path =  vm_backup_during_migration + '/' + 'dump_' + domain_snapshot
             snapshot_redefine_command = 'virsh snapshot-create --redefine %s %s ' % (vm_details.vm_identity, redefine_xml_path)
-            command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', snapshot_redefine_command, None, True)
+            command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', snapshot_redefine_command, None, True)
             logger.debug(command_output)
         snapshot_current_command = 'virsh snapshot-current %s %s' % (vm_details.vm_identity, current_snapshot_name)
-        command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', snapshot_current_command, None, True)
+        command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', snapshot_current_command, None, True)
         logger.debug(command_output)
     # Delete directory created for storing dumpxml of vm snapshots
     clean_migration_directory(vm_backup_during_migration)

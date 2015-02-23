@@ -527,8 +527,7 @@ def update_task_ignore(event_id):
 def get_search_host_form():
     form = FORM('Host IP :',
                 INPUT(_name = 'host_ip', _id='host_ip_id', requires = [
-                                IS_IPV4(error_message=IP_ERROR_MESSAGE),
-                                IS_NOT_IN_DB(db, 'host.host_ip', error_message='Host IP is already configured')]),
+                                IS_IPV4(error_message=IP_ERROR_MESSAGE)]),
                 INPUT(_type = 'button', _value = 'Get Details', _class = 'btn-submit'))
     return form
 
@@ -553,17 +552,19 @@ def get_add_host_form():
 def get_host_form(host_ip):
     
     form = get_add_host_form()
-    form.vars.host_name = 'host'+str(host_ip.split('.')[3])
-    form.vars.host_ip = host_ip
-    if is_host_available(host_ip):
-        form.vars.mac_addr = get_host_mac_address(host_ip)
-        form.vars.CPUs = get_host_cpu(host_ip)
-        form.vars.RAM  = get_host_ram(host_ip)
-        form.vars.HDD = get_host_hdd(host_ip)
-        form.vars.host_type = get_host_type(host_ip)
-        form.vars.status = HOST_STATUS_UP
-    else:
-        form.vars.status = HOST_STATUS_DOWN
+    private_ip_data = db.private_ip_pool(private_ip = host_ip)
+    if private_ip_data:
+        form.vars.host_ip = private_ip_data.id
+        form.vars.host_name = 'host'+str(host_ip.split('.')[3])
+        if is_host_available(host_ip):
+            form.vars.mac_addr = get_host_mac_address(host_ip)
+            form.vars.CPUs = get_host_cpu(host_ip)
+            form.vars.RAM  = get_host_ram(host_ip)
+            form.vars.HDD = get_host_hdd(host_ip)
+            form.vars.host_type = get_host_type(host_ip)
+            form.vars.status = HOST_STATUS_UP
+        else:
+            form.vars.status = HOST_STATUS_DOWN
 
     return form
     
@@ -674,15 +675,16 @@ def vm_has_snapshots(vm_id):
     
 def update_host_status(host_id, status):
     host_data = db.host[host_id]
-    logger.debug(host_data.host_ip)
+    host_ip = host_data.host_ip.private_ip
+    logger.debug(host_ip)
     host_info=host_data.host_type
     logger.debug(host_info)
     if status == HOST_STATUS_UP:
-        if is_host_available(host_data.host_ip):
+        if is_host_available(host_ip):
                 if host_data.CPUs == 0:
-                    cpu_num = get_host_cpu(host_data.host_ip)
-                    ram_gb = get_host_ram(host_data.host_ip)
-                    hdd_gb = get_host_hdd(host_data.host_ip)
+                    cpu_num = get_host_cpu(host_ip)
+                    ram_gb = get_host_ram(host_ip)
+                    hdd_gb = get_host_hdd(host_ip)
                     host_data.update_record(CPUs=cpu_num, RAM=ram_gb, HDD=hdd_gb)
         else:   
             host_power_up(host_data)                
@@ -690,7 +692,7 @@ def update_host_status(host_id, status):
         host_data.update_record(status = HOST_STATUS_UP)
 
     elif status == HOST_STATUS_MAINTENANCE:
-        migrate_all_vms_from_host(host_data.host_ip)
+        migrate_all_vms_from_host(host_ip)
         host_data.update_record(status=HOST_STATUS_MAINTENANCE)
 
     elif status == HOST_STATUS_DOWN:
@@ -702,10 +704,11 @@ def update_host_status(host_id, status):
 def delete_host_from_db(host_id):
     
     host_data = db.host[host_id]
-    private_ip_data = db.private_ip_pool(private_ip = host_data.host_ip)    
+    host_ip = host_data.host_ip.private_ip
+    private_ip_data = db.private_ip_pool(private_ip = host_ip)    
     if private_ip_data:
         remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
-    db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_data.host_ip))).delete()
+    db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_ip))).delete()
     del db.host[host_id]
     
 def get_util_period_form(submit_form=True):
@@ -816,7 +819,7 @@ def get_baadal_status_info():
 #         sys_snapshot = db.snapshot(vm_id=vm_detail.id,type=SNAPSHOT_SYSTEM)
         element = {'id' : vm_detail.id,
                    'vm_name' : vm_detail.vm_identity, 
-                   'host_ip' : vm_detail.host_id.host_ip, 
+                   'host_ip' : vm_detail.host_id.host_ip.private_ip, 
                    'vm_status' : get_vm_status(vm_detail.status),
                    'sys_snapshot': True if (vm_detail.status == VM_STATUS_SHUTDOWN) else False}
         vm_info.append(element)

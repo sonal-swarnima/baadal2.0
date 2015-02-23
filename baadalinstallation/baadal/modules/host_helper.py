@@ -90,7 +90,7 @@ def check_host_service_status(host_ip):
 def host_status_sanity_check():
     for host in current.db().select(current.db.host.ALL):
         if host.status != HOST_STATUS_MAINTENANCE:
-            host_status=check_host_status(host.host_ip)
+            host_status=check_host_status(host.host_ip.private_ip)
             if(host_status != host.status):
                 logger.debug("Changing status of " + host.host_name +" to " + str(host_status))
                 host.update_record(status=host_status)
@@ -178,9 +178,10 @@ def host_power_operation():
     livehosts = current.db(current.db.host.status == HOST_STATUS_UP).select()
     freehosts=[]
     try:
+        
         for host_data in livehosts:
-            if not has_running_vm(host_data.host_ip):
-                freehosts.append(host_data.host_ip)
+            if not has_running_vm(host_data.host_ip.private_ip):
+                freehosts.append(host_data.host_ip.private_ip)
         freehostscount = len(freehosts)
         if(freehostscount == 2):
             logger.debug("Everything is Balanced. Green Cloud :)")
@@ -195,9 +196,9 @@ def host_power_operation():
             extrahosts=freehosts[2:]
             for host_data in extrahosts:
                 logger.debug("Moving any dead vms to first running host")
-                migrate_all_vms_from_host(host_data.host_ip)
-                logger.debug("Sending kill signal to " + host_data.host_ip)
-                commands.getstatusoutput("ssh root@" + host_data.host_ip + " shutdown -h now")
+                migrate_all_vms_from_host(host_data.host_ip.private_ip)
+                logger.debug("Sending kill signal to " + host_data.host_ip.private_ip)
+                commands.getstatusoutput("ssh root@" + host_data.host_ip.private_ip + " shutdown -h now")
                 host_data.update_record(status=HOST_STATUS_DOWN)
     except:
         log_exception()
@@ -207,7 +208,7 @@ def host_power_operation():
 def host_power_up(host_data):
     try:
         if host_data.host_type == HOST_TYPE_VIRTUAL:
-            host_ip = host_data.host_ip
+            host_ip = host_data.host_ip.private_ip
             execute_remote_cmd(host_ip, 'root', 'virsh start' + get_host_name[host_ip])
         else:                        
             logger.debug('Powering up host with MAC ' + host_data.mac_addr)
@@ -222,7 +223,7 @@ def host_power_up(host_data):
 def host_power_down(host_data):
 
     try:
-        host_ip = host_data.host_ip
+        host_ip = host_data.host_ip.private_ip
         if host_data.host_type == HOST_TYPE_VIRTUAL:
             output = execute_remote_cmd(host_ip, 'root', 'virsh destroy' + get_host_name[host_ip])
         else:                        
@@ -268,7 +269,7 @@ def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=None):
 def delete_orhan_vm(vm_name, host_id):
     
     host_details = current.db.host[host_id]
-    connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip + "/system")
+    connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip.private_ip + "/system")
     domain = connection_object.lookupByName(vm_name)
     vm_state = domain.info()[0]
     if (vm_state == VIR_DOMAIN_RUNNING or vm_state == VIR_DOMAIN_PAUSED):
