@@ -1,0 +1,640 @@
+# coding: utf8
+import os
+import thread
+import logging
+import datetime
+import logging.config
+from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from helper import xml_connect
+from helper import db_connection
+from selenium.webdriver.common.keys import Keys
+import sys
+import time
+#creating a logger for logging the records
+logger = logging.getLogger("web2py.app.testapp")
+
+#creating connection to remote database
+baadal_db=db_connection() 
+
+
+
+#################################################################################################################
+#                             The main test function for stress
+                                           #
+#################################################################################################################
+def stress_script(m):
+    
+    
+    logging.debug("inside thread: "+str(m))
+    
+    root = xml_connect()
+    i=m
+    for j in xrange(0,len(root[i])): 
+        driver = webdriver.Remote(
+       command_executor='http://127.0.0.1:4444/wd/hub',
+       desired_capabilities=DesiredCapabilities.FIREFOX)#connect to selenium server
+        driver.implicitly_wait(10)
+        driver.get(root.get("url")) #url of the page to be hit 
+        driver.find_element_by_link_text(root.get("href")).click()
+        
+        for k in xrange(0,len(root[i][j])):
+            field_type=root[i][j][k].get("type")
+            xml_parent=root[i]
+            xml_child=root[i][j]
+            xml_sub_child=root[i][j][k]
+					
+            if field_type=="input": #checking for text fields
+                vm_name1=isInput(driver,xml_sub_child)
+                      
+            elif field_type=="read_only": #checking for submit button
+                isReadOnly(driver, xml_parent,xml_child,xml_sub_child)
+						
+            elif field_type=="submit": #checking for submit button
+                isSubmit(driver, xml_parent,xml_child,xml_sub_child)
+                driver.implicitly_wait(10)
+						
+            elif field_type=="button":#checking for button
+                time.sleep(3)
+                isButton(driver,xml_sub_child)
+					
+            elif field_type=="scroll":#scrolling the page up/down
+                isScroll(driver,xml_sub_child)
+				 		
+            elif field_type=="href":
+                isHref(driver,xml_sub_child)#clicking on the hyper link
+                        
+            elif field_type=="select":
+                isSelect(driver,xml_sub_child)# selecting from dropdown menu
+			 	
+            elif field_type=="table":
+                isTable(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                         
+            elif field_type=="img":#checking for setting image
+                table_path=xml_sub_child.get("path")
+                isImage(driver,xml_child,xml_sub_child,table_path)
+								
+            elif field_type=="check_tables":#cheking for host table
+                isCheckTable(driver,xml_parent,xml_child,xml_sub_child)
+                
+            elif field_type=="wait":
+                isWait(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                    
+            elif field_type=="check_data":
+                isCheckdata(driver,vm_name,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                        				
+            else:
+                logging.debug("report problem") #logging the report
+                
+            if k==5:
+                vm_name=vm_name1
+        driver.close()#disconnect from server
+
+
+def stress_test_script():
+    for m in range(0,5):
+        root = xml_connect()
+        total_scripts=root.get("total_scripts")
+        test_no=m%(int(total_scripts)-1)
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        thread.start_new_thread( stress_script,(test_no,) )
+        
+        logging.debug("Thread: "+str(m))
+        
+    return
+
+
+    
+
+#################################################################################################################
+#                                       The main test function  for unit testing                                            #
+#################################################################################################################
+		
+def test_script(test_case_no):
+    print test_case_no
+    root = xml_connect()
+    num=int(test_case_no)
+    if root[num-1].get("id")==test_case_no:
+        i=num-1
+        vm_name=""
+        for j in xrange(0,len(root[i])):
+            driver = webdriver.Remote(command_executor='http://127.0.0.1:4444/wd/hub', desired_capabilities=DesiredCapabilities.FIREFOX)#connect to selenium server#connect to selenium server
+            driver.implicitly_wait(10)
+            driver.get(root.get("url")) #url of the page to be hit 
+            driver.find_element_by_link_text(root.get("href")).click()
+            for k in xrange(0,len(root[i][j])):
+                field_type=root[i][j][k].get("type")
+                xml_parent=root[i]
+                xml_child=root[i][j]
+                xml_sub_child=root[i][j][k]
+					
+                if field_type=="input": #checking for text fields
+                    vm_name1=isInput(driver,xml_sub_child)
+                      
+                elif field_type=="read_only": #checking for submit button
+                    isReadOnly(driver, xml_parent,xml_child,xml_sub_child)
+						
+                elif field_type=="submit": #checking for submit button
+                    isSubmit(driver, xml_parent,xml_child,xml_sub_child)
+						
+                elif field_type=="button":#checking for button
+                    time.sleep(3)
+                    isButton(driver,xml_sub_child)
+					
+                elif field_type=="scroll":#scrolling the page up/down
+                    isScroll(driver,xml_sub_child)
+				 		
+                elif field_type=="href":
+                    isHref(driver,xml_sub_child)#clicking on the hyper link
+                    
+                elif field_type=="select":
+                    isSelect(driver,xml_sub_child)# selecting from dropdown menu
+			 	
+                elif field_type=="table":
+                    isTable(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                         
+                elif field_type=="img":#checking for setting image
+                    table_path=xml_sub_child.get("path")
+                    isImage(driver,xml_child,xml_sub_child,table_path)
+								
+                elif field_type=="check_tables":#cheking for host table
+                    isCheckTable(driver,xml_parent,xml_child,xml_sub_child)
+                
+                elif field_type=="wait":
+                    isWait(driver,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                    
+                elif field_type=="check_data":
+                    isCheckdata(driver,vm_name,xml_parent,xml_child,xml_sub_child)#checking for data in table
+                        				
+                else:
+                    logging.debug("report problem") #logging the report
+                
+                if k==5:
+                    vm_name=vm_name1
+            driver.close()#disconnect from server
+           
+###############################################################################################################
+#                             Functions used by the input field functions                                     #
+###############################################################################################################		
+
+# checking whether an element is present on the webpage
+def isElementPresent(driver,xml_child,xpath):
+    try:
+        driver.find_element_by_xpath(xpath)
+        return 1
+    except:
+        logger.debug(xml_child.get("value") +': Result:no table exists')
+        return 0	
+   
+		
+#checking whether front end data and daatabase entries are equal and printing the result 		
+def print_result(field_text,result,xml_child):
+	query_result=str(result)
+        logger.debug("screen=  "+str(field_text) )
+        logger.debug("db=      "+query_result)
+	if field_text ==query_result:
+		logger.debug(xml_child.get("value") +': Result:correct input') 
+	else:
+		logger.debug(xml_child.get("value") +': Result:Incorrect input')
+	return 
+	
+def open_error_page(driver,xml_parent,text,row_count):#open error link on differnet page
+	(driver.find_elements_by_link_text(text))[row_count].click()
+	field=driver.find_element_by_xpath(xml_parent.get("error_page"))
+	error_message=field.text
+	driver.find_element_by_link_text(xml_parent.get("error_page_close_text")).click()
+	return error_message
+	
+def admin_vm_status(status):#converting vm status bits into status text
+    logger.debug("in")
+    vm_status={0:"Running",1:"Paused",2:"Shutdown"}
+    if status==4:
+        result=vm_status[0]
+    if status==5:
+        result=vm_status[1]
+    if status==6:
+        result=vm_status[2]
+    return result 
+    	
+def host_status(status):#converting host status bits into status text
+	host_status={0:"Down",1:"Up",2:"Maintenance"}	
+	if status==0:
+		result=host_status[0]
+	if status==1:
+		result=host_status[1]
+	if status==2:
+		result=host_status[2]
+	return result
+	
+	
+def org_task_status(status,name):#converting  status bits into status text
+    task_status={0:"Approve  |  Reject",1:"Installation In Progress",2:"Remind Faculty"}
+    if	(status==0 | status==2) & (name=="org_admin_pending_tasks") :
+        result=task_status[0]
+    if (status==3) & (name=="org_admin_pending_tasks"):
+        result=task_status[1]
+    if (status==0) & (name=="faculty_pending_tasks"):
+        result=task_status[2]
+    return result
+	
+def execute_query(sql_query,arg=None):
+    cursor=baadal_db.cursor()
+    if arg==None:
+        cursor.execute(sql_query)
+    else:
+        cursor.execute(sql_query,arg)
+    return cursor
+    
+def click_on_dialogbox(driver):
+    alert = driver.switch_to_alert()
+    alert.accept()
+    click_on_dialogbox(driver)
+    return
+    
+ 
+
+def vm_running(xml_sub_child,driver):
+    print "in"
+    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
+    col_count=len(query_result[0])
+    row_count=len(query_result)
+    print len(query_result)
+    for length in range(0,(row_count)):
+        print length
+        status=query_result[length][col_count-1]
+        if status==4:
+            
+            id=xml_sub_child.get("id")
+            vm_id=query_result[length][1]
+            print  vm_id
+            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(vm_id) +"']").click()
+            vm_name=query_result[length][0]
+            return vm_name
+        if (status==5) | (status==6):
+            if row_count==length: 
+                logger.debug("No VM exist which is in running state,So Please Run a VM before doing this testing")
+                return vm_name
+            length+=1
+            continue
+     
+def vm_paused(xml_sub_child,driver):
+    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
+    col_count=len(query_result[0])
+    row_count=len(query_result)
+    for length in range(0,(row_count)):
+        status=query_result[length][col_count-1]
+        if status==5:
+            id=xml_sub_child.get("id")
+            vm_id=query_result[length][1]
+            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(vm_id) +"']").click()
+            vm_name=query_result[length][0]
+            return vm_name
+        if (status==4) | (status==6):
+            if row_count==length: 
+                logger.debug("No VM exist which is in paused mode,So Please Paused a VM before doing this testing")
+                return vm_name
+            length+=1
+            continue
+            
+def vm_shutdown(xml_sub_child,driver):
+    query_result=execute_query( xml_sub_child.get("query3")).fetchall()
+    col_count=len(query_result[0])
+    row_count=len(query_result)
+    for length in range(0,(row_count)): 
+        status=query_result[length][col_count-1]
+        if status==6:
+            id=xml_sub_child.get("id")
+            vm_id=query_result[length][1]
+            driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(vm_id) +"']").click()
+            logger.debug(xml_child.get("value"))
+            vm_name=query_result[length][0]
+            return vm_name
+        if (status==5) | (status==4):
+            if length==(row_count-1): 
+                vm_name=""
+                logger.debug("No VM exist which is in shutdown mode,So Please Shutdown a VM before doing this testing")
+                return vm_name
+            length+=1
+            continue
+            
+            
+def result_setting_page(field,query_result,driver,xml_child,xml_sub_child):
+    i=0
+    for t in field:
+        print "screen=" + str(t.text)
+        print "db=" + str(query_result[i][0])
+        if str(query_result[i][0]) in t.text:
+            logger.debug("correct inputs")
+        else :
+            logger.debug("Incorrect inputs")
+        i+=1 
+    return
+            
+def check_snapshot(vm_name,driver,xml_child,xml_sub_child):
+ 
+    logger.debug("Checking for entries in current snapshot table")
+    path="//table[@id='vm_snaps']/tbody/tr"
+    if isElementPresent(driver,xml_child,path):
+        query_result=execute_query(xml_sub_child.get("query4"),(str(vm_name))).fetchall()
+        total_snap=len(query_result)
+        print query_result
+        field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_snap"))
+        result_setting_page(field,query_result,driver,xml_child,xml_sub_child)
+    return total_snap
+        
+    
+def check_user(driver,xml_child,xml_sub_child,vm_name):
+    query_result=execute_query( xml_sub_child.get("query5"),(str(vm_name))).fetchall()
+    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_user"))
+    logger.debug("Checking for entries in Additional user table")
+    result_setting_page(field,query_result,driver,xml_child,xml_sub_child)
+    return
+
+ 
+def check_vm_configuration(driver,xml_child,xml_sub_child,vm_name):
+    query_result=execute_query( xml_sub_child.get("query6"),(str(vm_name))).fetchall()
+    field=driver.find_elements_by_xpath(xml_sub_child.get("xpath_conf"))
+    logger.debug("Checking for entries in VM Configuration table")
+    i=0
+    for t in field:
+        print "screen=" + str(t.text)
+        print "db=" + str(query_result[0][i])
+        if str(query_result[0][i]) in t.text:
+            logger.debug("correct inputs")
+        else :
+            logger.debug("Incorrect inputs")
+        i+=1
+    return
+
+                       
+'''def checking_operations_task():
+    if islement present():
+		field=find_elements_by_xpath("")
+		count=0
+		c=0
+		while True:
+			for x in field:
+				if vm_name in x.text & vm_operation in x.text :
+					count+=1
+					return True
+				else:
+					if count==0:
+						logger.debug("Error:VM doesnt exist in pending task table")
+					else:
+						continue
+				if count<c:
+					checking_operations_in_completed_task()
+                    return False
+	return	
+	
+	
+def checking_operations_in_completed_task():
+	driver.find_element_by_partial_link_text("").click()
+	field=find_elements_by_xpath("")
+	count=0
+	for x in field:
+		if vm_name in x.text & vm_operation in x.text :
+			count+=1
+			logger.debug("Your request has completed")
+			break
+		else:
+			continue
+	if count==0:
+		logger.debug("Error:VM doesnt exist in completed task table")
+		checking_operations_in_failed_task()
+	return
+	
+	
+def checking_operations_in_failed_task():
+	driver.find_element_by_partial_link_text("").click()
+	field=find_elements_by_xpath("")
+	count=0
+	for x in field:
+		if vm_name in x.text & vm_operation in x.text :
+			count+=1
+			logger.debug("Your request has failed")
+			break
+		else:
+			continue
+	if count==0:
+		logger.debug("Error:VM Niether exist in failed task table nor in completed task table")
+	return'''
+			                                                                    
+##############################################################################################################
+#  					           functions for various types of input fields  				          	     #
+##############################################################################################################
+		
+def isInput(driver, xml_sub_child):
+    current_time=datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    field = driver.find_element_by_id(xml_sub_child.get("id"))
+    if xml_sub_child.text!=None:
+        field.send_keys(xml_sub_child.text) # sending the user name/password/vm name/purpose etc
+    else:
+        if not (xml_sub_child.get("id") in ["user_password","user_username"]):
+            field.send_keys(str(current_time))	
+    return current_time
+	
+def isReadOnly(driver, xml_parent,xml_child,xml_sub_child):
+    current_time=datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    field = driver.find_element_by_id(xml_sub_child.get("id"))
+    if field.get_attribute("value")!='':
+        field.send_keys(xml_sub_child.text) # sending the user name/password/vm name/purpose etc
+        if field.get_attribute("value")==xml_sub_child.text:
+            logger.debug(xml_child.get("value")  +': Result:error') #logging the report
+        else:
+            logger.debug(xml_child.get("value")  +': Result:no error') #logging the report
+    else:
+        logger.debug(xml_child.get("value")  +': Result:empty') #logging the report
+    return 
+
+def isWait( driver, xml_parent, xml_child, xml_sub_child):
+    time.sleep(3)
+    return
+
+def isSubmit( driver, xml_parent, xml_child, xml_sub_child):
+    current_time=datetime.datetime.now()
+    user_name=xml_child.find('user_name').text
+    driver.find_element_by_xpath(xml_sub_child.text).click()
+    xpath=xml_parent.get("xpath")
+    status=isElementPresent(driver,xml_child,xpath)
+    field=driver.find_element_by_xpath(xpath)
+    if status==1:
+        if ("Logout" in field.get_attribute("innerHTML")):
+             logger.debug(xml_child.get("value")  +': Result:Valid Login') #logging the report
+        else:
+            logger.debug(xml_child.get("value")  +': Result:Invalid Login') #logging the report 
+    else:
+        logger.debug(xml_child.get("value") +': Result:error') #logging the report
+    return
+	
+def isButton(driver, xml_sub_child):
+	driver.find_element_by_xpath(xml_sub_child.text).click()
+	return
+			
+def isScroll(driver, xml_sub_child):
+	field=driver.find_element_by_tag_name("html")
+	field.send_keys(xml_sub_child.text)
+	driver.execute_script("window.scrollBy(0,200)", "")
+	return
+	
+def isHref(driver, xml_sub_child):
+	driver.find_element_by_partial_link_text(xml_sub_child.text).click()
+	return
+
+def isSelect(driver, xml_sub_child):
+	driver.find_element_by_xpath(xml_sub_child.text).click()
+	return
+	
+def isImage(driver,xml_child,xml_sub_child,a):	
+    k=0
+    vm_name1=""
+    if isElementPresent(driver,xml_child,a):
+        if xml_sub_child.get("name")=="vm_running_Setting":
+            logger.debug(xml_child.get("value") +': Result:Setting button works properly')
+            vm_name=vm_running(xml_sub_child,driver)
+            check_snapshot(vm_name,driver,xml_child,xml_sub_child)
+            check_user(driver,xml_child,xml_sub_child,vm_name)
+            check_vm_configuration(driver,xml_child,xml_sub_child,vm_name) 
+            
+            k+=1
+        if xml_sub_child.get("name")=="vm_paused_Setting":
+            logger.debug(xml_child.get("value") +': Result:Setting button works properly')
+            vm_name=vm_paused(xml_sub_child,driver)
+            k+=1
+        if xml_sub_child.get("name")=="vm_shutdown_Setting":
+            logger.debug(xml_child.get("value") +': Result:Setting button works properly')
+            vm_name=vm_shutdown(xml_sub_child,driver)
+            k+=1
+            '''if xml_sub_child.get("name")=="Snapshot":
+                field=driver.find_element_by_xpath(xml_sub_child.get("xpath_conf"))
+                conf_result=field.text
+                table_data=conf.split()
+                vm_name=table_data[0]
+                query_result=execute_query( xml_sub_child.get("query"),(str(vm_name))).fetchall()
+                print query_result
+                length=len(query_result)
+                print len(query_result)
+                if str(length)==xml_sub_child.get("max"):
+                    logger.debug("Snaphot limit reached.Delete previous snapshots to take new snapshot")
+                    return 
+                else:       
+                    driver.find_element_by_xpath(xml_sub_child.text).click()
+                    logger.debug("Your VM Snapshoting request has been queued")'''
+        else :
+            driver.find_element_by_xpath(xml_sub_child.text).click()
+            logger.debug("This VM operations is working correctly")
+            if (xml_sub_child.get("name")=="Setting_with_dialogbox") | (xml_sub_child.get("name")=="Delete") :
+                click_on_dialogbox(driver) 
+       
+       
+        if k==1:
+           vm_name1=vm_name
+    return
+    
+def isTable(driver,xml_parent,xml_child,xml_sub_child):
+    status_list={0:"Error",1:"failed_tasks",2:"TRY AGAIN | IGNORE",3:"my_pending_vm",4:"Waiting for admin approval",5:"faculty_pending_tasks",6:"Add_host",7:"org_admin_pending_tasks",8:"org_admin_all_tasks",9:"list_all_vm"}
+    table_path=xml_sub_child.text
+    if isElementPresent(driver,xml_child,table_path):
+        query_result=execute_query( xml_parent.get("query3")).fetchall()
+        length=len(query_result[0])#calculate number of columns of query
+        row_count=0 #number of rows in the table
+        col_count=0 #number of columns in the table
+        field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
+        for col in field:
+            field_text=col.text
+            if (field_text!="") & (field_text!="Install"):
+                if field_text==status_list[0]:
+                    text=open_error_page(driver,xml_parent,field_text,row_count)
+                    result=query_result[row_count][col_count]#data form query
+                    print_result(text,result,xml_child)
+                    
+                elif (query_result[row_count][col_count]==4) & (xml_parent.get("name")==status_list[1]):
+                    result=status_list[2]
+                    print_result(field_text,result,xml_child)
+                
+                elif (col_count%int(length)==7) & (xml_parent.get("name")==status_list[9]):
+                    status=query_result[row_count][col_count]
+                    result=admin_vm_status(status)
+                    print_result(field_text,result,xml_child)
+                    
+                elif (query_result[row_count][col_count]==2) & (xml_parent.get("name")==status_list[3]):
+                    result=status_list[4]
+                    print_result(field_text,result,xml_child)
+
+                elif (col_count%int(length)==6) & ((xml_parent.get("name")==status_list[5]) | (xml_parent.get("name")==status_list[7]) | (xml_parent.get("name")==status_list[8])):
+                    status=query_result[row_count][col_count]
+                    result=org_task_status(status,xml_parent.get("name"))
+                    print_result(field_text,result,xml_child)
+
+                elif (col_count%int(length)==2) & (xml_parent.get("name")==status_list[6]):
+                    status=query_result[row_count][col_count]
+                    result=host_status(status)
+                    print_result(field_text,result,xml_child)
+						
+                else:
+                    result=query_result[row_count][col_count]
+                    print_result(field_text,result,xml_child)
+                col_count+=1
+                if col_count%int(length)==0:
+                    row_count+=1
+                    col_count=0	
+    return
+
+def isCheckTable(driver, xml_parent, xml_child, xml_sub_child):
+    field=driver.find_elements_by_xpath(xml_sub_child.get("path"))
+    query_result=execute_query(xml_parent.get("query3")).fetchall()
+    table=0
+    for header in field:
+        if query_result[table][0] in header.text:
+            table_path=xml_sub_child.text
+            if isElementPresent(driver,xml_child,table_path):
+                result_fetch=execute_query(xml_parent.get("query4")).fetchall()
+                no_of_cols=len(result_fetch[0])#calculate number of columns of query
+                field=driver.find_elements_by_xpath(xml_sub_child.text)
+                #print field.text
+                row_count=0
+                col_count=0
+                for col in field:
+                    field_text=col.text
+                    if field_text!="":
+                        result=result_fetch[row_count][col_count]
+                        print_result(field_text,result,xml_child)
+                        col_count+=1
+                        if col_count%int(no_of_cols)==0:
+                            row_count+=1
+                            col_count=0		
+        table=table+1
+    return
+
+   
+def isCheckdata(driver,vm_name,xml_parent, xml_child, xml_sub_child):
+    print vm_name
+    table_path=xml_sub_child.text
+    if isElementPresent(driver,xml_child,table_path):
+        print "in"
+        driver.refresh()
+        field=driver.find_elements_by_xpath(xml_sub_child.text)#data from gui
+        query_result=execute_query( xml_sub_child.get("query3")).fetchone()
+        result=query_result[1]
+        for a in field:
+            row=a.text
+            if (str(vm_name) in row) | (str(query_result[0]) in row):
+                logger.debug("report"  +': Result:Correct Flow') #logging the report
+                id=xml_sub_child.get("id")
+                if id=="settings":
+                     driver.find_element_by_xpath("//*[@href='/baadal/user/"+ str(id) +"/"+ str(result) +"']").click()
+                if "Approve  |  Reject" in row:
+                    if xml_sub_child.get("click")=="Approve":
+                        print "in1"
+                        print result
+                        print id
+                        driver.find_element_by_xpath("//*[@href='/baadal/"+ str(id) +"/approve_request/"+ str(result) +"']").click()
+                    else:
+                        driver.find_element_by_xpath("//*[@href='/baadal/"+ str(id) +"/reject_request/"+ str(result) +"']").click()
+    return

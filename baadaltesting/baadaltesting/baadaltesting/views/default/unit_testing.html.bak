@@ -1,0 +1,30 @@
+{{extend 'layout.html'}}
+<div id="heading">UNIT TESTING</div>
+<div id="testcase">
+<div id="menu_bar">Choose the test cases to be executed:</div>
+{{=form}}
+</div>
+
+
+<style>
+    #testcase{
+        background:rgb(209, 232, 248);
+        height:1650px;
+        margin:60px 0 0 5px}
+        
+    #heading{
+         margin:50px 0 0 50px;
+        font-size:30px;
+        text-style:bold;
+       
+    }
+    #menu_bar{
+        text-align:center;
+        font-size:2.00em;
+        text-decoration:underline;
+        font-family:Helvetica;
+        color:#0060A0;
+        padding:30px 20px;
+        font-weight:bold
+    }
+</style>
