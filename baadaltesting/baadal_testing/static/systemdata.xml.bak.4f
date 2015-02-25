@@ -1,0 +1,241 @@
+<?xml version= "1.0"?>
+<test_scripts href="Login" xpath="//span[@class='auth_navbar']" total_scripts="100">
+        
+	<test_script1 id="1"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="VM migrate testing">
+        		<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<system type="create file" name1="testfile.txt" name="vm_running_Setting_intgrtn" id="settings" path="//table[@id='listallvm']/tbody/tr/td" xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="migrate_vm"  max="3" add_button="//input[@type='submit']" action="approve_request" user_id="attach_disk_size" user_id_data="10" print="Your request has been sent for approval." print_mode="No VM exists of testing user,So Please Start a VM of testing user before doing this testing" status="Running" other_status1="4" other_status2="3" live="yes">All VMs</system>
+		</test_case1>
+    </test_script1>
+      
+	<test_script2 id="2"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="Checking for shutdown virtual machine">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+          		<setting type="shutdown_vm" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="shutdown_machine" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+		</test_case1>
+    </test_script2>
+    
+    <test_script3 id="3"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+        <test_case1 value="Checking for Paused virtual machine">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+          		<setting type="shutdown_vm" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="pause_machine" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+		</test_case1>
+    </test_script3>
+
+    <test_script4 id="4"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+        <test_case1 value="Checking for Delete virtual machine">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+          		<setting type="shutdown_vm" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="Delete" title="//table[@id='vm_ops']/tbody/tr/td/a[@title='Delete this virtual machine']" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+		</test_case1>
+    </test_script4>
+
+    <test_script5 id="5"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+        <test_case1 value="Checking for Force ShutDown virtual machine">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+          		<setting type="shutdown_vm" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="destroy_machine" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+		</test_case1>
+    </test_script5>
+	
+  
+    
+    <test_script6 id="6"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+                  <test_case1 value="Checking for attach_disk">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+          		<setting type="attach_disk" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td" xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="attach_extra_disk" op1="destroy_machine" op2="start_machine" add_button="//input[@type='submit']" user_id="request_queue_attach_disk" user_id_data="10" max="3" action="approve_request">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+          
+		</test_case1>
+			<!--<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<req_vm type="href">USER MENU</req_vm>
+			<req_vm type="href">Request VM</req_vm>
+			<vm_name type="input" id="request_queue_vm_name"></vm_name>
+                        <enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>	
+            		<security_domain type="select">//select[@id='request_queue_security_domain']/option[@value='4']</security_domain>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">My VMs</list_vm> 		 
+          		<wait type="wait"></wait>         		 
+			<list_vm type="href">All Pending Requests</list_vm>
+                        <table type="check_data" id="admin" path="//table[@id='sortTable1']/tbody/tr/td/a[@class='Approve']"  print_data=" " click="approve_request"  data="integeration">//*[@id='sortTable1']/tbody/tr</table>
+                        <down_key type="scroll">Keys.PAGE_DOWN</down_key>
+                        <check_task type="task_table" >Create VM</check_task>
+          		<setting type="attach_disk" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td" xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="attach_extra_disk" op1="shutdown_machine" op2="start_machine" add_button="//input[@type='submit']" user_id="request_queue_attach_disk" user_id_data="10" max="3" action="approve_request">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+		</test_case1>-->
+               <!--<test_case2  value="Checking for attach disk when vm request">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<user_menu type="href">USER MENU</user_menu>
+			<req_vm type="href">Request VM</req_vm>			
+			<conf_id type="select" select_name="configuration">//select[@name='configuration_</conf_id>
+			<additional_hdd type="input" id="request_queue_extra_HDD">10</additional_hdd>
+		        <vm_name type="input" id="request_queue_vm_name"></vm_name>
+			<enable_ip type="submit">//input[@id="request_queue_public_ip"]</enable_ip>
+			<submit type="submit"  xpath="//div[@class='post']/h1[@class='title']" id="check_data" result="Request VM">//input[@type='submit']</submit>
+                        <setting type="live_attach_disk"></setting>
+		</test_case2>-->
+	</test_script6>
+    
+    <test_script7 id="7"  name ="shutdown_test">
+		<test_case1 value="Shutdown Baadal">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+                        <down_key type="scroll">Keys.PAGE_DOWN</down_key>
+			<shut_down type="check_shutdown" status="Running">true</shut_down>
+		</test_case1>
+        <test_case2 value="check all vms are shutdown">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+                        <down_key type="scroll">Keys.PAGE_DOWN</down_key>
+			<shutdown_baadal type="href">Shutdown Baadal</shutdown_baadal>
+              		
+			<check_shutdown_state type="shutdown_test" status="Running"></check_shutdown_state>
+		</test_case2>
+    </test_script7>
+    
+      <test_script8 id="8"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="Checking for clone_vm">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+          		<setting type="clone_vm" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="clone_vm" op1="shutdown_machine" op2="start_machine" add_button="//input[@type='submit']" user_id="request_queue_clone_count" user_id_data="1" max="3" action="approve_request">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+          
+		</test_case1>
+                <!--<test_case2 value="Checking for clone_vm">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+                        <attach_disk type="attach_disk" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td" xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="attach_extra_disk" op1="stop_vm" op2="start_vm" add_button="//input[@type='submit']" user_id="request_queue_attach_disk" user_id_data="10" max="3" action="approve_request">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</attach_disk>
+          		<setting type="clone_vm" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="clone_vm" op1="stop_vm" op2="start_vm" add_button="//input[@type='submit']" user_id="request_queue_clone_count" user_id_data="1" max="3" action="approve_request">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+          
+		</test_case2>-->
+	</test_script8>
+
+    <test_script9 id="9"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="Edit VM Configuration">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<setting type="edit_vm" name="vm_shutdown_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4"  xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="shutdown_machine" op1="edit_vm_config" op2="start_vm" max="3">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+</test_case1>		
+    </test_script9>
+
+    <test_script10 id="10"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="VNC grant for 30 mins">
+        		<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<system type="vnc" op="check_vnc_session" status="Running"></system>
+		</test_case1>
+
+		<test_case2 value="VNC grant 10 times">
+        		<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<system type="vnc" op="count_vnc_session" status="Running"></system>
+		</test_case2>
+	
+		<test_case3 value="Validate column sorting">
+        		<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<user_menu type="href">USER MENU</user_menu>
+			<sorting type="verify_sorting" page="My VMs" ></sorting>
+		</test_case3>
+    </test_script10>
+
+    <test_script11 id="11" href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="Checking for host status">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+           	        <user_menu type="href">USER MENU</user_menu>
+			<list_vm type="href">All VMs</list_vm>
+          		<setting type="host_checking" status="Running" status1="Up" op="Delete" title="//table[@id='vm_ops']/tbody/tr/td/a[@title='Delete this virtual machine']">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+          
+		</test_case1>
+
+        <test_case2 value="Checking for host load capacity">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+            <user_menu type="href">USER MENU</user_menu>
+            <create_vm type="create_vm" status="Running">10.0.0.5</create_vm>
+        </test_case2>
+	</test_script11>
+
+ <test_script12 id="12"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+	<test_case1 value="Checking for VM snapshot"><user_name id="user_username" type="input">badalUFA</user_name>
+<password id="user_password" type="input">baadal</password>
+<submit type="submit">//input[@type='submit']</submit>
+<setting type="vm_snapshot" name="vm_running_Setting_intgrtn" id="settings" path="//table[@id='listallvm']/tbody/tr/td" xpath_conf="//table[@id='configuration']/tbody/tr/td" print_mode="No VM exists of testing user,So Please Start a VM of testing user before doing this testing" status="Running" other_status1="4" other_status2="3" xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3" op="snapshot">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting></test_case1>
+    </test_script12>
+    
+    
+     <test_script13 id="13"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="Checking for launch vm with private_ip with public_ip ">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<down_key type="scroll">Keys.PAGE_DOWN</down_key>
+			<setting type ="create_vm_for_image" status="Running"  private_ip_flag="1" public_ip="1"  name="vm_running_Setting" id="settings" op_stop="destroy_vm">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting></test_case1>
+		
+			<test_case2 value="Checking for launch vm with out private_ip ">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<down_key type="scroll">Keys.PAGE_DOWN</down_key>
+			<setting type ="create_vm_for_image"   private_ip_flag="0" public_ip="1"  name="vm_running_Setting" id="settings" op_stop="destroy_vm">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+			</test_case2>
+
+			<test_case3 value="Checking for launch vm with out public_ip and with private_ip ">
+			<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<down_key type="scroll">Keys.PAGE_DOWN</down_key>
+			<setting type ="create_vm_for_image"   private_ip_flag="0" public_ip=""  name="vm_running_Setting" id="settings" op_stop="destroy_vm">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']</setting>
+			</test_case3>
+
+
+	</test_script13>
+     <test_script14 id="14"  href="Login" xpath="//span[@class='auth_navbar']"  name="setting">
+		<test_case1 value="Wake on LAN Testing">
+        		<user_name id="user_username" type="input">badalUFA</user_name>
+			<password id="user_password" type="input">baadal</password>
+			<submit type="submit">//input[@type='submit']</submit>
+			<list_vm type="href">All VMs</list_vm>
+			<setting type="wol" name="vm_running_Setting" id="settings" path="//table[@id='listallvm']/tbody/tr/td" 
+ xpath_user="//table[@id='vm_users']/tbody/tr" xpath_conf="//table[@id='configuration']/tbody/tr/td"  xpath_snap="//table[@id='vm_snaps']/tbody/tr" op="migrate_vm" print_mode="No VM exists of testing user,So Please Run a VM of testing user before doing this testing" status="Running" other_status1="3" other_status2="4" max="3" live="yes">//div[@class='TABLE']/table/tbody/tr/td/a[@title='Settings']  </setting>
+		</test_case1>
+	</test_script14>
+		
+   <test_script15 id="15"></test_script15>
+	
+</test_scripts>
