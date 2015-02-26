@@ -1201,6 +1201,7 @@ def perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name
     logger.debug("operation name is : " + str(operation_name))
     p_count=check_pendingtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)
     if str(p_count)==str(0):
+        logger.debug("p_count check")
 	c_count=check_completedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)
 	task_value.append(c_count)
         f_count=check_failedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)
@@ -1211,6 +1212,17 @@ def perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name
     logger.debug("Checked data in completed and failed task table after performing operation....")
     return task_value
 
+
+
+def send_bug_on_bugzilla(error_message,xml_child):
+    message="Hello Team,\n\n"\
+              +str(error_message)+ " .For further details check the logs on https://baadaltesting.cse.iitd.ernet.in\n\n Thanks,\n ...."
+    subject="Bug in "+ str(xml_child.get("value"))
+    import os
+    path=os.popen('pwd').read()
+    path=path.strip('\n')
+    os.system("python " +str(path)+ "/applications/baadal/bugzilla.py " +str(subject)+" " + str(message))
+    return
 
 def check_vm_in_failed_task(driver,xml_sub_child,xml_child,xml_parent,vm_name,operation_name,task_start_time,my_logger):
     vm_in_failed=0
@@ -1228,7 +1240,8 @@ def check_vm_in_failed_task(driver,xml_sub_child,xml_child,xml_parent,vm_name,op
 		r=row_count-1
                 error_message=open_error_page(driver,xml_parent,xml_child,r,my_logger)
                 logger.debug("Error:"+str( error_message))
-		send_mail("your task has failed  due to the following reason:"+ str(error_message))
+		send_bug_on_bugzilla(error_message,xml_child)
+		#send_mail(xml_child.get("value") + " This testcase has failed due to the following reason.." + str(error_message))
 	    row_count+=1
     return
 
@@ -1292,7 +1305,8 @@ def check_pendingtask_table(driver,xml_sub_child,xml_child,vm_name,operation_nam
 
 
 def check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_table_name,path_row,path_col,path_header,my_logger):
-    
+    logger.debug("inside check_task_table operation name is : " + str(operation_name))
+    logger.debug("vm_name is : " + str(vm_name))
     task_data=[]
     if isTablePresent(driver,xml_child,path_col,my_logger):
         countp=0
@@ -1317,9 +1331,11 @@ def check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_t
         field=driver.find_elements_by_xpath(path_col)
         for data in field:
             if c_count%col_count==task_f_no:
-                op_name_sc=data.text                
+                op_name_sc=data.text 
+                logger.debug("op_name_sc is : " + str(op_name_sc))               
             if c_count%col_count==vm_f_no:
-                vm_name_s=data.text                
+                vm_name_s=data.text
+                logger.debug("vm_name is : " + str(vm_name))                
             if c_count%col_count==requester_f_no:
 		 usernm=usrnm_list[xml_child[0].text]
             	 if str(usernm)==str(data.text):
@@ -1328,6 +1344,10 @@ def check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_t
             if (c_count%col_count==request_f_no):
                 start_time_s=data.text
             if (select_row) & (c_count%col_count==(col_count-1)):
+                logger.debug("vm_name is : " + str(vm_name))
+                logger.debug("vm_name_s is : " + str(vm_name_s))
+                logger.debug("op_name_sc is : " + str(op_name_sc))
+                logger.debug("operation_name is : " + str(operation_name))
                 if (str(vm_name)==str(vm_name_s)) & (str(operation_name)==str(op_name_sc)):	
 		    logger.debug("vm is still in pending task table")	    
 		    task_data.append(start_time_s)
@@ -1335,12 +1355,13 @@ def check_tasktable(driver,xml_sub_child,xml_child,vm_name,operation_name,task_t
             c_count+=1
     else:
         countp=0
+    logger.debug("task_data is : " + str(task_data))
     return task_data
 
 
 
 def check_completedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger):
-    logger.debug("Checking data in completed task table")
+    logger.debug("Checking data in completed task table operation name is : " +str(operation_name))
     task_table_name="Completed Task"
     time.sleep(20)
     driver.find_element_by_partial_link_text("Tasks").click()
@@ -1355,7 +1376,7 @@ def check_completedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_n
 
 
 def check_failedtask_table(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger):
-    logger.debug("Checking data in failed task table")
+    logger.debug("Checking data in failed task table operation name is : " + str(operation_name))
     task_table_name="Failed Task"
     driver.find_element_by_partial_link_text("Failed Tasks").click()
     path_row="//table[@id='failedtasks']/tbody/tr"
@@ -1686,7 +1707,10 @@ def send_mail(error_message):
     mail.settings.server = 'smtp.iitd.ernet.in:25'
     mail.settings.sender = 'jyoti690.visitor@cse.iitd.ernet.in'
     mail.settings.login = 'jyoti690.visitor@cse.iitd.ernet.in:jyoti_saini'
-    mail.send(to=['monika71990@gmail.com'],
+    mail.send(to=['sonal.swarnima@gmail.com','kanikashridhar@gmail.com ','keerti.agr@gmail.com','nalini.varshney22@gmail.com','jyoti690saini@gmail.com'],
           subject='Bug in baadal',
           # If reply_to is omitted, then mail.settings.sender is used
-          message="Error" + str(error_message))
+          message="Hello Team,\n\n"
+              +str(error_message)+ " .For further details check the logs on https://baadaltesting.cse.iitd.ernet.in\n\n"
+              "Thanks,\n"
+              "....")

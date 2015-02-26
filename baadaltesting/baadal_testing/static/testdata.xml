@@ -2487,7 +2487,7 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
 		
 <test_script94 id="50" href="Login" xpath="//span[@class='auth_navbar']" name="user">
 	
-        <test_case1  type="RAM" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" value="Checking VM Performance(Memory)" cmd_run_prgrm="python /home/data/mem.py">
+        <test_case1  type="RAM" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" value="Checking VM Graph(Memory)" cmd_run_prgrm="python /home/data/mem.py">
 		   <!--    <user_name id="user_username" type="input">badalUFA</user_name>
 			<password id="user_password" type="input">baadal@test_2015</password>
 			<submit type="submit">//input[@type='submit']</submit>
@@ -2510,19 +2510,19 @@ xpath_snap="//table[@id='vm_snaps']/tbody/tr" max="3"  op="Delete" title="//tabl
                
 	</test_script94>
 	<test_script95 id="51">
-	<test_case1 value="Checking VM Performance(CPU)" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" cmd_run_prgrm="python /home/data/cpu.py" type="CPU">
+	<test_case1 value="Checking VM Graph(CPU)" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" cmd_run_prgrm="python /home/data/cpu.py" type="CPU">
        
           <setting type ="graph_perf"> </setting>  
                 </test_case1>
 	</test_script95>
 	<test_script96 id="52">
-	<test_case1 value="Checking VM Performance(Network)" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" cmd_run_prgrm="python /home/data/net.py" type="NETWORK">
+	<test_case1 value="Checking VM Graph(Network)" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" cmd_run_prgrm="python /home/data/net.py" type="NETWORK">
         
 	<setting type ="graph_perf"> </setting>
                 </test_case1>
 	</test_script96>
 	<test_script97 id="53">
-	<test_case1 value="Checking VM Performance(Disk)" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" cmd_run_prgrm="python /home/data/disk.py" type="DISK" >
+	<test_case1 value="Checking VM Graph(Disk)" ip_add='10.237.20.155' usrnam="root" password="baadal@drc_JAN2015" cmd_run_prgrm="python /home/data/disk.py" type="DISK" >
        
 		<setting type ="graph_perf"> </setting> 
                 </test_case1>

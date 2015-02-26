@@ -236,6 +236,7 @@ def click_on_operations(driver,xml_sub_child,xml_child,xml_parent,vm_name,vm_id,
 	limit=op_clone_vm(driver,xml_sub_child,xml_child,xml_parent,vm_name,vm_id,my_logger)
     elif op_name=="start_machine":
 	print "start vm"
+        logger.debug("vm_name is : " + str(vm_name))
 	limit=op_start_vm(driver,xml_sub_child,xml_child,xml_parent,vm_name,vm_id,my_logger)
         logger.debug("return back after performing start vm")
     else:
@@ -853,13 +854,14 @@ def op_start_vm(driver,xml_sub_child,xml_child,xml_parent,vm_name,vm_id,my_logge
     click_on_setting(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
     if isElementPresent(driver,xml_child,path,my_logger):
     	driver.find_element_by_xpath(path).click()
-        time.sleep(60)
+        #time.sleep(60)
 	my_logger.debug("vm start")
 	driver.refresh()
    
     else:
 	my_logger.debug("No element exist")
     driver.find_element_by_link_text("Tasks").click()
+    logger.debug("operation name is : " + str(operation_name))
     task_n_value=perform_task_operation(driver,xml_sub_child,xml_child,vm_name,operation_name,my_logger)
     logger.debug("Before operations:"+str(task_value))
     logger.debug("After operations:"+str(task_n_value))
@@ -1348,7 +1350,7 @@ def attach_disk(driver,xml_child,xml_sub_child,xml_parent,vm_name,baadal_db,my_l
            my_logger.debug("attached sucessfully:")
            my_logger.debug("before attach request disk size is : " + str(check))
 	   my_logger.debug("after attach request disk size is : " +str(check1))
-    #delete_specific_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
+    delete_specific_vm(driver,xml_sub_child,xml_child,vm_name,vm_id,my_logger)
 
 
 def live_attach_disk(driver,xml_child,xml_sub_child,baadal_db,vm_name,my_logger):
@@ -1445,7 +1447,7 @@ def clone_vm_list(driver,xml_child,xml_sub_child,vm_name,my_logger):
         vm_id=""
 	private_ip=""
     data2.insert(0,vm_id)
-    data2.insert(1,new_vmname)
+    data2.insert(1,vm_name1)
     data2.insert(2,private_ip)
     logger.debug(data2)
     return data2
@@ -1483,6 +1485,7 @@ def clone_vm(driver,xml_child,xml_sub_child,xml_parent,vm_name,baadal_db,my_logg
 	private_ip=data1[2][0:]
     private_ip=str(private_ip)
     logger.debug("vm_id is : " + str(vm_id2))
+    logger.debug("vm_name2 is : " + str(vm_name2))
     logger.debug("private ip is : " + str(private_ip))
     #driver.find_element_by_partial_link_text("My VMs").click()
     click_on_setting(driver,xml_sub_child,xml_child,vm_name2,vm_id2,my_logger)

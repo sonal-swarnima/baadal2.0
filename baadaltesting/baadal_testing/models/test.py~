@@ -633,7 +633,7 @@ def print_graph_result(finl_data,init_data,xml_child,my_logger):
         
 	
         if  xml_child.get("type")=="CPU":
-            if  (i== 0):
+            if  (i== 1):
             
 	        my_logger.info("Checking data for CPU performance")
 		logger.info("i_data value is : " + str(i_data))
@@ -642,7 +642,7 @@ def print_graph_result(finl_data,init_data,xml_child,my_logger):
                 check_type_of_graph(diff,xml_child,fin_data,my_logger)
             
         elif xml_child.get("type")=="RAM":
-            if i==1 or i==2 :
+            if  i==2 :
                  my_logger.info("Checking data for RAM performance")
 		 logger.info("i_data value is : " + str(i_data))
                  logger.info("final value is : " + str(fin_data)  )
@@ -677,9 +677,16 @@ def check_type_of_graph(diff,xml_child,fin_data,my_logger):
     
     logger.info(xml_child.get("value") +": Differnce "+ str(diff)) 
     if fin_data==0:
+	error_message=":  Graph testing failed as RRD is not working!!!"
+	send_bug_on_bugzilla(error_message,xml_child)
+	send_mail(xml_child.get("value") +str(error_message))
 	my_logger.info(xml_child.get("value") +':  '+"Incorrect Data")
     else :
 	if diff<=0:
+	    error_message="Incorrect data..No changes after executing program on VM.Either program has not executed on VM or RRD is not working!!! "
+            send_bug_on_bugzilla(error_message,xml_child)
+	    
+	    send_mail(xml_child.get("value") +':  '+ str(error_message))
 	    my_logger.info(xml_child.get("value") +':  '+"Incorrect Data") 
 	else:
 	    my_logger.info(xml_child.get("value") +':  '+"Correct Data") 
@@ -690,6 +697,7 @@ def print_graph(finl_data,xml_child,my_logger):
         if finl_data[i]=="-nan":
             my_logger.info(xml_child.get("value") +':  '+"Correct Data")
         else :
+	    
             my_logger.info(xml_child.get("value") +':  '+"Incorrect Data")
 #################################################################################################################
 #                                        Function  for Network testing                                            #
@@ -1528,7 +1536,9 @@ def check_cpu_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(cpu_output) <= upper_limit:
        my_logger.info( "CPU performance is upto the mark!!!!!!!!!!")
     else:
-       send_mail(error_message)
+       error_message="CPU performance is not upto the mark!!!!!!!!!!"
+       send_bug_on_bugzilla(error_message,xml_child)
+       #send_mail(xml_child.get("value") +"CPU performance is not upto the mark!!!!!!!!!!")
        my_logger.error( "CPU performance is not upto the mark!!!!!!!!!!")
     ssh.close()
     return
@@ -1548,7 +1558,9 @@ def check_seqr_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(fseqr_output) <= upper_limit:
 	my_logger.info( "File Sequential Read performance is upto the mark!!!!!!!!!!")
     else:
-	 send_mail(error_message)
+	 error_message="File Sequential Read performance is not upto the mark!!!!!!!!!!"
+         send_bug_on_bugzilla(error_message,xml_child)
+	 #send_mail(xml_child.get("value") +"File Sequential Read performance is not upto the mark!!!!!!!!!!")
          my_logger.error( "File Sequential Read performance is not upto the mark!!!!!!!!!!")
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=seqrd cleanup")
     ssh.close()
@@ -1571,7 +1583,9 @@ def check_seqw_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(fseqrd_output) <= upper_limit:
 	my_logger.info( "File Sequential Write performance is upto the mark!!!!!!!!!!")
     else:
-	send_mail(error_message)
+	error_message="File Sequential Write performance is not upto the mark!!!!!!!!!!"
+        send_bug_on_bugzilla(error_message,xml_child)
+	#send_mail(xml_child.get("value") +"File Sequential Write performance is not upto the mark!!!!!!!!!!")
 	my_logger.error( "File Sequential Write performance is not upto the mark!!!!!!!!!!")
 
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=seqwr cleanup")
@@ -1590,7 +1604,9 @@ def check_ranr_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(frndrd_output) <= upper_limit:
 	my_logger.info( "File Random Read performance is upto the mark!!!!!!!!!!")
     else:
-	send_mail(error_message)
+        error_message="File Randon Read performance is not upto the mark!!!!!!!!!!"
+        send_bug_on_bugzilla(error_message,xml_child)
+	#send_mail(xml_child.get("value") +"File Random Read performance is not upto the mark!!!!!!!!!!")
 	my_logger.error( "File Random Read performance is not upto the mark!!!!!!!!!!")
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=rndrd cleanup")
     ssh.close()
@@ -1610,7 +1626,9 @@ def check_ranw_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(frndwr_output) <= upper_limit:
 	my_logger.info( "File Randon Write performance is upto the mark!!!!!!!!!!")
     else:
-	send_mail(error_message)
+	error_message="File Randon Write performance is not upto the mark!!!!!!!!!!"
+        send_bug_on_bugzilla(error_message,xml_child)
+	#send_mail(xml_child.get("value") +"File Randon Write performance is not upto the mark!!!!!!!!!!")
 	my_logger.error( "File Randon Write performance is not upto the mark!!!!!!!!!!")
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=fileio --num-threads=1 --file-total-size=2G --file-test-mode=rndwr cleanup")
     ssh.close()
@@ -1630,10 +1648,14 @@ def check_net_performance(upper_limit,lower_limit,vm_ip,my_logger):
         if lower_limit <= float(net_output) <= upper_limit:
 	    my_logger.info( "Network performance is upto the mark!!!!!!!!!!")
         else:
-	    send_mail(error_message)
+	    error_message="Network performance is upto the mark!!!!!!!!!!"
+            send_bug_on_bugzilla(error_message,xml_child)
+	    #send_mail(xml_child.get("value") +"Network performance is not upto the mark!!!!!!!!!!")
 	    my_logger.error( "Network performance is not upto the mark!!!!!!!!!!")
     else:
-	send_mail(error_message)
+	error_message="Network performance is not done as netperf not installed on the VM!!!!!!!!!!"
+        send_bug_on_bugzilla(error_message,xml_child)
+	#send_mail(xml_child.get("value") +"Network performance is not done as netperf not installed on the VM!!!!!!!!!!")
 	my_logger.info( "Network performance is not done as netperf not installed on the VM!!!!!!!!!!")
     ssh.close()
     return
@@ -1654,7 +1676,9 @@ def check_memr_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(memr_output) <= upper_limit:
 	my_logger.info( "Memory Read performance is upto the mark!!!!!!!!!!")
     else:
-        send_mail(error_message)
+	error_message="Memory Read performance is not upto the mark!!!!!!!!!!"
+        send_bug_on_bugzilla(error_message,xml_child)
+        #send_mail(xml_child.get("value") +"Memory Read performance is not upto the mark!!!!!!!!!!")
 	my_logger.error( "Memory Read performance is not upto the mark!!!!!!!!!!")
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=read cleanup")
     return
@@ -1674,8 +1698,9 @@ def check_memw_performance(upper_limit,lower_limit,vm_ip,my_logger):
     if lower_limit <= float(memw_output) <= upper_limit:
 	my_logger.info( "Memroy Write performance is upto the mark!!!!!!!!!!")
     else:
-	error_message="Memroy Write performance is not upto the mark!!!!!!!!!!"
-	send_mail(error_message)
+	error_message="Incorrect data..No changes after executing program on VM.Either program has not executed on VM or RRD is not working!!! "
+        send_bug_on_bugzilla(error_message,xml_child)
+	#send_mail(xml_child.get("value") +"Memroy Write performance is not upto the mark!!!!!!!!!!")
 	my_logger.error( "Memroy Write performance is not upto the mark!!!!!!!!!!")
     stdin, stdout, stderr =ssh.exec_command("sysbench --test=mutex --memory-total-size=1G --memory-oper=write cleanup")
     return
