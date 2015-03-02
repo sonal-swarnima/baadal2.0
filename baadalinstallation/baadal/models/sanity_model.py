@@ -162,9 +162,9 @@ def add_orphan_vm(vm_name, host_id):
     mac_address = mac_elem.attrib['address']
 
     ip_addr = db.private_ip_pool(mac_addr = mac_address)
-    ip_address = '127.0.0.1'
+    ip_address = None
     if ip_addr:
-        ip_address = ip_addr['private_ip']
+        ip_address = ip_addr['id']
     
     template_elem = root.xpath("devices/disk[@type='file']/source")[0]
     template_file = template_elem.attrib['file']
@@ -175,7 +175,7 @@ def add_orphan_vm(vm_name, host_id):
 
     security_domain_row = db.security_domain(vlan=ip_addr['vlan'])
     
-    vm_id = db.vm_data.insert(
+    db.vm_data.insert(
         vm_name = vm_name, 
         vm_identity = (vm_name), 
         RAM = ram_in_mb,
@@ -188,13 +188,11 @@ def add_orphan_vm(vm_name, host_id):
         owner_id = SYSTEM_USER,
         requester_id = SYSTEM_USER,
         private_ip = ip_address,
-        mac_addr = mac_address,
         vnc_port = vnc_port,
         purpose = 'Added by System',
         security_domain = security_domain_row['id'],
         status = vm_status)
         
-    db.private_ip_pool[ip_addr['id']] = dict(vm_id=vm_id)
     return
 
 def delete_vm_info(vm_identity):
