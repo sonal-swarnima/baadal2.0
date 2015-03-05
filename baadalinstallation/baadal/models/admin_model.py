@@ -446,7 +446,7 @@ def update_vm_lock(vminfo,flag) :
 
 def get_all_hosts() :
     
-    hosts = db().select(db.host.ALL) 
+    hosts = db().select(db.host.ALL, orderby = db.host.host_name)
     results = []
     for host in hosts:
         results.append({'ip'    :host.host_ip.private_ip, 
@@ -454,7 +454,8 @@ def get_all_hosts() :
                         'name'  :host.host_name, 
                         'status':host.status, 
                         'RAM'   :host.RAM,
-                        'CPUs'  :host.CPUs})    
+                        'CPUs'  :host.CPUs,
+                        'info'  :host.extra if host.extra != None else '-'})    
     return results
 
 
@@ -542,10 +543,11 @@ def get_configure_host_form():
 
 
 def get_add_host_form():
-    form_fields = ['host_ip','host_name','mac_addr','HDD','RAM','CPUs', 'host_type']
-    form_labels = {'host_ip':'Host IP','host_name':'Host Name','mac_addr':'MAC Address','HDD':'Harddisk(GB)','RAM':'RAM size in GB:','CPUs':'No. of CPUs:'}
+    form_fields = ['host_ip','host_name','HDD','RAM','CPUs', 'host_type']
+    form_labels = {'host_ip':'Host IP','host_name':'Host Name','HDD':'Harddisk(GB)','RAM':'RAM size in GB:','CPUs':'No. of CPUs:'}
 
     form = SQLFORM(db.host, fields = form_fields, labels = form_labels, submit_button = 'Add Host')
+    db.host.host_ip.writable=False
     return form
 
 

@@ -259,7 +259,6 @@ def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=None):
     params={'vm_id' : vm_id, 'destination_host' : dest_host_id, 'live_migration' : live_migration}
 
     current.db.task_queue.insert(task_type=current.VM_TASK_MIGRATE_HOST,
-                         vm_id=vm_id, 
                          requester_id=-1,
                          parameters=params, 
                          priority=1,  

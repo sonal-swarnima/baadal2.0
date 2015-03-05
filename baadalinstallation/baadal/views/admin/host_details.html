@@ -15,6 +15,7 @@
         <th>Name</th>
         <th>IP</th>
         <th>Status</th>
+        <th>Comment</th>
         <th>Commands</th>
       </tr>
   {{for host in hosts:}}
@@ -30,6 +31,7 @@
                 Maintenance
             {{pass}}
         </td>
+        <td>{{=host['extra']}}</td>
         <td>
    
         {{ if host['status']== HOST_STATUS_DOWN:}}
