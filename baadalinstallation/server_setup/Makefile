@@ -1,7 +1,7 @@
 BAADAL_LOCAL_DIR = ~/.baadal
 BIN_DIR = $(BAADAL_LOCAL_DIR)/bin
 SRC_DIR = src
-UTILS_DIR = utils
+UTILS_DIR = $(DIR_BAADAL_ROOT)/baadaltesting/sandbox/utils
 LOGS_DIR = $(BAADAL_LOCAL_DIR)/logs
 DISKS_DIR = $(BAADAL_LOCAL_DIR)/disks
 TEMP_DIR = $(BAADAL_LOCAL_DIR)/temp
@@ -15,15 +15,13 @@ DIR_BAADAL_CURRENT = $(shell pwd)
 DIR_BAADAL_ROOT = $(shell pwd)/../..
 DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 
-BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/baadal.tar
+BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/newbaadal.tar
 
 PROFILE = iitd
 # Please update this ip address after migration is complete, and make
-# sure it's reachable from any (all) subnets of IITD including hostels.
+# sure it's reachable from any (all) subnets of IITD including mysqlels.
 #PROFILE_PPA = http://10.208.20.131/openvswitch
 PROFILE_PPA = http://10.237.22.42/openvswitch
-  
-HOST_ID = 1
   
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
 UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu14.04/ubuntu-14.04-desktop-amd64.iso
@@ -35,6 +33,9 @@ UBUNTU_SOURCE = $(UBUNTU_SERVER)
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.6.tar.gz
 LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.6.tar.gz
 
+CFENGINE = $(UTILS_DIR)/cfengine-community_3.6.3-1_amd64.deb
+CFENGINE_SOURCE = http://s3.amazonaws.com/cfengine.package-repos/community_binaries/cfengine-community_3.6.3-1_amd64.deb
+
 LIBVIRTPYTHON = $(UTILS_DIR)/libvirt-python-1.2.6
 LIBVIRTPYTHON_SOURCE = http://libvirt.org/sources/python/libvirt-python-1.2.6.tar.gz
 LIBVIRTPYTHON_TAR=libvirt-python-1.2.6.tar.gz
@@ -43,14 +44,19 @@ VIRTMANAGER = $(UTILS_DIR)/virt-manager-0.10.0.tar.gz
 VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot/virt-manager-0.10.0.tar.gz
 
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
+
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
 BIN_CONTROLLER_SETUP = $(BIN_DIR)/controller-setup.sh
-BIN_FILER = $(BIN_DIR)/filer.sh
-BIN_FILER_SETUP = $(BIN_DIR)/filer-setup.sh
-BIN_NAT = $(BIN_DIR)/nat.sh
-BIN_NAT_SETUP = $(BIN_DIR)/nat-setup.sh
-BIN_HOST = $(BIN_DIR)/host.$(HOST_ID).sh
-BIN_HOST_SETUP = $(BIN_DIR)/host-setup.sh
+
+BIN_PXE = $(BIN_DIR)/pxe_dhcp.sh
+BIN_PXE_SETUP = $(BIN_DIR)/pxe_dhcp-setup.sh
+
+BIN_CFENGINE = $(BIN_DIR)/cfengine.sh
+BIN_CFENGINE_SETUP = $(BIN_DIR)/cfengine-setup.sh
+
+BIN_MYSQL = $(BIN_DIR)/mysql.sh
+BIN_MYSQL_SETUP = $(BIN_DIR)/mysql-setup.sh
+
 BIN_SWITCH = $(BIN_DIR)/switch.sh
 BIN_SSH_AUTHORIZED_KEYS = $(BIN_DIR)/authorized_keys
 
@@ -62,13 +68,15 @@ $(BIN_DIR):
 $(BAADAL_LOCAL_DIR):
 	@ mkdir -p $@
 
-$(UTILS_DIR):
+$(UTILS_DIR): $(LOGS_DIR) 
+	@ echo 'keerti' 
 	@ mkdir -p $@
 
 $(UTILS_LOCAL_DIR):
 	@ mkdir -p $@
   
 $(LOGS_DIR):
+	@ echo "keerti123"
 	@ mkdir -p $@
   
 $(DISKS_DIR):
@@ -97,13 +105,20 @@ $(VIRTMANAGER):
 	@ mkdir -p $(UTILS_DIR)
 	@ wget -c $(VIRTMANAGER_SOURCE) -O $@ || (rm $@ && false)
 
+$(CFENGINE):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(CFENGINE_SOURCE) -O $@ || (rm $@ && false)
+
+
 ubuntu: $(UBUNTU)
   
 libvirt: $(LIBVIRT) $(LIBVIRTPYTHON_TAR)
 
 virtmanager: $(VIRTMANAGER)
 
-utils: ubuntu libvirt virtmanager
+cfengine: $(CFENGINE)
+
+utils: ubuntu libvirt virtmanager cfengine
 
 $(BAADAL_TRANSFER_TAR):
 	@ mkdir -p $(UTILS_LOCAL_DIR)
@@ -124,17 +139,6 @@ $(CONFIGURE):
 # Is one way necessarily better than the other? Yes, obviously.
 # Is this the better way? No.
 openvswitch: sources-list-setup
-	#apt-get update || true
-	#apt-get -y install python-software-properties
-	#if [[ "$(PROFILE)" == "iitd" ]]; then \
-	#	add-apt-repository -y 'deb [arch=amd64] $(PROFILE_PPA) precise main';\
-	#	wget $(PROFILE_PPA)/key.gpg; \
-	#	cat key.gpg | apt-key add - ;\
-	#	rm key.gpg ;\
-	#else \
-	#	add-apt-repository -y ppa:ivoks/ovs-saucy ;\
-	#fi
-
 	apt-get update || true
 	apt-get -y install python-software-properties
 	apt-get -y install openvswitch-switch
@@ -158,25 +162,26 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISK
 	@ chmod +x $@
 	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
   
-$(BIN_FILER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/filer ubuntu filer-transfer
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/*.sh > $@
+$(BIN_PXE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(DISKS_DIR) $(SRC_DIR)/pxe_dhcp ubuntu pxe_dhcp-transfer
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/pxe_dhcp/*.sh > $@	
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
-	@ cp $(SRC_DIR)/filer/ks.cfg $(BIN_DIR)/ks.filer.cfg
+	@ cp $(SRC_DIR)/pxe_dhcp/ks.cfg $(BIN_DIR)/ks.pxe_dhcp.cfg
   
-$(BIN_NAT): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/nat ubuntu nat-transfer
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/install.sh > $@
+$(BIN_CFENGINE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/cfengine ubuntu cfengine-transfer
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/cfengine/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
-	@ cp $(SRC_DIR)/nat/ks.cfg $(BIN_DIR)/ks.nat.cfg
+	@ cp $(SRC_DIR)/cfengine/ks.cfg $(BIN_DIR)/ks.cfengine.cfg
   
-$(BIN_HOST): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/host ubuntu keygen-ssh-all
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/*.sh > $@
+$(BIN_MYSQL): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/mysql ubuntu mysql-transfer 
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/mysql/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
+	@ cp $(SRC_DIR)/mysql/ks.cfg $(BIN_DIR)/ks.mysql.cfg
   
 $(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
@@ -192,38 +197,50 @@ controller: $(BIN_CONTROLLER)
 controller-setup: $(BIN_CONTROLLER_SETUP)
 	@ sudo DNS=$$DNS CONTROLLER_INTERFACE=$$INTERFACE $<
   
-filer: $(BIN_FILER)
+pxe_dhcp: $(BIN_PXE)
 	@ sudo $<
 
-filer-setup: $(BIN_FILER_SETUP)
+pxe_dhcp-setup: $(BIN_PXE_SETUP)
 	@ sudo apt-get install nfs-kernel-server
 	@ sudo $<
   
-nat: $(BIN_NAT)
+cfengine: $(BIN_CFENGINE)
 	@ sudo $<
 
-nat-setup: $(BIN_NAT_SETUP)
+cfengine-setup: $(BIN_CFENGINE_SETUP)
 	@ sudo $<
 
-host: $(BIN_HOST)
-	sudo HOST_ID=$(HOST_ID) $<
+mysql: $(BIN_MYSQL)
+	sudo $<
 
-host-setup: $(BIN_HOST_SETUP)
-	@ sudo HOST_INTERFACE=$$INTERFACE $<
+mysql-setup: $(BIN_MYSQL_SETUP)
+	@ sudo $<
   
 switch: $(BIN_SWITCH)
 	@ sudo VIRTMANAGER_INSTALL=$$VIRTMANAGER_INSTALL LIBVIRT_INSTALL=$$LIBVIRT_INSTALL INTERFACE=$$INTERFACE DNS=$$DNS $<
   
-nat-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
-	@ cp -R $(SRC_DIR)/nat/transfer $(BIN_DIR)/transfer.nat
-	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.ssh
-	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.nat/root/.ssh
-	@ cp $(BIN_DIR)/id_rsa.nat $(BIN_DIR)/transfer.nat/root/.ssh/id_rsa
-	@ cp $(BIN_DIR)/id_rsa.nat.pub $(BIN_DIR)/transfer.nat/root/.ssh/id_rsa.pub
-	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
-	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.nat/baadal/baadal.tar
-	@ mkdir -p $(BIN_DIR)/transfer.nat/root/.baadal
-	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.nat/root/.baadal
+cfengine-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
+	@ cp -R $(SRC_DIR)/cfengine/transfer $(BIN_DIR)/transfer.cfengine
+	@ mkdir -p $(BIN_DIR)/transfer.cfengine/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.cfengine/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.cfengine $(BIN_DIR)/transfer.cfengine/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.cfengine.pub $(BIN_DIR)/transfer.cfengine/root/.ssh/id_rsa.pub
+	@ mkdir -p $(BIN_DIR)/transfer.cfengine/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.cfengine/baadal/newbaadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.cfengine/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.cfengine/root/.baadal
+
+mysql-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
+	@ cp -R $(SRC_DIR)/mysql/transfer $(BIN_DIR)/transfer.mysql
+	@ mkdir -p $(BIN_DIR)/transfer.mysql/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.mysql/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.mysql $(BIN_DIR)/transfer.mysql/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.mysql.pub $(BIN_DIR)/transfer.mysql/root/.ssh/id_rsa.pub
+	@ mkdir -p $(BIN_DIR)/transfer.mysql/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.mysql/baadal/newbaadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.mysql/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.mysql/root/.baadal
+
 
 controller-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp -R $(SRC_DIR)/controller/transfer $(BIN_DIR)/transfer.controller
@@ -232,20 +249,21 @@ controller-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp $(BIN_DIR)/id_rsa.controller $(BIN_DIR)/transfer.controller/root/.ssh/id_rsa
 	@ cp $(BIN_DIR)/id_rsa.controller.pub $(BIN_DIR)/transfer.controller/root/.ssh/id_rsa.pub
 	@ mkdir -p $(BIN_DIR)/transfer.controller/baadal
-	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.controller/baadal/baadal.tar
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.controller/baadal/newbaadal.tar
 	@ mkdir -p $(BIN_DIR)/transfer.controller/root/.baadal
 	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.controller/root/.baadal
 
-filer-transfer: $(CONFIG_DIR) keygen-ssh-all
-	@ cp -R $(SRC_DIR)/filer/transfer $(BIN_DIR)/transfer.filer
-	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.ssh
-	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.filer/root/.ssh
-	@ cp $(BIN_DIR)/id_rsa.filer $(BIN_DIR)/transfer.filer/root/.ssh/id_rsa
-	@ cp $(BIN_DIR)/id_rsa.filer.pub $(BIN_DIR)/transfer.filer/root/.ssh/id_rsa.pub
-	@ mkdir -p $(BIN_DIR)/transfer.filer/baadal
-	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.filer/baadal/baadal.tar
-	@ mkdir -p $(BIN_DIR)/transfer.filer/root/.baadal
-	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.filer/root/.baadal
+#changed by keerti
+pxe_dhcp-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
+	@ cp -R $(SRC_DIR)/pxe_dhcp/transfer $(BIN_DIR)/transfer.pxe_dhcp
+	@ mkdir -p $(BIN_DIR)/transfer.pxe_dhcp/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.pxe_dhcp/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.pxe_dhcp $(BIN_DIR)/transfer.pxe_dhcp/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.pxe_dhcp.pub $(BIN_DIR)/transfer.pxe_dhcp/root/.ssh/id_rsa.pub
+	@ mkdir -p $(BIN_DIR)/transfer.pxe_dhcp/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.pxe_dhcp/baadal/newbaadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.pxe_dhcp/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.pxe_dhcp/root/.baadal
 
 $(BIN_CONTROLLER_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/controller $(SRC_DIR)/controller/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/controller-setup.sh > $@
@@ -253,30 +271,31 @@ $(BIN_CONTROLLER_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/controller $(SRC_DIR)
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 
-$(BIN_NAT_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/nat $(SRC_DIR)/nat/*
-	@ mkdir -p $(BIN_DIR)/transfer.nat/baadal
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/nat/nat-setup.sh > $@
+$(BIN_CFENGINE_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/cfengine $(SRC_DIR)/cfengine/*
+	@ mkdir -p $(BIN_DIR)/transfer.cfengine/baadal
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/cfengine/cfengine-setup.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 
-$(BIN_HOST_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/host $(SRC_DIR)/host/*
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/host/host-setup.sh > $@
+$(BIN_MYSQL_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/mysql $(SRC_DIR)/mysql/*
+	@ mkdir -p $(BIN_DIR)/transfer.mysql/baadal
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/mysql/mysql-setup.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 
-$(BIN_FILER_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/filer $(SRC_DIR)/filer/*
-	@ mkdir -p $(BIN_DIR)/transfer.filer/baadal
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/filer/filer-setup.sh > $@
+$(BIN_PXE_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/pxe_dhcp $(SRC_DIR)/pxe_dhcp/*
+	@ mkdir -p $(BIN_DIR)/transfer.pxe_dhcp/baadal
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/pxe_dhcp/pxe_dhcp-setup.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 
 sources-list-setup:
-	@ sudo cp $(SRC_DIR)/common/sources.$(PROFILE) /etc/apt/sources.list 2>/dev/null || true
+	@ sudo cp $(SRC_DIR)/sources.$(PROFILE) /etc/apt/sources.list 2>/dev/null || true
 
-sandbox: switch nat controller filer
+sandbox: switch controller pxe_dhcp cfengine mysql
 
 configure: $(BIN_CONFIGURE)
 	@ $(BIN_CONFIGURE)
@@ -289,12 +308,16 @@ $(BIN_DIR)/id_rsa.controller:
 	@ ssh-keygen -q -f $@ -N '' -C 'baadal-controller'
 	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
-$(BIN_DIR)/id_rsa.filer:
-	@ ssh-keygen -q -f $@ -N '' -C 'baadal-filer'
+$(BIN_DIR)/id_rsa.pxe_dhcp:
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-pxe-dhcp'
 	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
-$(BIN_DIR)/id_rsa.nat:
-	@ ssh-keygen -q -f $@ -N '' -C 'baadal-nat'
+$(BIN_DIR)/id_rsa.cfengine:
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-cfengine'
+	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+
+$(BIN_DIR)/id_rsa.mysql:
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-mysql'
 	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
   
 ~/.ssh/id_rsa:
@@ -304,11 +327,14 @@ keygen-ssh-sandbox: $(BIN_DIR)/id_rsa.sandbox.pub
   
 keygen-ssh-controller: $(BIN_DIR)/id_rsa.controller
   
-keygen-ssh-filer: $(BIN_DIR)/id_rsa.filer
+keygen-ssh-pxe_dhcp: $(BIN_DIR)/id_rsa.pxe_dhcp
   
-keygen-ssh-nat: $(BIN_DIR)/id_rsa.nat
+keygen-ssh-cfengine: $(BIN_DIR)/id_rsa.cfengine
+
+keygen-ssh-mysql: $(BIN_DIR)/id_rsa.mysql
   
-keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-filer keygen-ssh-nat
+keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-pxe_dhcp keygen-ssh-cfengine keygen-ssh-mysql
+
   
 clean-config:
 	rm -rf $(CONFIGURE)
@@ -322,34 +348,37 @@ clean-controller:
 	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.controller.iso
 	sudo rm -f $(DISKS_DIR)/controller.img
   
-clean-filer:
-	sudo virsh destroy baadal_filer || true
-	sudo virsh undefine baadal_filer || true
-	sudo rm -f $(BIN_FILER)
-	sudo rm -f $(BIN_DIR)/ks.filer.cfg
-	sudo rm -rf $(BIN_DIR)/transfer.filer
-	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.filer.iso
-	sudo rm -f $(DISKS_DIR)/filer.img
+clean-pxe_dhcp:
+	sudo virsh destroy baadal_pxe_dhcp || true
+	sudo virsh undefine baadal_pxe_dhcp || true
+	sudo rm -f $(BIN_PXE)
+	sudo rm -f $(BIN_DIR)/ks.pxe_dhcp.cfg
+	sudo rm -rf $(BIN_DIR)/transfer.pxe_dhcp
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.pxe_dhcp.iso
+	sudo rm -f $(DISKS_DIR)/pxe_dhcp.img
   
-clean-nat:
-	sudo virsh destroy baadal_nat || true
-	sudo virsh undefine baadal_nat || true
-	sudo rm -f $(BIN_NAT)
-	sudo rm -f $(BIN_DIR)/ks.nat.cfg
-	sudo rm -rf $(BIN_DIR)/transfer.nat
-	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.nat.iso
-	sudo rm -f $(DISKS_DIR)/nat.img
+clean-cfengine:
+	sudo virsh destroy baadal_cfengine || true
+	sudo virsh undefine baadal_cfengine || true
+	sudo rm -f $(BIN_CFENGINE)
+	sudo rm -f $(BIN_DIR)/ks.cfengine.cfg
+	sudo rm -rf $(BIN_DIR)/transfer.cfengine
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.cfengine.iso
+	sudo rm -f $(DISKS_DIR)/cfengine.img
   
-clean-host:
-	sudo virsh destroy baadal_host_$(HOST_ID) || true
-	sudo virsh undefine baadal_host_$(HOST_ID) || true
-	sudo rm -f $(BIN_HOST)
-	sudo rm -f $(DISKS_DIR)/host.$(HOST_ID).img
+clean-mysql:
+	sudo virsh destroy baadal_mysql || true
+	sudo virsh undefine baadal_mysql || true
+	sudo rm -f $(BIN_MYSQL)
+	sudo rm -f $(DISKS_DIR)/mysql.img
+	sudo rm -rf $(BIN_DIR)/transfer.mysql
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.mysql.iso
+	sudo rm -f $(DISKS_DIR)/mysql.img
 
 clean-transfer-tar:
 	sudo rm -f $(BAADAL_TRANSFER_TAR)
 
-clean-setup: clean-config clean-controller clean-filer clean-nat clean-transfer-tar
+clean-setup: clean-config clean-controller clean-pxe_dhcp clean-cfengine clean-mysql clean-transfer-tar
 	sudo umount $(UTILS_DIR)/iso || true
 	sudo rm -rf $(UTILS_DIR)/iso
 	sudo rm -rf $(UTILS_DIR)/ubuntuiso

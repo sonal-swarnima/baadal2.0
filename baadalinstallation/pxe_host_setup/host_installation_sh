@@ -68,8 +68,8 @@ Enbl_Modules()
 	
 	cd /baadal/baadal/baadaltesting/sandbox/utils
 
-		tar -xvzf libvirt-1.2.9.tar.gz -C /root/
-		cd /root/libvirt-1.2.9
+		tar -xvzf libvirt-1.2.6.tar.gz -C /root/
+		cd /root/libvirt-1.2.6
 			./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 			make
 			make install
@@ -98,9 +98,9 @@ Enbl_Modules()
 			virsh net-autostart ovs-net
 		cd -
 
-		cd libvirt-python-1.2.9
-                        /root/libvirt-1.2.9/run python setup.py build
-                        /root/libvirt-1.2.9/run python setup.py install
+		cd libvirt-python-1.2.6
+                        /root/libvirt-1.2.6/run python setup.py build
+                        /root/libvirt-1.2.6/run python setup.py install
         cd -
 
 		tar -xvzf virt-manager-0.10.0.tar.gz -C /root
@@ -108,6 +108,12 @@ Enbl_Modules()
 		python setup.py install --prefix=/usr
 
 	cd -	
+
+    cd /cfengine
+         dpkg --install cfengine-community_3.6.3-1_amd64.deb
+         cf-agent --bootstrap 172.16.0.4
+    cd -
+
 
 	mkdir -p LOCAL_MOUNT_POINT
 	mount STORAGE_SERVER_IP:STORAGE_DIRECTORY LOCAL_MOUNT_POINT
@@ -125,6 +131,13 @@ Set_Hostname()
 	hostname $hostname
 }
 
+Disable_Apparmor()
+{
+        cd /etc/apparmor.d/disable
+        ln -s /etc/apparmor.d/usr.sbin.libvirtd . 
+        /etc/init.d/libvirt-bin restart
+}
+
 exec > >(tee /var/log/installation.log)
 exec 2>&1
 
@@ -133,5 +146,6 @@ Network_Setup
 Instl_Pkgs
 Enbl_Modules
 Set_Hostname
+Disable_Apparmor
 rm -f /etc/init.d/host_installation.sh
 reboot

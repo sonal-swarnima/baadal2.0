@@ -1,0 +1,8 @@
+bundle agent copy
+{
+files:
+
+  "/tmp/test_plain_1"
+  create => "true" ;
+}
+

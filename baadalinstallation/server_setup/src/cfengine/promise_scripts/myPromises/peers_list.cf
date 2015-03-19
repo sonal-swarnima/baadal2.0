@@ -1,0 +1,23 @@
+bundle agent peers
+{
+vars:
+
+  "myhosts" slist => { hostsseen("inf","lastseen","address") };
+
+files:
+   am_policy_hub::
+   "$(sys.workdir)/masterfiles/myPromises/hosts_ssh_keys/known_hosts"
+   comment => "Garbage collection of any output files",
+   delete => tidy,
+   classes => if_ok("done");
+
+commands:
+  done::
+  "/bin/sh $(sys.workdir)/masterfiles/myPromises/add_to_known_host.sh $(myhosts)";
+
+reports:
+  done::
+  "Found client/peer: $(myhosts)";
+
+}
+

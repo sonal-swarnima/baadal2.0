@@ -3,6 +3,7 @@ function run
   check_root
   config_get HOST_INTERFACE
 
+  HOST_INTERFACE=`ip route get 8.8.8.8 | awk '{ print $5; exit }'`
   #Install the ovs packages on NAT.
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
     

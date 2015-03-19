@@ -1,0 +1,6 @@
+bundle agent mounts
+{
+storage:
+  "/mnt/datastore" mount  => nfs("10.208.20.104","/vol/baadal/");  
+}
+

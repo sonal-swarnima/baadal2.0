@@ -1,0 +1,60 @@
+1. make utils
+   This will fetch all the required installers and the ubuntu ISO
+
+2. make switch LIBVIRT_INSTALL=yes VIRTMANAGER_INSTALL=yes
+   This will setup the internal bridges on the sandbox machine. These
+   arguments reinstall libvirt and virtmanager -- this may be required
+   if the machine has old versions of these programs.
+
+3. make baadal-transfer-tar
+   This will create a ~/.baadal/utils/baadal.tar file, which is to be
+   transferred to all the VMs. If an old version of baadal.tar exists, and
+   you want to replace it with a new one (because you think that something
+   has changed), type 'make clean-transfer-tar' before this command.
+
+6. make pxe 
+   This will create the PXE and DHCP VM. Once the VM is created, it is required to update the dhcp.conf file from the already running dhcp server.
+
+7. Go to the PXE DHCP machine and execute below commands 
+   $  cd /baadal/baadal/baadalinstallation/server_setup/
+   $  make openvswitch 
+   $  make pxe_dhcp-setup
+
+   $  cd  /baadal/baadal/baadalinstallation/
+   $  ./dhcp_installation.sh
+   $  ./pxe_installation.sh
+
+8. make cfengine
+   This will create the cfengine VM.
+
+#change the value of CFENGINE_IP and CONTROLLER_IP in controller_installation.cfg file
+9. Go to the cfengine VM and execute below commands
+   $  cd /baadal/baadal/baadalinstallation/server_setup/
+   $  make openvswitch
+
+   $  cd  /baadal/baadal/baadalinstallation/
+   $  ./cfengine_installation.sh
+
+10. make mysql
+ This will create the mysql VM
+
+11. Go to the mysql VM and execute the below commands
+   $  cd /baadal/baadal/baadalinstallation/server_setup/
+   $  make openvswitch
+
+Before executing the below script take the mysqldump of the baadal db from the machine where mysql is currently executing.
+Use the below command to take the mysqldump ,
+mysqldump -uroot -p<PASSWORD> baadal > dumpfile.sql and keep the file in /baadal/baadal/baadalinstallation/ folder 
+
+   $  cd  /baadal/baadal/baadalinstallation/
+   $  ./mysql_installation.sh
+
+12. make controller
+13. Go to the controller VM and execute the below commands
+   $  cd /baadal/baadal/baadalinstallation/server_setup/
+   $  make openvswitch
+   $  cd /baadal/baadal/baadalinstallation/server_setup/controller
+   $  ./controller_newinstallation.sh
+
+
+

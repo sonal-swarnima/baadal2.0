@@ -1,0 +1,17 @@
+bundle agent delete_old_logs {
+  files:
+       "$(sys.workdir)/outputs"
+
+        comment => "Garbage collection of any output files",
+        delete => tidy,
+        file_select => days_old("7"),
+        depth_search => recurse("inf");
+
+        "$(sys.workdir)/"
+
+        comment => "Garbage collection of any output files",
+        delete => tidy,
+        file_select => name_age(".*runlog.*","7"),
+        depth_search => recurse("inf");
+}
+

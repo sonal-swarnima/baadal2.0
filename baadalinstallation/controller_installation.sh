@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 baa
 CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2 python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson) 
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson uuid-dev)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev ntpdate)
 
@@ -369,10 +369,10 @@ Instl_Pkgs()
 	# end of FOR loop / package installation from pkg_lst
 
         cd /baadal/baadal/baadaltesting/sandbox/utils	
-			tar -xvzf libvirt-1.2.9.tar.gz
-			mv libvirt-1.2.9 /tmp/libvirt-1.2.9
+			tar -xvzf libvirt-1.2.6.tar.gz
+			mv libvirt-1.2.6 /tmp/libvirt-1.2.6
 	
-			cd /tmp/libvirt-1.2.9
+			cd /tmp/libvirt-1.2.6
 				./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
 				make
 				make install
@@ -384,9 +384,9 @@ Instl_Pkgs()
 			    	sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
 			cd -
 
-			cd libvirt-python-1.2.9
-		    	/tmp/libvirt-1.2.9/run python setup.py build
-				/tmp/libvirt-1.2.9/run python setup.py install
+			cd libvirt-python-1.2.6
+		    	/tmp/libvirt-1.2.6/run python setup.py build
+				/tmp/libvirt-1.2.6/run python setup.py install
 			cd -
         cd -
 
@@ -548,8 +548,8 @@ Enbl_Modules()
 	a2enmod rewrite
 	a2enmod headers
 	a2enmod expires
-    a2enmod wsgi
-    a2enmod rewrite
+	a2enmod wsgi
+   
 
 	shopt -s nocasematch
 	case $DB_TYPE in

@@ -1,0 +1,32 @@
+bundle agent check_packages_installed
+{
+
+methods:
+    "checkpackagesinstalled" usebundle
+                        => b01_run ;
+
+}
+
+bundle agent b01_run
+{
+
+vars:
+
+    "desired_packages" slist
+                        => {
+                             "tcpdump",
+                             "vim",
+                             "openssh-server",
+                             "smem",
+                             "virt-viewer",
+			     "traceroute"
+  	} ;
+
+packages:
+
+    "$(desired_packages)"
+    package_policy      => "add",
+    package_method      => apt ;
+
+}
+                                        

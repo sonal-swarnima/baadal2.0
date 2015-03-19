@@ -1,0 +1,17 @@
+bundle agent config_ssh
+{
+  files:
+      "/etc/ssh/sshd_config"
+        comment => "Ensure root login is disallowed",
+        edit_line => sshd_config,
+        classes => if_repaired("restart_sshd");
+
+  commands:
+   restart_sshd::
+       "/usr/sbin/service ssh restart";
+}
+
+bundle edit_line sshd_config {
+    replace_patterns:
+        "^PermitRootLogin .*$" replace_with => value("PermitRootLogin yes");
+}

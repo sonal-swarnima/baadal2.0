@@ -1,0 +1,29 @@
+bundle common main_promise
+{
+vars:
+    "bundles" slist     => {
+                             "check_services",
+                             "change_root_password",
+                             "set_passwordless_ssh_1",
+			     "mounts",
+                             "time_management" ,
+                             "delete_old_logs",
+			     "check_packages_installed",
+                             "config_ssh",
+                             "peers",
+    } ;
+
+    "promise_files" slist
+                        => {
+                             "myPromises/check_service_running.cf" ,
+                             "myPromises/change_root_password.cf" ,
+                             "myPromises/set_passwordless_ssh_1.cf" ,
+                             "myPromises/check_mounting.cf",
+                             "myPromises/check_and_set_date.cf",
+                             "myPromises/delete_old_logs.cf" ,
+                             "myPromises/check_packages_installed.cf",
+                             "myPromises/permit_root_login_ssh.cf",
+                             "myPromises/peers_list.cf",
+    } ;
+
+}

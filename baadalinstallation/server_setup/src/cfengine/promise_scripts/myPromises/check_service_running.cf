@@ -1,0 +1,17 @@
+bundle agent check_services {
+
+vars:
+        "services" slist => { "libvirtd" };
+        "init_scripts_path" string => "/usr/sbin";
+
+processes:
+        "$(services)"
+        comment => "Check if the processes for '$(services)'",
+        restart_class => "restart_$(services)";
+
+commands:
+        "${init_scripts_path}/${services} -d"
+        comment => "Restarting the service",
+        ifvarclass => "restart_${services}";
+}
+

@@ -1,0 +1,18 @@
+bundle agent time_management
+    {
+     vars:
+
+      any::
+
+       "ntp_server" string => "ntp.iitd.ac.in";
+
+     commands:
+
+      any::
+
+          "/usr/sbin/ntpdate $(ntp_server)"
+
+         contain => silent;
+
+    }
+
