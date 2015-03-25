@@ -180,8 +180,8 @@ def find_new_host(RAM, vCPU):
     
     if selected_hosts:
         #Sort selected host list by Ram first then Cpu
-        selected_hosts.sort(key=lambda k: k['RAM'])[0] 
-        return selected_hosts[0]['id'] 
+        selected_host = sorted(selected_hosts,key=lambda k: k['RAM'])[0]
+        return selected_host['id'] 
     #If no suitable host found
     raise Exception("No active host is available for a new vm.")
     
