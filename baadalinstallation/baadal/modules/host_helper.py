@@ -293,12 +293,15 @@ graph={}
 node_list=[]
 edge_list=[]
 
+import math
+
 def get_latency_btw_hosts(next_host_ip,host_ip):
     logger.debug("getting latency")
     logger.debug("next_host_ip:" + str(next_host_ip))
     latency_cmd="netperf -t TCP_RR  -H"+str(next_host_ip)+"| sed -n '7 p'  | tr -s ' '  | cut -f'6' -d' '"
     logger.debug("host_ip:" + str(host_ip))
     logger.debug("latency_cmd:" + str(latency_cmd))
+    
     l_output=execute_remote_cmd(host_ip, "root", latency_cmd)
     lat=l_output
     logger.debug("lat:"+ str(lat))
@@ -341,11 +344,11 @@ def generate_axis():
     sublist=[]
     sublist.append(x_axis)
     sublist.append(y_axis)
-    check=check_sublist(x_axis,y_axis,sublist)
-    if check:
-        generate_axis()
+    check=check_sublist(x_axis,y_axis,data)
+    if check:    
+	generate_axis()
     else:
-        data.append(sublist)    
+	data.append(sublist)    
     return sublist
 
    
@@ -374,7 +377,7 @@ def node_attribute(i,host_name,host_ip):
 def edge_attribute(next_host_ip,host_ip,k,i,j):
     latency=get_latency_btw_hosts(next_host_ip,host_ip)
     throughput=get_throughput_btw_hosts(next_host_ip,host_ip)
-    edge_label= "latency: " + str(latency)+ ' , ' + "throughput: " + str(throughput)
+    edge_label= "L: " + str(latency)+ ' , ' + "T: " + str(throughput)
     edge_data={}
     edge_data['id']=str(k)
     edge_data['source']=i
@@ -385,26 +388,36 @@ def edge_attribute(next_host_ip,host_ip,k,i,j):
     return 
 
 
+def check_software_installation(host_ip_list):
+   cmd='dpkg --get-selections | grep "netperf" | cut -f 7'
+   for host_ip in host_ip_list:
+       if str(cmd)!="install":
+           command="apt-get -y install netperf --force-yes"
+           execute_remote_cmd(host_ip, "root", command)
+   return
+
+
 def collect_data_from_host(host_ip_list,host_name_list):
     active_host_no=len(host_ip_list)
+    check_software_installation(host_ip_list)
     for i in xrange(0,active_host_no):	
         host_ip=host_ip_list[i]
         host_name=host_name_list[i]
         logger.debug( "host_ip:" + str(host_ip))
         if is_pingable(host_ip):
-            node_attribute(i,host_name,host_ip)
+	    node_attribute(i,host_name,host_ip)
             for j in xrange(i,active_host_no):
-                next_host_ip=host_ip_list[j]
+	        next_host_ip=host_ip_list[j]
                 logger.debug( "next host :" + str(next_host_ip))
                 if is_pingable(next_host_ip):
-                    if host_ip!=next_host_ip:
+		    if host_ip!=next_host_ip:
                         k=str(i) + str(j)
-                        logger.debug(k)
-                        edge_attribute(next_host_ip,host_ip,k,i,j)
-                else :
-                    logger.debug( "host is unreachable")
-        else :
-            logger.debug( "host is unreachable")
+			logger.debug(k)
+			edge_attribute(next_host_ip,host_ip,k,i,j)
+		else :
+	            logger.debug( "host is unreachable")
+	else :
+	    logger.debug( "host is unreachable")
     
     graph['nodes']=node_list
     graph['edges']=edge_list
@@ -418,4 +431,3 @@ def collect_data_from_host(host_ip_list,host_name_list):
         f.write(unicode(json.dumps(graph, ensure_ascii=False))) 
     shutil.move('/home/www-data/web2py/applications/baadal/static/sigma/graph.json','/home/www-data/web2py/applications/baadal/static/sigma/data.json') 
     logger.debug("done") 
-
