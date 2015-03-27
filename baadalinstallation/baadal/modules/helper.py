@@ -38,29 +38,31 @@ def update_constant(constant_name, constant_value):
 
 #Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
+    if machine_ip=="localhost":
+        command_output=os.popen(command).readlines()
+    else:
+        logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
 
-    logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
-
-    output = None
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(machine_ip, username = user_name, password = password)
-        logger.debug("Connected to host %s " % machine_ip)
-        stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
+        output = None
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(machine_ip, username = user_name, password = password)
+            logger.debug("Connected to host %s " % machine_ip)
+            stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         
-        output = stdout.readlines() if ret_list else "".join(stdout.readlines())
-        #logger.debug("Output : %s " % output)
+            output = stdout.readlines() if ret_list else "".join(stdout.readlines())
+            #logger.debug("Output : %s " % output)
 
-        error = "".join(stderr.readlines())
-        if (stdout.channel.recv_exit_status()) != 0:
-            raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
-    except paramiko.SSHException:
-        log_exception()
-        raise
-    finally:
-        if ssh:
-            ssh.close()
+            error = "".join(stderr.readlines())
+            if (stdout.channel.recv_exit_status()) != 0:
+                raise Exception("Exception while executing remote command %s on %s: %s" %(command, machine_ip, error))
+        except paramiko.SSHException:
+            log_exception()
+            raise
+        finally:
+            if ssh:
+                ssh.close()
     
     return output
 

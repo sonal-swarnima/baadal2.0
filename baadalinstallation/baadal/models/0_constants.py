@@ -116,7 +116,7 @@ UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
 UUID_PURGE_UNUSEDVM = 'scheduler-uuid-purge-unusedvm'
 UUID_HOST_NETWORKING='scheduler-uuid-host-networking'
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
-
+UUID_RRD='scheduler-uuid-rrd-task'
 ITEMS_PER_PAGE=20
 
 VM_RAM_SET = (256, 512,1024,2048,4096,8192,16384,32768,65536)

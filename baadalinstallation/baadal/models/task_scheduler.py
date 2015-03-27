@@ -298,7 +298,9 @@ def check_vnc_access():
     finally: 
         logger.debug("EXITING CLEAR ALL TIMEDOUT VNC MAPPINGS........")
 
-def vm_utilization_rrd(host_ip):
+########################RRD################################################3
+
+def vm_utilization_rrd(host_ip,m_type=None):
     """
     Handles periodic collection of VM and Host utilization data and updation of respective RRD file."""
     
@@ -309,7 +311,10 @@ def vm_utilization_rrd(host_ip):
         rrd_logger.debug(host_ip)
         
         if is_pingable(host_ip):
-            update_rrd(host_ip)
+	   if m_type is None: 
+	        update_rrd(host_ip)
+	   else:
+		update_rrd(host_ip,m_type)
  
         else:
             rrd_logger.error("UNABLE TO UPDATE RRDs for host : %s" % host_ip)
@@ -320,9 +325,26 @@ def vm_utilization_rrd(host_ip):
  
     finally:
         rrd_logger.debug("Completing RRD Processing for Host: %s" % host_ip)
-        logger.debug("EXITING RRD UPDATION/CREATION........")
+        logger.debug("EXITING RRD UPDATION/CREATION........on host: %s" % host_ip)
+
+def task_rrd():
+    list_host=[]
+    controller_ip=controller_ip=os.popen("ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2").readlines()
+    rrd_logger.info(controller_ip[0].strip("\n"))
+    controller_ip=controller_ip[0].strip("\n")
+    nat_ip=os.popen("route -n | sed -n '3p' | awk '{print $2}'").readlines()
+    nat_ip=nat_ip[0].strip("\n")
+    list_host.append(controller_ip)
+    list_host.append(nat_ip)
+    for ip in list_host:
+        if controller_ip==ip:
+	    m_type="controller"    
+        else:
+	    m_type="nat"  
+	vm_utilization_rrd(ip,m_type)
 
 
+#########################################################################################
 def process_vmdaily_checks():
     """
     Function will check for the shutdown VM's and sends email to the user"""
@@ -438,7 +460,8 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_purge_unused=process_unusedvm_purge,
                     					memory_overload=overload_memory,
-                    					networking_host=host_networking), 
+                    					networking_host=host_networking,
+							rrd_task=task_rrd), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -522,6 +545,14 @@ vm_scheduler.queue_task('networking_host',
                     group_name = 'host_task')
 
 
+vm_scheduler.queue_task("rrd_task", 
+                     
+                     repeats = 0, # run indefinitely
+                     start_time = request.now, 
+                     period = 5 * MINUTES, # every 5 minutes
+                     timeout = 5 * MINUTES,
+                     uuid = UUID_RRD ,
+                    group_name = 'vm_rrd')
 
 active_host_list = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
 

@@ -310,10 +310,13 @@ def get_actual_usage(dom_obj, host_ip):
     return usage 
 
 """Uses iostat tool to capture CPU statistics of host"""
-def get_host_cpu_usage(host_ip):
-
+def get_host_cpu_usage(host_ip,m_type=None):
+    rrd_logger.info("getting cpu info")
     command = "iostat -c | sed '1,2d'"
-    command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
+    if m_type=="controller":
+        execute_remote_cmd("localhost", 'root', command, None,  True)
+    else:
+	command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     rrd_logger.debug(type(command_output))
     cpu_stats = re.split('\s+', command_output[1])
     rrd_logger.debug(cpu_stats)
@@ -321,41 +324,67 @@ def get_host_cpu_usage(host_ip):
     return (float(cpu_stats[1]) + float(cpu_stats[2]) + float(cpu_stats[3]))
 
 """Uses iostat tool to capture input/output statistics for host"""
-def get_host_disk_usage(host_ip):
+def get_host_disk_usage(host_ip,m_type=None):
 
     command = "iostat -d | sed '1,2d'"
-    command_output = execute_remote_cmd(host_ip, 'root', command, None, True)
+    
+    if m_type=="controller":
+        execute_remote_cmd("localhost", 'root', command, None,  True)
+    
+    else:
+        command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     disk_stats = re.split('\s+', command_output[1])
     rrd_logger.info("Disk stats of host %s is dr: %s dw: %s" % (host_ip, disk_stats[2], disk_stats[3]))  
     return [float(disk_stats[2]), float(disk_stats[3])]
 
 """Uses top command to capture memory usage for host"""
-def get_host_mem_usage(host_ip):
+def get_host_mem_usage(host_ip,m_type=None):
 
     command = "top -b -n1 | grep 'Mem'"
-    command_output = execute_remote_cmd(host_ip, 'root', command, None, True)
-    mem_stats = re.split('\s+', command_output[0])[3]
-    used_mem_in_kb = int(mem_stats[:-1])
+    if m_type=="controller":
+        execute_remote_cmd("localhost", 'root', command, None,  True)
+   
+    else:
+        command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
+    rrd_logger.info("command_output is %s"%(command_output))
+    mem_stat = str(command_output)
+    if '+' in mem_stat:
+	mem_stat=mem_stat.replace('+',' ')
+    rrd_logger.info("memory status %s"%(mem_stat))
+    mem_stat_new=re.split(',',mem_stat)
+    mem_stat_new=re.split(' ',mem_stat_new[1])
+    used_mem_in_kb = int(mem_stat_new[1])
     rrd_logger.info("Mem stats of host %s is %s" % (host_ip, used_mem_in_kb))
     return used_mem_in_kb
 
 """Uses ifconfig command to capture network usage for host"""
-def get_host_nw_usage(host_ip):
+def get_host_nw_usage(host_ip,m_type=None):
 
     command = "ifconfig baadal-br-int | grep 'RX bytes:'"
-    command_output = execute_remote_cmd(host_ip, 'root', command, None, True)
+    if m_type=="controller":
+        execute_remote_cmd("localhost", 'root', command, None,  True)
+    
+    else:
+        command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     nw_stats = re.split('\s+', command_output[0])
     rx = int(re.split(':', nw_stats[2])[1])
     tx = int(re.split(':', nw_stats[6])[1])
     rrd_logger.info("Disk stats of host %s is rx: %s tx: %s" % (host_ip, rx, tx))
     return [rx, tx]
 
-def get_host_resources_usage(host_ip):
+def get_host_resources_usage(host_ip,m_type=None):
+    rrd_logger.info("getting data for RRD file")
+    if m_type is None:
+        host_cpu_usage = get_host_cpu_usage(host_ip)
+        host_disk_usage = get_host_disk_usage(host_ip)
+        host_mem_usage = get_host_mem_usage(host_ip)
+        host_nw_usage = get_host_nw_usage(host_ip)
+    else:
 
-    host_cpu_usage = get_host_cpu_usage(host_ip)
-    host_disk_usage = get_host_disk_usage(host_ip)
-    host_mem_usage = get_host_mem_usage(host_ip)
-    host_nw_usage = get_host_nw_usage(host_ip)
+        host_cpu_usage = get_host_cpu_usage(host_ip,m_type)
+        host_disk_usage = get_host_disk_usage(host_ip,m_type)
+        host_mem_usage = get_host_mem_usage(host_ip,m_type)
+        host_nw_usage = get_host_nw_usage(host_ip,m_type)
 
     host_usage = {'cpu' : host_cpu_usage} #percent cpu usage
     host_usage.update({'dr' : host_disk_usage[0]*1024}) #Bytes/s
@@ -368,12 +397,14 @@ def get_host_resources_usage(host_ip):
     return host_usage
 
 
-def update_host_rrd(host_ip):
+def update_host_rrd(host_ip,m_type=None):
 
     try:
    
         rrd_file = get_rrd_file(host_ip.replace(".","_"))
+        rrd_logger.info(rrd_file)
         timestamp_now = time.time()
+        rrd_logger.info(timestamp_now)
 
         if not (os.path.exists(rrd_file)):
 
@@ -382,9 +413,14 @@ def update_host_rrd(host_ip):
             create_rrd(rrd_file)
        
         else:
+	    rrd_logger.info("updating  RRD file")
+	    if m_type is None:
+		host_stats = get_host_resources_usage(host_ip)
+	    else:
 
-            host_stats = get_host_resources_usage(host_ip)
+                host_stats = get_host_resources_usage(host_ip,m_type)
             rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
+	    
  
     except Exception, e:
  
@@ -415,51 +451,57 @@ def update_vm_rrd(dom, active_dom_ids, host_ip):
                 rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
 
 
-def update_rrd(host_ip):
+def update_rrd(host_ip,m_type=None):
+	#UPDATE CONTROLLER AND NAT RRD
+        if m_type is not None:
+        
+            rrd_logger.info("Startiing rrd updation for nat/controller %s" % (host_ip))
+            update_host_rrd(host_ip,m_type)
+            rrd_logger.info("Ending rrd updation for nat/controller %s" % (host_ip))
+	
+	#UPDATE HOST RRD
+        else:
 
-        #UPDATE HOST RRD
-        rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
-        update_host_rrd(host_ip)
-        rrd_logger.info("Ending rrd updation for host %s" % (host_ip))
+            rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
+            update_host_rrd(host_ip)
+            rrd_logger.info("Ending rrd updation for host %s" % (host_ip))
+            rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
+	 #UPDATE RRD for ALL VMs on GIVEN HOST
+            hypervisor_conn = None
 
+            try:
 
-        #UPDATE RRD for ALL VMs on GIVEN HOST
+                hypervisor_conn = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
+                rrd_logger.debug(hypervisor_conn.getHostname())
 
-        rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
+                active_dom_ids  = hypervisor_conn.listDomainsID()
+                rrd_logger.info(active_dom_ids)
+                all_dom_objs    = hypervisor_conn.listAllDomains()
+                rrd_logger.info(all_dom_objs)
 
-        hypervisor_conn = None
+                for dom_obj in all_dom_objs:
 
-        try:
+                    try:
 
-            hypervisor_conn = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
-            rrd_logger.debug(hypervisor_conn.getHostname())
+                        rrd_logger.info("Starting rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
+                        update_vm_rrd(dom_obj, active_dom_ids, host_ip)
 
-            active_dom_ids  = hypervisor_conn.listDomainsID()
-            all_dom_objs    = hypervisor_conn.listAllDomains()
-
-            for dom_obj in all_dom_objs:
-
-                try:
-
-                    rrd_logger.info("Starting rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
-                    update_vm_rrd(dom_obj, active_dom_ids, host_ip)
-
-                except Exception, e:
+                    except Exception, e:
                     
-                    rrd_logger.debug(e)
-                    rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
+                        rrd_logger.debug(e)
+                        rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
   
-                finally:
+                    finally:
 
-                    rrd_logger.info("Ending rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
+                       rrd_logger.info("Ending rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
                 
  
-        except Exception, e:
+            except Exception, e:
         
-            rrd_logger.debug(e)
+                rrd_logger.debug(e)
 
-        finally:
-
-            if hypervisor_conn:
-                hypervisor_conn.close()
+            finally:
+                rrd_logger.info("Ending rrd updation for vms on host %s" % host_ip)
+                if hypervisor_conn:
+                    hypervisor_conn.close()
 
