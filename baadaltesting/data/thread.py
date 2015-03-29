@@ -1,4 +1,4 @@
-from multiprocessing import Pool
+'''from multiprocessing import Pool
 import datetime
 
 c_time=datetime.datetime.now()
@@ -12,6 +12,14 @@ def f(x):
 no_of_cpu_to_be_consumed = 6
 
 p = Pool(processes=no_of_cpu_to_be_consumed)
-p.map(f, range(no_of_cpu_to_be_consumed))
+p.map(f, range(no_of_cpu_to_be_consumed))'''
+import os
+import datetime
+c_time=datetime.datetime.now()
+e_time=c_time + datetime.timedelta(seconds=850)
+
+while e_time>=datetime.datetime.now():
+    os.system("sysbench --test=cpu --num-threads=4 --cpu-max-prime=20000 run")
+
 
 
