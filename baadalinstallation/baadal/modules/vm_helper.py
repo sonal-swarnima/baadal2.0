@@ -1106,7 +1106,7 @@ def edit_vm_config(parameters):
                 public_ip_pool = choose_random_public_ip()
 
                 if public_ip_pool:
-                    create_mapping(public_ip_pool.public_ip, vm_details.private_ip)
+                    create_mapping(public_ip_pool.public_ip, vm_details.private_ip.private_ip)
                     current.db.vm_data[vm_id] = dict(public_ip=public_ip_pool.id)
                     message += "Edited Public IP successfully."
                     

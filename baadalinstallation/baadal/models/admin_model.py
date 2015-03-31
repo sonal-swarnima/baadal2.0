@@ -536,8 +536,7 @@ def get_search_host_form():
 def get_configure_host_form():
     form = FORM('Host MAC:',
                 INPUT(_name = 'host_mac_addr', _id='host_mac_id', requires = [
-                                IS_MAC_ADDRESS(),
-                                IS_NOT_IN_DB(db, 'host.mac_addr', error_message='Host MAC is already configured')]),
+                                IS_MAC_ADDRESS()]),
                 INPUT(_type = 'button', _value = 'Configure', _class = 'btn-submit'))
     return form
 

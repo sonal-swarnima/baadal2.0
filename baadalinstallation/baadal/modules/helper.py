@@ -38,6 +38,7 @@ def update_constant(constant_name, constant_value):
 
 #Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
+
     if machine_ip=="localhost":
         command_output=os.popen(command).readlines()
     else:
@@ -70,7 +71,6 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
 def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
 
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
-
     output = None
     try:
         ssh = paramiko.SSHClient()

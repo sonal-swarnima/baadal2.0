@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-import libvirt,commands  # @UnusedImport
-from libvirt import *  # @UnusedWildImport
-from vm_helper import *  # @UnusedWildImport
-from helper import *  # @UnusedWildImport
-
+from helper import * # @UnusedWildImport
+from libvirt import * # @UnusedWildImport
 from random import randrange
+from vm_helper import * # @UnusedWildImport
+import commands # @UnusedImport
+import libvirt
+import math
+
 #Host Status
 HOST_STATUS_DOWN = 0
 HOST_STATUS_UP = 1
@@ -293,7 +295,6 @@ graph={}
 node_list=[]
 edge_list=[]
 
-import math
 
 def get_latency_btw_hosts(next_host_ip,host_ip):
     logger.debug("getting latency")
@@ -346,9 +347,9 @@ def generate_axis():
     sublist.append(y_axis)
     check=check_sublist(x_axis,y_axis,data)
     if check:    
-	generate_axis()
+        generate_axis()
     else:
-	data.append(sublist)    
+        data.append(sublist)    
     return sublist
 
    
@@ -389,12 +390,12 @@ def edge_attribute(next_host_ip,host_ip,k,i,j):
 
 
 def check_software_installation(host_ip_list):
-   cmd='dpkg --get-selections | grep "netperf" | cut -f 7'
-   for host_ip in host_ip_list:
-       if str(cmd)!="install":
-           command="apt-get -y install netperf --force-yes"
-           execute_remote_cmd(host_ip, "root", command)
-   return
+    cmd='dpkg --get-selections | grep "netperf" | cut -f 7'
+    for host_ip in host_ip_list:
+        if str(cmd)!="install":
+            command="apt-get -y install netperf --force-yes"
+            execute_remote_cmd(host_ip, "root", command)
+    return
 
 
 def collect_data_from_host(host_ip_list,host_name_list):
@@ -405,19 +406,19 @@ def collect_data_from_host(host_ip_list,host_name_list):
         host_name=host_name_list[i]
         logger.debug( "host_ip:" + str(host_ip))
         if is_pingable(host_ip):
-	    node_attribute(i,host_name,host_ip)
+            node_attribute(i,host_name,host_ip)
             for j in xrange(i,active_host_no):
-	        next_host_ip=host_ip_list[j]
+                next_host_ip=host_ip_list[j]
                 logger.debug( "next host :" + str(next_host_ip))
                 if is_pingable(next_host_ip):
-		    if host_ip!=next_host_ip:
+                    if host_ip!=next_host_ip:
                         k=str(i) + str(j)
-			logger.debug(k)
-			edge_attribute(next_host_ip,host_ip,k,i,j)
-		else :
-	            logger.debug( "host is unreachable")
-	else :
-	    logger.debug( "host is unreachable")
+                        logger.debug(k)
+                        edge_attribute(next_host_ip,host_ip,k,i,j)
+                else :
+                    logger.debug( "host is unreachable")
+        else :
+            logger.debug( "host is unreachable")
     
     graph['nodes']=node_list
     graph['edges']=edge_list

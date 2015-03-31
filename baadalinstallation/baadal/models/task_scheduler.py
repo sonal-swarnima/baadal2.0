@@ -461,7 +461,7 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_purge_unused=process_unusedvm_purge,
                     					memory_overload=overload_memory,
                     					networking_host=host_networking,
-							rrd_task=task_rrd), 
+							            rrd_task=task_rrd), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -545,13 +545,12 @@ vm_scheduler.queue_task('networking_host',
                     group_name = 'host_task')
 
 
-vm_scheduler.queue_task("rrd_task", 
-                     
-                     repeats = 0, # run indefinitely
-                     start_time = request.now, 
-                     period = 5 * MINUTES, # every 5 minutes
-                     timeout = 5 * MINUTES,
-                     uuid = UUID_RRD ,
+vm_scheduler.queue_task("rrd_task",       
+                    repeats = 0, # run indefinitely
+                    start_time = request.now, 
+                    period = 5 * MINUTES, # every 5 minutes
+                    timeout = 5 * MINUTES,
+                    uuid = UUID_RRD ,
                     group_name = 'vm_rrd')
 
 active_host_list = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)

@@ -20,11 +20,15 @@ the respective domain running on the hypervisor. Memory utilization is fetched f
 host, since VMs run as processes on the host.
 
 """
-import os, re, time, rrdtool, libvirt
-from xml.etree import ElementTree
-from log_handler import rrd_logger
 from gluon import IMG, URL, current
 from helper import get_constant, get_context_path, execute_remote_cmd
+from log_handler import rrd_logger
+from xml.etree import ElementTree
+import os
+import re
+import time
+import rrdtool
+import libvirt
 
 VM_UTIL_10_MINS = 1
 VM_UTIL_24_HOURS = 2
@@ -316,7 +320,7 @@ def get_host_cpu_usage(host_ip,m_type=None):
     if m_type=="controller":
         execute_remote_cmd("localhost", 'root', command, None,  True)
     else:
-	command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
+        command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     rrd_logger.debug(type(command_output))
     cpu_stats = re.split('\s+', command_output[1])
     rrd_logger.debug(cpu_stats)
@@ -349,7 +353,8 @@ def get_host_mem_usage(host_ip,m_type=None):
     rrd_logger.info("command_output is %s"%(command_output))
     mem_stat = str(command_output)
     if '+' in mem_stat:
-	mem_stat=mem_stat.replace('+',' ')
+        mem_stat=mem_stat.replace('+',' ')
+
     rrd_logger.info("memory status %s"%(mem_stat))
     mem_stat_new=re.split(',',mem_stat)
     mem_stat_new=re.split(' ',mem_stat_new[1])
@@ -413,14 +418,13 @@ def update_host_rrd(host_ip,m_type=None):
             create_rrd(rrd_file)
        
         else:
-	    rrd_logger.info("updating  RRD file")
-	    if m_type is None:
-		host_stats = get_host_resources_usage(host_ip)
-	    else:
-
+            rrd_logger.info("updating  RRD file")
+            if m_type is None:
+                host_stats = get_host_resources_usage(host_ip)
+            else:
                 host_stats = get_host_resources_usage(host_ip,m_type)
+                
             rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
-	    
  
     except Exception, e:
  
@@ -452,56 +456,56 @@ def update_vm_rrd(dom, active_dom_ids, host_ip):
 
 
 def update_rrd(host_ip,m_type=None):
-	#UPDATE CONTROLLER AND NAT RRD
-        if m_type is not None:
+    #UPDATE CONTROLLER AND NAT RRD
+    if m_type is not None:
+    
+        rrd_logger.info("Startiing rrd updation for nat/controller %s" % (host_ip))
+        update_host_rrd(host_ip,m_type)
+        rrd_logger.info("Ending rrd updation for nat/controller %s" % (host_ip))
+    
+    #UPDATE HOST RRD
+    else:
+    
+        rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
+        update_host_rrd(host_ip)
+        rrd_logger.info("Ending rrd updation for host %s" % (host_ip))
+        rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
+        #UPDATE RRD for ALL VMs on GIVEN HOST
+        hypervisor_conn = None
         
-            rrd_logger.info("Startiing rrd updation for nat/controller %s" % (host_ip))
-            update_host_rrd(host_ip,m_type)
-            rrd_logger.info("Ending rrd updation for nat/controller %s" % (host_ip))
-	
-	#UPDATE HOST RRD
-        else:
-
-            rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
-            update_host_rrd(host_ip)
-            rrd_logger.info("Ending rrd updation for host %s" % (host_ip))
-            rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
-	 #UPDATE RRD for ALL VMs on GIVEN HOST
-            hypervisor_conn = None
-
-            try:
-
-                hypervisor_conn = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
-                rrd_logger.debug(hypervisor_conn.getHostname())
-
-                active_dom_ids  = hypervisor_conn.listDomainsID()
-                rrd_logger.info(active_dom_ids)
-                all_dom_objs    = hypervisor_conn.listAllDomains()
-                rrd_logger.info(all_dom_objs)
-
-                for dom_obj in all_dom_objs:
-
-                    try:
-
-                        rrd_logger.info("Starting rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
-                        update_vm_rrd(dom_obj, active_dom_ids, host_ip)
-
-                    except Exception, e:
-                    
-                        rrd_logger.debug(e)
-                        rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
-  
-                    finally:
-
-                       rrd_logger.info("Ending rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
+        try:
+        
+            hypervisor_conn = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
+            rrd_logger.debug(hypervisor_conn.getHostname())
+            
+            active_dom_ids  = hypervisor_conn.listDomainsID()
+            rrd_logger.info(active_dom_ids)
+            all_dom_objs    = hypervisor_conn.listAllDomains()
+            rrd_logger.info(all_dom_objs)
+            
+            for dom_obj in all_dom_objs:
+            
+                try:
                 
- 
-            except Exception, e:
+                    rrd_logger.info("Starting rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
+                    update_vm_rrd(dom_obj, active_dom_ids, host_ip)
+                
+                except Exception, e:
+                
+                    rrd_logger.debug(e)
+                    rrd_logger.debug("Error occured while creating/updating rrd for VM : %s" % dom_obj.name())
+                
+                finally:
+                
+                    rrd_logger.info("Ending rrd updation for vm %s on host %s" % (dom_obj.name(), host_ip))
         
-                rrd_logger.debug(e)
-
-            finally:
-                rrd_logger.info("Ending rrd updation for vms on host %s" % host_ip)
-                if hypervisor_conn:
-                    hypervisor_conn.close()
-
+        
+        except Exception, e:
+        
+            rrd_logger.debug(e)
+        
+        finally:
+            rrd_logger.info("Ending rrd updation for vms on host %s" % host_ip)
+            if hypervisor_conn:
+                hypervisor_conn.close()
+        
