@@ -1235,7 +1235,7 @@ def clone(vmid):
         if((( host_ram_after_200_percent_overcommitment - used_ram) >= vm_details.RAM) and ((host_cpu_after_200_percent_overcommitment - used_cpu) >= vm_details.vCPU) and (vm_details.vCPU <= host.CPUs)):
             clone_command = "virt-clone --original " + vm_details.vm_identity + " --name " + cloned_vm_details.vm_identity + \
                         clone_file_parameters + " --mac " + vm_properties['mac_addr']
-            command_output = execute_remote_cmd(vm_details.host_id.host_ip, 'root', clone_command, None, True)
+            command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', clone_command, None, True)
             logger.debug(command_output)
             logger.debug("Updating db after cloning")
             update_db_after_vm_installation(cloned_vm_details, vm_properties, parent_id = vm_details.id)
