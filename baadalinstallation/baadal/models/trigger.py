@@ -48,20 +48,20 @@ def schedule_task(fields, _id):
                                 group_name = 'vm_task')
 
 
-def vm_data_insert_callback(fields, _id):
-    db.vm_data_event.insert(vm_id        = _id,
-                            vm_name      = fields['vm_name'],
-                            vm_identity  = fields['vm_identity'],
-                            vCPU         = fields['vCPU'],
-                            RAM          = fields['RAM'],
-                            HDD          = fields['HDD'],
-                            extra_HDD    = fields['extra_HDD'],
-                            purpose      = fields['purpose'],
-                            template_id  = fields['template_id'],
-                            requester_id = fields['requester_id'],
-                            owner_id     = fields['owner_id'])
+# def vm_data_insert_callback(fields, _id):
+#     db.vm_data_event.insert(vm_id        = _id,
+#                             vm_name      = fields['vm_name'],
+#                             vm_identity  = fields['vm_identity'],
+#                             vCPU         = fields['vCPU'],
+#                             RAM          = fields['RAM'],
+#                             HDD          = fields['HDD'],
+#                             extra_HDD    = fields['extra_HDD'],
+#                             purpose      = fields['purpose'],
+#                             template_id  = fields['template_id'],
+#                             requester_id = fields['requester_id'],
+#                             owner_id     = fields['owner_id'])
 
-db.vm_data._after_insert = [vm_data_insert_callback]
+# db.vm_data._after_insert = [vm_data_insert_callback]
 
 
 def task_queue_insert_callback(fields, _id):

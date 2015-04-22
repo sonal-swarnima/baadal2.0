@@ -254,7 +254,7 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
         else:
             requested_by = SYSTEM_USER
 
-    params.update({'vm_id' : long(vm_id)})
+    params.update({'vm_id' : long(vm_id) if vm_id != -1 else None})
     db.task_queue.insert(task_type=task_type,
                          requester_id=requested_by,
                          parameters=params, 

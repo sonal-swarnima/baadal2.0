@@ -1441,6 +1441,7 @@ def delete_template(parameters):
     parent_vm = current.db.vm_data(saved_template = template_id)
     if parent_vm:
         parent_vm.update_record(saved_template = None)
+    del current.db.template[template_id]
         
     return (current.TASK_QUEUE_STATUS_SUCCESS, "")
    
