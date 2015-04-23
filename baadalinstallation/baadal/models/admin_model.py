@@ -749,7 +749,7 @@ def get_host_util_data(util_period):
     hosts = db(db.host.status == HOST_STATUS_UP).select()
     host_util_dict = {}
     for host_info in hosts:
-        host_identity = str(host_info.host_ip).replace('.','_')
+        host_identity = str(host_info.host_ip.private_ip).replace('.','_')
         util_result = fetch_rrd_data(host_identity, int(util_period))
         total_mem_kb = host_info.RAM * GIGABYTE
         

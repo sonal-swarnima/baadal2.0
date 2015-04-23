@@ -288,7 +288,7 @@ def is_request_in_queue(vm_id, task_type, snapshot_id=None):
 
     for task in task_data:
         params = task.parameters
-        if params['vm_id'] == vm_id:
+        if int(params['vm_id']) == int(vm_id):
             if snapshot_id != None:
                 if params['snapshot_id'] == snapshot_id:
                     return True
