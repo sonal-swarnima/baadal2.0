@@ -39,12 +39,12 @@ def update_constant(constant_name, constant_value):
 #Executes command on remote machine using paramiko SSHClient
 def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
+    output = None
     if machine_ip=="localhost":
-        command_output=os.popen(command).readlines()
+        output=os.popen(command).readlines()
     else:
         logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
 
-        output = None
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

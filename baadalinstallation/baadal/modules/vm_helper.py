@@ -673,6 +673,8 @@ def clean_up_database_after_vm_deletion(vm_details):
     # updating the used entry of database
     current.db(current.db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
                                                           (int(vm_details.extra_HDD) + int(vm_details.template_id.hdd)))
+    # updating task_queue_event entry to remove reference of VM
+    current.db(current.db.task_queue_event.vm_id == vm_details.id).update(vm_id = None)
     # deleting entry of extra disk of vm
     current.db(current.db.attached_disks.vm_id == vm_details.id).delete()
 
@@ -1323,7 +1325,7 @@ def get_extra_disk_location(datastore_id, vm_identity, disk_name, get_disk_size=
         disk_size = 0
         if image_present & get_disk_size:
             command = "qemu-img info " + disk_image_path + " | grep 'virtual size'"
-            ret = ret = os.popen(command).read() # Returns e.g. virtual size: 40G (42949672960 bytes)
+            ret = os.popen(command).read() # Returns e.g. virtual size: 40G (42949672960 bytes)
             disk_size = int(ret[ret.index(':')+1:ret.index('G ')].strip())
             
         return (disk_image_path, image_present, disk_size)

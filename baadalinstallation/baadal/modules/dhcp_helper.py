@@ -14,17 +14,21 @@ def create_dhcp_bulk_entry(dhcp_info_list):
     for dhcp_info in dhcp_info_list:
         host_name = dhcp_info[0] if dhcp_info[0] != None else ('IP_' + dhcp_info[2].replace(".", '_'))
         dhcp_cmd = '''
-            ip_present=$(grep 'host %s ' /etc/dhcp/dhcpd.conf)
-            if test -z "$ip_present"; then
-                echo "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" >> /etc/dhcp/dhcpd.conf
+            file_name="/etc/dhcp/dhcp.d/1_%s.conf"
+            if [ -e "$file_name" ]
+            then
+                echo $file_name
             else
-                echo %s
+               echo "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" > $file_name
             fi
-            ''' %(host_name, host_name, dhcp_info[1], dhcp_info[2], dhcp_info[2])
+            ''' %(host_name, host_name, dhcp_info[1], dhcp_info[2])
 
         entry_cmd += dhcp_cmd
         
-    restart_cmd = "/etc/init.d/isc-dhcp-server restart"
+    restart_cmd = '''
+                    cat /etc/dhcp/dhcp.d/*.conf > /etc/dhcp/dhcpd.conf
+                    /etc/init.d/isc-dhcp-server restart                        
+                    ''' 
 
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
@@ -40,13 +44,12 @@ def remove_dhcp_entry(host_name, mac_addr, ip_addr):
 
     host_name = host_name if host_name != None else ('IP_' + ip_addr.replace(".", '_'))
 
-    if mac_addr != None:
-        entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*hardware.*ethernet.*%s;.*fixed-address.*%s;.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name, mac_addr, ip_addr)
-    else:
-        entry_cmd = "sed -i '/host.*%s.*{/ {N;N;N; s/host.*%s.*{.*}//g}' /etc/dhcp/dhcpd.conf" %(host_name, host_name)
+    entry_cmd = "rm /etc/dhcp/dhcp.d/1_%s.conf" %(host_name)
+    restart_cmd = '''
+                    cat /etc/dhcp/dhcp.d/*.conf > /etc/dhcp/dhcpd.conf
+                    /etc/init.d/isc-dhcp-server restart                        
+                    ''' 
 
-    restart_cmd = "/etc/init.d/isc-dhcp-server restart"
-    
     execute_remote_cmd(dhcp_ip, 'root', entry_cmd)
     execute_remote_cmd(dhcp_ip, 'root', restart_cmd)
 

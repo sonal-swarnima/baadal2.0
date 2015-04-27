@@ -34,7 +34,8 @@ VM_UTIL_10_MINS = 1
 VM_UTIL_24_HOURS = 2
 VM_UTIL_ONE_WEEK = 3
 VM_UTIL_ONE_MNTH = 4
-VM_UTIL_ONE_YEAR = 5
+VM_UTIL_THREE_MNTH = 5
+VM_UTIL_ONE_YEAR = 6
 
 STEP         = 300
 TIME_DIFF_MS = 550
@@ -160,6 +161,8 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
         start_time = '-1w'
     elif period == VM_UTIL_ONE_MNTH:
         start_time = '-1m'
+    elif period == VM_UTIL_THREE_MNTH:
+        start_time = '-3m'
     elif period == VM_UTIL_ONE_YEAR:
         start_time = '-1y'
     cpu_data = []
