@@ -673,8 +673,10 @@ def clean_up_database_after_vm_deletion(vm_details):
     # updating the used entry of database
     current.db(current.db.datastore.id == vm_details.datastore_id).update(used = int(vm_details.datastore_id.used) -  \
                                                           (int(vm_details.extra_HDD) + int(vm_details.template_id.hdd)))
+
     # updating task_queue_event entry to remove reference of VM
     current.db(current.db.task_queue_event.vm_id == vm_details.id).update(vm_id = None)
+
     # deleting entry of extra disk of vm
     current.db(current.db.attached_disks.vm_id == vm_details.id).delete()
 

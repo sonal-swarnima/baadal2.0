@@ -79,6 +79,7 @@ def shutdown_baadal():
                                        requester_id = -1,
                                        old_value    = vm_detail.status,
                                        new_value    = 'System Shutdown')
+        current.db.commit()
 #         pool.add_task(snapshot_and_suspend, vm_detail.id, vm_detail.vm_identity)
 
 #     pool.wait_completion()    

@@ -29,6 +29,8 @@ VM_TASK_MIGRATE_HOST = 'Migrate VM Between Hosts'
 VM_TASK_MIGRATE_DS = 'Migrate VM Between Datastores'
 VM_TASK_SAVE_AS_TEMPLATE = 'Save As Template'
 VM_TASK_DELETE_TEMPLATE = 'Delete Template'
+VM_TASK_WARNING_SHUTDOWN = 'Warn Shutdown'
+VM_TASK_WARNING_DELETE = 'Warn Delete'
 current.VM_TASK_MIGRATE_HOST = VM_TASK_MIGRATE_HOST
 
 #Task Queue Priority
@@ -46,7 +48,10 @@ TASK_VNC = 'vnc_access'
 TASK_CLONE_VM = 'clone_task'
 TASK_VM = 'vm_task'
 TASK_DAILY_CHECKS = 'vm_daily_checks'
-TASK_PURGE_UNUSEDVM = 'vm_purge_unused'
+TASK_PURGE_UNUSEDVM = 'vm_garbage_collector'
+
+
+
 
 #Request Status
 REQ_STATUS_REQUESTED = 1
@@ -113,8 +118,9 @@ UUID_VM_UTIL_RRD = 'scheduler-uuid-vm-util-rrd'
 UUID_VNC_ACCESS = 'scheduler-uuid-vnc-access'
 UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
 UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
-UUID_PURGE_UNUSEDVM = 'scheduler-uuid-purge-unusedvm'
+UUID_PURGE_UNUSEDVM = 'scheduler-uuid-garbage-collector'
 UUID_HOST_NETWORKING='scheduler-uuid-host-networking'
+
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 UUID_RRD='scheduler-uuid-rrd-task'
 ITEMS_PER_PAGE=20

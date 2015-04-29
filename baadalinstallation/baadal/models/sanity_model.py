@@ -90,6 +90,7 @@ def check_vm_sanity(host_id = 0):
                                             'status':status,
                                             'message':'VM is on expected host '+vm.host_id.host_name, 'operation':'None'})#Good VMs
                         if vm_state_map[vm_state] != vm.status:
+                            logger.info("vm_identity="+str(domain_name)+" vm_state_map[vm_state]="+str(vm_state_map[vm_state])+"and vm.status is" + str(vm.status))
                             #If not in sync with actual state of VM; status of VM updated in DB
                             db(db.vm_data.vm_identity == domain_name).update(status = vm_state_map[vm_state])
 
