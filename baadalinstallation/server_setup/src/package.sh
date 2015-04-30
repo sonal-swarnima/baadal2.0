@@ -62,6 +62,8 @@ function libvirt_install
     package_install libpciaccess-dev
     package_install python
     package_install uuid-dev
+    package_install python-libxml2
+    package_install nfs-common
 
     dir=$pwd
 

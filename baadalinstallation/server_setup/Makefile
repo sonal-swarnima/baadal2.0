@@ -1,7 +1,6 @@
 BAADAL_LOCAL_DIR = ~/.baadal
 BIN_DIR = $(BAADAL_LOCAL_DIR)/bin
 SRC_DIR = src
-UTILS_DIR = $(DIR_BAADAL_ROOT)/baadaltesting/sandbox/utils
 LOGS_DIR = $(BAADAL_LOCAL_DIR)/logs
 DISKS_DIR = $(BAADAL_LOCAL_DIR)/disks
 TEMP_DIR = $(BAADAL_LOCAL_DIR)/temp
@@ -16,6 +15,7 @@ DIR_BAADAL_ROOT = $(shell pwd)/../..
 DIR_BAADAL_INSTALLATION = $(DIR_BAADAL_ROOT)/baadalinstallation
 
 BAADAL_TRANSFER_TAR = $(UTILS_LOCAL_DIR)/newbaadal.tar
+UTILS_DIR = /baadal2.0/baadaltesting/sandbox/utils
 
 PROFILE = iitd
 # Please update this ip address after migration is complete, and make
@@ -43,6 +43,9 @@ LIBVIRTPYTHON_TAR=libvirt-python-1.2.6.tar.gz
 VIRTMANAGER = $(UTILS_DIR)/virt-manager-0.10.0.tar.gz
 VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot/virt-manager-0.10.0.tar.gz
 
+HAPROXY = $(UTILS_DIR)/haproxy-1.5.8.tar.gz
+HAPROXY_SOURCE = http://www.haproxy.org/download/1.5/src/haproxy-1.5.8.tar.gz
+
 BIN_CONFIGURE=$(BIN_DIR)/configure.sh
 
 BIN_CONTROLLER = $(BIN_DIR)/controller.sh
@@ -53,6 +56,9 @@ BIN_PXE_SETUP = $(BIN_DIR)/pxe_dhcp-setup.sh
 
 BIN_CFENGINE = $(BIN_DIR)/cfengine.sh
 BIN_CFENGINE_SETUP = $(BIN_DIR)/cfengine-setup.sh
+
+BIN_HAPROXY = $(BIN_DIR)/cfengine.sh
+BIN_HAPROXY_SETUP = $(BIN_DIR)/cfengine-setup.sh
 
 BIN_MYSQL = $(BIN_DIR)/mysql.sh
 BIN_MYSQL_SETUP = $(BIN_DIR)/mysql-setup.sh
@@ -69,14 +75,12 @@ $(BAADAL_LOCAL_DIR):
 	@ mkdir -p $@
 
 $(UTILS_DIR): $(LOGS_DIR) 
-	@ echo 'keerti' 
 	@ mkdir -p $@
 
 $(UTILS_LOCAL_DIR):
 	@ mkdir -p $@
   
 $(LOGS_DIR):
-	@ echo "keerti123"
 	@ mkdir -p $@
   
 $(DISKS_DIR):
@@ -109,6 +113,11 @@ $(CFENGINE):
 	@ mkdir -p $(UTILS_DIR)
 	@ wget -c $(CFENGINE_SOURCE) -O $@ || (rm $@ && false)
 
+$(HAPROXY):
+	@ mkdir -p $(UTILS_DIR)
+	@ wget -c $(HAPROXY_SOURCE) -O $@ || (rm $@ && false)
+
+
 
 ubuntu: $(UBUNTU)
   
@@ -116,9 +125,11 @@ libvirt: $(LIBVIRT) $(LIBVIRTPYTHON_TAR)
 
 virtmanager: $(VIRTMANAGER)
 
-cfengine: $(CFENGINE)
+cfengine_tar: $(CFENGINE)
 
-utils: ubuntu libvirt virtmanager cfengine
+haproxy_tar: $(HAPROXY)
+
+utils: ubuntu libvirt virtmanager cfengine_tar haproxy_tar
 
 $(BAADAL_TRANSFER_TAR):
 	@ mkdir -p $(UTILS_LOCAL_DIR)
@@ -163,7 +174,7 @@ $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISK
 	@ cp $(SRC_DIR)/controller/ks.cfg $(BIN_DIR)/ks.controller.cfg
   
 $(BIN_PXE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(DISKS_DIR) $(SRC_DIR)/pxe_dhcp ubuntu pxe_dhcp-transfer
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/pxe_dhcp/*.sh > $@	
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/pxe_dhcp/install.sh > $@	
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
@@ -175,6 +186,13 @@ $(BIN_CFENGINE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 	@ cp $(SRC_DIR)/cfengine/ks.cfg $(BIN_DIR)/ks.cfengine.cfg
+
+$(BIN_HAPROXY): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/haproxy ubuntu haproxy-transfer
+        @ cat $(SRC_DIR)/*.sh $(SRC_DIR)/haproxy/install.sh > $@
+        @ sed -i '1i#!/bin/$(SHELL)' $@
+        @ sed -i '$$a$(RUN_COMMAND)' $@
+        @ chmod +x $@
+        @ cp $(SRC_DIR)/haproxy/ks.cfg $(BIN_DIR)/ks.haproxy.cfg
   
 $(BIN_MYSQL): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/mysql ubuntu mysql-transfer 
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/mysql/install.sh > $@
@@ -183,13 +201,12 @@ $(BIN_MYSQL): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR
 	@ chmod +x $@
 	@ cp $(SRC_DIR)/mysql/ks.cfg $(BIN_DIR)/ks.mysql.cfg
   
-$(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch libvirt
+$(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)/switch
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/switch/*.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
-	@ cp $(SRC_DIR)/switch/ovs-net-internal.xml $(BIN_DIR)/ovs-net-internal.xml
-	@ cp $(SRC_DIR)/switch/ovs-net-external.xml $(BIN_DIR)/ovs-net-external.xml
+	@ cp $(SRC_DIR)/switch/ovs-net.xml $(BIN_DIR)/ovs-net.xml
   
 controller: $(BIN_CONTROLLER)
 	@ sudo $<
@@ -207,8 +224,16 @@ pxe_dhcp-setup: $(BIN_PXE_SETUP)
 cfengine: $(BIN_CFENGINE)
 	@ sudo $<
 
+haproxy: $(BIN_HAPROXY)
+        @ sudo $<
+
+
 cfengine-setup: $(BIN_CFENGINE_SETUP)
 	@ sudo $<
+
+haproxy-setup: $(BIN_HAPROXY_SETUP)
+        @ sudo $<
+
 
 mysql: $(BIN_MYSQL)
 	sudo $<
@@ -229,6 +254,18 @@ cfengine-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.cfengine/baadal/newbaadal.tar
 	@ mkdir -p $(BIN_DIR)/transfer.cfengine/root/.baadal
 	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.cfengine/root/.baadal
+
+haproxy-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
+        @ cp -R $(SRC_DIR)/haproxy/transfer $(BIN_DIR)/transfer.haproxy
+        @ mkdir -p $(BIN_DIR)/transfer.haproxy/root/.ssh
+        @ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.haproxy/root/.ssh
+        @ cp $(BIN_DIR)/id_rsa.haproxy $(BIN_DIR)/transfer.haproxy/root/.ssh/id_rsa
+        @ cp $(BIN_DIR)/id_rsa.haproxy.pub $(BIN_DIR)/transfer.haproxy/root/.ssh/id_rsa.pub
+        @ mkdir -p $(BIN_DIR)/transfer.haproxy/baadal
+        @ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.haproxy/baadal/newbaadal.tar
+        @ mkdir -p $(BIN_DIR)/transfer.haproxy/root/.baadal
+        @ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.haproxy/root/.baadal
+
 
 mysql-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp -R $(SRC_DIR)/mysql/transfer $(BIN_DIR)/transfer.mysql
@@ -278,6 +315,14 @@ $(BIN_CFENGINE_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/cfengine $(SRC_DIR)/cfe
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
 
+$(BIN_HAPROXY_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/haproxy $(SRC_DIR)/haproxy/*
+        @ mkdir -p $(BIN_DIR)/transfer.haproxy/baadal
+        @ cat $(SRC_DIR)/*.sh $(SRC_DIR)/haproxy/haproxy-setup.sh > $@
+        @ sed -i '1i#!/bin/$(SHELL)' $@
+        @ sed -i '$$a$(RUN_COMMAND)' $@
+        @ chmod +x $@
+
+
 $(BIN_MYSQL_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/mysql $(SRC_DIR)/mysql/*
 	@ mkdir -p $(BIN_DIR)/transfer.mysql/baadal
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/mysql/mysql-setup.sh > $@
@@ -295,7 +340,7 @@ $(BIN_PXE_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/pxe_dhcp $(SRC_DIR)/pxe_dhcp
 sources-list-setup:
 	@ sudo cp $(SRC_DIR)/sources.$(PROFILE) /etc/apt/sources.list 2>/dev/null || true
 
-sandbox: switch controller pxe_dhcp cfengine mysql
+sandbox: switch controller pxe_dhcp cfengine mysql haproxy
 
 configure: $(BIN_CONFIGURE)
 	@ $(BIN_CONFIGURE)
@@ -316,6 +361,11 @@ $(BIN_DIR)/id_rsa.cfengine:
 	@ ssh-keygen -q -f $@ -N '' -C 'baadal-cfengine'
 	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
 
+$(BIN_DIR)/id_rsa.haproxy:
+	@ ssh-keygen -q -f $@ -N '' -C 'baadal-haproxy'
+	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
+
+
 $(BIN_DIR)/id_rsa.mysql:
 	@ ssh-keygen -q -f $@ -N '' -C 'baadal-mysql'
 	@ cat $@.pub >> $(BIN_SSH_AUTHORIZED_KEYS)
@@ -331,9 +381,11 @@ keygen-ssh-pxe_dhcp: $(BIN_DIR)/id_rsa.pxe_dhcp
   
 keygen-ssh-cfengine: $(BIN_DIR)/id_rsa.cfengine
 
+keygen-ssh-haproxy: $(BIN_DIR)/id_rsa.haproxy
+
 keygen-ssh-mysql: $(BIN_DIR)/id_rsa.mysql
   
-keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-pxe_dhcp keygen-ssh-cfengine keygen-ssh-mysql
+keygen-ssh-all: keygen-ssh-sandbox keygen-ssh-controller keygen-ssh-pxe_dhcp keygen-ssh-cfengine keygen-ssh-mysql keygen-ssh-haproxy
 
   
 clean-config:
@@ -366,6 +418,16 @@ clean-cfengine:
 	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.cfengine.iso
 	sudo rm -f $(DISKS_DIR)/cfengine.img
   
+clean-haproxy:
+	sudo virsh destroy baadal_haproxy || true
+	sudo virsh undefine baadal_haproxy || true
+	sudo rm -f $(BIN_HAPROXY)
+	sudo rm -f $(BIN_DIR)/ks.haproxy.cfg
+	sudo rm -rf $(BIN_DIR)/transfer.haproxy
+	sudo rm -f $(UTILS_LOCAL_DIR)/ubuntu.haproxy.iso
+	sudo rm -f $(DISKS_DIR)/haproxy.img
+
+
 clean-mysql:
 	sudo virsh destroy baadal_mysql || true
 	sudo virsh undefine baadal_mysql || true

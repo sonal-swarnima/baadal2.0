@@ -1,3 +1,7 @@
+#!/bin/bash
+
+source ../controller_installation.cfg 2>> /dev/null
+
 function check_root
 {
   $ECHO_PROGRESS "Checking root"
@@ -25,6 +29,7 @@ function run
   config_get INTERFACE
 
   MAC_INTERFACE=$(ifconfig $INTERFACE | grep HWaddr | cut -d ' ' -f 1,11 | cut -d ' ' -f 2)
+  INTERFACE=`ip route get 8.8.8.8 | awk '{ print $5; exit }'`
 
   ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
   ovsvsctl_add_br $OVS_BRIDGE_INTERNAL
@@ -58,4 +63,7 @@ function run
   # Not really a good idea
   killall dnsmasq 2>/dev/null
 
+  mkdir -p $LOCAL_MOUNT_POINT
+  mount -t nfs $STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT
+  echo -e "$STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
 }
