@@ -701,7 +701,8 @@ mkdir -p $TFTP_DIR
 sed -i -e 's/^/^#/g' /etc/default/tftpd-hpa
 echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" > /etc/default/tftpd-hpa
 echo -e "TFTP_USERNAME=\"tftp\"\nTFTP_DIRECTORY=\"$TFTP_DIR\"\nTFTP_ADDRESS=\"0.0.0.0:69\"\nTFTP_OPTIONS=\"-s -c -l\"" >> /etc/default/tftpd-hpa
-/etc/init.d/tftpd-hpa restart
+service tftpd-hpa stop
+service tftpd-hpa start
 
 # tftpd-hpa is called from inetd. The options passed to tftpd-hpa when it starts are thus found in /etc/inetd.conf
 echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-s\t$TFTP_DIR" >> /etc/inetd.conf
