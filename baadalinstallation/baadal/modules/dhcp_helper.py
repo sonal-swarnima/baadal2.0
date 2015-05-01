@@ -40,7 +40,7 @@ def create_dhcp_entry(host_name, mac_addr, ip_addr):
     create_dhcp_bulk_entry(dhcp_info_list)
 
 #Removes entry from DHCP
-def remove_dhcp_entry(host_name, mac_addr, ip_addr):
+def remove_dhcp_entry(host_name,ip_addr):
 
     host_name = host_name if host_name != None else ('IP_' + ip_addr.replace(".", '_'))
 
