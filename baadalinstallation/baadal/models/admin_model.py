@@ -190,7 +190,7 @@ def add_private_ip(ip_pool_id):
             #Update generated mac address in DB
             private_ip_pool.update_record(mac_addr=mac_address)
 
-        create_dhcp_entry(None, mac_address, private_ip_pool.private_ip)
+        create_dhcp_entry(None,private_ip_pool.private_ip)
 
 
 def get_available_private_ip(security_domain_id):
@@ -586,7 +586,7 @@ def configure_host_by_mac(mac_addr):
     if avl_private_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
         host_name = 'host'+str(avl_private_ip.split('.')[3])
-        create_dhcp_entry(host_name, mac_addr, avl_private_ip)
+        create_dhcp_entry(host_name,avl_private_ip)
         db.host[0] = dict(host_ip=ip_info['id'], 
                           host_name=host_name, 
                           mac_addr=mac_addr, 
