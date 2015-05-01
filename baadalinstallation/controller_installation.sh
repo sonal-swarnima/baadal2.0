@@ -776,7 +776,7 @@ Configure_Dhcp_Pxe()
 
 	cp $PXE_SETUP_FILES_PATH/ks_cfg $PXE_SETUP_FILES_PATH/ks.cfg
 
-	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
+	sed -i -e 's/PXE_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	mv $PXE_SETUP_FILES_PATH/ks.cfg /var/www/.
 
