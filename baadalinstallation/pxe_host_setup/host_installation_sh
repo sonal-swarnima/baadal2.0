@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Normal_pkg_lst=(python sysstat qemu-kvm gconf2 librsvg2-common python-appindicator python-dbus python-glade2 python-gnome2 python-gtk-vnc python-gtk2 python-urlgrabber python-vte intltool libvirt-glib-1.0-dev nfs-common kvm-ipxe vim libnl-dev gcc pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude  openssh-server cgroup-bin libpciaccess-dev libglib2.0-dev python-libxml2 sysstat smem uuid-dev)
+Normal_pkg_lst=(python sysstat qemu-kvm gconf2 librsvg2-common python-appindicator python-dbus python-glade2 python-gnome2 python-gtk-vnc python-gtk2 python-urlgrabber python-vte intltool libvirt-glib-1.0-dev nfs-common kvm-ipxe vim libnl-dev gcc pkg-config libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev python-dev libyajl-dev aptitude  openssh-server cgroup-bin libpciaccess-dev libglib2.0-dev python-libxml2 sysstat smem uuid-dev libpciaccess-dev libyajl-dev)
 
 ############################################################################################################################
  
