@@ -592,3 +592,7 @@ def verify_extra_disk():
 
     disk_info = check_vm_extra_disk(vm_image_name, disk_name, datastore_id)
     return disk_info
+
+
+def network_graph():
+    return dict()
