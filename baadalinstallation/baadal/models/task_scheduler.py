@@ -382,7 +382,7 @@ def overload_memory():
     file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
     file_path = file_path_row.value
     logger.debug(type(file_path))
-    host_ips_rows = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+    host_ips_rows = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     logger.debug(host_ips_rows)
 
     command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
@@ -402,7 +402,7 @@ def overload_memory():
 #host networking graph
 def host_networking():
     logger.debug("collecting host networking data")
-    active_host_list= db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+    active_host_list= db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     active_host_name=db(db.host.status == HOST_STATUS_UP).select(db.host.host_name)
     logger.debug( "active_host_list:" + str(active_host_list))
     logger.debug( "active_host_name:" + str(active_host_name))
@@ -523,7 +523,7 @@ vm_scheduler.queue_task("rrd_task",
                     uuid = UUID_RRD ,
                     group_name = 'vm_rrd')
 
-active_host_list = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+active_host_list = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
 
 for host in active_host_list:
 
