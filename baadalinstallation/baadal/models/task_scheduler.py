@@ -403,7 +403,9 @@ def overload_memory():
 def host_networking():
     logger.debug("collecting host networking data")
     active_host_list= db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+    
     active_host_name=db(db.host.status == HOST_STATUS_UP).select(db.host.host_name)
+    
     logger.debug( "active_host_list:" + str(active_host_list))
     logger.debug( "active_host_name:" + str(active_host_name))
     active_host_no=len(active_host_list)
