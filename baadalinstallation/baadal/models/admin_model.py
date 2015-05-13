@@ -101,7 +101,7 @@ def get_manage_public_ip_pool_form():
 def private_ip_on_delete(private_ip_pool_id):
     private_ip_data = db.private_ip_pool[private_ip_pool_id]
     if private_ip_data.vlan != HOST_VLAN_ID:
-        remove_dhcp_entry(None,private_ip_data.private_ip)
+        remove_dhcp_entry(None, private_ip_data.private_ip)
 
 def get_private_ip_ref_link(row):
     """Returns link to VM settings page if IP is assigned to a VM
@@ -190,7 +190,7 @@ def add_private_ip(ip_pool_id):
             #Update generated mac address in DB
             private_ip_pool.update_record(mac_addr=mac_address)
 
-        create_dhcp_entry(None, private_ip_pool.private_ip)
+        create_dhcp_entry(None, mac_address, private_ip_pool.private_ip)
 
 
 def get_available_private_ip(security_domain_id):
@@ -586,7 +586,7 @@ def configure_host_by_mac(mac_addr):
     if avl_private_ip:
         logger.debug('Available IP for mac address %s is %s'%(mac_addr, avl_private_ip))
         host_name = 'host'+str(avl_private_ip.split('.')[3])
-        create_dhcp_entry(host_name, avl_private_ip)
+        create_dhcp_entry(host_name, mac_addr, avl_private_ip)
         db.host[0] = dict(host_ip=ip_info['id'], 
                           host_name=host_name, 
                           mac_addr=mac_addr, 
