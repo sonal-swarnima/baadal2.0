@@ -211,7 +211,8 @@ db.define_table('vm_data',
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
     Field('snapshot_flag', 'integer', default = 0),
     Field('saved_template', db.template),
-    Field('delete_warning_date', 'datetime'))
+    Field('delete_warning_date', 'datetime'),
+    Field('shutdown_warning_date', 'datetime'))
 
 db.vm_data.purpose.widget=SQLFORM.widgets.text.widget
 db.vm_data.public_ip.requires = IS_EMPTY_OR(IS_IN_DB(db, 'public_ip_pool.id', '%(public_ip)s', zero=None))

@@ -22,7 +22,7 @@ import os
 
 task = {VM_TASK_CREATE               :    install,
         VM_TASK_START                :    start,
-        VM_TASK_STOP                 :    shutdown,
+        VM_TASK_STOP                 :    destroy,
         VM_TASK_SUSPEND              :    suspend,
         VM_TASK_RESUME               :    resume,
         VM_TASK_DESTROY              :    destroy,
@@ -344,68 +344,37 @@ def task_rrd():
 	vm_utilization_rrd(ip,m_type)
 
 
-#########################################################################################
+
+
+## Below function will check for the shutdown VM's and unused VM's and sends warning email to the user
 def process_vmdaily_checks():
     """
     Function will check for the shutdown VM's and sends email to the user"""
     
     logger.info("Entering VM's Daily Checks........")
 
-    try: 
-        vmShutDownDays = config.get("GENERAL_CONF", "shutdown_vm_days") 
-        send_email=0
-
-        for vm_id in db().select(db.vm_event_log.vm_id, distinct=True): 
-            for vm_details in db(db.vm_event_log.vm_id==vm_id['vm_id']).select(db.vm_event_log.ALL,orderby = ~db.vm_event_log.id,limitby=(0,1)):
-                daysDiff=(get_datetime()-vm_details.timestamp).days
-                vm_shutdown_time=vm_details.timestamp
-
-                logger.info("VM details are VM_ID:" + str(vm_details['vm_id'])+ "|ID:"+str(vm_details['id'])+"|new_values is:"+str(vm_details['new_value'])+"|daysDiff:" + str(daysDiff)+"|vmShutDownDays:"+vmShutDownDays+"|vm_shutdown_time :"+str(vm_shutdown_time))
-
-                if (vm_details.new_value == "Shutdown" and int(daysDiff)>=int(vmShutDownDays)):
-                    vm_users = []
-                    vm_name  = ""
-
-                    for user in db((db.user_vm_map.vm_id == vm_details.vm_id) & (db.user_vm_map.vm_id == db.vm_data.id) & (db.vm_data.locked !='T') & (db.vm_data.delete_warning_date == None )).select(db.user_vm_map.user_id,db.vm_data.vm_name): 
-                        send_email=1
-                        vm_users.append(user.user_vm_map.user_id) 
-                        vm_name=user.vm_data.vm_name
-                   
-                    if (send_email == 1):
-                        vm_delete_time = send_email_delete_vm_warning(vm_users,vm_name,vm_shutdown_time) 
-                        logger.debug("Mail sent for vm_name:"+str(vm_name)+"|delete time returned from the function:"+ str(vm_delete_time)) 
-                        db(db.vm_data.id == vm_details.vm_id).update(locked=True, delete_warning_date=vm_delete_time) 
-                    else:
-                        logger.debug("Email has already been sent to VM_ID:"+str(vm_details.vm_id))
-                else:
-                    logger.info("VM:"+str(vm_details.vm_id)+" is not shutdown ..") 
-    except:
-        log_exception()
-        pass
-    finally: 
-        db.commit()
-        logger.debug("EXITING VM DAILY CHECKS........")
-
-def process_unusedvm_purge():
-
-    logger.info("ENTERING PURGE UNUSED VM ........") 
-
     try:
-        # Fetch all the VM's which are locked and whose delete warning date=today. 
-        for vm_data in db(db.vm_data.locked == True).select(db.vm_data.ALL):
-            for vm_details in db(db.vm_event_log.vm_id==vm_data.id).select(db.vm_event_log.ALL,orderby = ~db.vm_event_log.id,limitby=(0,1)):
-                daysDiff=(get_datetime()-vm_data.delete_warning_date).days
-                if(vm_details.new_value == "Shutdown" and daysDiff >= 0):
-                    logger.info("Need to delete the VM ID:"+str(vm_data.id)) 
-                    add_vm_task_to_queue(vm_data.id,VM_TASK_DELETE)
-                    # make an entry in task queue so that scheduler can pick up and delete the VM.
+        process_sendwarning_unusedvm()
+        process_sendwarning_shutdownvm()
     except:
         log_exception()
         pass
     finally:
         db.commit()
-        logger.debug("EXITING PURGE UNUSED VM ........")
+        logger.debug("EXITING VM DAILY CHECKS........")
 
+##Below function will purge/shutdown the unused VM's 
+def process_unusedvm():
+    logger.info("ENTERING PROCESS UNUSED VM ........")
+    try:
+        process_shutdown_unusedvm()
+        process_purge_shutdownvm()
+    except:
+        log_exception()
+        pass
+    finally:
+        db.commit()
+        logger.debug("EXITING PROCESS UNUSED VM......")
 
 
 def overload_memory():
@@ -413,7 +382,7 @@ def overload_memory():
     file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
     file_path = file_path_row.value
     logger.debug(type(file_path))
-    host_ips_rows = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+    host_ips_rows = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     logger.debug(host_ips_rows)
 
     command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
@@ -433,8 +402,10 @@ def overload_memory():
 #host networking graph
 def host_networking():
     logger.debug("collecting host networking data")
-    active_host_list= db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+    active_host_list= db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+    
     active_host_name=db(db.host.status == HOST_STATUS_UP).select(db.host.host_name)
+    
     logger.debug( "active_host_list:" + str(active_host_list))
     logger.debug( "active_host_name:" + str(active_host_name))
     active_host_no=len(active_host_list)
@@ -458,10 +429,10 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         host_sanity=host_sanity_check,
                                         vm_util_rrd=vm_utilization_rrd,
                                         vm_daily_checks=process_vmdaily_checks,
-                                        vm_purge_unused=process_unusedvm_purge,
-                    					memory_overload=overload_memory,
-                    					networking_host=host_networking,
-							            rrd_task=task_rrd), 
+                                        vm_garbage_collector=process_unusedvm,
+                                        memory_overload=overload_memory,
+                		        networking_host=host_networking,
+					rrd_task=task_rrd), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -514,17 +485,18 @@ vm_scheduler.queue_task(TASK_HOST_SANITY,
 vm_scheduler.queue_task(TASK_DAILY_CHECKS,
                     repeats = 0, # run indefinitely
                     start_time = request.now,
-                    period = 10 * MINUTES, # every 10 minutes
-                    timeout = 5 * MINUTES,
+                    period = 24 * HOURS, # every 24h
+                    timeout = 60 * MINUTES,
                     uuid = UUID_DAILY_CHECKS,
                     group_name = 'vm_sanity')
 
-# Adding task for scheduler to delete unused VM's
+
+#Adding new task for scheduler to delete/shutdown unused VM's
 vm_scheduler.queue_task(TASK_PURGE_UNUSEDVM,
                     repeats = 0, # run indefinitely
                     start_time = request.now,
-                    period = 10 * MINUTES, # every 10 minutes
-                    timeout = 5 * MINUTES,
+                    period = 24 * HOURS, # every 24h
+                    timeout = 60 * MINUTES,
                     uuid = UUID_PURGE_UNUSEDVM,
                     group_name = 'vm_sanity')
 
@@ -553,7 +525,7 @@ vm_scheduler.queue_task("rrd_task",
                     uuid = UUID_RRD ,
                     group_name = 'vm_rrd')
 
-active_host_list = db((db.host.status == HOST_STATUS_UP) and (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
+active_host_list = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
 
 for host in active_host_list:
 

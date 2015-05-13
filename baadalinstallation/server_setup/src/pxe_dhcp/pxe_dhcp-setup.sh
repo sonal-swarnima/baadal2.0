@@ -34,7 +34,7 @@ function run
   pxedhcp_ip="$(/sbin/ifconfig $PXEDHCP_INTERFACE | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')"
   INTERNAL_GATEWAY_IP=$(ip route | awk '/default/{print $3}')
   ifconfig_noip $PXEDHCP_INTERFACE
-  ifconfig_ip $DHCP_BRIDGE_INTERNAL $controller_ip $VLAN_NETMASK
+  ifconfig_ip $DHCP_BRIDGE_INTERNAL $pxedhcp_ip $VLAN_NETMASK
   route_add_net $INTERNAL_GATEWAY_IP 0.0.0.0 $DHCP_BRIDGE_INTERNAL
 
   #Get the base address from the ip address, we assume subnet mask to be 255.255.0.0.

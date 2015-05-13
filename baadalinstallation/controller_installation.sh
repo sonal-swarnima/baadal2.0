@@ -8,7 +8,7 @@ NUMBER_OF_VLANS=255
 baa
 CONTROLLER_IP=$(ifconfig $OVS_BRIDGE_NAME | grep "inet addr"| cut -d: -f2 | cut -d' ' -f1)
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 netperf sysbench sysstat python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls apache2.2-common python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson uuid-dev)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 netperf sysbench sysstat python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls python-matplotlib python-reportlab inetutils-inetd tftpd-hpa dhcp3-server apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson uuid-dev)
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev ntpdate)
 
@@ -701,7 +701,8 @@ mkdir -p $TFTP_DIR
 sed -i -e 's/^/^#/g' /etc/default/tftpd-hpa
 echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" > /etc/default/tftpd-hpa
 echo -e "TFTP_USERNAME=\"tftp\"\nTFTP_DIRECTORY=\"$TFTP_DIR\"\nTFTP_ADDRESS=\"0.0.0.0:69\"\nTFTP_OPTIONS=\"-s -c -l\"" >> /etc/default/tftpd-hpa
-/etc/init.d/tftpd-hpa restart
+service tftpd-hpa stop
+service tftpd-hpa start
 
 # tftpd-hpa is called from inetd. The options passed to tftpd-hpa when it starts are thus found in /etc/inetd.conf
 echo -e "tftp\tdgram\tudp\twait\troot\t/usr/sbin/in.tftpd\t/usr/sbin/in.tftpd\t-s\t$TFTP_DIR" >> /etc/inetd.conf
@@ -776,7 +777,7 @@ Configure_Dhcp_Pxe()
 
 	cp $PXE_SETUP_FILES_PATH/ks_cfg $PXE_SETUP_FILES_PATH/ks.cfg
 
-	sed -i -e 's/CONTROLLER_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
+	sed -i -e 's/PXE_IP/'"$CONTROLLER_IP"'/g' $PXE_SETUP_FILES_PATH/ks.cfg
 
 	mv $PXE_SETUP_FILES_PATH/ks.cfg /var/www/.
 

@@ -1,0 +1,36 @@
+
+global
+	user haproxy
+	group haproxy
+	daemon
+
+defaults
+	log     global
+	mode    http
+	option  httplog
+	option  dontlognull
+	timeout server 50000
+	timeout connect 5000
+	timeout client 50000
+
+frontend www
+	bind 172.16.0.8:80
+	option http-server-close
+	default_backend web-backend
+
+frontend www-https
+	bind 172.16.0.8:443 ssl crt /etc/ssl/self/self_signed.pem
+	reqadd X-Forwarded-Proto:\ https
+	default_backend web-backend
+
+backend web-backend
+	redirect scheme https if !{ ssl_fc }
+	server web-1 172.16.0.7:80 check
+
+listen stats :1936
+	stats enable
+	stats scope www
+	stats scope web-backend
+	stats uri /
+	stats realm Haproxy\ Statistics
+	stats auth user:password 

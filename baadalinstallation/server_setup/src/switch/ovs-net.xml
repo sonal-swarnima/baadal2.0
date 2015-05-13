@@ -9,6 +9,6 @@ or other application using the libvirt API.
   <name>ovs-net</name>  
   <uuid>2197d6d1-bc98-464b-8d3c-1c4044995ae5</uuid>
   <forward mode='bridge'/>
-  <bridge name='baadal_br_int'/>
+  <bridge name='baadal-br-int'/>
   <virtualport type='openvswitch'/>
 </network>

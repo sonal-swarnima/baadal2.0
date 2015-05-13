@@ -3,7 +3,7 @@ function run
   check_root
 #  package_update_db
   package_install qemu-kvm
-  disk_create /root/disk/pxe_dhcp.img ${PXE_SPACE}G
+  disk_create $PXE_DISK ${PXE_SPACE}G
   remaster_ubuntu $PXE_KICKSTART $PXE_TRANSFER $PXE_ISO
 
   $ECHO_PROGRESS Installing OS
@@ -15,7 +15,7 @@ function run
     --ram=$PXE_RAM \
     --vcpus=$PXE_VCPUS \
     --os-type=Linux \
-    --disk path=/root/disk/pxe_dhcp.img,format=qcow2,size=$PXE_SPACE \
+    --disk path=$PXE_DISK,format=qcow2,size=$PXE_SPACE \
     --cdrom $PXE_ISO \
     --network network=$OVS_NET_INTERNAL,mac=$MAC_PXE \
     --noautoconsole \

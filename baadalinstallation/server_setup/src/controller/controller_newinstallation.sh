@@ -1,8 +1,8 @@
 #!/bin/bash
 
-source ./controller_installation.cfg 2>> /dev/null
+source ../../../controller_installation.cfg 2>> /dev/null
 
-Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls python-matplotlib python-reportlab inetutils-inetd apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson uuid-dev)
+Normal_pkg_lst=(git zip unzip tar openssh-server build-essential python2.7:python2.5 python-dev python-paramiko libapache2-mod-wsgi debconf-utils wget libapache2-mod-gnutls python-matplotlib python-reportlab inetutils-inetd apache2 apt-mirror python-rrdtool python-lxml libnl-dev libxml2-dev libgnutls-dev libdevmapper-dev libcurl4-gnutls-dev libyajl-dev libpciaccess-dev nfs-common qemu-utils python-simplejson uuid-dev netperf sysbench sysstat )
 
 Ldap_pkg_lst=(python-ldap perl-modules libpam-krb5 libpam-cracklib php5-auth-pam libnss-ldap krb5-user ldap-utils libldap-2.4-2 nscd ca-certificates ldap-auth-client krb5-config:libkrb5-dev ntpdate)
 
@@ -449,19 +449,7 @@ Enbl_Modules()
 	echo -e "$STORAGE_SERVER_IP:$STORAGE_DIRECTORY $LOCAL_MOUNT_POINT nfs rw,auto" >> /etc/fstab
 }
 
-#Function to create SSL certificate
-Create_SSL_Certi()
-{
-	echo "current path"
-	pwd
-
-	mkdir /etc/apache2/ssl
-	echo "creating Self Signed Certificate................................."
-	openssl genrsa 1024 > /etc/apache2/ssl/self_signed.key
-	chmod 400 /etc/apache2/ssl/self_signed.key
-	openssl req -new -x509 -nodes -sha1 -days 365 -key /etc/apache2/ssl/self_signed.key -config controller_installation.cfg > /etc/apache2/ssl/self_signed.cert
-	openssl x509 -noout -fingerprint -text < /etc/apache2/ssl/self_signed.cert > /etc/apache2/ssl/self_signed.info
-}
+#Function to create SSL certificate -- moved to haproxy.sh
 
 
 #Function to modify Apache configurations according to our application
@@ -484,14 +472,8 @@ Rewrite_Apache_Conf()
 		<VirtualHost *:80>
 		  DocumentRoot /var/www
 		  RewriteEngine On
-		  RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+		  #RewriteRule /(baadal|admin).* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 		  RewriteRule /$ https://%{HTTP_HOST}/baadal [R=301,L]
-		</VirtualHost>
-
-		<VirtualHost *:443>
-		  SSLEngine on
-		  SSLCertificateFile /etc/apache2/ssl/self_signed.cert
-		  SSLCertificateKeyFile /etc/apache2/ssl/self_signed.key
 		
 		  WSGIProcessGroup web2py
 		  WSGIScriptAlias / /home/www-data/web2py/wsgihandler.py

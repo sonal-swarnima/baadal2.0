@@ -1,0 +1,58 @@
+VOLUME CREATION ON NETAPP FILER
+
+
+
+############# TO CREATE A RULE #################################
+
+1. vserver export-policy create policy_name -vserver vserver_name
+2. export-policy rule create -vserver vserver_name
+                 -policyname policy_name
+                 -protocol nfs
+                 -clientmatch 0.0.0.0/0
+                 -rorule any
+                 -rwrule any
+                 -anon 0
+                 -superuser any
+
+Note:- Clientmatch can take only one subnet as its value.To create a rule which will provide mounting access to multiple subnets,please create another rule with same name but different clientmatch value.Here 0.0.0.0/0 means anyone can mount the volume.
+
+
+########### TO CREATE A VOLUME ################################
+
+vol create -vserver vserver_name
+       -volume volume_name
+       -aggregate aggregate_name
+       -size 2T
+       -state online
+       -type RW
+       -policy policy_name
+       -user 0
+       -group 1
+       -security-style unix
+       -unix-permissions ---rwxrwxrwx
+       -junction-path /vol/eval
+
+Note:- Junction path is the mount path.
+
+
+
+########### MANUALLY RUN SNAPMIRROR SCHEDULE ##################
+snapmirror update-ls-set -S //vs01/rootvol
+
+
+Note:- The load sharing (LS) mirrors of volume "rootvol" which is "Junction Parent Volume:" of the volume created will be updated according to the snapmirror schedule.
+[[You can verify it by running:
+     vol show -fields junction-parent]]
+
+This step is required if you want your volume to be visible immediately in the global namespace.
+Here vs01 is the vserver name under which rootvol is created.
+
+
+
+
+############ MOUNTING THE VOLUME ##################################
+
+Install nfs common
+
+mount -t 172.16.105.9:/vol/volume_name  <local dir path>
+
