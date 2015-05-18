@@ -213,8 +213,8 @@ def host_power_up(host_data):
             host_ip = host_data.host_ip.private_ip
             execute_remote_cmd(host_ip, 'root', 'virsh start' + get_host_name[host_ip])
         else:                        
-            logger.debug('Powering up host with MAC ' + host_data.mac_addr)
-            commands.getstatusoutput( "wakeonlan " + host_data.mac_addr)
+            logger.debug('Powering up host with MAC ' + host_data.host_ip.mac_addr)
+            commands.getstatusoutput( "wakeonlan " + host_data.host_ip.mac_addr)
         
         logger.debug("Host powered up successfully!!!")
     except:
