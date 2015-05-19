@@ -389,13 +389,22 @@ def edge_attribute(next_host_ip,host_ip,k,i,j):
     return 
 
 
-def check_software_installation(host_ip_list):
+def install_package():
     cmd='dpkg --get-selections | grep "netperf" | cut -f 7'
-    for host_ip in host_ip_list:
-        if str(cmd)!="install":
+    cmd1="ps -ef | grep 'apt-get' |wc -l"
+    if str(cmd)!="install":
+        if str(cmd1)=="1":       
             command="apt-get -y install netperf --force-yes"
             execute_remote_cmd(host_ip, "root", command)
+	else:
+	    install_package()
+
+def check_package_installation(host_ip_list):
+    for host_ip in host_ip_list:
+        install_package()
     return
+
+
 
 
 def collect_data_from_host(host_ip_list,host_name_list):
