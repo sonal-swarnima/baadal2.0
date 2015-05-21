@@ -389,7 +389,7 @@ def process_loadbalancer():
         logger.debug("EXITING PROCESS LOADBALANCER VM......")
 
 def check_compile_folder(file_path):
-    compile_cmd='gcc + str(file_path) + '/memhog.c -o  ' + str(file_path) +'/memhog'
+    compile_cmd='gcc '+ str(file_path) + '/memhog.c -o  ' + str(file_path) +'/memhog'
     if  "memhog" not in os.listdir(file_path):
 	logger.debug("Memhog compiled file does not exist...Compiling memgog file...")
         os.system(complie_cmd)
