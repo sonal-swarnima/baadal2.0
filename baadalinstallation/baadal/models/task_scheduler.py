@@ -388,6 +388,14 @@ def process_loadbalancer():
     finally:
         logger.debug("EXITING PROCESS LOADBALANCER VM......")
 
+def check_compile_folder(file_path):
+    compile_cmd='gcc + str(file_path) + '/memhog.c -o  ' + str(file_path) +'/memhog'
+    if  "memhog" not in os.listdir(file_path):
+	logger.debug("Memhog compiled file does not exist...Compiling memgog file...")
+        os.system(complie_cmd)
+        logger.debug("Compiled memgog file...")
+	
+
 def overload_memory():
     logger.debug("Executing overload memory task")
     file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
@@ -395,13 +403,12 @@ def overload_memory():
     logger.debug(type(file_path))
     host_ips_rows = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     logger.debug(host_ips_rows)
-
     command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
     for host_ip_row in host_ips_rows:
         logger.debug("overloading memory of")
         logger.debug(host_ip_row)
         logger.debug(type(host_ip_row['private_ip']))
-        # ret = execute_remote_cmd(host_ip_row['host_ip'], 'root', command1)
+        check_compile_folder(file_path)
         command1 = 'scp '+ str(file_path) +'/memhog root@'+ str(host_ip_row['private_ip']) +':/'
         logger.debug('executing' + command1) 
         ret = os.system(command1)
@@ -409,6 +416,7 @@ def overload_memory():
         ret = execute_remote_cmd(host_ip_row['private_ip'], 'root', command2)
         logger.debug(ret)
     logger.debug("Completed overload memory task")
+
   
 #host networking graph
 def host_networking():
