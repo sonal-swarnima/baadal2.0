@@ -424,8 +424,8 @@ def get_host_mem_usage(host_ip,m_type=None):
 
     rrd_logger.info("memory status %s"%(mem_stat))
     mem_stat_new=re.split(',',mem_stat)
-    mem_stat_new=re.split(' ',mem_stat_new[1])
-    used_mem_in_kb = int(mem_stat_new[1])
+    mem_stat_new = re.search('(?<= )\w+',mem_stat_new[1])
+    used_mem_in_kb = int(mem_stat_new.group(0))
     rrd_logger.info("Mem stats of host %s is %s" % (host_ip, used_mem_in_kb))
     return used_mem_in_kb
 

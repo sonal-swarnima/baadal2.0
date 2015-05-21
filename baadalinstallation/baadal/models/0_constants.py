@@ -49,6 +49,7 @@ TASK_CLONE_VM = 'clone_task'
 TASK_VM = 'vm_task'
 TASK_DAILY_CHECKS = 'vm_daily_checks'
 TASK_PURGE_UNUSEDVM = 'vm_garbage_collector'
+TASK_LOADBALANCE_VM = 'vm_loadbalance'
 
 
 
@@ -120,6 +121,7 @@ UUID_MEMORY_OVERLOAD = 'scheduler-uuid-memory'
 UUID_DAILY_CHECKS = 'scheduler-uuid-daily-check'
 UUID_PURGE_UNUSEDVM = 'scheduler-uuid-garbage-collector'
 UUID_HOST_NETWORKING='scheduler-uuid-host-networking'
+UUID_LOADBALANCE_VM='scheduler-uuid-loadbalance-vm'
 
 PUBLIC_IP_NOT_ASSIGNED = "Not Assigned"
 UUID_RRD='scheduler-uuid-rrd-task'

@@ -377,6 +377,17 @@ def process_unusedvm():
         logger.debug("EXITING PROCESS UNUSED VM......")
 
 
+def process_loadbalancer():
+    logger.info("ENTERING PROCESS LOADBALANCER VM ........")
+    try:
+        (host_list,vm_list)=find_host_and_guest_list()
+        loadbalance_vm(host_list,vm_list) 
+    except:
+        log_exception()
+        pass
+    finally:
+        logger.debug("EXITING PROCESS LOADBALANCER VM......")
+
 def overload_memory():
     logger.debug("Executing overload memory task")
     file_path_row = db(db.constants.name=="memory_overload_file_path").select(db.constants.value).first()
@@ -431,8 +442,9 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_garbage_collector=process_unusedvm,
                                         memory_overload=overload_memory,
-                		        networking_host=host_networking,
-					rrd_task=task_rrd), 
+                		                networking_host=host_networking,
+					                    rrd_task=task_rrd,
+                                        vm_loadbalance=process_loadbalancer), 
                              group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
 
 
@@ -499,6 +511,16 @@ vm_scheduler.queue_task(TASK_PURGE_UNUSEDVM,
                     timeout = 60 * MINUTES,
                     uuid = UUID_PURGE_UNUSEDVM,
                     group_name = 'vm_sanity')
+
+#Adding new task for scheduler to load_balance the VM by migrating them on other hosts.
+vm_scheduler.queue_task(TASK_LOADBALANCE_VM,
+                    repeats = 0, # run indefinitely
+                    start_time = request.now,
+                    period = 24 * HOURS, # every 24h
+                    timeout = 60 * MINUTES,
+                    uuid = UUID_LOADBALANCE_VM,
+                    group_name = 'vm_sanity')
+
 
 vm_scheduler.queue_task('memory_overload',
                     repeats = 0, # run indefinitely
