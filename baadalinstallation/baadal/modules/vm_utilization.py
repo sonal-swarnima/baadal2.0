@@ -385,7 +385,7 @@ def get_host_cpu_usage(host_ip,m_type=None):
     rrd_logger.info("getting cpu info")
     command = "iostat -c | sed '1,2d'"
     if m_type=="controller":
-        execute_remote_cmd("localhost", 'root', command, None,  True)
+        command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
     else:
         command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     rrd_logger.debug(type(command_output))
@@ -400,7 +400,7 @@ def get_host_disk_usage(host_ip,m_type=None):
     command = "iostat -d | sed '1,2d'"
     
     if m_type=="controller":
-        execute_remote_cmd("localhost", 'root', command, None,  True)
+        command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
     
     else:
         command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
@@ -411,30 +411,25 @@ def get_host_disk_usage(host_ip,m_type=None):
 """Uses top command to capture memory usage for host"""
 def get_host_mem_usage(host_ip,m_type=None):
 
-    command = "top -b -n1 | grep 'Mem'"
+    command = "free -k | grep 'buffers/cache' | awk '{print $3}'"
     if m_type=="controller":
-        execute_remote_cmd("localhost", 'root', command, None,  True)
+        command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
    
     else:
         command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
-    rrd_logger.info("command_output is %s"%(command_output))
-    mem_stat = str(command_output)
-    if '+' in mem_stat:
-        mem_stat=mem_stat.replace('+',' ')
-
-    rrd_logger.info("memory status %s"%(mem_stat))
-    mem_stat_new=re.split(',',mem_stat)
-    mem_stat_new = re.search('(?<= )\w+',mem_stat_new[1])
-    used_mem_in_kb = int(mem_stat_new.group(0))
+    rrd_logger.info("command_output is %s"%(command_output[0]))
+    used_mem_in_kb = int(command_output[0])
     rrd_logger.info("Mem stats of host %s is %s" % (host_ip, used_mem_in_kb))
     return used_mem_in_kb
+
+
 
 """Uses ifconfig command to capture network usage for host"""
 def get_host_nw_usage(host_ip,m_type=None):
 
     command = "ifconfig baadal-br-int | grep 'RX bytes:'"
     if m_type=="controller":
-        execute_remote_cmd("localhost", 'root', command, None,  True)
+        command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
     
     else:
         command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
