@@ -975,7 +975,7 @@ def snapshot(parameters):
 
         vm_details = current.db.vm_data[vm_id]
 
-        if is_pingable(str(vm_details.private_ip)):
+        if is_pingable(str(vm_details.private_ip.private_ip)):
 
             logger.debug("VM is pingable. Starting to start with snapshotting...")
             if snapshot_type != current.SNAPSHOT_USER:
@@ -996,8 +996,8 @@ def snapshot(parameters):
 
         else:
                 
-            message = "Unable to ping VM before snapshoting: %s" % (vm_details.private_ip)
-            raise Exception("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip))
+            message = "Unable to ping VM before snapshoting: %s" % (vm_details.private_ip.ptivate_ip)
+            raise Exception("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip.private_ip))
 
     except:
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
@@ -1117,7 +1117,7 @@ def edit_vm_config(parameters):
                 else:
                     raise Exception("Available Public IPs are exhausted.")
             else:
-                remove_mapping(vm_details.public_ip, vm_details.private_ip)
+                remove_mapping(vm_details.public_ip.public_ip, vm_details.private_ip.private_ip)
                 current.db.vm_data[vm_id] = dict(public_ip = None)
         
         if 'security_domain' in parameters:
