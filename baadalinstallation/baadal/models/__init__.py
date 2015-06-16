@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__all__ =['add_collaborators', 'add_faculty_approver', 'add_orphan_vm', 'add_private_ip', 'add_private_ip_range', 
+__all__ =['get_host_details','add_data_into_affinity','add_collaborators', 'add_faculty_approver', 'add_orphan_vm', 'add_private_ip', 'add_private_ip_range', 
           'add_public_ip_range', 'add_user_verify_row', 'add_user_vm_access', 'add_vm_task_to_queue', 'add_vm_users', 
           'approve_vm_request', 'check_delete_security_domain', 'check_faculty', 'check_host_sanity', 'check_moderator', 
           'check_orgadmin', 'check_snapshot_limit', 'check_vm_extra_disk', 'check_vm_owner', 'check_vm_resource', 
           'check_vm_sanity', 'check_vm_snapshot_sanity', 'configure_host_by_mac', 'delete_all_user_roles', 
-          'delete_host_from_db', 'delete_orphan_snapshot', 'delete_snapshot_info', 'delete_user_vm_access', 
+          'delete_host_from_db', 'delete_orphan_snapshot', 'delete_snapshot_info', 'delete_user_vm_access','reset_host_affinity', 
           'delete_vm_info', 'disable_user', 'does_vm_exist', 'edit_vm_config_validation', 'enqueue_vm_request', 
           'exception_handler', 'exec_launch_vm_image', 'execute_command', 'get_add_host_form', 'get_all_hosted_vm', 
           'get_all_hosts', 'get_all_orglevel_vm_list', 'get_all_pending_req_count', 'get_all_pending_requests', 

@@ -54,6 +54,7 @@ def getVirshDomainConn(vm_details, host_ip=None, domain_name=None):
     if vm_details != None:
         host_ip = vm_details.host_id.host_ip.private_ip
         domain_name = vm_details.vm_identity
+
     connection_object = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
 
     domain = connection_object.lookupByName(domain_name)

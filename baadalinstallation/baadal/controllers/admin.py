@@ -206,7 +206,7 @@ def delete_user_vm():
 def migrate_vm():
 
     vm_id = request.args[0]
-
+    vm_details = get_migrate_vm_details(vm_id)
     if len(request.args) > 1:
         params={}
         if request.args[1] == 'migrate_vm_hosts':
@@ -223,11 +223,44 @@ def migrate_vm():
 
         session.flash = 'Your task has been queued. Please check your task list for status.'
         redirect(URL(c = 'admin', f = 'hosts_vms'))
-    else:
-        vm_details = get_migrate_vm_details(vm_id)
-
+    logger.debug("vm_details[affinity flag] :  " + str(vm_details['affinity_flag']))
+    if vm_details['affinity_flag'] != 0:
+      host_details = get_host_details(vm_details['vm_name'])
+      logger.debug("available_hosts : " + str(host_details['available_hosts']))
+      vm_details['available_hosts'] = host_details['available_hosts']
     return dict(vm_details=vm_details)
-        
+
+
+@check_moderator
+@handle_exception
+def affinity_host():
+    vm_id = request.args[0]
+    vm_details = get_migrate_vm_details(vm_id)
+    vm_name=vm_details['vm_name']
+    host_details={}
+    host_details = get_host_details(vm_name)
+    params={}
+    host_detail=[]
+    if len(request.args) > 1:
+       if request.args[1] == 'affinity_host':
+          host_details = get_host_details(vm_name)
+       params['affinity_host'] = request.vars['test']
+       add_data_into_affinity(params,vm_details)   
+       host_details = get_host_details(vm_name)
+       #redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id))
+    return dict(vm_details=vm_details,host_details=host_details)
+    
+
+def delete_affinity_vm():
+    vm_id = request.args[0]
+    key = request.args[1]
+    reset_host_affinity(vm_id,key)
+    session.flash = 'host affinity removed.'
+    redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id))
+    #if request.env.http_referer:
+    #   redirect(request.env.http_referer)
+    #redirect(request.env.http_referer)
+      
    
 @check_moderator
 @handle_exception

@@ -610,6 +610,7 @@ def get_migrate_vm_details(vm_id):
     vm_details['vm_id'] = vm_id
     vm_details['vm_name'] = vm_data.vm_identity
     vm_details['vm_status'] = vm_data.status
+    vm_details['affinity_flag'] = vm_data.affinity_flag
     vm_details['current_host'] = "%s (%s)" %(vm_data.host_id.host_name, vm_data.host_id.host_ip.private_ip)
     vm_details['current_datastore'] = "%s (%s:%s)" %(vm_data.datastore_id.ds_name, vm_data.datastore_id.ds_ip, vm_data.datastore_id.path)
     vm_details['available_hosts'] = dict((host.id, "%s (%s)"%(host.host_name, host.host_ip.private_ip)) 
@@ -960,3 +961,50 @@ def get_mail_user_form():
                 
                 TR(INPUT(_type = 'submit', _value = 'Send Email')),_style='width:100%; border:0px'))
     return form
+
+
+
+
+def add_data_into_affinity(params,vm_details):
+    current_host = vm_details['current_host']
+    current_host = current_host.split("(")
+    current_host = current_host[0]
+    #if params['affinity_host'] != 0 :
+    if isinstance(params['affinity_host'], str):
+       host_details = params['affinity_host'].split()
+    else :
+       host_details = params['affinity_host']
+    for item in host_details:
+        db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=1)
+        if db.host_affinity(affinity_host=item):
+           db(db.host_affinity.affinity_host == item).update(affinity_host=item)
+        else :
+           db.host_affinity.insert(vm_id=vm_details['vm_id'],vm_name=vm_details['vm_name'], current_host=current_host, affinity_host=item)
+
+
+
+def get_host_details(vm_name):
+    host_data = db(db.host_affinity.vm_name == vm_name).select().first()
+    host_details = {}
+    logger.debug("host data is : " + str(host_data))
+    if host_data != None :
+       host_details['current_host'] = "%s" %(host_data.current_host)   
+       host_details['available_hosts'] = dict((host.id, "%s"%(host.affinity_host))
+                                         for host in db((db.host_affinity.vm_name == host_data.vm_name)).select())
+    return host_details
+   
+
+def reset_host_affinity(vm_id,key): 
+    logger.debug("inside reset_host_affinity")
+    host_data = db(db.host_affinity.id == key).select().first()
+    logger.debug("host data is : " + str(host_data))
+    vm_details = get_migrate_vm_details(vm_id)
+    logger.debug("vm_details is : " + str(vm_details))
+    logger.debug("current host is : " + str(vm_details['current_host'])) 
+    if vm_details['current_host'] in host_data['affinity_host'] : 
+       logger.debug("inside if part")
+       return "we can not delete this host affinity because currently vm is on this host !!"
+    else :
+       logger.debug("inside else part")  
+       db(db.host_affinity.id==key).delete()
+       db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=0)

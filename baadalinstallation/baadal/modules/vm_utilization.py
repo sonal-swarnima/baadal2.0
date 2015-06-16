@@ -284,6 +284,8 @@ def create_rrd(rrd_file):
 
 """Captures memory utilization of a VM from the host.
    VMs run on host as individual processes. Memory utilization of the process is derived."""
+#feteching actual memory usage of vm by top command by using RES (gets total memory comsumed by process) and %MEM (amount of memory used by process from RES)
+
 def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("Fetching memory usage of domain %s defined on host %s" % (dom_name, host))
@@ -487,6 +489,7 @@ def update_host_rrd(host_ip,m_type=None):
                 host_stats = get_host_resources_usage(host_ip,m_type)
                 
             rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
+	    
  
     except Exception, e:
  

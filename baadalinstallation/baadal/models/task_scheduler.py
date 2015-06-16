@@ -403,6 +403,7 @@ def overload_memory():
     logger.debug(type(file_path))
     host_ips_rows = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     logger.debug(host_ips_rows)
+
     command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
     for host_ip_row in host_ips_rows:
         logger.debug("overloading memory of")
@@ -437,6 +438,9 @@ def host_networking():
     logger.debug( host_name_list)
     collect_data_from_host(host_ip_list,host_name_list)
     logger.debug("collected host networking data")    
+
+
+
      
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler

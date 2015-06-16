@@ -62,8 +62,19 @@ def loadbalance_vm(host_list=[],vm_list=[]):
 
 def check_affinity(vm_details,host):
     try:
-        logger.debug("Entering into check_affinity")
-        return True 
+        logger.debug("host is : " + str(host))
+        flag=vm_details.affinity_flag
+        logger.debug("affinity flag value is : " + str(flag))
+        if flag == 1:
+           logger.debug("host value is : " + str(vm_details.vm_identity))
+           host_list=get_host_details(vm_details.vm_identity)
+           for key in host_list['available_hosts']:
+                if host['host_name'] in host_list['available_hosts'][key]:
+                   return True 
+                else :
+                   return False 
+        else:
+          return True
     except:
         logger.exception('Exception in check_affinity') 
         return False

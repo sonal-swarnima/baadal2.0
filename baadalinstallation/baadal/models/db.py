@@ -130,6 +130,14 @@ db.define_table('public_ip_pool',
 
 db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
 
+
+
+db.define_table('host_affinity',
+    Field('vm_id','integer'),
+    Field('vm_name', 'string', length = 100, notnull = True),
+    Field('current_host', 'string', length = 20),
+    Field('affinity_host', 'string', length = 40))
+
 db.define_table('private_ip_pool',
     Field('private_ip', 'string', length = 15, notnull = True, unique = True),
     Field('mac_addr', 'string', length = 20, unique = True),
@@ -210,6 +218,7 @@ db.define_table('vm_data',
     Field('security_domain', db.security_domain),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
     Field('snapshot_flag', 'integer', default = 0),
+    Field('affinity_flag', 'integer', default = 0),
     Field('saved_template', db.template),
     Field('delete_warning_date', 'datetime'),
     Field('shutdown_warning_date', 'datetime'))

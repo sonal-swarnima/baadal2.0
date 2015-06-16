@@ -1,0 +1,72 @@
+{{extend 'layout.html'}}
+
+<div id="tabs-task">
+
+  <ul>
+    <li><a href="#hostTab", onclick="set_tab_cookie(0);">Set Affinity</a></li>
+    
+  </ul>
+
+  <div id="hostTab">
+    {{if len(vm_details['available_hosts']) != 0:}}
+        <form action="{{=vm_details['vm_id']}}/affinity_host">
+        <table>
+          <tr>
+            <td>VM Name:</td>
+            <td><b>{{=vm_details['vm_name']}}</b></td>
+          </tr>
+          <tr>
+            <td>Current Hosts:</td>
+            <td><b>{{=vm_details['current_host']}}</b></td>
+           </tr>
+           <tr>
+           <td>Affinity Hosts:</td>
+              {{ for key in vm_details['available_hosts']:}}
+                   <tr>
+                   <td></td><td><input value={{=vm_details['available_hosts'][key]}} type="checkbox" name="test" />{{=vm_details['available_hosts'][key]}}</td>
+                   </tr>
+                {{pass}}
+          </tr>
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Host" /></td>
+          </tr>
+        </table>
+        </form>
+       {{pass}}
+  </div>
+ 
+<div>    
+   {{if len(host_details) != 0:}} 
+    <h2 class="title">Affinity Host</h2>
+    <table id="affinity_host">
+        <tr>
+         {{ for key in host_details['available_hosts']:}}
+                <td id="{{=key}}">{{=host_details['available_hosts'][key]}}</td>
+                <td>
+                <a alt="Remove the Host Affinity" href="{{=URL(request.application, 'admin','delete_affinity_vm', args=[vm_details['vm_id'],key])}}" title="Remove the Host Affinity" style="text-decoration:none;color:black;"><b>X<b/>
+                </a>
+            </td>
+      {{pass}}
+      </tr> 
+     </table>
+{{pass}}
+</div>
+    {{pass}}
+
+
+</div>
+
+
+<script>
+$(document).keypress(function(e) {
+  if(e.which == 13) {
+    tab_refresh();
+    $(this).closest('form').submit()
+  }
+})
+
+</script>
+
+
+ 

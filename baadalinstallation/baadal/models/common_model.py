@@ -353,14 +353,15 @@ def get_vm_operations(vm_id):
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
                      'save_as_template'      : ('user', 'save.png', 'Save as Template'),
-                     'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM')}
+                     'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM'),
+                     'affinity_host'         : ('admin','PowerCLI.png','Set Affinity')}
 
     valid_operations_list = []
     
     vm_status = db.vm_data[vm_id].status
     
     if vm_status not in (VM_STATUS_UNKNOWN, VM_STATUS_IN_QUEUE):
-        valid_operations = ['snapshot', 'show_vm_performance']
+        valid_operations = ['snapshot', 'show_vm_performance','affinity_host']
 
         if vm_status == VM_STATUS_RUNNING:
             valid_operations.extend(['suspend_vm' , 'stop_vm', 'destroy_vm'])
