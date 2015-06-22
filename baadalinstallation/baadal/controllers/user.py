@@ -9,7 +9,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from log_handler import logger
-from vm_utilization import get_performance_graph
+from vm_utilization import *
 
 @auth.requires_login()
 @handle_exception
