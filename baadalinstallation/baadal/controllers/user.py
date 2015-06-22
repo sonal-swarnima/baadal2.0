@@ -302,3 +302,188 @@ def configure_snapshot():
     vm_id = int(request.args[0])
     flag = request.vars['snapshot_flag']
     update_snapshot_flag(vm_id, flag) 
+
+
+################rrd graph#############
+
+def fetch_data_for_graph(vm_identity,graph_period,g_type,vm_ram):
+    start_time = None
+    consolidation = 'MIN' 
+    end_time = 'now'
+    logger.debug("fetch")
+    rrd_file = get_rrd_file(vm_identity)
+    logger.debug(rrd_file)
+    if graph_period == 'hour':
+        start_time = 'now - ' + str(12*300)
+    elif graph_period == 'day':
+        start_time = 'now - ' + str(12*300*24)
+    elif graph_period == 'month':
+        start_time = 'now - ' + str(12*300*24*30)
+    elif graph_period == 'week':
+        start_time = 'now - ' + str(12*300*24*7)
+    elif graph_period == 'year':
+        start_time = 'now - ' + str(12*300*24*365)
+    logger.debug(start_time)
+    cpu_data = []
+    mem_data = []
+    dskr_data = []
+    dskw_data = []
+    nwr_data = []
+    nww_data = []
+    disk_data=[]
+    if os.path.exists(rrd_file):
+        rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)    
+        
+        fld_info = rrd_ret[1]
+        data_info = rrd_ret[2] 
+        tim_info=rrd_ret[0][0]
+        
+	cpu_idx = fld_info.index('cpu')
+        mem_idx = fld_info.index('ram')
+        dskr_idx = fld_info.index('dr')
+        dskw_idx = fld_info.index('dw')
+        nwr_idx = fld_info.index('tx')
+        nww_idx = fld_info.index('rx')
+        mem_data=[]
+	i=0
+        for data in data_info:
+            
+            info={}
+            time_info=(int(tim_info) + 300*i)*1000
+            i+=1
+            
+            
+	    if g_type=="cpu":
+                if data[cpu_idx] != None: 
+		    info['y']=float(row[cpu_idx]) 
+	        else:
+		    info['y']=float(0)
+	        
+		 
+                cpu_data.append(info) 
+                
+            if g_type=="ram":
+                
+                if data[mem_idx] != None and  data[mem_idx]>0: 
+                    logger.debug(vm_ram)
+		    if int(vm_ram)>1024:
+                        
+		        mem=round(float(data[mem_idx])/(1024*1024*1024),2)
+			
+		    else:
+			mem=round(float(data[mem_idx])/(1024*1024),2)
+		    
+                    info['y']=mem
+		else:
+		    
+		    info['y']=float(0)
+		info['x']=time_info
+                mem_data.append(info) 
+	      
+	        
+                
+	    if g_type=="diskw":
+                if data[cpu_idx] != None: 
+                    info['y']=(float(row[disk_idx])*10^-9)/300
+	        else:
+		    info['y']=float(0)
+	        
+		 
+                disk_data.append(info) 
+                
+	    if g_type=="nwr":
+                if data[nw_idx] != None: 
+                    info['y']=float(row[nw_idx])
+	        else:
+		    info['y']=float(0)
+	        info['x']='new Date('+str(time_info)+')'
+		 
+                nw_data.append(info) 
+                return nwr_data
+	    if g_type=="nww":
+                if data[cpu_idx] != None: 
+                    info['y']=float(row[cpu_idx])
+	        else:
+		    info['y']=float(0)
+	        
+		 
+                cpu_data.append(info) 
+               
+	    if g_type=="diskr":
+                if data[cpu_idx] != None: 
+                    info['y']=float(row[cpu_idx])
+	        else:
+		    info['y']=float(0)
+	        
+		 
+                cpu_data.append(info) 
+                logger.debug(diskr_data)
+    return mem_data                
+
+
+def check_graph_period(graph_period):
+    if graph_period == 'hour':
+        valueformat="hh mm TT"
+    elif graph_period == 'day':
+        valueformat=" hh mm TT"
+    elif graph_period == 'month':
+        valueformat="DD MMM"
+    elif graph_period == 'week':
+        valueformat="DDD hh mm TT"
+    elif graph_period == 'year':
+        valueformat="MMM YY "
+    logger.debug(valueformat)
+    return valueformat
+
+def check_graph_type(g_type,vm_ram):
+    logger.debug(g_type)
+    logger.debug("inside")
+    title={}
+    if g_type=='cpu':
+       title['y_title']='cpu(%)'
+       title['g_title']="CPU PERFORMANCE"
+    if g_type=='disk':
+       title['y_title']='disk(bytes/sec)'
+       title['g_title']="DISK PERFORMANCE"
+    if g_type=='nw':
+       title['y_title']='network(MB/sec)'
+       title['g_title']="NETWORK PERFORMANCE"
+    if g_type=="ram":
+       
+       if int(vm_ram)>1024:
+           title['y_title']="ram(GB)"
+       else:
+           title['y_title']="ram(MB)"
+       title['g_title']="MEMORY PERFORMANCE"
+    logger.debug(title)
+    return title
+
+
+def create_graph():
+    data=[]
+    ret={}
+    logger.debug(request.vars['graphType'])
+    logger.debug(request.vars['vmIdentity'])
+    logger.debug(request.vars['graphPeriod'])
+    logger.debug(request.vars['vm_RAM'])
+    
+    graph_period=request.vars['graphPeriod']
+    vm_ram=request.vars['vm_RAM']
+    vm_identity=request.vars['vmIdentity']
+    g_type=request.vars['graphType']
+    title=check_graph_type(g_type,vm_ram)
+    ret['valueformat']=check_graph_period(graph_period)
+    ret['data']=fetch_data_for_graph(vm_identity,graph_period,g_type,vm_ram)
+    ret['y_title']=title['y_title']
+    ret['g_title']=title['g_title']
+    if int(vm_ram)>1024:
+	mem=float(vm_ram)/(1024)
+    else:
+	mem=vm_ram
+    
+    ret['mem']=mem
+    
+    import json
+    json_str = json.dumps(ret,ensure_ascii=False)
+    logger.debug(json_str)
+    return json_str
