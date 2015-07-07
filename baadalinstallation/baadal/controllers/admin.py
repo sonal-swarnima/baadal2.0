@@ -11,8 +11,8 @@ from maintenance import shutdown_baadal, bootup_baadal
 from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN,\
     HOST_STATUS_MAINTENANCE
 from log_handler import logger
-from vm_utilization import VM_UTIL_10_MINS, VM_UTIL_24_HOURS, get_performance_graph
-from helper import get_constant
+from vm_utilization import *
+from helper import *
 
 @check_moderator
 @handle_exception
@@ -548,14 +548,79 @@ def start_bootup():
 
 @check_moderator
 @handle_exception       
+def show_cont_performance():
+
+    
+    host_ram="10"
+    m_type="host"
+    return dict(host_identity='172_16_0_9' ,host_ram=host_ram, m_type=m_type)
+
+def show_nat_performance():
+
+    
+    host_ram="10"
+    m_type="host"
+    return dict(host_identity='172_16_0_3' ,host_ram=host_ram, m_type=m_type)
+
+@check_moderator
+@handle_exception       
 def show_host_performance():
 
     host_id = request.args(0)
     host_info = get_host_config(host_id)
     host_identity = str(host_info.host_ip.private_ip).replace('.','_')
-    
-    return dict(host_id=host_id, host_identity=host_identity)
+    host_ram="10"
+    m_type="host"
+    return dict(host_id=host_id, host_identity=host_identity ,host_ram=host_ram, m_type=m_type)
 
+def create_graph_for_host():
+    data=[]
+    ret={}
+    logger.debug(request.vars['graphType'])
+    logger.debug(request.vars['hostIdentity'])
+    logger.debug(request.vars['graphPeriod'])
+    logger.debug(request.vars['host_RAM'])
+    logger.debug(request.vars['mtype'])
+    graph_period=request.vars['graphPeriod']
+    vm_ram=request.vars['host_RAM']
+    vm_identity=request.vars['hostIdentity']
+    g_type=request.vars['graphType']
+    m_type=request.vars['mtype']
+    title=check_graph_type(g_type,vm_ram,m_type)
+   
+    ret['valueformat']=check_graph_period(graph_period)
+    ret['y_title']=title['y_title']
+    ret['g_title']=title['g_title']
+    
+    
+    ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type)
+    
+    
+    
+    if int(vm_ram)>1024:
+	mem=float(vm_ram)/(1024)
+    else:
+	mem=vm_ram
+    
+    ret['mem']=mem
+    
+
+    if g_type=='disk':
+	ret['legend_read']='disk read'
+	ret['legend_write']='disk write'
+    
+    elif g_type=='nw':
+	ret['legend_read']='network read'
+	ret['legend_write']='network write'
+    elif g_type=='cpu':
+	ret['name']='cpu'
+    else:
+	ret['name']='mem'
+    import json
+    
+    json_str = json.dumps(ret,ensure_ascii=False)
+    
+    return json_str
 
 @check_moderator
 @handle_exception       

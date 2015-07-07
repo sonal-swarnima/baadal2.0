@@ -378,7 +378,7 @@ def node_attribute(i,host_name,host_ip):
 def edge_attribute(next_host_ip,host_ip,k,i,j):
     latency=get_latency_btw_hosts(next_host_ip,host_ip)
     throughput=get_throughput_btw_hosts(next_host_ip,host_ip)
-    edge_label= "L: " + str(latency)+ ' , ' + "T: " + str(throughput)
+    edge_label= "L: " + str(latency)+ ' , ' 
     edge_data={}
     edge_data['id']=str(k)
     edge_data['source']=i
@@ -407,9 +407,10 @@ def check_package_installation(host_ip_list):
 
 
 
+
 def collect_data_from_host(host_ip_list,host_name_list):
     active_host_no=len(host_ip_list)
-    check_software_installation(host_ip_list)
+    check_package_installation(host_ip_list)
     for i in xrange(0,active_host_no):	
         host_ip=host_ip_list[i]
         host_name=host_name_list[i]

@@ -192,7 +192,9 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
             if row[dskw_idx] != None: dskw_data.append(float(row[dskw_idx]))
             if row[nwr_idx] != None: nwr_data.append(float(row[nwr_idx]))
             if row[nww_idx] != None: nww_data.append(float(row[nww_idx]))
+
     
+    rrd_logger.info("mem_data"+str(mem_data))
     return (sum(mem_data)/float(len(mem_data)) if len(mem_data) > 0 else 0, 
             sum(cpu_data)/float(len(cpu_data)) if len(cpu_data) > 0 else 0, 
             sum(dskr_data)/float(len(dskr_data)) if len(dskr_data) > 0 else 0,
@@ -290,10 +292,13 @@ def get_dom_mem_usage(dom_name, host):
 
     rrd_logger.debug("Fetching memory usage of domain %s defined on host %s" % (dom_name, host))
 
+   
     cmd = "output=`ps -ef --sort=start_time | grep '%s.qcow2' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'" % dom_name
     #"ps aux | grep '\-name " + dom_name + " ' | grep kvm"
     output = execute_remote_cmd(host, "root", cmd, None, True)
+    
     return (int(output[0]))*1024 #return memory in Bytes by default
+
 
 """Uses libvirt function to extract interface device statistics for a domain
    to find network usage of virtual machine."""
@@ -394,7 +399,7 @@ def get_host_cpu_usage(host_ip,m_type=None):
     cpu_stats = re.split('\s+', command_output[1])
     rrd_logger.debug(cpu_stats)
     rrd_logger.info("CPU stats of host %s is %s" % ( host_ip, (cpu_stats[1] + cpu_stats[2] + cpu_stats[3])))
-    return (float(cpu_stats[1]) + float(cpu_stats[2]) + float(cpu_stats[3]))
+    return (float(cpu_stats[1]) + float(cpu_stats[2]) + float(cpu_stats[3])) # return cpu in %
 
 """Uses iostat tool to capture input/output statistics for host"""
 def get_host_disk_usage(host_ip,m_type=None):
@@ -408,7 +413,7 @@ def get_host_disk_usage(host_ip,m_type=None):
         command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
     disk_stats = re.split('\s+', command_output[1])
     rrd_logger.info("Disk stats of host %s is dr: %s dw: %s" % (host_ip, disk_stats[2], disk_stats[3]))  
-    return [float(disk_stats[2]), float(disk_stats[3])]
+    return [float(disk_stats[2]), float(disk_stats[3])] #return memory in KB/sec
 
 """Uses top command to capture memory usage for host"""
 def get_host_mem_usage(host_ip,m_type=None):
@@ -422,7 +427,7 @@ def get_host_mem_usage(host_ip,m_type=None):
     rrd_logger.info("command_output is %s"%(command_output[0]))
     used_mem_in_kb = int(command_output[0])
     rrd_logger.info("Mem stats of host %s is %s" % (host_ip, used_mem_in_kb))
-    return used_mem_in_kb
+    return used_mem_in_kb #return memory in KB
 
 
 
@@ -438,8 +443,8 @@ def get_host_nw_usage(host_ip,m_type=None):
     nw_stats = re.split('\s+', command_output[0])
     rx = int(re.split(':', nw_stats[2])[1])
     tx = int(re.split(':', nw_stats[6])[1])
-    rrd_logger.info("Disk stats of host %s is rx: %s tx: %s" % (host_ip, rx, tx))
-    return [rx, tx]
+    rrd_logger.info("Network stats of host %s is rx: %s tx: %s" % (host_ip, rx, tx))
+    return [rx, tx] # return network in Bytes
 
 def get_host_resources_usage(host_ip,m_type=None):
     rrd_logger.info("getting data for RRD file")
@@ -574,3 +579,176 @@ def update_rrd(host_ip,m_type=None):
             if hypervisor_conn:
                 hypervisor_conn.close()
         
+################graph#################
+
+
+
+def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type):
+    
+    start_time = None
+    consolidation = 'MIN' 
+    end_time = 'now'
+    
+    rrd_file = get_rrd_file(vm_identity)
+    
+    if graph_period == 'hour':
+        start_time = 'now - ' + str(12*300)
+    elif graph_period == 'day':
+        start_time = 'now - ' + str(12*300*24)
+    elif graph_period == 'month':
+        start_time = 'now - ' + str(12*300*24*30)
+    elif graph_period == 'week':
+        start_time = 'now - ' + str(12*300*24*7)
+    elif graph_period == 'year':
+        start_time = 'now - ' + str(12*300*24*365)
+    result=[]
+    
+    result1=[]
+    result2=[]
+    result3=[]
+    if os.path.exists(rrd_file):
+        rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)    
+        
+        fld_info = rrd_ret[1]
+        data_info = rrd_ret[2] 
+        tim_info=rrd_ret[0][0]
+        
+	cpu_idx = fld_info.index('cpu')
+        mem_idx = fld_info.index('ram')
+        dskr_idx = fld_info.index('dr')
+        dskw_idx = fld_info.index('dw')
+        nwr_idx = fld_info.index('tx')
+        nww_idx = fld_info.index('rx')
+        mem_data=[]
+	i=1
+        for data in data_info:
+            info1={}
+            info={}
+            time_info=(int(tim_info) + 300*i)*1000
+            i+=1
+            
+            
+	    if g_type=="cpu":
+		
+                if data[cpu_idx] != None: 
+		    info['y']=round(float(data[cpu_idx]),3)
+		    
+	        else:
+		    info['y']=float(0)
+	        
+		info['x']=time_info 
+                result3.append(info) 
+                
+            if g_type=="ram":
+                
+                if data[mem_idx] != None and  data[mem_idx]>0: 
+                    
+		    if (int(vm_ram)>1024) or (m_type=='host'):
+                        
+		        mem=round(float(data[mem_idx])/(1024*1024*1024),2)
+			
+		    else:
+			mem=round(float(data[mem_idx])/(1024*1024),2)
+		    
+                    info['y']=mem
+		else:
+		    
+		    info['y']=float(0)
+		info['x']=time_info
+                result3.append(info) 
+	      
+	        
+                
+	    if g_type=="disk":
+		
+		if data[dskr_idx] != None: 
+		   
+                    
+                    info1['y']=round(float(data[dskr_idx])/(1024*1024),2)
+	        else:
+		    info1['y']=float(0)
+		
+		if data[dskw_idx] != None: 
+	            
+                    info['y']=round(float(data[dskw_idx])/(1024*1024),2)
+	        else:
+		    info['y']=float(0)
+
+	        info['x']=time_info 
+		info1['x']=time_info 
+		
+                result1.append(info1) 
+                result2.append(info)
+	        
+	
+	    if g_type=="nw":
+		
+                if data[nwr_idx] != None: 
+                    info1['y']=round(float(data[nwr_idx])/(1024*1024),2)
+	        else:
+		    info1['y']=float(0)
+		if data[nww_idx] != None: 
+	            
+                    info['y']=round(float(data[nww_idx])/(1024*1024),2)
+	        else:
+		    info['y']=float(0)
+	        info['x']=time_info 
+		info1['x']=time_info 
+                result1.append(info1) 
+                result2.append(info)	
+		
+
+    if g_type=='ram' or g_type=='cpu':
+	
+	return result3
+
+    if g_type=='nw' or g_type=='disk':
+	
+	result.append(result1) 
+        result.append(result2)	
+	
+	return result
+
+   
+    
+
+def check_graph_period(graph_period):
+    if graph_period == 'hour':	
+        valueformat="hh:mm TT"
+    elif graph_period == 'day':
+        valueformat=" hh:mm TT"
+    elif graph_period == 'month':
+        valueformat="DDMMM"
+    elif graph_period == 'week':
+        valueformat="DDD,hh:mm TT"
+    elif graph_period == 'year':
+        valueformat="MMMYY "
+    
+    return valueformat
+
+def check_graph_type(g_type,vm_ram,m_type):
+    
+    title={}
+    if g_type=='cpu':
+       title['y_title']='cpu(%)'
+       title['g_title']="CPU PERFORMANCE"
+    if g_type=='disk':
+       title['y_title']='disk(MB/s)'
+       title['g_title']="DISK PERFORMANCE"
+    if g_type=='nw':
+       title['y_title']='net(MB/s)'
+       title['g_title']="NETWORK PERFORMANCE"
+    if g_type=="ram":
+       
+       if (int(vm_ram)>1024) or (m_type=='host'):
+           title['y_title']="ram(GB)"
+       else:
+           title['y_title']="ram(MB)"
+       title['g_title']="MEMORY PERFORMANCE"
+    
+    return title
+
+
+
+
+

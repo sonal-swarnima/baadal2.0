@@ -39,7 +39,10 @@ window.onload = function () {
 	labelFontColor:'#0057af'
 	
       },
-
+	legend:{
+        fontSize: 15,
+             
+      },
       data: [
       {        
       dataPoints: [],
@@ -55,10 +58,10 @@ window.onload = function () {
 {
    graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
    period = $('input[name=graph-period-radio]:radio:checked').val();
-   vm_identity = "{{=vm_identity}}";
-   vm_ram = "{{=vm_ram}}";
-   m_type = "{{=m_type}}";
-   jQuery.ajax({type:"POST",url:"{{=URL('creat_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,
+   host_identity = "{{=host_identity}}";
+   host_ram = "{{=host_ram}}";
+   m_type="{{=m_type}}";
+   jQuery.ajax({type:"POST",url:"{{=URL('create_graph_for_host')}}", data:{graphType:graph_type, hostIdentity:host_identity,host_RAM:host_ram,
    graphPeriod:period,mtype:m_type},dataType: "json", success:function(ret) {
 	if (graph_type=='cpu' | graph_type=='ram'){
 	    var length=ret['data'].length;}
@@ -70,7 +73,7 @@ window.onload = function () {
 	    $("#target").html("<b>RRD IS UNAVAILABLE!!!!!!</b>");}
         else
 	   { 
-	    chart.options.data[0].dataPoints=[];
+	   chart.options.data[0].dataPoints=[];
 	    chart.options.data[1].dataPoints=[];
 	   var info = new Array(length); 
 	    var info1 = new Array(length); 
@@ -108,12 +111,14 @@ window.onload = function () {
 	        }
 	    chart.options.axisX.valueFormatString=ret['valueformat'];
             chart.options.axisY.title=ret['y_title'];
+	    
 	    chart.options.title.fontColor='#0057af';
 	    chart.options.axisY.titleFontColor='#0057af';
 	    chart.options.title.text=ret['g_title'];
             if (graph_type=='cpu' | graph_type=='ram'){
 	        chart.options.data[0].dataPoints=info;
 		chart.options.data[0].name=ret['name'];
+		
 	            }
         
 	    if (graph_type=='disk' | graph_type=='nw'){
@@ -126,7 +131,7 @@ window.onload = function () {
 		chart.options.data[1].type='line';
 		chart.options.data[1].name=ret['legend_write'];
 		chart.options.data[1].legendText=ret['legend_write'];
-       
+       	        
 	            }
         
 	    
@@ -206,8 +211,6 @@ jQuery(document).ready( function(){
 <div id="disk"></div>
 </div>
 
-{{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
-_href=URL(r=request, f='settings', args=[vm_id]),
-_title="Settings",
-_alt="Settings")}}
+
+
  
