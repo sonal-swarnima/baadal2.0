@@ -550,17 +550,17 @@ def start_bootup():
 @handle_exception       
 def show_cont_performance():
 
-    
-    host_ram="10"
+    host_cpu=16
+    host_ram="24102"
     m_type="host"
-    return dict(host_identity='172_16_0_9' ,host_ram=host_ram, m_type=m_type)
+    return dict(host_identity='172_16_0_9' ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
 
 def show_nat_performance():
 
-    
-    host_ram="10"
+    host_cpu=40
+    host_ram=64384
     m_type="host"
-    return dict(host_identity='172_16_0_3' ,host_ram=host_ram, m_type=m_type)
+    return dict(host_identity='172_16_0_3' ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
 
 @check_moderator
 @handle_exception       
@@ -569,9 +569,13 @@ def show_host_performance():
     host_id = request.args(0)
     host_info = get_host_config(host_id)
     host_identity = str(host_info.host_ip.private_ip).replace('.','_')
-    host_ram="10"
+    host_cpu=host_info.CPUs
+
+    host_ram=host_info.RAM
+    logger.debug(host_cpu)
+    logger.debug(type(host_cpu))
     m_type="host"
-    return dict(host_id=host_id, host_identity=host_identity ,host_ram=host_ram, m_type=m_type)
+    return dict(host_id=host_id, host_identity=host_identity ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
 
 def create_graph_for_host():
     data=[]
@@ -581,11 +585,13 @@ def create_graph_for_host():
     logger.debug(request.vars['graphPeriod'])
     logger.debug(request.vars['host_RAM'])
     logger.debug(request.vars['mtype'])
+    logger.debug(request.vars['host_CPU'])
     graph_period=request.vars['graphPeriod']
     vm_ram=request.vars['host_RAM']
     vm_identity=request.vars['hostIdentity']
     g_type=request.vars['graphType']
     m_type=request.vars['mtype']
+    host_cpu=request.vars['host_CPU']
     title=check_graph_type(g_type,vm_ram,m_type)
    
     ret['valueformat']=check_graph_period(graph_period)
@@ -593,7 +599,7 @@ def create_graph_for_host():
     ret['g_title']=title['g_title']
     
     
-    ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type)
+    ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu)
     
     
     
@@ -615,7 +621,7 @@ def create_graph_for_host():
     elif g_type=='cpu':
 	ret['name']='cpu'
     else:
-	ret['name']='mem'
+	ret['name']='mem'	
     import json
     
     json_str = json.dumps(ret,ensure_ascii=False)
