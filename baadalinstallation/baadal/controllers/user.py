@@ -174,8 +174,7 @@ def show_vm_performance():
     vm_id = int(request.args[0])
     vm_info = get_vm_info(vm_id)  
     m_type="vm"
-    return dict(vm_id = vm_id, vm_identity = vm_info.vm_data.vm_identity, vm_ram = vm_info.vm_data.RAM,m_type=m_type)
-
+    return dict(vm_id = vm_id, vm_identity = vm_info.vm_data.vm_identity, vm_ram = vm_info.vm_data.RAM,m_type=m_type,vm_cpu=vm_info.vm_data.vCPU)
 
 
 
