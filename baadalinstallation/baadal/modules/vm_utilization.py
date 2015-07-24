@@ -582,15 +582,14 @@ def update_rrd(host_ip,m_type=None):
 ################graph#################
 
 
-
-def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type):
+def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
     
     start_time = None
     consolidation = 'MIN' 
     end_time = 'now'
-    
+    rrd_logger.debug(g_type)
     rrd_file = get_rrd_file(vm_identity)
-    
+    rrd_logger.debug(host_cpu)
     if graph_period == 'hour':
         start_time = 'now - ' + str(12*300)
     elif graph_period == 'day':
@@ -630,8 +629,12 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type):
             
 	    if g_type=="cpu":
 		
+		
                 if data[cpu_idx] != None: 
-		    info['y']=round(float(data[cpu_idx]),3)
+		    
+		    cpu_no=host_cpu.split(" ")
+		    
+		    info['y']=round(float(data[cpu_idx])/(float(int(cpu_no[0])*50000000)),3)
 		    
 	        else:
 		    info['y']=float(0)
@@ -747,8 +750,3 @@ def check_graph_type(g_type,vm_ram,m_type):
        title['g_title']="MEMORY PERFORMANCE"
     
     return title
-
-
-
-
-
