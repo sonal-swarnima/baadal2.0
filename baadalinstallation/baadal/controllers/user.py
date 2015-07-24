@@ -176,10 +176,6 @@ def show_vm_performance():
     m_type="vm"
     return dict(vm_id = vm_id, vm_identity = vm_info.vm_data.vm_identity, vm_ram = vm_info.vm_data.RAM,m_type=m_type,vm_cpu=vm_info.vm_data.vCPU)
 
-
-
-
-
 def create_graph_for_vm():
     ret=creat_graph()
     
@@ -200,13 +196,13 @@ def creat_graph():
     g_type=request.vars['graphType']
     m_type=request.vars['mtype']
     title=check_graph_type(g_type,vm_ram,m_type)
-   
+    host_cpu=request.vars['host_CPU']
     ret['valueformat']=check_graph_period(graph_period)
     ret['y_title']=title['y_title']
     ret['g_title']=title['g_title']
     
     
-    ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type)
+    ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu)
     
     
     
