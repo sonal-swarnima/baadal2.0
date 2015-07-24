@@ -39,11 +39,15 @@ window.onload = function () {
 	labelFontColor:'#0057af'
 	
       },
-
+	legend:{
+        fontSize: 15,
+             
+      },
       data: [
       {        
       dataPoints: [],
 	type: "line"
+	
       },{}]
       
     
@@ -57,8 +61,9 @@ window.onload = function () {
    period = $('input[name=graph-period-radio]:radio:checked').val();
    host_identity = "{{=host_identity}}";
    host_ram = "{{=host_ram}}";
+   host_cpu = "{{=host_cpu}}";
    m_type="{{=m_type}}";
-   jQuery.ajax({type:"POST",url:"{{=URL('create_graph_for_host')}}", data:{graphType:graph_type, hostIdentity:host_identity,host_RAM:host_ram,
+   jQuery.ajax({type:"POST",url:"{{=URL('create_graph_for_host')}}", data:{graphType:graph_type, hostIdentity:host_identity,host_RAM:host_ram,host_CPU:host_cpu,
    graphPeriod:period,mtype:m_type},dataType: "json", success:function(ret) {
 	if (graph_type=='cpu' | graph_type=='ram'){
 	    var length=ret['data'].length;}
@@ -72,6 +77,9 @@ window.onload = function () {
 	   { 
 	   chart.options.data[0].dataPoints=[];
 	    chart.options.data[1].dataPoints=[];
+	   
+	   chart.options.data[0].showInLegend=false;
+	   chart.options.data[1].showInLegend=false;
 	   var info = new Array(length); 
 	    var info1 = new Array(length); 
 
@@ -114,6 +122,8 @@ window.onload = function () {
             if (graph_type=='cpu' | graph_type=='ram'){
 	        chart.options.data[0].dataPoints=info;
 		chart.options.data[0].name=ret['name'];
+		
+		
 	            }
         
 	    if (graph_type=='disk' | graph_type=='nw'){
@@ -121,8 +131,8 @@ window.onload = function () {
 		chart.options.data[0].legendText=ret['legend_read'];
 		chart.options.data[0].name=ret['legend_read'];
 		chart.options.data[1].dataPoints=info1;
-		chart.options.data[0].showInLegend='true';
-		chart.options.data[1].showInLegend='true';
+		chart.options.data[0].showInLegend=true;
+		chart.options.data[1].showInLegend=true;
 		chart.options.data[1].type='line';
 		chart.options.data[1].name=ret['legend_write'];
 		chart.options.data[1].legendText=ret['legend_write'];
