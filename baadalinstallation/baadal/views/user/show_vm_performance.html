@@ -39,6 +39,10 @@ window.onload = function () {
 	labelFontColor:'#0057af'
 	
       },
+	legend:{
+        fontSize: 15,
+             
+      },
 
       data: [
       {        
@@ -58,7 +62,8 @@ window.onload = function () {
    vm_identity = "{{=vm_identity}}";
    vm_ram = "{{=vm_ram}}";
    m_type = "{{=m_type}}";
-   jQuery.ajax({type:"POST",url:"{{=URL('creat_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,
+   vm_cpu = "{{=vm_cpu}}";
+   jQuery.ajax({type:"POST",url:"{{=URL('creat_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,host_CPU:vm_cpu,
    graphPeriod:period,mtype:m_type},dataType: "json", success:function(ret) {
 	if (graph_type=='cpu' | graph_type=='ram'){
 	    var length=ret['data'].length;}
@@ -72,6 +77,8 @@ window.onload = function () {
 	   { 
 	    chart.options.data[0].dataPoints=[];
 	    chart.options.data[1].dataPoints=[];
+	    chart.options.data[0].showInLegend=false;
+	   chart.options.data[1].showInLegend=false;
 	   var info = new Array(length); 
 	    var info1 = new Array(length); 
 
