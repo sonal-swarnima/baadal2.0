@@ -274,7 +274,7 @@ def _get_configured_logger(name):
         formatter="%(asctime)s %(levelname)s %(funcName)s():%(lineno)d %(message)s"
         handler.setFormatter(logging.Formatter(formatter))
         handler.setLevel(logging.DEBUG)
-        
+        logger.propagate = False
         logger.addHandler(handler)
         logger.setLevel(logging.DEBUG)
 
