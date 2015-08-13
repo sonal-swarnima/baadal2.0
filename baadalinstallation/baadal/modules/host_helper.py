@@ -38,7 +38,7 @@ def is_host_available(host_ip):
         return False
 
 def get_host_mac_address(host_ip):
-    command = "ifconfig -a | grep eth0 | head -n 1"
+    command = "ifconfig -a | grep baadal-br-int | head -n 1"
     ret = execute_remote_cmd(host_ip, 'root',command)#Returns e.g. eth0      Link encap:Ethernet  HWaddr 18:03:73:0d:e4:49
     ret=ret.strip()
     mac_addr = ret[ret.rindex(' '):].lstrip()
