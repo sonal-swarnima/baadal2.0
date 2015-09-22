@@ -362,7 +362,7 @@ if test $install_web2py -eq 1; then
 	echo "Initializing Web2py Setup"	
 	pwd	
 	rm -rf web2py/
-	unzip web2py_src.zip
+	unzip ../../../web2py_src.zip
 		
 	if test ! -d web2py/; then
 		echo "UNABLE TO EXTRACT WEB2PY!!!"
