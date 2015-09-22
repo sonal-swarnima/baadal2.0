@@ -354,7 +354,7 @@ def get_vm_operations(vm_id):
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
                      'save_as_template'      : ('user', 'save.png', 'Save as Template'),
                      'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM'),
-                     'affinity_host'         : ('admin','PowerCLI.png','Set Affinity')}
+                     'affinity_host'         : ('admin','affinity.png','Set Affinity')}
 
     valid_operations_list = []
     

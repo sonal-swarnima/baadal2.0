@@ -8,8 +8,7 @@ if 0:
 ###################################################################################
 from simplejson import dumps
 from maintenance import shutdown_baadal, bootup_baadal
-from host_helper import delete_orhan_vm, HOST_STATUS_UP, HOST_STATUS_DOWN,\
-    HOST_STATUS_MAINTENANCE
+from host_helper import *
 from log_handler import logger
 from vm_utilization import *
 from helper import *
@@ -628,8 +627,63 @@ def create_graph_for_host():
     
     return json_str
 
-@check_moderator
-@handle_exception       
+def machine_info():
+        
+	cont_data={}
+	nat_data={}
+     
+	logger.debug("checking controller info")
+	import os
+	cmds="ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2"
+	#subprocess.check_output("ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2")
+	
+        
+        cont_data['ip']=os.popen(cmds).read()
+	nat_ip=os.popen("route -n | sed -n '3p' | awk '{print $2}'").readline()
+        
+        nat_data['ip']=nat_ip
+	
+	cmds=" ifconfig baadal-br-int | grep 'HWaddr ' | awk '{ print $5} '"
+        cont_data['mac_addr']=execute_remote_cmd("localhost", 'root', cmds, None,  True)
+	nat_data['mac_addr']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip("\n")
+	cmds = "free -m | grep 'Mem:' | awk '{print $2}'"
+	cont_data['ram']=execute_remote_cmd("localhost", 'root', cmds, None,  True).strip("\n")
+	nat_data['ram']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip("\n")	
+	cmds="fdisk -l | grep Disk\ /dev |  awk '{print $3}'"
+        cont_data['hdd']=execute_remote_cmd("localhost", 'root', cmds, None,  True)
+	nat_data['hdd']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip("\n")
+	
+	
+	cmds='lshw | grep capacity | grep bit/s | sed -n "1 p" | tr -s " " | cut -f"3" -d" "' 
+	command_output =execute_remote_cmd("localhost", 'root', cmds, None,  True).strip("\n")
+        logger.debug(command_output)
+	cont_data['band']=command_output
+       	command_output = execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip('\n')
+	nat_data['band']=command_output
+	logger.debug(nat_data) 
+	cmds="nproc"
+	cont_data['cpu']=execute_remote_cmd("localhost", 'root', cmds, None,  True).strip("\n")
+	nat_data['cpu']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip('\n')
+	
+
+	data={}
+	logger.debug(nat_data) 
+	logger.debug(cont_data)
+	cont_list=[]   
+        cont_list.append(cont_data)
+	nat_list=[]   
+        nat_list.append(nat_data)
+	data['cont']=cont_list
+	data['nat']=nat_list
+	logger.debug(data) 
+	import io, json,shutil
+        with io.open('/home/www-data/web2py/applications/baadal/static/mc_info.json', 'w', encoding='utf-8') as f:
+            f.write(unicode(json.dumps(data, ensure_ascii=False))) 
+        shutil.move('/home/www-data/web2py/applications/baadal/static/mc_info.json','/home/www-data/web2py/applications/baadal/static/machine_info.json') 
+        
+	return 
+
+   
 def get_updated_host_graph():
 #     logger.debug("in")
     logger.debug(request.vars['graphType'])
@@ -652,6 +706,9 @@ def host_config():
     logger.debug(host_info)
     return dict(host_info=host_info)
 
+
+def show_mc_performance(info):
+    return dict()
 
 @check_moderator
 @handle_exception       
@@ -697,6 +754,9 @@ def verify_extra_disk():
     disk_info = check_vm_extra_disk(vm_image_name, disk_name, datastore_id)
     return disk_info
 
-
 def network_graph():
+    return dict()
+
+
+def host_network_graph():
     return dict()

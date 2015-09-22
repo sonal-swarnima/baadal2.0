@@ -176,6 +176,17 @@ def show_vm_performance():
     m_type="vm"
     return dict(vm_id = vm_id, vm_identity = vm_info.vm_data.vm_identity, vm_ram = vm_info.vm_data.RAM,m_type=m_type,vm_cpu=vm_info.vm_data.vCPU)
 
+
+@check_vm_owner
+@handle_exception       
+def show_vm_graph():
+    vm_id = int(request.args[0])
+    vm_info = get_vm_info(vm_id)  
+    
+    return dict(vm_id = vm_id, vm_identity = vm_info.vm_data.vm_identity, vm_ram = vm_info.vm_data.RAM)
+
+
+
 def create_graph_for_vm():
     ret=creat_graph()
     
