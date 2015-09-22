@@ -24,10 +24,10 @@ PROFILE = iitd
 PROFILE_PPA = http://10.237.22.42/openvswitch
   
 UBUNTU = $(UTILS_DIR)/ubuntu.iso
-UBUNTU_ALTERNATE = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu14.04/ubuntu-14.04-desktop-amd64.iso
-UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/trusty/ubuntu-14.04-alternate-amd64.iso
-UBUNTU_SERVER = http://mirror.cse.iitd.ernet.in/cdimages/ubuntu14.04/ubuntu-14.04-server-amd64.iso
-UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/trusty/ubuntu-14.04-server-amd64.iso
+UBUNTU_ALTERNATE = http://releases.ubuntu.com/trusty/ubuntu-14.04.3-server-amd64.iso
+UBUNTU_ALTERNATE_EXTERNAL = http://releases.ubuntu.com/trusty/ubuntu-14.04.3-alternate-amd64.iso
+UBUNTU_SERVER = http://releases.ubuntu.com/trusty/ubuntu-14.04.3-server-amd64.iso
+UBUNTU_SERVER_EXTERNAL = http://releases.ubuntu.com/trusty/ubuntu-14.04.3-server-amd64.iso
 UBUNTU_SOURCE = $(UBUNTU_SERVER)
 
 LIBVIRT = $(UTILS_DIR)/libvirt-1.2.6.tar.gz
@@ -57,8 +57,8 @@ BIN_PXE_SETUP = $(BIN_DIR)/pxe_dhcp-setup.sh
 BIN_CFENGINE = $(BIN_DIR)/cfengine.sh
 BIN_CFENGINE_SETUP = $(BIN_DIR)/cfengine-setup.sh
 
-BIN_HAPROXY = $(BIN_DIR)/cfengine.sh
-BIN_HAPROXY_SETUP = $(BIN_DIR)/cfengine-setup.sh
+BIN_HAPROXY = $(BIN_DIR)/haproxy.sh
+BIN_HAPROXY_SETUP = $(BIN_DIR)/haproxy-setup.sh
 
 BIN_MYSQL = $(BIN_DIR)/mysql.sh
 BIN_MYSQL_SETUP = $(BIN_DIR)/mysql-setup.sh
@@ -153,12 +153,12 @@ openvswitch: sources-list-setup
 	apt-get update || true
 	apt-get -y install python-software-properties
 	apt-get -y install openvswitch-switch
-	apt-get -y install openvswitch-common=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-pki=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-controller=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-datapath-dkms=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-switch=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install python-openvswitch=2.0.2-0ubuntu0.14.04.1
+	apt-get -y install openvswitch-common=2.0.2-0ubuntu0.14.04.3
+	apt-get -y install openvswitch-pki=2.0.2-0ubuntu0.14.04.3
+	apt-get -y install openvswitch-controller=2.0.2-0ubuntu0.14.04.3
+	apt-get -y install openvswitch-datapath-dkms=2.0.2-0ubuntu0.14.04.3
+	apt-get -y install openvswitch-switch=2.0.2-0ubuntu0.14.04.3
+	apt-get -y install python-openvswitch=2.0.2-0ubuntu0.14.04.3
 
 $(BIN_CONFIGURE): $(BIN_DIR) $(LOGS_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@
@@ -167,7 +167,7 @@ $(BIN_CONFIGURE): $(BIN_DIR) $(LOGS_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure
 	@ chmod +x $@
   
 $(BIN_CONTROLLER): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/controller ubuntu controller-transfer
-	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/*.sh > $@
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/controller/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
 	@ sed -i '$$a$(RUN_COMMAND)' $@
 	@ chmod +x $@
@@ -188,12 +188,13 @@ $(BIN_CFENGINE): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_
 	@ cp $(SRC_DIR)/cfengine/ks.cfg $(BIN_DIR)/ks.cfengine.cfg
 
 $(BIN_HAPROXY): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/haproxy ubuntu haproxy-transfer
-        @ cat $(SRC_DIR)/*.sh $(SRC_DIR)/haproxy/install.sh > $@
-        @ sed -i '1i#!/bin/$(SHELL)' $@
-        @ sed -i '$$a$(RUN_COMMAND)' $@
-        @ chmod +x $@
-        @ cp $(SRC_DIR)/haproxy/ks.cfg $(BIN_DIR)/ks.haproxy.cfg
-  
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/haproxy/install.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
+	@ cp $(SRC_DIR)/haproxy/ks.cfg $(BIN_DIR)/ks.haproxy.cfg
+ 
+ 
 $(BIN_MYSQL): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(DISKS_DIR) $(SRC_DIR)/mysql ubuntu mysql-transfer 
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/mysql/install.sh > $@
 	@ sed -i '1i#!/bin/$(SHELL)' $@
@@ -210,7 +211,7 @@ $(BIN_SWITCH): $(BIN_DIR) $(UTILS_LOCAL_DIR) $(UTILS_DIR) $(LOGS_DIR) $(SRC_DIR)
   
 controller: $(BIN_CONTROLLER)
 	@ sudo $<
-
+ 
 controller-setup: $(BIN_CONTROLLER_SETUP)
 	@ sudo DNS=$$DNS CONTROLLER_INTERFACE=$$INTERFACE $<
   
@@ -223,16 +224,16 @@ pxe_dhcp-setup: $(BIN_PXE_SETUP)
   
 cfengine: $(BIN_CFENGINE)
 	@ sudo $<
-
+ 
 haproxy: $(BIN_HAPROXY)
-        @ sudo $<
+	@ sudo $<
 
 
 cfengine-setup: $(BIN_CFENGINE_SETUP)
 	@ sudo $<
 
 haproxy-setup: $(BIN_HAPROXY_SETUP)
-        @ sudo $<
+	@ sudo $<
 
 
 mysql: $(BIN_MYSQL)
@@ -256,15 +257,15 @@ cfengine-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
 	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.cfengine/root/.baadal
 
 haproxy-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
-        @ cp -R $(SRC_DIR)/haproxy/transfer $(BIN_DIR)/transfer.haproxy
-        @ mkdir -p $(BIN_DIR)/transfer.haproxy/root/.ssh
-        @ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.haproxy/root/.ssh
-        @ cp $(BIN_DIR)/id_rsa.haproxy $(BIN_DIR)/transfer.haproxy/root/.ssh/id_rsa
-        @ cp $(BIN_DIR)/id_rsa.haproxy.pub $(BIN_DIR)/transfer.haproxy/root/.ssh/id_rsa.pub
-        @ mkdir -p $(BIN_DIR)/transfer.haproxy/baadal
-        @ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.haproxy/baadal/newbaadal.tar
-        @ mkdir -p $(BIN_DIR)/transfer.haproxy/root/.baadal
-        @ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.haproxy/root/.baadal
+	@ cp -R $(SRC_DIR)/haproxy/transfer $(BIN_DIR)/transfer.haproxy
+	@ mkdir -p $(BIN_DIR)/transfer.haproxy/root/.ssh
+	@ cp $(BIN_SSH_AUTHORIZED_KEYS) $(BIN_DIR)/transfer.haproxy/root/.ssh
+	@ cp $(BIN_DIR)/id_rsa.haproxy $(BIN_DIR)/transfer.haproxy/root/.ssh/id_rsa
+	@ cp $(BIN_DIR)/id_rsa.haproxy.pub $(BIN_DIR)/transfer.haproxy/root/.ssh/id_rsa.pub
+	@ mkdir -p $(BIN_DIR)/transfer.haproxy/baadal
+	@ cp $(BAADAL_TRANSFER_TAR) $(BIN_DIR)/transfer.haproxy/baadal/newbaadal.tar
+	@ mkdir -p $(BIN_DIR)/transfer.haproxy/root/.baadal
+	@ cp -R $(CONFIG_DIR) $(BIN_DIR)/transfer.haproxy/root/.baadal
 
 
 mysql-transfer: $(BAADAL_TRANSFER_TAR) $(CONFIG_DIR) keygen-ssh-all
@@ -316,11 +317,11 @@ $(BIN_CFENGINE_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/cfengine $(SRC_DIR)/cfe
 	@ chmod +x $@
 
 $(BIN_HAPROXY_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/haproxy $(SRC_DIR)/haproxy/*
-        @ mkdir -p $(BIN_DIR)/transfer.haproxy/baadal
-        @ cat $(SRC_DIR)/*.sh $(SRC_DIR)/haproxy/haproxy-setup.sh > $@
-        @ sed -i '1i#!/bin/$(SHELL)' $@
-        @ sed -i '$$a$(RUN_COMMAND)' $@
-        @ chmod +x $@
+	@ mkdir -p $(BIN_DIR)/transfer.haproxy/baadal
+	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/haproxy/haproxy-setup.sh > $@
+	@ sed -i '1i#!/bin/$(SHELL)' $@
+	@ sed -i '$$a$(RUN_COMMAND)' $@
+	@ chmod +x $@
 
 
 $(BIN_MYSQL_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/mysql $(SRC_DIR)/mysql/*
@@ -338,7 +339,7 @@ $(BIN_PXE_SETUP): $(BIN_DIR) $(LOGS_DIR) $(SRC_DIR)/pxe_dhcp $(SRC_DIR)/pxe_dhcp
 	@ chmod +x $@
 
 sources-list-setup:
-	@ sudo cp $(SRC_DIR)/sources.$(PROFILE) /etc/apt/sources.list 2>/dev/null || true
+	#@ sudo cp $(SRC_DIR)/sources.$(PROFILE) /etc/apt/sources.list 2>/dev/null || true
 
 sandbox: switch controller pxe_dhcp cfengine mysql haproxy
 

@@ -29,5 +29,4 @@ function run
   else
     $ECHO_OK HAPROXY vm created
   fi
-
-
+}
