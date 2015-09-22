@@ -36,6 +36,8 @@ VM_UTIL_ONE_WEEK = 3
 VM_UTIL_ONE_MNTH = 4
 VM_UTIL_THREE_MNTH = 5
 VM_UTIL_ONE_YEAR = 6
+HOURS = 15
+MINS = 16
 VM_UTIL_20_DAYS = 20
 
 STEP         = 300
@@ -150,13 +152,17 @@ def get_performance_graph(graph_type, vm, graph_period):
 
 
 """"Fetch RRD data to display in tabular format"""
-def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
+def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
     rrd_file = get_rrd_file(rrd_file_name)
-
-    start_time = 'now-' + str(24*60*60)
+   
+    start_time = 'now-' + str(24*60*60) 
     end_time = 'now'
-    
-    if period == VM_UTIL_10_MINS:
+
+    if period == HOURS:
+        start_time = 'now-' + str(period_no*60*60)
+    elif period == MINS:
+        start_time = 'now-' + str(period_no*60)
+    elif period == VM_UTIL_10_MINS:
         start_time = 'now-' + str(10*60)
     elif period == VM_UTIL_ONE_WEEK:
         start_time = '-1w'
@@ -194,7 +200,6 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS):
             if row[nww_idx] != None: nww_data.append(float(row[nww_idx]))
 
     
-    rrd_logger.info("mem_data"+str(mem_data))
     return (sum(mem_data)/float(len(mem_data)) if len(mem_data) > 0 else 0, 
             sum(cpu_data)/float(len(cpu_data)) if len(cpu_data) > 0 else 0, 
             sum(dskr_data)/float(len(dskr_data)) if len(dskr_data) > 0 else 0,
@@ -240,7 +245,6 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
         NWWNoneIdentifier='Y'
 
         for row in data_info:
-            rrd_logger.info("Info about the VM:%s,row[cpu_idx]:%s,row[nwr_idx]:%s,row[nww_idx]:%s" %(rrd_file_name,row[cpu_idx],row[nwr_idx],row[nww_idx])) 
             if (row[cpu_idx] != None) : 
                 CPUNoneIdentifier='N'
                 if int(row[cpu_idx]) > int(thresholdcontext['CPUThreshold']) : cpu_threshold='Y'
@@ -254,6 +258,7 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
                 if int(row[nww_idx]) > int(thresholdcontext['WriteThreshold']) : write_threshold='Y'
 		
             if (cpu_threshold=='Y' or read_threshold=='Y' or write_threshold=='Y') :
+                rrd_logger.info("Info about the VM:%s,row[cpu_idx]:%s,row[nwr_idx]:%s,row[nww_idx]:%s" %(rrd_file_name,row[cpu_idx],row[nwr_idx],row[nww_idx])) 
                 rrd_logger.info("Threshold is reached once.. VM:"+str(rrd_file_name)+" is in use") 
                 return False
            
@@ -286,18 +291,12 @@ def create_rrd(rrd_file):
 
 """Captures memory utilization of a VM from the host.
    VMs run on host as individual processes. Memory utilization of the process is derived."""
-#feteching actual memory usage of vm by top command by using RES (gets total memory comsumed by process) and %MEM (amount of memory used by process from RES)
 
 def get_dom_mem_usage(dom_name, host):
-
-    rrd_logger.debug("Fetching memory usage of domain %s defined on host %s" % (dom_name, host))
-
-   
-    cmd = "output=`ps -ef --sort=start_time | grep '%s.qcow2' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'" % dom_name
-    #"ps aux | grep '\-name " + dom_name + " ' | grep kvm"
-    output = execute_remote_cmd(host, "root", cmd, None, True)
-    
-    return (int(output[0]))*1024 #return memory in Bytes by default
+    rrd_logger.info("memory stats for VM:%s is %s" %(dom.name(),dom.memoryStats()))
+    domain_memUsed=(dom.memoryStats()['available']-dom.memoryStats()['unused'])
+    rrd_logger.info("domain_memUsed is : "+str(domain_memUsed))
+    return (domain_memUsed*1024)
 
 
 """Uses libvirt function to extract interface device statistics for a domain
@@ -343,9 +342,10 @@ def get_dom_disk_usage(dom_obj):
 
 def get_current_dom_resource_usage(dom, host_ip):
 
-    dom_memusage   = get_dom_mem_usage(dom.name(), host_ip)
+    dom_memusage   = get_dom_mem_usage(dom, host_ip)
     dom_nw_usage   = get_dom_nw_usage(dom)
     dom_disk_usage = get_dom_disk_usage(dom)
+    timestamp_now = time.time()   #keerti
 
     dom_stats =      {'rx'     : dom_nw_usage[0]}
     dom_stats.update({'tx'     : dom_nw_usage[1]})
@@ -354,6 +354,7 @@ def get_current_dom_resource_usage(dom, host_ip):
     dom_stats.update({'memory'  : dom_memusage})
     dom_stats.update({'cputime' : dom.info()[4]})
     dom_stats.update({'cpus'    : dom.info()[3]})
+    dom_stats.update({'timestamp': timestamp_now})  
 
     rrd_logger.info(dom_stats)
     rrd_logger.warn("As we get VM mem usage info from rrs size of the process running on host therefore it is observed that the memused is sometimes greater than max mem specified in case when the VM uses memory near to its mam memory")
@@ -364,42 +365,77 @@ def get_actual_usage(dom_obj, host_ip):
 
 
     dom_name = dom_obj.name()
+    cache_id = str(dom_name)
 
     dom_stats = get_current_dom_resource_usage(dom_obj, host_ip)
 
     """Fetch previous domain stat value from cache"""
-    prev_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)  # @UndefinedVariable
-    rrd_logger.debug(prev_dom_stats)
-        
+    current.cache.disk(cache_id, lambda:dom_stats, 86400)  # @UndefinedVariable
+    prev_dom_stats = current.cache.disk(cache_id, lambda:dom_stats, 86400)  # @UndefinedVariable
+    rrd_logger.debug("prev_dom_stats for vm:"+str(dom_name)+" are: "+str(prev_dom_stats))
+    
     #calulate usage
+    timestamp = float(dom_stats['timestamp'] - prev_dom_stats['timestamp']) #keerti
+   
+    if timestamp == 0:
+        cputime = dom_stats['cputime'] - prev_dom_stats['cputime'] 
+    else:
+        cputime = float((dom_stats['cputime'] - prev_dom_stats['cputime'])*300)/float(dom_stats['timestamp'] - prev_dom_stats['timestamp'])  #keerti
+
     usage = {'ram'      : dom_stats['memory']} #ram in Bytes usage
-    usage.update({'cpu' : (dom_stats['cputime'] - prev_dom_stats['cputime'])/(float(prev_dom_stats['cpus'])*10000000*STEP)}) #percent cpu usage
+    usage.update({'cpu' : cputime})  
     usage.update({'tx'  : (dom_stats['tx'] - prev_dom_stats['tx'])}) #in KBytes
     usage.update({'rx'  : (dom_stats['rx'] - prev_dom_stats['rx'])}) #in KBytes
     usage.update({'dr'  : (dom_stats['diskr'] - prev_dom_stats['diskr'])}) #in KBytes
     usage.update({'dw'  : (dom_stats['diskw'] - prev_dom_stats['diskw'])}) #in KBytes
 
-    current.cache.disk.clear(str(dom_name))  # @UndefinedVariable
+    current.cache.disk.clear(cache_id+"$")  # @UndefinedVariable
+    
 
     """Cache the current CPU utilization, so that difference can be calculated in next instance"""
-    latest_dom_stats = current.cache.disk(str(dom_name), lambda:dom_stats, 86400)        # @UndefinedVariable
-    rrd_logger.debug(latest_dom_stats)
+    current.cache.disk(cache_id, lambda:dom_stats, 86400)        # @UndefinedVariable
+    latest_dom_stats = current.cache.disk(cache_id, lambda:dom_stats, 86400)        # @UndefinedVariable
+    rrd_logger.debug("latest_dom_stats for vm:"+str(dom_name)+" are: "+str(latest_dom_stats))
    
     return usage 
 
 """Uses iostat tool to capture CPU statistics of host"""
 def get_host_cpu_usage(host_ip,m_type=None):
     rrd_logger.info("getting cpu info")
-    command = "iostat -c | sed '1,2d'"
+    command = "cat /proc/stat | awk 'FNR == 1{print $2+$3+$4}'"
+    
     if m_type=="controller":
         command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
     else:
         command_output = execute_remote_cmd(host_ip, 'root', command, None,  True)
-    rrd_logger.debug(type(command_output))
-    cpu_stats = re.split('\s+', command_output[1])
-    rrd_logger.debug(cpu_stats)
-    rrd_logger.info("CPU stats of host %s is %s" % ( host_ip, (cpu_stats[1] + cpu_stats[2] + cpu_stats[3])))
-    return (float(cpu_stats[1]) + float(cpu_stats[2]) + float(cpu_stats[3])) # return cpu in %
+    rrd_logger.debug(command_output[0])
+    timestamp_now = time.time()
+   
+    cpu_stats = {'cputicks'    :  float(command_output[0])}     # (cpu time in clock ticks
+    cpu_stats.update({'timestamp'    :  timestamp_now})
+ 
+    prev_cpu_stats = current.cache.disk(str(host_ip), lambda:cpu_stats, 86400)  # @UndefinedVariable
+    rrd_logger.debug(prev_cpu_stats)
+    timestamp = float(cpu_stats['timestamp'] - prev_cpu_stats['timestamp'])
+    rrd_logger.debug("timestamp %s" % str(timestamp))
+ 
+    #cpu_usage = cpu_stats - prev_cpu_stats # cpu usage in last 5 min (cputime-in ticks)
+    if timestamp == 0:
+        cpu_usage = float(cpu_stats['cputicks'] - prev_cpu_stats['cputicks'])
+    else:
+        cpu_usage = float((cpu_stats['cputicks'] - prev_cpu_stats['cputicks'])*300) / float(cpu_stats['timestamp'] - prev_cpu_stats['timestamp']) # keerti uncomment above line and comment it
+    
+    current.cache.disk.clear(str(host_ip))  # @UndefinedVariable
+
+    """Cache the current CPU utilization, so that difference can be calculated in next instance"""
+    latest_cpu_stats = current.cache.disk(str(host_ip), lambda:cpu_stats, 86400)        # @UndefinedVariable
+    rrd_logger.debug(latest_cpu_stats)
+
+
+    clock_ticks = os.sysconf(os.sysconf_names['SC_CLK_TCK'])     # (ticks per second) 
+    cpu_usage = float(cpu_usage*1000000000) / float(clock_ticks)     # (cpu time in ns)
+    rrd_logger.info("CPU stats of host %s is %s" % ( host_ip, cpu_usage))
+    return (cpu_usage)
 
 """Uses iostat tool to capture input/output statistics for host"""
 def get_host_disk_usage(host_ip,m_type=None):
@@ -516,13 +552,26 @@ def update_vm_rrd(dom, active_dom_ids, host_ip):
             timestamp_now = time.time()
  
             if dom.ID() in active_dom_ids:
- 
                 vm_usage = get_actual_usage(dom, host_ip)
                 rrd_logger.debug("Usage Info for VM %s: %s" % (dom_name, vm_usage))
                 rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, vm_usage['cpu'], vm_usage['ram'], vm_usage['dr'], vm_usage['dw'], vm_usage['tx'], vm_usage['rx']))
             else:
-
                 rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
+
+
+def set_domain_memoryStatsperiod(host_ip):
+    try:
+        hypervisor_conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
+        active_dom_ids  = hypervisor_conn.listDomainsID()
+        for dom_id in active_dom_ids:
+            dom_info = hypervisor_conn.lookupByID(dom_id)
+            dom_info.setMemoryStatsPeriod(2)
+    except Exception, e:
+        rrd_logger.debug(e)
+    finally:
+        rrd_logger.info("Ending setting memory stats periods for VM's %s" % host_ip)
+        if hypervisor_conn:
+           hypervisor_conn.close()
 
 
 def update_rrd(host_ip,m_type=None):
@@ -538,8 +587,13 @@ def update_rrd(host_ip,m_type=None):
     
         rrd_logger.info("Startiing rrd updation for host %s" % (host_ip))
         update_host_rrd(host_ip)
-        rrd_logger.info("Ending rrd updation for host %s" % (host_ip))
+        rrd_logger.info("Ending rrd updation for host %s" % (host_ip)) 
+
+
         rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
+        #Adding the call for setting stat periods for all VM's on the host
+        set_domain_memoryStatsperiod(host_ip)
+
         #UPDATE RRD for ALL VMs on GIVEN HOST
         hypervisor_conn = None
         
@@ -587,9 +641,7 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
     start_time = None
     consolidation = 'MIN' 
     end_time = 'now'
-    rrd_logger.debug(g_type)
     rrd_file = get_rrd_file(vm_identity)
-    rrd_logger.debug(host_cpu)
     if graph_period == 'hour':
         start_time = 'now - ' + str(12*300)
     elif graph_period == 'day':
@@ -605,6 +657,7 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
     result1=[]
     result2=[]
     result3=[]
+
     if os.path.exists(rrd_file):
         rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)    
         
@@ -619,23 +672,19 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         nwr_idx = fld_info.index('tx')
         nww_idx = fld_info.index('rx')
         mem_data=[]
-	i=1
+
+	    timeinterval=1
         for data in data_info:
             info1={}
             info={}
-            time_info=(int(tim_info) + 300*i)*1000
-            i+=1
+            time_info=(int(tim_info) + 300*timeinterval)*1000
+            timeinterval+=1
             
             
 	    if g_type=="cpu":
-		
-		
                 if data[cpu_idx] != None: 
-		    
 		    cpu_no=host_cpu.split(" ")
-		    
-		    info['y']=round(float(data[cpu_idx])/(float(int(cpu_no[0])*50000000)),3)
-		    
+		    info['y']=round((float(data[cpu_idx])*100)/(float(int(cpu_no[0])*5*60*1000000000)),3)   #dividing the rrd value by no of cores*5min(converted into nanoseconds)
 	        else:
 		    info['y']=float(0)
 	        
@@ -643,16 +692,12 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
                 result3.append(info) 
                 
             if g_type=="ram":
-                
                 if data[mem_idx] != None and  data[mem_idx]>0: 
-                    
 		    if (int(vm_ram)>1024) or (m_type=='host'):
-                        
 		        mem=round(float(data[mem_idx])/(1024*1024*1024),2)
-			
 		    else:
 			mem=round(float(data[mem_idx])/(1024*1024),2)
-		    
+                    
                     info['y']=mem
 		else:
 		    
@@ -660,19 +705,14 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
 		info['x']=time_info
                 result3.append(info) 
 	      
-	        
-                
 	    if g_type=="disk":
 		
 		if data[dskr_idx] != None: 
-		   
-                    
                     info1['y']=round(float(data[dskr_idx])/(1024*1024),2)
 	        else:
 		    info1['y']=float(0)
 		
 		if data[dskw_idx] != None: 
-	            
                     info['y']=round(float(data[dskw_idx])/(1024*1024),2)
 	        else:
 		    info['y']=float(0)
@@ -683,15 +723,12 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
                 result1.append(info1) 
                 result2.append(info)
 	        
-	
 	    if g_type=="nw":
-		
                 if data[nwr_idx] != None: 
                     info1['y']=round(float(data[nwr_idx])/(1024*1024),2)
 	        else:
 		    info1['y']=float(0)
 		if data[nww_idx] != None: 
-	            
                     info['y']=round(float(data[nww_idx])/(1024*1024),2)
 	        else:
 		    info['y']=float(0)
@@ -702,14 +739,11 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
 		
 
     if g_type=='ram' or g_type=='cpu':
-	
 	return result3
 
     if g_type=='nw' or g_type=='disk':
-	
 	result.append(result1) 
         result.append(result2)	
-	
 	return result
 
    

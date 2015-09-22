@@ -9,14 +9,14 @@ if 0:
 
 from helper import IS_MAC_ADDRESS, get_ips_in_range, generate_random_mac, is_valid_ipv4
 from dhcp_helper import create_dhcp_entry, remove_dhcp_entry, create_dhcp_bulk_entry
-from host_helper import migrate_all_vms_from_host, is_host_available, get_host_mac_address,\
-    get_host_cpu, get_host_ram, get_host_hdd, HOST_STATUS_UP, HOST_STATUS_DOWN, HOST_STATUS_MAINTENANCE, \
-    get_host_type, host_power_up, host_power_down
+from host_helper import *
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS, VM_UTIL_THREE_MNTH
 from log_handler import logger
 from vm_helper import launch_existing_vm_image, get_vm_image_location,\
     get_extra_disk_location
+
+
 
 def get_manage_template_form(req_type):
     db.template.id.readable=False # Since we do not want to expose the id field on the grid
@@ -101,7 +101,7 @@ def get_manage_public_ip_pool_form():
 def private_ip_on_delete(private_ip_pool_id):
     private_ip_data = db.private_ip_pool[private_ip_pool_id]
     if private_ip_data.vlan != HOST_VLAN_ID:
-        remove_dhcp_entry(None, private_ip_data.private_ip)
+        remove_dhcp_entry(None, private_ip_data.mac_addr ,private_ip_data.private_ip)
 
 def get_private_ip_ref_link(row):
     """Returns link to VM settings page if IP is assigned to a VM
@@ -709,8 +709,7 @@ def delete_host_from_db(host_id):
     host_ip = host_data.host_ip.private_ip
     private_ip_data = db.private_ip_pool(private_ip = host_ip)    
     if private_ip_data:
-        remove_dhcp_entry(host_data.host_name, private_ip_data['private_ip'])
-
+        remove_dhcp_entry(host_data.host_name, host_data.mac_addr, private_ip_data['private_ip'])
     db(db.scheduler_task.uuid == (UUID_VM_UTIL_RRD + "=" + str(host_ip))).delete()
     del db.host[host_id]
     
@@ -736,14 +735,16 @@ def get_vm_util_data(util_period):
     vmlist = []
     for vm in vms:
         util_result = fetch_rrd_data(vm.vm_identity, util_period)
-        element = {'vm_id' : vm.id,
+        logger.debug(str(vm.vm_name)+ str(util_result))
+        cpu_percent = round((float(util_result[1])*100)/(float(int(vm.vCPU)*5*60*1000000000)),2)
+        element = {'vm_id'   : vm.id,
                    'vm_name' : vm.vm_name,
-                   'memory' : round(util_result[0]/(vm.RAM * MEGABYTE), 2),
-                   'cpu' : round(util_result[1], 2),
-                   'diskr' : round(util_result[2], 2),
-                   'diskw' : round(util_result[3], 2),
-                   'nwr' : round(util_result[4], 2),
-                   'nww' : round(util_result[5], 2)}
+                   'memory'  : round(((util_result[0]/(vm.RAM * 1024*1024))*100), 2),
+                   'cpu'     : cpu_percent,
+                   'diskr'   : round(util_result[2], 2),
+                   'diskw'   : round(util_result[3], 2),
+                   'nwr'     : round(util_result[4], 2),
+                   'nww'     : round(util_result[5], 2)}
         vmlist.append(element)
     return vmlist
 
@@ -757,10 +758,11 @@ def get_host_util_data(util_period):
         total_mem_kb = host_info.RAM * GIGABYTE
         
         mem_util=(util_result[0]/float(total_mem_kb))*100
+        cpu_percent = round((float(util_result[1])*100)/(float(int(host_info.CPUs)*5*60*1000000000)),2)
 
         element = {'Memory' : str(round(mem_util,2)) + "%",
-                   'CPU'    : str(round(util_result[1],2)) + "%"}
-        
+                   'CPU'    : str(cpu_percent) + "%"}
+        logger.debug(element)
         host_util_dict[host_info.id] = element
 
     return host_util_dict
@@ -834,7 +836,7 @@ def get_host_config(host_id):
     
     host_info = db.host[host_id]
     host_info.HDD = str(host_info.HDD) + ' GB'
-    host_info.RAM = str(host_info.RAM) + ' GB'
+    host_info.RAM = str(host_info.RAM) 
     host_info.CPUs = str(host_info.CPUs) + ' CPU'
 
     return host_info

@@ -67,7 +67,11 @@ if auth.is_logged_in():
                 (T('Configure Host'), False, URL('admin','host_details')),
                 (T('Configure Template'), False, URL('admin','manage_template')),
                 (T('Configure Datastore'), False, URL('admin','manage_datastore')),
-                (T('Host Networking Graph'), False, URL('admin','network_graph')),
+		(T('Controller Performance'), False, URL('admin','show_cont_performance')),
+		(T('NAT Performance'), False, URL('admin','show_nat_performance')),
+                (T('Host Throughput Graph'), False, URL('admin','network_graph')),
+		(T('Host Latency Graph'), False, URL('admin','host_network_graph')),
+                
                 (T('Configure Security Domain'), False, URL('admin','manage_security_domain')),
                 (T('Configure Private IP Pool'), False, URL('admin','manage_private_ip_pool')),
                 (T('Configure Public IP Pool'), False, URL('admin','manage_public_ip_pool')),

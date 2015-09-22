@@ -78,9 +78,9 @@ SHUTDOWN_WARNING_BODY="Dear {0[userName]},\n\n"\
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
 
 BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\n"\
-    "Baadal services will be shutting down tomorrow at 3:00 PM for planned maintenance."\
+    "Baadal services will be shutting down today from 12:00 PM to 6:00 PM for maintenance."\
     "We will shutdown your VM {0[vmName]}({0[vmIp]}) to avoid any corruption of data.\n"\
-    "Please save your work accordingly.\n\nVM will be brought up as soon as possible."
+    "VM will be brought up as soon as possible."
 
 MAIL_FOOTER = "\n\nRegards,\nBaadal Admin\n\n\n"\
     "NOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\

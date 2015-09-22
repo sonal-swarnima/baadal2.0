@@ -389,10 +389,11 @@ def process_loadbalancer():
         logger.debug("EXITING PROCESS LOADBALANCER VM......")
 
 def check_compile_folder(file_path):
-    compile_cmd='gcc '+ str(file_path) + '/memhog.c -o  ' + str(file_path) +'/memhog'
+    compile_cmd='gcc ' + str(file_path) + '/memhog.c -o  ' + str(file_path) +'/memhog'
+    logger.debug(compile_cmd)
     if  "memhog" not in os.listdir(file_path):
 	logger.debug("Memhog compiled file does not exist...Compiling memgog file...")
-        os.system(complie_cmd)
+        os.system(compile_cmd)
         logger.debug("Compiled memgog file...")
 	
 
@@ -403,22 +404,24 @@ def overload_memory():
     logger.debug(type(file_path))
     host_ips_rows = db((db.host.status == HOST_STATUS_UP) & (db.host.host_ip == db.private_ip_pool.id)).select(db.private_ip_pool.private_ip)
     logger.debug(host_ips_rows)
-
-    command2 = 'nohup /memhog >memoryhog.out 2>&1 &'
+    command2 = '/memhog >/memoryhog.out &'
+    command3 = "ps -ef | grep memhog | grep -v grep | awk 'END{print FNR}'"
     for host_ip_row in host_ips_rows:
-        logger.debug("overloading memory of")
-        logger.debug(host_ip_row)
+        logger.debug("overloading memory of"+str(host_ip_row))
         logger.debug(type(host_ip_row['private_ip']))
         check_compile_folder(file_path)
         command1 = 'scp '+ str(file_path) +'/memhog root@'+ str(host_ip_row['private_ip']) +':/'
         logger.debug('executing' + command1) 
         ret = os.system(command1)
         logger.debug('os.system return value' + str(ret))
-        ret = execute_remote_cmd(host_ip_row['private_ip'], 'root', command2)
-        logger.debug(ret)
+        output = execute_remote_cmd(host_ip_row['private_ip'], 'root', command3)
+        ret1 = int(output[0])
+        if(ret1 == 0):
+            ret = execute_remote_cmd(host_ip_row['private_ip'], 'root', command2)
+            logger.debug(ret)
     logger.debug("Completed overload memory task")
 
-  
+
 #host networking graph
 def host_networking():
     logger.debug("collecting host networking data")
@@ -457,7 +460,7 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                 		                networking_host=host_networking,
 					                    rrd_task=task_rrd,
                                         vm_loadbalance=process_loadbalancer), 
-                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task'])
+                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task','host_network'])
 
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
@@ -529,7 +532,7 @@ vm_scheduler.queue_task(TASK_LOADBALANCE_VM,
                     repeats = 0, # run indefinitely
                     start_time = request.now,
                     period = 24 * HOURS, # every 24h
-                    timeout = 60 * MINUTES,
+                    timeout = 10 * HOURS,
                     uuid = UUID_LOADBALANCE_VM,
                     group_name = 'vm_sanity')
 
@@ -537,7 +540,7 @@ vm_scheduler.queue_task(TASK_LOADBALANCE_VM,
 vm_scheduler.queue_task('memory_overload',
                     repeats = 0, # run indefinitely
                     start_time = request.now,
-                    period = 1 * HOURS, # every hour
+                    period = 4 * HOURS, # every hour
                     timeout = 5 * MINUTES,
                     uuid = UUID_MEMORY_OVERLOAD,
                     group_name = 'host_task')
@@ -545,10 +548,10 @@ vm_scheduler.queue_task('memory_overload',
 vm_scheduler.queue_task('networking_host',
                     repeats = 0, # run indefinitely
                     start_time = request.now,
-                    period = 45 * MINUTES, # every 10 minutes
-                    timeout = 30 * MINUTES,
+                    period = 4 * HOURS, # every hour
+                    timeout = 5 * MINUTES,
                     uuid = UUID_HOST_NETWORKING,
-                    group_name = 'host_task')
+                    group_name = 'host_network')
 
 
 vm_scheduler.queue_task("rrd_task",       

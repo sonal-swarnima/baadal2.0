@@ -128,7 +128,7 @@ def process_shutdown_unusedvm():
                 logger.info(" DaysDiff are "+str(daysDiff)+" return value is "+str(retVal))
                 if(retVal == True):
                     logger.info("Need to shutdown the VM ID:"+str(vmData.id))
-                    add_vm_task_to_queue(vmData.id,TASK_TYPE_DESTROY_VM)
+                    add_vm_task_to_queue(vmData.id,VM_TASK_DESTROY)
                     # make an entry in task queue so that scheduler can pick up and shutdown the VM.
                 else:
                     logger.info("No Need to shutdown the VM ID:"+str(vmData.id)+" as VM is in use now. ")
@@ -148,22 +148,25 @@ def process_shutdown_unusedvm():
 def process_purge_shutdownvm():
 
     logger.info("ENTERING PURGE SHUTDOWN VM ........") 
+    vmShutDownDays = config.get("GENERAL_CONF", "shutdown_vm_days")
 
     try:
         # Fetch all the VM's which are locked and whose delete warning date is not null. 
         for vm_data in db(db.vm_data.locked == T and db.vm_data.delete_warning_date!=None).select(db.vm_data.ALL):
+            daysDiff=0
             daysDiff=(get_datetime()-vm_data.delete_warning_date).days
             if(daysDiff >=0 ):
                 for vm_details in db(db.vm_event_log.vm_id==vm_data.id).select(db.vm_event_log.ALL,orderby = ~db.vm_event_log.id,limitby=(0,1)):
-                    if(vm_details.new_value == "Shutdown"):
+                    daysDiff=(get_datetime()-vm_details.timestamp).days
+                    if(vm_details.new_value == "Shutdown" and int(daysDiff)>=int(vmShutDownDays)):
                         logger.info("Need to delete the VM ID:"+str(vm_data.id)) 
-                        add_vm_task_to_queue(vm_data.id,TASK_TYPE_DELETE_VM)
+                        add_vm_task_to_queue(vm_data.id,VM_TASK_DELETE)
                         # make an entry in task queue so that scheduler can pick up and delete the VM.
                     else:
                         logger.info("No need to delete the VM ID:"+str(vm_data.id)+" as it is in use now. ")
                         db(db.vm_data.id == vm_details.vm_id).update(locked='F',delete_warning_date=None)
             else:
-                logger.info("No need to process shutdown the VM :"+str(vm_data.id))
+                logger.info("No need to process shutdown VM :"+str(vm_data.id))
     except:
         log_exception()
         pass

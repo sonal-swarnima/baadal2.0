@@ -1,0 +1,216 @@
+{{extend 'layout.html'}}
+
+
+<script src="{{=URL('static','js/jquery.canvasjs.min.js')}}"  ,type="text/javascript"></script>
+
+  <script type="text/javascript">
+
+window.onload = function () {
+	var chart = new CanvasJS.Chart("target", { 
+    
+      
+      title:{
+        text: "Memory Performance"
+      },
+
+      axisX:{
+        title: "time",
+        interval:10, 
+        tickColor: "#0057af",
+        tickLength: 5,
+        tickThickness: 2 ,
+        valueFormatString: "DDMMM ", 
+        labelAngle: -50,
+	labelFontColor:'#0057af',
+	titleFontColor :'#0057af'
+       
+	
+      },
+
+      toolTip: {
+        shared: true
+      },
+      axisY:{
+	
+        title: "mem(MB)",
+        tickColor: "#0057af",
+        tickLength: 5,
+        tickThickness: 2,
+	labelFontColor:'#0057af'
+	
+      },
+
+      data: [
+      {        
+      dataPoints: [],
+	type: "line"
+      }]
+      
+    
+});
+
+    chart.render();	
+    
+    function update_graph()
+{
+   graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
+   period = $('input[name=graph-period-radio]:radio:checked').val();
+   vm_identity = "{{=vm_identity}}";
+   vm_ram = "{{=vm_ram}}";
+   
+   jQuery.ajax({type:"POST",url:"{{=URL('create_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,
+   graphPeriod:period},dataType: "json", success:function(ret) {
+	if (graph_type=='cpu' | graph_type=='ram'){
+	    var length=ret['data'].length;}
+	else{var length=ret['data'][0].length;}
+       
+	
+        if (length==0){
+	    
+	    $("#target").html("<b>RRD IS UNAVAILABLE!!!!!!</b>");}
+        else
+	   { 
+	   chart.options.data=[];
+	   var info = new Array(length); 
+	    var info1 = new Array(length); 
+
+	    var data2=ret['data'];
+	    
+            for (i =length-1; i >=0; i--) {
+	
+                if (graph_type=='cpu' | graph_type=='ram'){
+                    var data1={};
+                    data1['y']=data2[i].y;
+	            data1['x']=new Date(data2[i].x);
+                    if (data1['y']>ret['mem']){
+                        data1['markerColor']='red';
+                        }
+		   
+	            info[i]=data1;
+		    }
+		if (graph_type=='disk' |  graph_type=='nw'){
+		    
+                    var data4={};
+		    var data3={};
+                    data4['y']=data2[0][i].y;
+	            data4['x']=new Date(data2[0][i].x);
+		    data3['y']=data2[1][i].y;
+	            data3['x']=new Date(data2[1][i].x);
+		    
+	            info[i]=data4;
+		    info1[i]=data3;
+		    }
+		
+
+
+
+	        }
+	    chart.options.axisX.valueFormatString=ret['valueformat'];
+            chart.options.axisY.title=ret['y_title'];
+	    chart.options.title.fontColor='#0057af';
+	    chart.options.axisY.titleFontColor='#0057af';
+	    chart.options.title.text=ret['g_title'];
+            if (graph_type=='cpu' | graph_type=='ram'){
+	        chart.options.data[0].dataPoints=info;
+		chart.options.data[0].name=ret['name'];
+	            }
+        
+	    if (graph_type=='disk' | graph_type=='nw'){
+	        chart.options.data[0].dataPoints=info;
+		chart.options.data[0].legendText=ret['legend_read'];
+		chart.options.data[0].name=ret['legend_read'];
+		chart.options.data[1].dataPoints=info1;
+		chart.options.data[0].showInLegend='true';
+		chart.options.data[1].showInLegend='true';
+		chart.options.data[1].type='line';
+		chart.options.data[1].name=ret['legend_write'];
+		chart.options.data[1].legendText=ret['legend_write'];
+       
+	            }
+        
+	    
+	    chart.render();
+		}
+		
+	
+   }});
+}
+
+
+
+jQuery(document).ready( function(){
+    update_graph();
+    $('input[name=graph-period-radio]:radio').click( function() {
+        
+        
+        update_graph();
+        });
+    $('#tabs-task ul li').click( function() {
+        update_graph();
+        });
+    $('#refresh').click( function() {
+       update_graph();
+        });
+});
+
+
+
+
+};
+
+
+    
+    
+    
+
+
+
+ </script>
+<div id="tabs-task">
+<ul>
+<li><a href="#ram">Memory</a></li>
+<li><a href="#cpu">CPU</a></li>
+<li><a href="#nw">Network</a></li>
+<li><a href="#disk">Disk</a></li>
+</ul>
+<br/><br/>
+<table>
+<tr>
+<td>
+<div id="graph-type">
+<input type="radio" value="hour" name="graph-period-radio" checked="checked">&nbsp;Hourly<br/><br/>
+<input type="radio" value="day" name="graph-period-radio">&nbsp;Daily<br/><br/>
+<input type="radio" value="week" name="graph-period-radio">&nbsp;Weekly<br/><br/>
+<input type="radio" value="month" name="graph-period-radio">&nbsp;Monthly<br/><br/>
+<input type="radio" value="year" name="graph-period-radio">&nbsp;Yearly<br/><br/>
+</div>
+</td>
+<td>
+<table>
+<tr>
+<td id="target" style="height: 250px; width: 500px;"></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<input type="button" id="refresh" name="refresh" value="Refresh Graph">
+</td>
+</tr>
+</table>
+<div id="ram"></div>
+<div id="cpu"></div>
+<div id="nw"></div>
+<div id="disk"></div>
+</div>
+
+<div>
+{{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
+_href=URL(r=request, f='settings', args=[vm_id]),
+_title="Settings",
+_alt="Settings")}}
+<br>
+</div>
+
+ 

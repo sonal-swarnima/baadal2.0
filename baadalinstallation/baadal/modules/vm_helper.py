@@ -943,8 +943,8 @@ def undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm
 # Migrates VM to new host
 def migrate(parameters):
 
-    logger.debug("Inside migrate() function")
     vmid = parameters['vm_id']
+    logger.debug("Inside migrate() function for vm_id: "+str(vmid))
     destination_host_id = parameters['destination_host']
     if parameters['live_migration'] == 'on':
         live_migration = True
@@ -997,7 +997,7 @@ def snapshot(parameters):
 
         else:
                 
-            message = "Unable to ping VM before snapshoting: %s" % (vm_details.private_ip.ptivate_ip)
+            message = "Unable to ping VM before snapshoting: %s" % (vm_details.private_ip.private_ip)
             raise Exception("Unable to ping VM before snapshoting: %s" % (vm_details.private_ip.private_ip))
 
     except:

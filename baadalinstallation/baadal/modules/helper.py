@@ -42,7 +42,7 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
     logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
     output = None
     if machine_ip=="localhost":
-        output=os.popen(command).read()
+        output=os.popen(command).readline()
 	logger.debug(output)
     else:
         logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))

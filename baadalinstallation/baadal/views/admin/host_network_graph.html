@@ -1,6 +1,7 @@
 {{extend 'layout.html'}}
 
 
+
 <!DOCTYPE html>
 <meta charset="utf-8">
 <html>
@@ -31,19 +32,20 @@
   <body>
     <div id="chart"></div>
 
-    <script type="text/javascript">
+     <script type="text/javascript">
       var host_name_lists=[];
-      
+      var band_range=[];
       d3.json("{{=URL('static/sigma','graph.json')}}", function(json) {
     
    
-    
     for(var i = 0; i < json.length; i++) {
     var obj = json[i];
 
-    host_name_lists.push(obj.name);}
+   
+    host_name_lists.push(obj.name);
+   }
+    
 
-     
       var margin = { top: 60, right: 0, bottom: 150, left: 60 },
           width = 1360 - margin.left - margin.right,
           height = 830 - margin.top - margin.bottom,
@@ -53,8 +55,7 @@
           colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0"],
 	  
           host_list = host_name_lists;
-      
-      
+
       d3.tsv("{{=URL('static/sigma','graph.tsv')}}",
         function(d) {
 	  var count = host_list.length*host_list.length;
@@ -64,14 +65,14 @@
 	    
             current: +d.current,
             next: +d.next,
-            throughput: +d.throughput
+            latency: +d.latency
           };
 	
 },
         function(error, data) {
 	  
           var colorScale = d3.scale.linear()
-              .domain([0,100,900,7000,9000,10000,20000])
+              .domain([1.2461e-05,3.8457e-05,4.0489e-05,5.6177e-05,6.7426e-05,7.0282e-05,0.0001408])
               .range(colors);
 
           var svg = d3.select("#chart").append("svg")
@@ -113,12 +114,12 @@
               .style("fill", colors[0]);
 
           heatMap.transition().duration(1000)
-              .style("fill", function(d) { return colorScale(d.throughput); });
+              .style("fill", function(d) { return colorScale(d.latency); });
 
-          heatMap.append("title").text(function(d) { return d.throughput; });
+          heatMap.append("title").text(function(d) { return d.latency; });
               
           var legend = svg.selectAll(".legend")
-              .data([0,100,900,7000,9000,10000,20000])
+              .data([1.2461e-05,3.8457e-05,4.0489e-05,5.6177e-05,6.7426e-05,7.0282e-05,0.0001408])
               .enter().append("g")
               .attr("class", "legend");
 
@@ -135,16 +136,13 @@
             .text(function(d) { return "≥ " + d; })
             .attr("x", function(d, i) { return legendElementWidth * i; })
             .attr("y", height + gridSize);
-      }); }
-);
+      });});
     </script>
   </body>
-
 <ul>
-<li><b>Throughput Unit is Mbits/sec</b></li>
+<li><b>latency Unit is sec</b></li>
 
 
 </ul>
-
 </html>
 
