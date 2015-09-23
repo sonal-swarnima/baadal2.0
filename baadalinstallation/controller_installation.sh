@@ -400,7 +400,7 @@ Instl_Pkgs()
 
 Setup_Baadalapp()
 {
-        baadalapp_config_path=/home/www-data/web2py/applications/baadal/static/baadalapp.cfg
+        baadalapp_config_path=/home/www-data/web2py/applications/baadal/private/baadalapp.cfg
 
         sed -i -e 's/nat_ip=/'"nat_ip=$NETWORK_GATEWAY_IP"'/g' $baadalapp_config_path
 

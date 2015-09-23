@@ -11,7 +11,7 @@ from helper import get_context_path
 def get_startup_data():
     from xml.dom import minidom
 
-    xmldoc = minidom.parse(os.path.join(get_context_path(), 'static/startup_data.xml'))
+    xmldoc = minidom.parse(os.path.join(get_context_path(), 'private/startup_data.xml'))
     return xmldoc
 
 

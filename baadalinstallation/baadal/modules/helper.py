@@ -17,7 +17,7 @@ def get_config_file():
 
     import ConfigParser    
     config = ConfigParser.ConfigParser()
-    config.read(os.path.join(get_context_path(), 'static/baadalapp.cfg'));
+    config.read(os.path.join(get_context_path(), 'private/baadalapp.cfg'));
     return config
 
 config = get_config_file()

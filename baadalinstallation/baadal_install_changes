@@ -31,7 +31,7 @@ copy_app: git_pull
 	@cp -r /home/www-data/web2py/applications/baadal $(CURRENT_DIR)/baadal_backup
 	# mysqldump --all-databases > all_databases.sql
 	mysqldump -uroot -pbaadal --all-databases > backupfile.sql
-	@rsync -avz --exclude static/baadalapp.cfg --exclude static/startup_data.xml baadal/ /home/www-data/web2py/applications/baadal
+	@rsync -avz --exclude private/baadalapp.cfg --exclude private/startup_data.xml baadal/ /home/www-data/web2py/applications/baadal
 
 git_pull: $(CURRENT_DIR)
 	#inside git pull
