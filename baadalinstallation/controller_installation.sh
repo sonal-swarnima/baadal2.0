@@ -760,7 +760,9 @@ Configure_Dhcp_Pxe()
 	echo "option domain-name-servers $DNS_SERVERS;" >> /etc/dhcp/dhcpd.conf
 
 	sed -i -e "s/INTERFACES=\"\"/INTERFACES=\"$OVS_BRIDGE_NAME $VLANS\"/" /etc/default/isc-dhcp-server
-
+	mkdir /etc/dhcp/dhcp.d
+	cp /etc/dhcp/dhcpd.conf /etc/dhcp/dhcp.d/0_dhcpd.conf
+	
 	ln -s $TFTP_DIR/ubuntu /var/www/ubuntu-14.04-server-amd64
 	
 
