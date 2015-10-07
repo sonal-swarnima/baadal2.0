@@ -237,6 +237,7 @@ def affinity_host():
     vm_details = get_migrate_vm_details(vm_id)
     vm_name=vm_details['vm_name']
     host_details={}
+    host_data=''
     host_details = get_host_details(vm_name)
     params={}
     host_detail=[]
@@ -244,10 +245,12 @@ def affinity_host():
        if request.args[1] == 'affinity_host':
           host_details = get_host_details(vm_name)
        params['affinity_host'] = request.vars['test']
-       add_data_into_affinity(params,vm_details)   
-       host_details = get_host_details(vm_name)
-       #redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id))
-    return dict(vm_details=vm_details,host_details=host_details)
+       host_data=add_data_into_affinity(params,vm_details)  
+       if host_data == None:
+          session.flash = 'Please select host for set Affinity'
+          redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id)) 
+       host_details = get_host_details(vm_name) 
+    return dict(vm_details=vm_details,host_details=host_details,host_data=host_data)
     
 
 def delete_affinity_vm():
