@@ -292,7 +292,7 @@ def create_rrd(rrd_file):
 """Captures memory utilization of a VM from the host.
    VMs run on host as individual processes. Memory utilization of the process is derived."""
 
-def get_dom_mem_usage(dom_name, host):
+def get_dom_mem_usage(dom, host):
     rrd_logger.info("memory stats for VM:%s is %s" %(dom.name(),dom.memoryStats()))
     domain_memUsed=(dom.memoryStats()['available']-dom.memoryStats()['unused'])
     rrd_logger.info("domain_memUsed is : "+str(domain_memUsed))
