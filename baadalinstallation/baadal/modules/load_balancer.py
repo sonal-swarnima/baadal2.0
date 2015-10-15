@@ -56,6 +56,7 @@ def loadbalance_vm(host_list=[],vm_list=[]):
             logger.exception('Exception in process_schedule_vm') 
             return False
 
+# Function check affinity of vm with host. Affinity gives list of host on which vm can be migrated.
 def check_affinity(vm_details,host):
     try:
         logger.debug("Entering into check_affinity for vm:"+str(vm_details.vm_name)) 
@@ -68,6 +69,7 @@ def check_affinity(vm_details,host):
         return False
         
 
+# Function move a vm on host if affinity is correct and migration is possible.
 def schedule_vm(vm_details,host,live_migration):
     try:
         logger.debug("Entering into scheduleVM")
@@ -97,7 +99,7 @@ def schedule_vm(vm_details,host,live_migration):
         logger.exception('Exception in scheduleVM')         
         return False
 
-
+#Function returns memory used by memhog process so that it can be added to available memory.
 def get_memhog_usage(host_ip):
     logger.debug("Entering into getmemhog_usage") 
     cmd = "output=`ps -ef --sort=start_time | grep 'memhog' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'"
@@ -108,6 +110,8 @@ def get_memhog_usage(host_ip):
         #logger.debug("For host:"+str(host_ip)+" PSS Value from memhog="+str(output))
         return (int(output[0])*1024)
 
+
+# Function returns host list in descending order of available memory and guest list. 
 def find_host_and_guest_list():
 
     logger.debug("Entering into find_host_and_guest_list")
@@ -131,6 +135,8 @@ def find_host_and_guest_list():
 
     return (map(itemgetter(0),sorted_host_list),guest_list)
 
+
+#Function checks guest_present_host and selected host are same or not.
 def is_same_host(guest_info,host_info):
     try:
         logger.debug("Entering into is_same_host")
@@ -143,6 +149,7 @@ def is_same_host(guest_info,host_info):
         logger.exception('Exception in is_same_host')
         return False
 
+#Function checks whether migration on the host is possible or not and criteria is host utilization should not go above 90% after migration.
 def is_migration_possible(guest_info,host_info):
     try:
         logger.debug("Entering into is_migration_possible")
@@ -177,7 +184,7 @@ def is_migration_possible(guest_info,host_info):
         logger.exception('Exception in is_migration_possible')
         return False
 
-
+# Function shutdown the host with no vm.
 def shutdown_nonactive_hosts(host_list):
     logger.debug(host_list)
 

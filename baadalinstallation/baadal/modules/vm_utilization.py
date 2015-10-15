@@ -541,16 +541,16 @@ def update_vm_rrd(dom, active_dom_ids, host_ip):
 
         dom_name = dom.name()
         rrd_file = get_rrd_file(dom.name())
-
+ 
         if not (os.path.exists(rrd_file)):
             rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
             rrd_logger.warn("Creating new RRD file")
             create_rrd(rrd_file)
-
+ 
         else:
-
+ 
             timestamp_now = time.time()
-
+ 
             if dom.ID() in active_dom_ids:
                 vm_usage = get_actual_usage(dom, host_ip)
                 rrd_logger.debug("Usage Info for VM %s: %s" % (dom_name, vm_usage))
