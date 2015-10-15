@@ -11,9 +11,10 @@ import sys, math, shutil, libvirt, os, time, random
 import xml.etree.ElementTree as etree
 
 
-# Chooses datastore from a list of available datastores
-def choose_datastore():
-  
+def _choose_datastore():
+    """
+    Chooses datastore from a list of available datastores
+    """
     # datastore_capacity = current.db(current.db.datastore.id >= 0).select(orderby = current.db.datastore.used
     datastores = current.db(current.db.datastore.id >= 0).select()
     datastore_length = len(datastores)
@@ -37,8 +38,10 @@ def choose_datastore():
         logger.debug("selected database" + str(first_elts))
         return first_elts
 
-#Returns resources utilization of a host in MB,Count
 def host_resources_used(host_id):
+    """
+    Returns resources utilization of a host in MB, Count
+    """
     RAM = 0.0
     CPU = 0.0
     vms = current.db((current.db.vm_data.host_id == host_id) & (current.db.vm_data.status != current.VM_STATUS_UNKNOWN) &  (current.db.vm_data.status != current.VM_STATUS_IN_QUEUE)).select()
@@ -50,7 +53,9 @@ def host_resources_used(host_id):
     return (math.ceil(RAM),math.ceil(CPU))
 
 def getVirshDomainConn(vm_details, host_ip=None, domain_name=None):
-    
+    """
+    Generic method to establish libvirt connection
+    """    
     if vm_details != None:
         host_ip = vm_details.host_id.host_ip.private_ip
         domain_name = vm_details.vm_identity
@@ -62,13 +67,18 @@ def getVirshDomainConn(vm_details, host_ip=None, domain_name=None):
     return (connection_object, domain)
 
 def getVirshDomain(vm_details):
-    
+    """
+    Generic method to establish libvirt connection
+    """
     (connection_object, domain) = getVirshDomainConn(vm_details)
     connection_object.close()
     return domain
     
-def set_portgroup_in_vm(domain_name, portgroup, host_ip, vlan_tag):
-    
+def _set_portgroup_in_vm(domain_name, portgroup, host_ip, vlan_tag):
+    """
+    Set the vlan tag in network configuration of VM
+    This is required to ensure that VM fetches IP of its vlan from DHCP
+    """
     (connection_object, domain) = getVirshDomainConn(None, host_ip, domain_name)
     xml = etree.fromstring(domain.XMLDesc(0))
     source_network_element = xml.find('.//interface/source') 
@@ -96,7 +106,12 @@ def set_portgroup_in_vm(domain_name, portgroup, host_ip, vlan_tag):
     domain.isActive()
     connection_object.close()
     
-def get_private_ip_mac(security_domain_id):
+def _get_private_ip_mac(security_domain_id):
+    """
+    Chooses a random Private IP from the pool, such that:
+        - It is not assigned to any VM or host
+        - It belongs to VLAN of given security domain
+    """
     vlans = current.db(current.db.security_domain.id == security_domain_id)._select(current.db.security_domain.vlan)
     private_ip_pool = current.db((~current.db.private_ip_pool.id.belongs(current.db(current.db.vm_data.private_ip != None)._select(current.db.vm_data.private_ip))) 
                                  & (~current.db.private_ip_pool.id.belongs(current.db(current.db.host.host_ip != None)._select(current.db.host.host_ip))) 
@@ -110,10 +125,12 @@ def get_private_ip_mac(security_domain_id):
 
 
 def choose_random_public_ip():
-    """Chooses a random Public IP from the pool, such that:
-       1. It is not assigned to any VM
-       2. It is not assigned to any host
-       3. IP is marked active."""
+    """
+    Chooses a random Public IP from the pool, such that:
+        - It is not assigned to any VM
+        - It is not assigned to any host
+        - IP is marked active.
+    """
     public_ip_pool = current.db((~current.db.public_ip_pool.id.belongs(current.db(current.db.vm_data.public_ip != None)._select(current.db.vm_data.public_ip))) 
                               & (~current.db.public_ip_pool.id.belongs(current.db(current.db.host.public_ip != None)._select(current.db.host.public_ip)))
                               & (current.db.public_ip_pool.is_active == True)) \
@@ -122,11 +139,13 @@ def choose_random_public_ip():
     return public_ip_pool
 
 
-def choose_mac_ip(vm_properties):
-    """Chooses mac address, ip address and vncport for a vm to be installed"""
-
+def _choose_mac_ip(vm_properties):
+    """
+    Chooses mac address and ip address for a vm to be installed.
+    It also chooses a random public IP if requested
+    """
     if not 'private_ip' in vm_properties:
-        private_ip_info = get_private_ip_mac(vm_properties['security_domain'])
+        private_ip_info = _get_private_ip_mac(vm_properties['security_domain'])
         vm_properties['private_ip'] = private_ip_info.private_ip
         vm_properties['mac_addr']   = private_ip_info.mac_addr
         vm_properties['vlan_name']  = private_ip_info.vlan.name
@@ -144,9 +163,11 @@ def choose_mac_ip(vm_properties):
         vm_properties['public_ip'] = None
 
 
-def choose_mac_ip_vncport(vm_properties):
-    
-    choose_mac_ip(vm_properties)
+def _choose_mac_ip_vncport(vm_properties):
+    """
+    Chooses mac address, ip address and vncport for a vm to be installed
+    """
+    _choose_mac_ip(vm_properties)
 
     start_range = int(get_constant('vncport_start_range')) 
     end_range = int(get_constant('vncport_end_range'))
@@ -157,8 +178,12 @@ def choose_mac_ip_vncport(vm_properties):
             break;
     vm_properties['vnc_port'] = str(random_vnc_port)
 
-#Returns all the host running vms of particular run level
+
 def find_new_host(RAM, vCPU):
+    """
+    Select a random host from list of 3 hosts with available RAM and CPU
+    Availability is checked with 200 percent over-commitment.
+    """
     hosts = current.db(current.db.host.status == 1).select()
     hosts = hosts.as_list(True,False) 
     count = 3 
@@ -187,13 +212,14 @@ def find_new_host(RAM, vCPU):
     raise Exception("No active host is available for a new vm.")
     
 
-# Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
 def allocate_vm_properties(vm_details):
-    
+    """
+    Allocates vm properties ( datastore, host, ip address, mac address, vnc port, ram, vcpus)
+    """
     logger.debug("Inside allocate_vm_properties()...")
     vm_properties = {}
 
-    vm_properties['datastore'] = choose_datastore()
+    vm_properties['datastore'] = _choose_datastore()
     logger.debug("Datastore selected is: " + str(vm_properties['datastore']))
 
     vm_properties['host'] = find_new_host(vm_details.RAM, vm_details.vCPU)
@@ -201,7 +227,7 @@ def allocate_vm_properties(vm_details):
 
     vm_properties['public_ip_req'] = False if (vm_details.public_ip == None) else True
     vm_properties['security_domain'] = vm_details.security_domain
-    choose_mac_ip_vncport(vm_properties)
+    _choose_mac_ip_vncport(vm_properties)
 
     logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + " VNCPORT is : "  \
                           + str(vm_properties['vnc_port']) + " Vlan tag is " + str(vm_properties['vlan_tag']) )
@@ -212,9 +238,13 @@ def allocate_vm_properties(vm_details):
     return vm_properties
 
 
-# Creates a vm image
 def create_vm_image(vm_details, datastore):
-
+    """
+    Create a VM image
+        - Creates a directory for the new VM using vm_identity
+        - Find the location of template image requested for
+        - Copy the template image from its location to new vm directory
+    """
     # Creates a directory for the new vm
     vm_directory_path = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_details.vm_identity
     logger.debug("Creating vm directory...")
@@ -267,9 +297,11 @@ def create_vm_image(vm_details, datastore):
 
     return (template, vm_image_name)
 
-# Determines an install command for vm
-def get_install_command(vm_details, vm_image_location, vm_properties):
 
+def _get_install_command(vm_details, vm_image_location, vm_properties):
+    """
+    Generates install command for vm
+    """
     template = vm_properties['template']
     bus = ',bus=virtio'     
     optional = ' --import --os-type=' + template.os
@@ -299,9 +331,11 @@ def get_install_command(vm_details, vm_image_location, vm_properties):
 
     return install_command 
 
-# Generates xml
-def generate_xml(diskpath,target_disk):
 
+def _generate_disk_xml(diskpath,target_disk):
+    """
+    Generates xml for defining new disk
+    """
     root_element = etree.Element('disk',attrib = {'type':'block','device':'disk'})
     etree.SubElement(root_element, 'driver',attrib = {'name':'qemu','cache':'none', 'type':'qcow2'})
     etree.SubElement(root_element, 'source', attrib = {'dev':diskpath})
@@ -309,9 +343,11 @@ def generate_xml(diskpath,target_disk):
 
     return (etree.tostring(root_element))
       
-# create_extra_disk_image
-def create_extra_disk_image(vm_details, disk_name, size, datastore):
 
+def create_extra_disk_image(vm_details, disk_name, size, datastore):
+    """
+    Create extra disk image
+    """
     vm_extra_disks_directory_path = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
                                     datastore.ds_name + '/' + vm_details.vm_identity
 
@@ -326,9 +362,11 @@ def create_extra_disk_image(vm_details, disk_name, size, datastore):
 
     return False if output != 0 else True
 
-# Attaches a disk with vm
+
 def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
-   
+    """
+    Attach given disk to the VM
+    """
     try:
         (connection_object, domain) = getVirshDomainConn(None, hostip, vm_details.vm_identity)
 
@@ -344,7 +382,7 @@ def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
         target_disk = "vd" + chr(97 + already_attached_disks + 1)
         logger.debug(target_disk)
         logger.debug("...................")
-        xmlDescription = generate_xml(diskpath, target_disk)
+        xmlDescription = _generate_disk_xml(diskpath, target_disk)
         logger.debug(xmlDescription)
         logger.debug("new vm is %s " % new_vm)
 
@@ -378,12 +416,14 @@ def attach_disk(vm_details, disk_name, hostip, already_attached_disks, new_vm):
         logger.exception('Exception: ') 
         return 0
 
-# Serves extra disk request and updates db
-def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
 
+def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
+    """
+    Serves extra disk request and updates db
+    """
     logger.debug("Starting to serve extra disk request...")
     logger.debug("new vm is %s " % new_vm)
-    datastore = choose_datastore()
+    datastore = _choose_datastore()
     already_attached_disks = len(current.db(current.db.attached_disks.vm_id == vm_details.id).select()) 
     disk_name = vm_details.vm_identity + "_disk" + str(already_attached_disks + 1) + ".qcow2"  
 
@@ -398,11 +438,13 @@ def serve_extra_disk_request(vm_details, disk_size, host_ip, new_vm = False):
 
     return False
 
-# Launches a vm on host
-def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
 
+def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
+    """
+    Launches a vm image on host
+    """
     attach_disk_status_message = ''
-    install_command = get_install_command(vm_details, vm_image_location, vm_properties)  
+    install_command = _get_install_command(vm_details, vm_image_location, vm_properties)  
     # Starts installing a vm
     host_ip = current.db.host[vm_properties['host']].host_ip.private_ip
     logger.debug("Installation started...")
@@ -411,7 +453,7 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
     command_output = execute_remote_cmd(host_ip, 'root', install_command)
     logger.debug(command_output)
     logger.debug("Starting to set portgroup in vm...")
-    set_portgroup_in_vm(vm_details['vm_identity'], vm_properties['vlan_name'], host_ip, vm_properties['vlan_tag'])
+    _set_portgroup_in_vm(vm_details['vm_identity'], vm_properties['vlan_name'], host_ip, vm_properties['vlan_tag'])
     logger.debug("Portgroup set in vm")
 
     # Serving HDD request
@@ -424,8 +466,11 @@ def launch_vm_on_host(vm_details, vm_image_location, vm_properties):
             attach_disk_status_message += "Attached extra disk failed."
     return attach_disk_status_message
 
-# Checks if a newly created vm is defined
+
 def check_if_vm_defined(hostip, vmname):
+    """
+    Checks if a newly created vm is successfully defined
+    """
     vm_defined = False
     try:
         connection_object = libvirt.openReadOnly('qemu+ssh://root@'+ hostip +'/system')
@@ -437,9 +482,11 @@ def check_if_vm_defined(hostip, vmname):
     except:
         return False
 
-# Frees vm properties
-def free_vm_properties(vm_details, vm_properties):
 
+def _free_vm_properties(vm_details, vm_properties):
+    """
+    Frees vm properties in-case installation has failed mid-way
+    """
     logger.debug("VM installation fails..Starting to free vm properties")
 
     if vm_properties:
@@ -468,9 +515,10 @@ def free_vm_properties(vm_details, vm_properties):
     return
     
 
-# Updates db after a vm is installed successfully
 def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None):
-
+    """
+    Updates db after a vm is installed successfully
+    """
     logger.debug("Starting to update db after vm installation..")
     hostid = vm_properties['host']
     datastore = vm_properties['datastore']
@@ -507,50 +555,53 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     return
 
 
-# Installs a vm
 def install(parameters):
- 
-        vmid = parameters['vm_id']
-        logger.debug("In install() function...")
-        vm_details = current.db.vm_data[vmid]
-        vm_properties = None
+    """
+    Installs a vm
+    """
+    vmid = parameters['vm_id']
+    logger.debug("In install() function...")
+    vm_details = current.db.vm_data[vmid]
+    vm_properties = None
 
-        try:
-            # Fetches vm details from vm_data table
-            logger.debug("VM details are: " + str(vm_details))
-    
-            # Calling allocate_vm_properties function
-            vm_properties = allocate_vm_properties(vm_details)
+    try:
+        # Fetches vm details from vm_data table
+        logger.debug("VM details are: " + str(vm_details))
 
-            # Calling create_vm_image function
-            (vm_properties['template'], vm_image_location) = create_vm_image(vm_details, vm_properties['datastore'])
-         
-            # Calling launch_vm_on_host
-            attach_disk_status_message = launch_vm_on_host(vm_details, vm_image_location, vm_properties)       
+        # Calling allocate_vm_properties function
+        vm_properties = allocate_vm_properties(vm_details)
 
-            # Checking if vm has been installed successfully
-            assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip.private_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
+        # Calling create_vm_image function
+        (vm_properties['template'], vm_image_location) = create_vm_image(vm_details, vm_properties['datastore'])
+     
+        # Calling launch_vm_on_host
+        attach_disk_status_message = launch_vm_on_host(vm_details, vm_image_location, vm_properties)       
 
-            if vm_properties['public_ip_req']:
-                create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
+        # Checking if vm has been installed successfully
+        assert(check_if_vm_defined(current.db.host[vm_properties['host']].host_ip.private_ip, vm_details.vm_identity)), "VM is not installed. Check logs."
 
-            # Update database after vm installation
-            update_db_after_vm_installation(vm_details, vm_properties) 
+        if vm_properties['public_ip_req']:
+            create_mapping(vm_properties['public_ip'], vm_properties['private_ip'])
 
-            message = "VM is installed successfully." + attach_disk_status_message
-            logger.debug("Task Status: SUCCESS Message: %s " % message)
+        # Update database after vm installation
+        update_db_after_vm_installation(vm_details, vm_properties) 
 
-            return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
+        message = "VM is installed successfully." + attach_disk_status_message
+        logger.debug("Task Status: SUCCESS Message: %s " % message)
 
-        except:
-            if vm_properties != None:         
-                free_vm_properties(vm_details, vm_properties)
-            logger.debug("Task Status: FAILED Error: %s " % log_exception())
-            return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
+        return (current.TASK_QUEUE_STATUS_SUCCESS, message)                    
 
-# Starts a vm
+    except:
+        if vm_properties != None:         
+            _free_vm_properties(vm_details, vm_properties)
+        logger.debug("Task Status: FAILED Error: %s " % log_exception())
+        return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
+
+
 def start(parameters):
-    
+    """
+    Starts a vm
+    """
     logger.debug("Inside start() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
@@ -568,9 +619,11 @@ def start(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Suspends a vm
-def suspend(parameters):
 
+def suspend(parameters):
+    """
+    Suspends a vm
+    """
     logger.debug("Inside suspend() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
@@ -588,9 +641,11 @@ def suspend(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Resumes a vm
-def resume(parameters):
 
+def resume(parameters):
+    """
+    Resumes a vm
+    """
     logger.debug("Inside resume() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
@@ -608,9 +663,11 @@ def resume(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Destroys a vm forcefully
-def destroy(parameters):
 
+def destroy(parameters):
+    """
+    Destroys a vm forcefully
+    """
     logger.debug("Inside destroy() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
@@ -629,9 +686,11 @@ def destroy(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Destroys a vm gracefully
-def shutdown(parameters):
 
+def shutdown(parameters):
+    """
+    Destroys a vm gracefully
+    """
     logger.debug("Inside shutdown() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
@@ -650,9 +709,11 @@ def shutdown(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Function to clean up database after vm deletion
-def clean_up_database_after_vm_deletion(vm_details):
-    
+
+def _clean_up_database_after_vm_deletion(vm_details):
+    """
+    Cleans up database after vm deletion
+    """
     logger.debug("Inside clean up database after vm deletion () function...")
 
     # moving vm image folder to archives folder
@@ -683,17 +744,21 @@ def clean_up_database_after_vm_deletion(vm_details):
 
     logger.debug("Database cleaned")
 
-# Checks if a vm has snapshot(s)    
+
 def vm_has_snapshots(vm_id):
+    """
+    Checks if a vm has snapshot(s)
+    """
     if (current.db(current.db.snapshot.vm_id == vm_id).select()):
         return True
     else:
         return False
 
         
-# Deletes a vm
 def delete(parameters):
-
+    """
+    Deletes a vm
+    """
     logger.debug("Inside delete() function")
     vm_id = parameters['vm_id']
     vm_details = current.db.vm_data[vm_id]
@@ -710,7 +775,7 @@ def delete(parameters):
             remove_mapping(vm_details.public_ip.public_ip, vm_details.private_ip.private_ip)
         message = vm_details.vm_identity + " is deleted successfully."
         logger.debug(message)
-        clean_up_database_after_vm_deletion(vm_details)
+        _clean_up_database_after_vm_deletion(vm_details)
         current.db(current.db.vm_data.id == vm_id).delete()
         current.db.commit()
         logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -719,9 +784,11 @@ def delete(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Migrate domain with snapshots
-def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags, vm_backup_during_migration):
 
+def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domain_snapshots_list, current_snapshot_name, flags, vm_backup_during_migration):
+    """
+    Migrate domain with snapshots
+    """
     # XML dump of snapshot(s) of the vm
     logger.debug("Starting to take xml dump of the snapshot(s) of the vm... ")
 
@@ -759,17 +826,21 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
 
     return
 
-# Delete directory created for storing dumpxml of vm snapshots
-def clean_migration_directory(vm_backup_during_migration):
 
+def clean_migration_directory(vm_backup_during_migration):
+    """
+    Delete directory created for storing dumpxml of vm snapshots
+    """
     if os.path.exists(vm_backup_during_migration):
         shutil.rmtree(vm_backup_during_migration)
 
     return
 
-# Undo the migration 
+ 
 def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name, vm_backup_during_migration):
-
+    """
+    Undo the migration
+    """
     if domain_snapshots_list:
         # Redefine the snapshots of the vm on the source host
         logger.debug("Starting to redefine all the snapshot(s) of the vm on the source host...")
@@ -786,9 +857,11 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name, vm_
 
     return
 
-# Migrate domain
-def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
 
+def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
+    """
+    Migrate domain
+    """
     vm_details = current.db.vm_data[vm_id]
     domain_snapshots_list = []
     current_snapshot_name = ''
@@ -849,7 +922,14 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
+
 def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=False): 
+    """
+    Migrate VM domain from one datastore to another.
+        - Copy VM Image to new datastore
+        - Update VM XML definition
+        - Update database
+    """
     logger.debug(sys.path)
     vm_details = current.db.vm_data[vmid]
     datastore_id = vm_details["datastore_id"]
@@ -924,6 +1004,9 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
 
 
 def undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm_directory_path, datastore_id):
+    """
+    Undo migration in case of any issue
+    """
     # undo databse changes
     vm_details.update_record(datastore_id=datastore_id)
     
@@ -940,9 +1023,10 @@ def undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm
         os.rmdir(vm_directory_path)
 
 
-# Migrates VM to new host
 def migrate(parameters):
-
+    """
+    Migrates VM to new host
+    """
     vmid = parameters['vm_id']
     logger.debug("Inside migrate() function for vm_id: "+str(vmid))
     destination_host_id = parameters['destination_host']
@@ -952,9 +1036,11 @@ def migrate(parameters):
         live_migration = False
     return migrate_domain(vmid, destination_host_id, live_migration)
   
-# Migrates VM to new datastore
-def migrate_datastore(parameters):
 
+def migrate_datastore(parameters):
+    """
+    Migrates VM to new datastore
+    """
     logger.debug("Inside migrate_datastore() function")
     vmid = parameters['vm_id']
     destination_ds_id = parameters['destination_ds']
@@ -966,9 +1052,10 @@ def migrate_datastore(parameters):
     return migrate_domain_datastore(vmid, destination_ds_id, live_migration)
   
 
-# Snapshots a vm
 def snapshot(parameters):
-
+    """
+    Snapshots a vm
+    """
     logger.debug("Inside snapshot() function")
     vm_id = parameters['vm_id']
     snapshot_type = parameters['snapshot_type']
@@ -1004,9 +1091,11 @@ def snapshot(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Reverts to snapshot
+
 def revert(parameters):
-    
+    """
+    Reverts to snapshot
+    """
     logger.debug("Inside revert snapshot() function")
     vm_id = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
@@ -1025,9 +1114,11 @@ def revert(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-# Deletes a snapshot
-def delete_snapshot(parameters):
 
+def delete_snapshot(parameters):
+    """
+    Deletes a snapshot
+    """
     logger.debug("Inside delete snapshot() function")
     vm_id = parameters['vm_id']
     snapshotid = parameters['snapshot_id']
@@ -1056,11 +1147,13 @@ def delete_snapshot(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 
-"""Get new IP for given security domain.
-Update the VM XML with new mac_address and update the information in DB"""
 def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
+    """
+    Get new IP for given security domain.
+    Update the VM XML with new mac_address and update the information in DB
+    """
     # fetch new private IP from db from given security domain
-    private_ip_info = get_private_ip_mac(security_domain_id)
+    private_ip_info = _get_private_ip_mac(security_domain_id)
     
     # update vm config to add new mac address.
     root = etree.fromstring(xmlDesc)
@@ -1081,8 +1174,9 @@ def update_security_domain(vm_details, security_domain_id, xmlDesc=None):
     return etree.tostring(root)
 
 def edit_vm_config(parameters):
-    """Edits vm configuration"""
-
+    """
+    Edits vm configuration
+    """
     logger.debug("Inside edit vm config() function")
     vm_id = parameters['vm_id']    
     vm_details = current.db.vm_data[vm_id]
@@ -1136,16 +1230,19 @@ def edit_vm_config(parameters):
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-def get_clone_properties(vm_details, cloned_vm_details, vm_properties):
-    
-    datastore = choose_datastore()
+
+def _get_clone_properties(vm_details, cloned_vm_details, vm_properties):
+    """
+    Get properties for Cloned VM.
+    """
+    datastore = _choose_datastore()
     vm_properties['datastore'] = datastore
     logger.debug("Datastore selected is: " + str(datastore))
 
     vm_properties['security_domain'] = vm_details.security_domain
     vm_properties['public_ip_req'] = False
     # Finds mac address, ip address and vnc port for the cloned vm
-    choose_mac_ip_vncport(vm_properties)
+    _choose_mac_ip_vncport(vm_properties)
     logger.debug("MAC is : " + str(vm_properties['mac_addr']) + " IP is : " + str(vm_properties['private_ip']) + \
                          " VNCPORT is : " + str(vm_properties['vnc_port']))
   
@@ -1188,9 +1285,11 @@ def get_clone_properties(vm_details, cloned_vm_details, vm_properties):
 
     return (clone_file_parameters)
                 
-"""Migrates cloned vm to new host"""
-def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm,vm_properties):
 
+def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_cloned_vm,vm_properties):
+    """
+    Migrates cloned vm to new host
+    """
     try:
         new_host_ip_for_cloned_vm = current.db.host[new_host_id_for_cloned_vm].host_ip.private_ip
         logger.debug("New host ip for cloned vm is: " + str(new_host_ip_for_cloned_vm))
@@ -1210,9 +1309,11 @@ def migrate_clone_to_new_host(vm_details, cloned_vm_details, new_host_id_for_clo
         logger.debug("Error: " + message)
         return False
         
-# Clones vm
+
 def clone(vmid):
-    
+    """
+    Clones vm
+    """
     vm_properties = {}
     logger.debug("Inside clone() function")
     cloned_vm_details = current.db.vm_data[vmid]
@@ -1222,7 +1323,7 @@ def clone(vmid):
         if domain.info()[0] != VIR_DOMAIN_SHUTOFF:
             raise Exception("VM is not shutoff. Check vm status.")
 
-        clone_file_parameters = get_clone_properties(vm_details, cloned_vm_details, vm_properties)
+        clone_file_parameters = _get_clone_properties(vm_details, cloned_vm_details, vm_properties)
         logger.debug("cloned vm properties after clone_file_parameters" + str(vm_properties))
         host = vm_properties['vm_host_details']
         logger.debug("host is: " + str(host))
@@ -1264,26 +1365,15 @@ def clone(vmid):
         else:
             raise Exception("Host resources exhausted. Migrate the host vms and then try.")        
     except:
-        free_vm_properties(cloned_vm_details, vm_properties)
+        _free_vm_properties(cloned_vm_details, vm_properties)
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
-'''
-def free_cloned_vm_properties(cloned_vm_details, vm_properties):
 
-    logger.debug("Cloned VM installation fails..Starting to delete directory")
-
-    # Wont work for clone. Check
-    cloned_vm_directory_path = vm_properties['datastore'].system_mount_point + '/' + get_constant('vms') + '/' + cloned_vm_details.vm_identity
-    if os.path.exists (cloned_vm_directory_path):
-        logger.debug("Starting to delete vm directory.")
-        shutil.rmtree(cloned_vm_directory_path)
-    return
-'''
-
-"""Attaches extra disk to VM"""
 def attach_extra_disk(parameters):
-
+    """
+    Attaches extra disk to VM
+    """
     logger.debug("Inside attach extra disk() function")
     vmid = parameters['vm_id']
     disk_size = parameters['disk_size']
@@ -1306,7 +1396,9 @@ def attach_extra_disk(parameters):
 
 
 def get_vm_image_location(datastore_id, vm_identity):
-
+    """
+    Get the file path for qcow2 image of a VM
+    """
     datastore = current.db.datastore[datastore_id]
     vm_directory_path = datastore.system_mount_point + '/' + get_constant('vms') + '/' + vm_identity
     vm_image_name = vm_directory_path + '/' + vm_identity + '.qcow2'
@@ -1316,7 +1408,9 @@ def get_vm_image_location(datastore_id, vm_identity):
     return (vm_image_name, image_present)
 
 def get_extra_disk_location(datastore_id, vm_identity, disk_name, get_disk_size=False):
-
+    """
+    Get the file path for qcow2 image of teh extra disk
+    """
     datastore = current.db.datastore[datastore_id]
     if datastore:
         vm_extra_disks_directory_path = datastore.system_mount_point + '/' + get_constant('extra_disks_dir') + '/' + \
@@ -1335,9 +1429,11 @@ def get_extra_disk_location(datastore_id, vm_identity, disk_name, get_disk_size=
     else:
         return (None, False, 0)
 
-#Launch existing VM image
+
 def launch_existing_vm_image(vm_details):
-    
+    """
+    Launch existing VM image
+    """
     logger.debug('Launch existing VM image')
     vm_properties = {}
     vm_properties['ram'] = vm_details.RAM
@@ -1360,7 +1456,7 @@ def launch_existing_vm_image(vm_details):
         if vm_details.public_ip.is_active:
             vm_properties['public_ip'] = vm_details.public_ip.public_ip
 
-    choose_mac_ip_vncport(vm_properties)
+    _choose_mac_ip_vncport(vm_properties)
 
     vm_properties['template'] = current.db.template[vm_details.template_id]
     vm_properties['datastore'] = current.db.datastore[vm_details.datastore_id]
@@ -1391,7 +1487,9 @@ def launch_existing_vm_image(vm_details):
         update_db_after_vm_installation(vm_details, vm_properties)
         
 def save_as_template(parameters):
-    
+    """
+    Save VM as template
+    """
     logger.debug("Inside save_as_template() function")
     vm_id = parameters['vm_id']
     vm_data = current.db.vm_data[vm_id]
@@ -1435,6 +1533,9 @@ def save_as_template(parameters):
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
 
 def delete_template(parameters):
+    """
+    Delete template
+    """
     logger.debug("Inside delete_template() function")
     template_id = parameters['template_id']
     template_details = current.db.template[template_id]
@@ -1451,11 +1552,14 @@ def delete_template(parameters):
     return (current.TASK_QUEUE_STATUS_SUCCESS, "")
    
 def create_new_template(vm_details):
+    """
+    Create a new template from the VM image
+    """
     try:
         (connection_object, domain) = getVirshDomainConn(vm_details)
         xmlfile = domain.XMLDesc(0)
         logger.debug("connection object created")
-        datastore = choose_datastore()
+        datastore = _choose_datastore()
         logger.debug(datastore)
         new_template_dir = datastore.system_mount_point + '/' +get_constant('templates_dir') + '/' + vm_details.requester_id.first_name
         logger.debug("Creating user template directory...")

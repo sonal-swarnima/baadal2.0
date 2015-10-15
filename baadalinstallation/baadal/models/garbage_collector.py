@@ -30,7 +30,7 @@ def process_sendwarning_shutdownvm():
                     vm_users = []
                     vm_name  = ""
 
-                    for user in db((db.user_vm_map.vm_id == vm_details.vm_id) & (db.user_vm_map.vm_id == db.vm_data.id) & (db.vm_data.locked !='T') & (db.vm_data.delete_warning_date == None )).select(db.user_vm_map.user_id,db.vm_data.vm_name):
+                    for user in db((db.user_vm_map.vm_id == vm_details.vm_id) & (db.user_vm_map.vm_id == db.vm_data.id) & (db.vm_data.locked != True) & (db.vm_data.delete_warning_date == None )).select(db.user_vm_map.user_id,db.vm_data.vm_name):
                         send_email=1
                         vm_users.append(user.user_vm_map.user_id)
                         vm_name=user.vm_data.vm_name

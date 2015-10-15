@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-""" nat_mapper.py: Manages NAT(Network Address Translation) machine so that;  
+""" Manages NAT(Network Address Translation) machine so that;  
 a Linux machine can act as router
 
 Following scenarios are handled
-1. Create mapping between public IP and private IP by creating interface for public
-   IP and adding corresponding rules in IP tables
-2. Remove mapping between public IP and private IP by deleting interface for public
-   IP and removing corresponding rules from IP tables
-3. Create mapping between VNC_Server:VNC_port & Host_Server:VNC_Port_of_VM by creating
-   interface for VNC server if not present already and adding corresponding rules in 
-   IP tables
-4. Removing mapping between VNC_Server:VNC_port & Host_Server:VNC_Port_of_VM by deleting 
-   corresponding rules from IP tables
-5. Delete all VNC server mapping that has exceeded given duration
+    1. Create mapping between public IP and private IP by creating interface for public
+       IP and adding corresponding rules in IP tables
+    2. Remove mapping between public IP and private IP by deleting interface for public
+       IP and removing corresponding rules from IP tables
+    3. Create mapping between VNC_Server:VNC_port & Host_Server:VNC_Port_of_VM by creating
+       interface for VNC server if not present already and adding corresponding rules in 
+       IP tables
+    4. Removing mapping between VNC_Server:VNC_port & Host_Server:VNC_Port_of_VM by deleting 
+       corresponding rules from IP tables
+    5. Delete all VNC server mapping that has exceeded given duration
 """
 
 from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception
@@ -30,16 +30,18 @@ VNC_ACCESS_STATUS_ACTIVE = 'active'
 VNC_ACCESS_STATUS_INACTIVE = 'inactive'
 
 
-def get_nat_details():
+def _get_nat_details():
     nat_type = config.get("GENERAL_CONF", "nat_type")
     nat_ip = config.get("GENERAL_CONF", "nat_ip")
     nat_user = config.get("GENERAL_CONF", "nat_user")
     
     return (nat_type, nat_ip, nat_user)
 
-#Construct command for updating IP tables
-def get_ip_tables_command(command_type, source_ip , destination_ip, source_port = -1, destination_port = -1):
-    
+
+def _get_ip_tables_command(command_type, source_ip , destination_ip, source_port = -1, destination_port = -1):
+    """
+    Construct command for updating IP tables
+    """    
     pre_command = "iptables -t nat -I PREROUTING " if command_type == "Add" else "iptables -t nat -D PREROUTING  "
     
     if source_port == -1 & destination_port == -1:
@@ -65,9 +67,11 @@ def get_ip_tables_command(command_type, source_ip , destination_ip, source_port 
     
     return command
 
-#Construct command for updating interfaces file
-def get_interfaces_command(command_type, source_ip):
 
+def _get_interfaces_command(command_type, source_ip):
+    """
+    Construct command for updating interfaces file
+    """    
     source_ip_octets = source_ip.split('.')
     interface_alias = "%s:%s.%s.%s" %(NAT_PUBLIC_INTERFACE, source_ip_octets[1], source_ip_octets[2], source_ip_octets[3])
     interfaces_merge_command = "cat /etc/network/interfaces.d/*.cfg > /etc/network/interfaces"
@@ -90,25 +94,27 @@ def get_interfaces_command(command_type, source_ip):
 
     return interfaces_command
 
-"""Function to create mappings in NAT
- If NAT type is software_nat then for creating public - private IP mapping:
- 1) Create the alias on NAT that will listen on the public IP.
- 2) Create rules in iptables to forward the traffic coming on public IP to private IP and vice versa.
- And for providing VNC access:
- 1) Check if the NAT is listening on the public IP to be used for VNC access.
- 2) If NAT is not listening on the desired public IP, create an alias to listen on that IP.
- 3) Create rules in iptables to forward the VNC traffic to the host."""
-def create_mapping(source_ip , destination_ip, source_port = -1, destination_port = -1, duration = -1 ):
 
-    nat_type, nat_ip, nat_user = get_nat_details()
+def create_mapping(source_ip , destination_ip, source_port = -1, destination_port = -1, duration = -1 ):
+    """
+    Function to create mappings in NAT
+    If NAT type is software_nat then for creating public - private IP mapping:
+        - Create the alias on NAT that will listen on the public IP.
+        - Create rules in iptables to forward the traffic coming on public IP to private IP and vice versa.
+    For providing VNC access:
+        - Check if the NAT is listening on the public IP to be used for VNC access.
+        - If NAT is not listening on the desired public IP, create an alias to listen on that IP.
+        - Create rules in iptables to forward the VNC traffic to the host.
+    """    
+    nat_type, nat_ip, nat_user = _get_nat_details()
 
     if nat_type == NAT_TYPE_SOFTWARE:
         
         if source_port == -1 & destination_port == -1:
             logger.debug("Adding public ip %s private ip %s mapping on NAT" %(source_ip, destination_ip))
 
-            interfaces_command = get_interfaces_command('Add', source_ip)
-            iptables_command = get_ip_tables_command('Add', source_ip , destination_ip)
+            interfaces_command = _get_interfaces_command('Add', source_ip)
+            iptables_command = _get_ip_tables_command('Add', source_ip , destination_ip)
             
             command = interfaces_command + iptables_command
 
@@ -117,8 +123,8 @@ def create_mapping(source_ip , destination_ip, source_port = -1, destination_por
             
             logger.debug("Creating SSH session on NAT box %s" %(nat_ip))
             
-            interfaces_command = get_interfaces_command('Add', source_ip)
-            iptables_command = get_ip_tables_command('Add', source_ip , destination_ip, source_port, destination_port)
+            interfaces_command = _get_interfaces_command('Add', source_ip)
+            iptables_command = _get_ip_tables_command('Add', source_ip , destination_ip, source_port, destination_port)
 
             command = interfaces_command + iptables_command
 
@@ -135,32 +141,33 @@ def create_mapping(source_ip , destination_ip, source_port = -1, destination_por
         raise Exception("NAT type is not supported")
 
 
-"""Function to remove mapping from NAT
-If NAT type is software_nat then for removing public IP - private IP mapping:
-1) Remove the alias on NAT listening on the public IP.
-2) Delete rules from iptables to forward the traffic coming on public IP to private IP and vice versa.
-3) Flush the entries from DB and make public IP free.
-And for revoking VNC access:
-1) Delete rules from iptables to forward the VNC traffic to the host.
-2) Update DB to make the VNC access inactive."""
 def remove_mapping(source_ip, destination_ip, source_port=-1, destination_port=-1):
-
-    nat_type, nat_ip, nat_user = get_nat_details()
+    """
+    Function to remove mapping from NAT
+    If NAT type is software_nat then for removing public IP - private IP mapping:
+        - Remove the alias on NAT listening on the public IP.
+        - Delete rules from iptables to forward the traffic coming on public IP to private IP and vice versa.
+        - Flush the entries from DB and make public IP free.
+    For revoking VNC access:
+        - Delete rules from iptables to forward the VNC traffic to the host.
+        - Update DB to make the VNC access inactive.
+    """    
+    nat_type, nat_ip, nat_user = _get_nat_details()
 
     if nat_type == NAT_TYPE_SOFTWARE:
         # source_port and destination_port are -1 when function is called for removing public IP - private IP mapping
         if source_port == -1 and destination_port == -1:
             logger.debug("Removing mapping for public IP: %s and private IP: %s" %(source_ip, destination_ip))
             
-            interfaces_command = get_interfaces_command('Delete', source_ip)
-            iptables_command = get_ip_tables_command('Delete', source_ip , destination_ip)
+            interfaces_command = _get_interfaces_command('Delete', source_ip)
+            iptables_command = _get_ip_tables_command('Delete', source_ip , destination_ip)
             
             command = interfaces_command + iptables_command
             
         else:
             logger.debug("Removing VNC mapping from NAT for public IP %s host IP %s public VNC port %s private VNC port %s" %(source_ip, destination_ip, source_port, destination_port))
 
-            command = get_ip_tables_command('Delete', source_ip , destination_ip, source_port, destination_port)
+            command = _get_ip_tables_command('Delete', source_ip , destination_ip, source_port, destination_port)
 
         # Create SSH session to execute all commands on NAT box.
         execute_remote_bulk_cmd(nat_ip, nat_user, command)
@@ -174,10 +181,12 @@ def remove_mapping(source_ip, destination_ip, source_port=-1, destination_port=-
     else:
         raise Exception("NAT type is not supported")
 
-# Function to flush all mappings from NAT
+
 def clear_all_nat_mappings(db):
-    
-    nat_type, nat_ip, nat_user = get_nat_details()
+    """
+    Clears mappings from NAT
+    """    
+    nat_type, nat_ip, nat_user = _get_nat_details()
 
     if nat_type == NAT_TYPE_SOFTWARE:
 
@@ -228,10 +237,11 @@ def clear_all_nat_mappings(db):
         raise Exception("NAT type is not supported")
         
 
-# Function to delete all timed-out VNC mappings from NAT
 def clear_all_timedout_vnc_mappings():
-    
-    nat_type, nat_ip, nat_user = get_nat_details()
+    """
+    Deletes all timed-out VNC mappings from NAT
+    """    
+    nat_type, nat_ip, nat_user = _get_nat_details()
 
     if nat_type == NAT_TYPE_SOFTWARE:
        
@@ -284,9 +294,10 @@ def clear_all_timedout_vnc_mappings():
         raise Exception("NAT type is not supported")
 
 
-# Function to create mapping in NAT for VNC access
 def create_vnc_mapping_in_nat(vm_id):
-
+    """
+    Create mapping in NAT for VNC access
+    """    
     vm_data = current.db.vm_data[vm_id]
     vnc_host_ip = config.get("GENERAL_CONF", "vnc_ip")
     duration = 30 * 60 #30 minutes
@@ -308,9 +319,10 @@ def create_vnc_mapping_in_nat(vm_id):
         log_exception()
 
 
-# Function to create mapping in NAT for public IP - private IP
 def create_public_ip_mapping_in_nat(vm_id):
-    
+    """
+    Create mapping in NAT for public IP - private IP
+    """    
     vm_data = current.db.vm_data[vm_id]
     try:
         create_mapping(vm_data.public_ip, vm_data.private_ip)
@@ -320,8 +332,11 @@ def create_public_ip_mapping_in_nat(vm_id):
     except:
         log_exception()
     
-# Function to remove mapping for VNC access from NAT
+
 def remove_vnc_mapping_from_nat(vm_id):
+    """
+    Remove mapping for VNC access from NAT
+    """    
     vm_data = current.db.vm_data[vm_id]
     vnc_host_ip = config.get("GENERAL_CONF", "vnc_ip")
     host_ip = vm_data.host_id.host_ip.private_ip
@@ -334,9 +349,11 @@ def remove_vnc_mapping_from_nat(vm_id):
     except:
         log_exception()
     
-# Function to remove public IP - private IP mapping from NAT
+
 def remove_public_ip_mapping_from_nat(vm_id):
-    
+    """
+    Remove public IP - private IP mapping from NAT
+    """    
     vm_data = current.db.vm_data[vm_id]
     try:
         remove_mapping(vm_data.public_ip, vm_data.private_ip)

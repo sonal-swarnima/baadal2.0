@@ -56,8 +56,10 @@ def loadbalance_vm(host_list=[],vm_list=[]):
             logger.exception('Exception in process_schedule_vm') 
             return False
 
-# Function check affinity of vm with host. Affinity gives list of host on which vm can be migrated.
 def check_affinity(vm_details,host):
+    """
+    Check affinity of vm with host. Affinity gives list of host on which vm can be migrated.
+    """
     try:
         logger.debug("Entering into check_affinity for vm:"+str(vm_details.vm_name)) 
         if(vm_details.vm_name in ('superopt','largevm','NeuroImaging2','sniper-big','csl788-1','NeuroImaging','sniper-large', 'mooc_6')):
@@ -69,8 +71,10 @@ def check_affinity(vm_details,host):
         return False
         
 
-# Function move a vm on host if affinity is correct and migration is possible.
 def schedule_vm(vm_details,host,live_migration):
+    """
+    Migrate a vm on host if affinity is correct and migration is possible.
+    """
     try:
         logger.debug("Entering into scheduleVM")
         retVal=True
@@ -99,8 +103,10 @@ def schedule_vm(vm_details,host,live_migration):
         logger.exception('Exception in scheduleVM')         
         return False
 
-#Function returns memory used by memhog process so that it can be added to available memory.
 def get_memhog_usage(host_ip):
+    """
+    Returns memory used by memhog process so that it can be added to available memory.
+    """
     logger.debug("Entering into getmemhog_usage") 
     cmd = "output=`ps -ef --sort=start_time | grep 'memhog' | grep -v grep | awk '{print $2}'`;smem -c 'pid pss'| grep $output | awk '{print $2}'"
     output = execute_remote_cmd(host_ip, "root", cmd, None, True) 
@@ -111,9 +117,10 @@ def get_memhog_usage(host_ip):
         return (int(output[0])*1024)
 
 
-# Function returns host list in descending order of available memory and guest list. 
 def find_host_and_guest_list():
-
+    """
+    Returns host list in descending order of available memory and guest list.
+    """
     logger.debug("Entering into find_host_and_guest_list")
 
     host_usage = {}
@@ -136,8 +143,10 @@ def find_host_and_guest_list():
     return (map(itemgetter(0),sorted_host_list),guest_list)
 
 
-#Function checks guest_present_host and selected host are same or not.
 def is_same_host(guest_info,host_info):
+    """
+    Checks guest_present_host and selected host are same or not.
+    """
     try:
         logger.debug("Entering into is_same_host")
         host_ip = host_info['host_ip'].private_ip
@@ -149,8 +158,11 @@ def is_same_host(guest_info,host_info):
         logger.exception('Exception in is_same_host')
         return False
 
-#Function checks whether migration on the host is possible or not and criteria is host utilization should not go above 90% after migration.
 def is_migration_possible(guest_info,host_info):
+    """
+    Checks whether migration on the host is possible or not and criteria is host utilization should not 
+    go above 90% after migration.
+    """
     try:
         logger.debug("Entering into is_migration_possible")
         #host mem usage used_mem_in_kb
@@ -184,8 +196,10 @@ def is_migration_possible(guest_info,host_info):
         logger.exception('Exception in is_migration_possible')
         return False
 
-# Function shutdown the host with no vm.
 def shutdown_nonactive_hosts(host_list):
+    """
+    Shutdown the host with no vm.
+    """
     logger.debug(host_list)
 
     for host in host_list:
@@ -200,7 +214,4 @@ def shutdown_nonactive_hosts(host_list):
         rrd_logger.info(all_dom_objs)
         rrd_logger.info(type(all_dom_objs))
         if not all_dom_objs:
-            logger.debug("Host1 %s is free...Shutting it down " %str(host.host_ip.private_ip))        
-
-
-
+            logger.debug("Host1 %s is free...Shutting it down " %str(host.host_ip.private_ip))
