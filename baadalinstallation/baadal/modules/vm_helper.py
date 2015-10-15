@@ -1202,7 +1202,7 @@ def edit_vm_config(parameters):
         if 'public_ip' in parameters:
             enable_public_ip = parameters['public_ip']
             if enable_public_ip:
-                public_ip_pool = choose_random_public_ip()
+                public_ip_pool = _choose_random_public_ip()
 
                 if public_ip_pool:
                     create_mapping(public_ip_pool.public_ip, vm_details.private_ip.private_ip)
