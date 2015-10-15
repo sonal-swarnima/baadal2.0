@@ -206,15 +206,32 @@ def host_power_operation():
         log_exception()
     return
 
-
+#Power up the host 
 def host_power_up(host_data):
     try:
+        host_ip = host_data.host_ip.private_ip
         if host_data.host_type == HOST_TYPE_VIRTUAL:
-            host_ip = host_data.host_ip.private_ip
             execute_remote_cmd(host_ip, 'root', 'virsh start' + get_host_name[host_ip])
-        else:                        
-            logger.debug('Powering up host with MAC ' + host_data.host_ip.mac_addr)
-            commands.getstatusoutput( "wakeonlan " + host_data.host_ip.mac_addr)
+        else:
+            setup_type = config.get("GENERAL_CONF","setup_type")
+            if setup_type == "nic":
+                ucs_management_ip = config.get("UCS_MANAGER_DETAILS","ucs_management_ip")
+		ucs_user = config.get("UCS_MANAGER_DETAILS","ucs_user")
+		ucs_password = config.get("UCS_MANAGER_DETAILS","ucs_password")
+		host_ip=str(host_ip)
+                server_num=host_ip.split('.')
+                ucs_server_num=str(int(server_num[3])-20)
+                logger.debug("ucs server number is :"+ucs_server_num)
+                ssh = paramiko.SSHClient()
+                ssh.load_system_host_keys()
+                ssh.connect(ucs_management_ip,username=ucs_user,password=ucs_password)
+                stdin, stdout,stderr=ssh.exec_command("scope org / ;  scope org IIT-Delhi ; scope service-profile Badal-Host"+ str(ucs_server_num) + " ; power up ; commit-buffer")
+                output=stdout.readlines()               
+                if len(output)!= 0:
+                    logger.debug("Host not powered up . Command not run properly ")
+            else:                        
+                logger.debug('Powering up host with MAC ' + host_data.host_ip.mac_addr)
+                commands.getstatusoutput( "wakeonlan " + host_data.host_ip.mac_addr)
         
         logger.debug("Host powered up successfully!!!")
     except:
@@ -228,9 +245,30 @@ def host_power_down(host_data):
         host_ip = host_data.host_ip.private_ip
         if host_data.host_type == HOST_TYPE_VIRTUAL:
             output = execute_remote_cmd(host_ip, 'root', 'virsh destroy' + get_host_name[host_ip])
-        else:                        
-            output = execute_remote_cmd(host_ip, 'root', 'init 0')
-
+        else:
+            setup_type = config.get("GENERAL_CONF","setup_type")
+            if setup_type == "nic":
+                ucs_management_ip = config.get("UCS_MANAGER_DETAILS","ucs_management_ip")
+                logger.debug(ucs_management_ip)
+                logger.debug(type(ucs_management_ip))  
+                ucs_user = config.get("UCS_MANAGER_DETAILS","ucs_user")
+		logger.debug(ucs_user)
+                logger.debug(type(ucs_user))
+                ucs_password = config.get("UCS_MANAGER_DETAILS","ucs_password")
+                logger.debug(ucs_password) 
+                host_ip=str(host_ip)
+                server_num=host_ip.split('.')
+                ucs_server_num=str(int(server_num[3])-20)
+                logger.debug("ucs server number is :"+ucs_server_num)
+                ssh = paramiko.SSHClient()
+                ssh.load_system_host_keys()
+                ssh.connect(ucs_management_ip,username=ucs_user,password=ucs_password)                
+                stdin, stdout,stderr=ssh.exec_command("scope org / ;  scope org IIT-Delhi ; scope service-profile Badal-Host"+ str(ucs_server_num) + " ; power down ; commit-buffer")
+                output=stdout.readlines()
+                if len(output)!= 0:
+                    logger.debug("Host not powered up . Command not run properly ")
+            else:                        
+                output = execute_remote_cmd(host_ip, 'root', 'init 0')
         logger.debug(str(output) + ' ,Host shut down successfully !!!')
     except:
         log_exception()
