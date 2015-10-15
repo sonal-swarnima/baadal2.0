@@ -673,7 +673,7 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         nww_idx = fld_info.index('rx')
         mem_data=[]
 
-	    timeinterval=1
+        timeinterval=1
         for data in data_info:
             info1={}
             info={}
