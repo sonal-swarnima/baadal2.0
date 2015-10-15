@@ -9,12 +9,16 @@ from log_handler import logger
 
 
 def get_context_path():
-
+    """
+    Returns the application context path
+    """
     ctx_path = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'))
     return ctx_path
 
 def get_config_file():
-
+    """
+    Returns the handler for application config file
+    """
     import ConfigParser    
     config = ConfigParser.ConfigParser()
     config.read(os.path.join(get_context_path(), 'private/baadalapp.cfg'));
@@ -23,27 +27,38 @@ def get_config_file():
 config = get_config_file()
 
 def get_datetime():
+    """
+    Generic method defined to return datetime, for uniformity
+    """
     import datetime
     return datetime.datetime.now()
 
-# Get value from table 'costants'
+
 def get_constant(constant_name):
+    """
+    Get value from table 'costants'
+    """
     constant = current.db.constants(name = constant_name)['value']
     return constant
 
-# Update value into table 'costants'
+
 def update_constant(constant_name, constant_value):
+    """
+    Update value into table 'costants'
+    """
     current.db(current.db.constants.name == constant_name).update(value = constant_value)
     return 
 
-#Executes command on remote machine using paramiko SSHClient
-def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
 
+def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list = False):
+    """
+    Executes command on remote machine using paramiko SSHClient
+    """
     logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
     output = None
-    if machine_ip=="localhost":
+    if machine_ip == 'localhost':
         output=os.popen(command).readline()
-	logger.debug(output)
+        logger.debug(output)
     else:
         logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
 
@@ -55,7 +70,6 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
             stdin,stdout,stderr = ssh.exec_command(command)  # @UnusedVariable
         
             output = stdout.readlines() if ret_list else "".join(stdout.readlines())
-            #logger.debug("Output : %s " % output)
 
             error = "".join(stderr.readlines())
             if (stdout.channel.recv_exit_status()) != 0:
@@ -69,9 +83,11 @@ def execute_remote_cmd(machine_ip, user_name, command, password = None, ret_list
     
     return output
 
-#Executes command on remote machine using paramiko SSHClient
-def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
 
+def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
+    """
+    Executes multiple commands on remote machine using paramiko SSHClient
+    """
     logger.debug("executing remote command %s on %s:"  %(command, machine_ip))
     output = None
     try:
@@ -97,15 +113,20 @@ def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
     
     return output
 
-#Checks if string represents 4 octets seperated by decimal.
+
 def is_valid_ipv4(value):
+    """
+    Checks if string represents 4 octets seperated by decimal.
+    """
     regex = re.compile(
         '^(([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])\.){3}([1-9]?\d|1\d\d|2[0-4]\d|25[0-5])$')
     return regex.match(value)
 
-#Validates each IP string, checks if first three octets are same; and the last octet has a valid range.
+
 def validate_ip_range(ipFrom, ipTo):
-    
+    """
+    Validates each IP string, checks if first three octets are same; and the last octet has a valid range.
+    """
     if is_valid_ipv4(ipFrom) and is_valid_ipv4(ipTo):
         ip1 = ipFrom.split('.')
         ip2 = ipTo.split('.')
@@ -113,9 +134,11 @@ def validate_ip_range(ipFrom, ipTo):
             return True
     return False
 
-#Get List of IPs in a validated IP range
+
 def get_ips_in_range(ipFrom, ipTo):
-    
+    """
+    Get List of IPs in a validated IP range
+    """
     ip_addr_lst = []
     ip1 = ipFrom.split('.')
     ip2 = ipTo.split('.')
@@ -126,8 +149,11 @@ def get_ips_in_range(ipFrom, ipTo):
     return ip_addr_lst
 
 
-# Generates MAC address
+
 def generate_random_mac():
+    """
+    Generates MAC address
+    """
     MAC_GEN_FIRST_BIT=0xa2
     MAC_GEN_FIXED_BITS=3
     
@@ -143,7 +169,9 @@ def generate_random_mac():
     
 
 def log_exception(message=None, log_handler=None):
-    
+    """
+    Formats the exception using traceback
+    """
     log_handler = logger if log_handler == None else log_handler
     import sys, traceback
     etype, value, tb = sys.exc_info()
@@ -154,15 +182,19 @@ def log_exception(message=None, log_handler=None):
     return trace
 
 def is_pingable(ip):
-
+    """
+    Checks if IP is pingable
+    """
     command = "ping -c 1 %s" % ip
     response = os.system(command)
     
     return not(response)
 
-"""Custom validator to check if string is a valid mac address"""
+
 class IS_MAC_ADDRESS(Validator):
-    
+    """
+    Custom validator to check if string is a valid mac address
+    """
     regex = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
     
     def __init__(self, error_message='enter valid MAC address'):

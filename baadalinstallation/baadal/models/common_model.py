@@ -352,7 +352,7 @@ def get_vm_operations(vm_id):
                      'confirm_vm_deletion()' : ( None, 'delete.png', 'Delete this virtual machine'),
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
-                     'save_as_template'      : ('user', 'save.png', 'Save as Template'),
+                     'save_vm_as_template'      : ('user', 'save.png', 'Save as Template'),
                      'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM'),
                      'affinity_host'         : ('admin','affinity.png','Set Affinity')}
 
@@ -373,7 +373,7 @@ def get_vm_operations(vm_id):
                     is_request_in_queue(vm_id, VM_TASK_ATTACH_DISK)):
                 valid_operations.extend(['start_vm'])
 
-            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk', 'save_as_template'])
+            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk', 'save_vm_as_template'])
 
         if not is_vm_user():
             valid_operations.extend(['confirm_vm_deletion()'])

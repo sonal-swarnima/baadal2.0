@@ -8,7 +8,7 @@ if 0:
 from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd
 from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot,\
     revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore,\
-    save_as_template, delete_template
+    save_vm_as_template, delete_template
 from host_helper import host_status_sanity_check, collect_data_from_host
 from vm_utilization import update_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
@@ -36,7 +36,7 @@ task = {VM_TASK_CREATE               :    install,
         VM_TASK_EDIT_CONFIG          :    edit_vm_config,
         VM_TASK_CLONE                :    clone,
         VM_TASK_ATTACH_DISK          :    attach_extra_disk,
-        VM_TASK_SAVE_AS_TEMPLATE     :    save_as_template,
+        VM_TASK_SAVE_AS_TEMPLATE     :    save_vm_as_template,
         VM_TASK_DELETE_TEMPLATE      :    delete_template
        }
 

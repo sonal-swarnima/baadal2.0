@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-from helper import * # @UnusedWildImport
-from libvirt import * # @UnusedWildImport
-from random import randrange
-from vm_helper import * # @UnusedWildImport
-import commands # @UnusedImport
+from gluon import current
+from helper import execute_remote_cmd, get_constant, config, log_exception, \
+    is_pingable
+from libvirt import VIR_DOMAIN_SHUTOFF, VIR_DOMAIN_PAUSED, VIR_DOMAIN_RUNNING, \
+    VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA
+from log_handler import logger
+from vm_helper import find_new_host, launch_vm_on_host, revert
+import commands
+import csv
 import libvirt
 import math
+import paramiko
 
 #Host Status
 HOST_STATUS_DOWN = 0
@@ -216,16 +221,16 @@ def host_power_up(host_data):
             setup_type = config.get("GENERAL_CONF","setup_type")
             if setup_type == "nic":
                 ucs_management_ip = config.get("UCS_MANAGER_DETAILS","ucs_management_ip")
-		ucs_user = config.get("UCS_MANAGER_DETAILS","ucs_user")
-		ucs_password = config.get("UCS_MANAGER_DETAILS","ucs_password")
-		host_ip=str(host_ip)
+                ucs_user = config.get("UCS_MANAGER_DETAILS","ucs_user")
+                ucs_password = config.get("UCS_MANAGER_DETAILS","ucs_password")
+                host_ip=str(host_ip)
                 server_num=host_ip.split('.')
                 ucs_server_num=str(int(server_num[3])-20)
                 logger.debug("ucs server number is :"+ucs_server_num)
                 ssh = paramiko.SSHClient()
                 ssh.load_system_host_keys()
                 ssh.connect(ucs_management_ip,username=ucs_user,password=ucs_password)
-                stdin, stdout,stderr=ssh.exec_command("scope org / ;  scope org IIT-Delhi ; scope service-profile Badal-Host"+ str(ucs_server_num) + " ; power up ; commit-buffer")
+                stdin, stdout,stderr=ssh.exec_command("scope org / ;  scope org IIT-Delhi ; scope service-profile Badal-Host"+ str(ucs_server_num) + " ; power up ; commit-buffer")  # @UnusedVariable
                 output=stdout.readlines()               
                 if len(output)!= 0:
                     logger.debug("Host not powered up . Command not run properly ")
@@ -252,7 +257,7 @@ def host_power_down(host_data):
                 logger.debug(ucs_management_ip)
                 logger.debug(type(ucs_management_ip))  
                 ucs_user = config.get("UCS_MANAGER_DETAILS","ucs_user")
-		logger.debug(ucs_user)
+                logger.debug(ucs_user)
                 logger.debug(type(ucs_user))
                 ucs_password = config.get("UCS_MANAGER_DETAILS","ucs_password")
                 logger.debug(ucs_password) 
@@ -263,7 +268,7 @@ def host_power_down(host_data):
                 ssh = paramiko.SSHClient()
                 ssh.load_system_host_keys()
                 ssh.connect(ucs_management_ip,username=ucs_user,password=ucs_password)                
-                stdin, stdout,stderr=ssh.exec_command("scope org / ;  scope org IIT-Delhi ; scope service-profile Badal-Host"+ str(ucs_server_num) + " ; power down ; commit-buffer")
+                stdin, stdout,stderr=ssh.exec_command("scope org / ;  scope org IIT-Delhi ; scope service-profile Badal-Host"+ str(ucs_server_num) + " ; power down ; commit-buffer")  # @UnusedVariable
                 output=stdout.readlines()
                 if len(output)!= 0:
                     logger.debug("Host not powered up . Command not run properly ")
@@ -340,7 +345,7 @@ def get_latency_btw_hosts(next_host_ip,host_ip):
         print("latency between host is :"+ str(latency))
         ret=str(latency) 
     else:
-	ret=str(lat)
+        ret=str(lat)
     return ret
 
 def get_bandwidth_of_host(host_ip):
@@ -361,27 +366,8 @@ def get_throughput_btw_hosts(next_host_ip,host_ip):
     return ret
 
 
-def install_package(host_ip):
-
-    cmd='dpkg --get-selections | grep "netperf" | cut -f 7'
-    ret=execute_remote_cmd(host_ip, "root", cmd)
-    cmd1="ps -ef | grep 'apt-get' |wc -l"
-    ret1=execute_remote_cmd(host_ip, "root", cmd)
-    if str(ret)!="install":
-	if str(ret1)=="1":       
-	    command="apt-get -y install netperf --force-yes"
-            execute_remote_cmd(host_ip, "root", command)
-	
-
-def check_package_installation(host_ip_list):
-   
-    for host_ip in host_ip_list:
-        install_package()
-    return
-
 def collect_data_from_host(host_ip_list,host_name_list):
     active_host_no=len(host_ip_list)
-    #check_package_installation(host_ip_list)
     
     data=[]
     
@@ -394,48 +380,28 @@ def collect_data_from_host(host_ip_list,host_name_list):
 
     for i in range(1,active_host_no+1):	
         host_ip=host_ip_list[i-1]
-        host_name=host_name_list[i-1]
-        print( "host_ip:" + str(host_ip))
+
         if is_pingable(host_ip):
             
             for j in range(1,active_host_no+1):
-		next_host_ip=host_ip_list[j-1]
-		if is_pingable(next_host_ip):
+                next_host_ip=host_ip_list[j-1]
+                if is_pingable(next_host_ip):
 
                     row_info=[]
-    		    latency=get_latency_btw_hosts(next_host_ip,host_ip)
+                    latency=get_latency_btw_hosts(next_host_ip,host_ip)
                     throughput=get_throughput_btw_hosts(next_host_ip,host_ip)
                     row_info.insert(0,str(i))
                     row_info.insert(1,str(j))
                     row_info.insert(2,latency)
-    		    row_info.insert(3,throughput)
+                    row_info.insert(3,throughput)
                     data.insert(((active_host_no*(i-1))+j),row_info) 
-
 
                 else :
                     logger.debug( "host is unreachable")
         else :
             logger.debug("host is unreachable")
    
-    file = open('/home/www-data/web2py/applications/baadal/static/sigma/graph.tsv', 'w');
-    writer = csv.writer(file, dialect="excel-tab")
+    _file = open('/home/www-data/web2py/applications/baadal/static/sigma/graph.tsv', 'w');
+    writer = csv.writer(_file, dialect="excel-tab")
     for item in data:
         writer.writerow(item)
-
-
-def get_json_data():
-    import json
-    host_band_list=[]
-    host_name_list=[]
-    
-    import io, json
-    with io.open('/home/www-data/web2py/applications/baadal/static/sigma/graph.json', 'r', encoding='utf-8') as f:
-        data=json.load(f)
-         
-    for i in range(len(data)):
-       
-        host_name_list.append(str(data[i]['name']))
-        host_band_list.append(data[i]['bandwidth'])
-    logger.debug("host_name_list"+str(host_name_list))
-    return host_name_list
-

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-
+""" load_balancer.py: This module manages periodic load balancing of hosts on the
+    basis of the recorded resource utilization by VMs.
+"""
 from gluon import current
 from helper import execute_remote_cmd
 from host_helper import HOST_STATUS_UP

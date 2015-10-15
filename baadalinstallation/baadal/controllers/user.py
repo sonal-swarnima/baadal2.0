@@ -9,7 +9,8 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from log_handler import logger
-from vm_utilization import *
+from vm_utilization import check_graph_type, check_graph_period, \
+    get_performance_graph, fetch_info_graph
 
 @auth.requires_login()
 @handle_exception
@@ -167,7 +168,6 @@ def list_my_task():
     return dict(pending=pending, success=success, failed=failed, form=form)  
 
 
-#############################################CONTROLLER#######################################
 @check_vm_owner
 @handle_exception       
 def show_vm_performance():
@@ -188,13 +188,11 @@ def show_vm_graph():
 
 
 def create_graph_for_vm():
-    ret=creat_graph()
     
-    
+    ret=create_graph()
     return ret
 
-def creat_graph():
-    data=[]
+def create_graph():
     ret={}
     logger.debug(request.vars['graphType'])
     logger.debug(request.vars['vmIdentity'])
@@ -215,27 +213,22 @@ def creat_graph():
     
     ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu)
     
-    
-    
-    if int(vm_ram)>1024:
-	mem=float(vm_ram)/(1024)
-    else:
-	mem=vm_ram
+    mem=float(vm_ram)/(1024) if int(vm_ram)>1024 else vm_ram
     
     ret['mem']=mem
     
 
     if g_type=='disk':
-	ret['legend_read']='disk read'
-	ret['legend_write']='disk write'
+        ret['legend_read']='disk read'
+        ret['legend_write']='disk write'
     
     elif g_type=='nw':
-	ret['legend_read']='network read'
-	ret['legend_write']='network write'
+        ret['legend_read']='network read'
+        ret['legend_write']='network write'
     elif g_type=='cpu':
-	ret['name']='cpu'
+        ret['name']='cpu'
     else:
-	ret['name']='mem'
+        ret['name']='mem'
     import json
     
     json_str = json.dumps(ret,ensure_ascii=False)
@@ -304,7 +297,7 @@ def edit_vm_config():
 
 @check_vm_owner
 @handle_exception       
-def save_as_template():
+def save_vm_as_template():
     vm_id = int(request.args[0])
     if is_request_in_queue(vm_id, VM_TASK_SAVE_AS_TEMPLATE):    
         session.flash = "Request to save VM as template already in queue."

@@ -63,7 +63,7 @@ window.onload = function () {
    vm_ram = "{{=vm_ram}}";
    m_type = "{{=m_type}}";
    vm_cpu = "{{=vm_cpu}}";
-   jQuery.ajax({type:"POST",url:"{{=URL('creat_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,host_CPU:vm_cpu,
+   jQuery.ajax({type:"POST",url:"{{=URL('create_graph')}}", data:{graphType:graph_type, vmIdentity:vm_identity,vm_RAM:vm_ram,host_CPU:vm_cpu,
    graphPeriod:period,mtype:m_type},dataType: "json", success:function(ret) {
 	if (graph_type=='cpu' | graph_type=='ram'){
 	    var length=ret['data'].length;}

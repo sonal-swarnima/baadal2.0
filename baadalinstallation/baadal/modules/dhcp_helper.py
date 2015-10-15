@@ -1,5 +1,23 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
+""" dhcp_helper.py:  This module manages the DHCP configuration such as 
+    - create an entry into DHCP
+    - remove an entry from DHCP
+    - create multiple entries in DHCP
+    
+    In order to manages all the configured IPs, a directory 'dhcp.d' is created within /etc/dhcp.
+    
+    For every new dhcp entry, a file with unique name is created in this directory with MAC address and fixed IP address configuration.
+
+    The DHCP configuration file dhcpd.conf file is constructed using following command
+
+    cat /etc/dhcp/dhcp.d/*.conf > /etc/dhcp/dhcpd.conf
+    
+    For removing the entry, corresponding file is deleted from the directory,
+    and dhcp.d file is re-constructed
+    
+    DHCP is restarted after each modification.
+"""
 from helper import config, execute_remote_cmd
 
 dhcp_ip = config.get("GENERAL_CONF","dhcp_ip")

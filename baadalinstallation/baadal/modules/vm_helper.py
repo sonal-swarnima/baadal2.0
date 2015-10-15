@@ -124,7 +124,7 @@ def _get_private_ip_mac(security_domain_id):
         raise Exception(("Available MACs are exhausted for security domain '%s'." % sd.name))
 
 
-def choose_random_public_ip():
+def _choose_random_public_ip():
     """
     Chooses a random Public IP from the pool, such that:
         - It is not assigned to any VM
@@ -153,7 +153,7 @@ def _choose_mac_ip(vm_properties):
 
     if vm_properties['public_ip_req']:
         if 'public_ip' not in vm_properties:
-            public_ip_pool = choose_random_public_ip()
+            public_ip_pool = _choose_random_public_ip()
 
             if public_ip_pool:
                 vm_properties['public_ip'] = public_ip_pool.public_ip
@@ -827,7 +827,7 @@ def migrate_domain_with_snapshots(vm_details, destination_host_ip, domain, domai
     return
 
 
-def clean_migration_directory(vm_backup_during_migration):
+def _clean_migration_directory(vm_backup_during_migration):
     """
     Delete directory created for storing dumpxml of vm snapshots
     """
@@ -853,7 +853,7 @@ def undo_migration(vm_details, domain_snapshots_list, current_snapshot_name, vm_
         command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', snapshot_current_command, None, True)
         logger.debug(command_output)
     # Delete directory created for storing dumpxml of vm snapshots
-    clean_migration_directory(vm_backup_during_migration)
+    _clean_migration_directory(vm_backup_during_migration)
 
     return
 
@@ -912,7 +912,7 @@ def migrate_domain(vm_id, destination_host_id=None, live_migration=False):
         current.db.commit()
         
         # Delete directory created for storing dumpxml of vm snapshot
-        clean_migration_directory(vm_backup_during_migration)
+        _clean_migration_directory(vm_backup_during_migration)
 
         message = vm_details.vm_identity + " is migrated successfully."
         logger.debug("Task Status: SUCCESS Message: %s " % message)
@@ -1433,6 +1433,11 @@ def get_extra_disk_location(datastore_id, vm_identity, disk_name, get_disk_size=
 def launch_existing_vm_image(vm_details):
     """
     Launch existing VM image
+        - Choose new private_ip & mac_addr if not provided
+        - Get location for VM image
+        - Launch VM on given host
+        - Attach extra disk to VM if defined
+        - Create mapping between public IP and private IP if required
     """
     logger.debug('Launch existing VM image')
     vm_properties = {}
@@ -1486,9 +1491,10 @@ def launch_existing_vm_image(vm_details):
 
         update_db_after_vm_installation(vm_details, vm_properties)
         
-def save_as_template(parameters):
+def save_vm_as_template(parameters):
     """
     Save VM as template
+    If template for given VM already exists, replace with new template.
     """
     logger.debug("Inside save_as_template() function")
     vm_id = parameters['vm_id']
@@ -1554,6 +1560,9 @@ def delete_template(parameters):
 def create_new_template(vm_details):
     """
     Create a new template from the VM image
+        - Create template directory
+        - Copy VM Image to directory(Live copy if VM is running)
+        - Update database to define new template
     """
     try:
         (connection_object, domain) = getVirshDomainConn(vm_details)
