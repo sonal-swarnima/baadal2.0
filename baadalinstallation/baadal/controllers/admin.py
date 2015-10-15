@@ -6,12 +6,16 @@ if 0:
     from gluon import request,session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from simplejson import dumps
-from maintenance import shutdown_baadal, bootup_baadal
-from host_helper import *
+from helper import get_constant
+from vm_utilization import VM_UTIL_24_HOURS
+from host_helper import delete_orhan_vm, HOST_STATUS_MAINTENANCE, HOST_STATUS_UP, \
+    HOST_STATUS_DOWN
 from log_handler import logger
-from vm_utilization import *
-from helper import *
+from maintenance import shutdown_baadal, bootup_baadal
+from simplejson import dumps
+from vm_utilization import VM_UTIL_10_MINS, check_graph_type, check_graph_period, \
+    fetch_info_graph, get_performance_graph
+
 
 @check_moderator
 @handle_exception
@@ -224,9 +228,9 @@ def migrate_vm():
         redirect(URL(c = 'admin', f = 'hosts_vms'))
     logger.debug("vm_details[affinity flag] :  " + str(vm_details['affinity_flag']))
     if vm_details['affinity_flag'] != 0:
-      host_details = get_host_details(vm_details['vm_name'])
-      logger.debug("available_hosts : " + str(host_details['available_hosts']))
-      vm_details['available_hosts'] = host_details['available_hosts']
+        host_details = get_host_details(vm_details['vm_name'])
+        logger.debug("available_hosts : " + str(host_details['available_hosts']))
+        vm_details['available_hosts'] = host_details['available_hosts']
     return dict(vm_details=vm_details)
 
 
@@ -234,23 +238,23 @@ def migrate_vm():
 @handle_exception
 def affinity_host():
     vm_id = request.args[0]
-    vm_details = get_migrate_vm_details(vm_id)
-    vm_name=vm_details['vm_name']
+#     vm_details = get_migrate_vm_details(vm_id)
+#     vm_name=vm_details['vm_name']
     host_details={}
     host_data=''
-    host_details = get_host_details(vm_name)
+    host_details = get_host_details(vm_id)
     params={}
-    host_detail=[]
+#     host_detail=[]
     if len(request.args) > 1:
-       if request.args[1] == 'affinity_host':
-          host_details = get_host_details(vm_name)
-       params['affinity_host'] = request.vars['test']
-       host_data=add_data_into_affinity(params,vm_details)  
-       if host_data == None:
-          session.flash = 'Please select host for set Affinity'
-          redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id)) 
-       host_details = get_host_details(vm_name) 
-    return dict(vm_details=vm_details,host_details=host_details,host_data=host_data)
+        if request.args[1] == 'affinity_host':
+            host_details = get_host_details(vm_id)
+        params['affinity_host'] = request.vars['test']
+        host_data=add_data_into_affinity(params, vm_id)  
+        if host_data == None:
+            session.flash = 'Please select host for set Affinity'
+            redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id)) 
+    host_details = get_host_details(vm_id) 
+    return dict(host_details=host_details,host_data=host_data)
     
 
 def delete_affinity_vm():
@@ -259,9 +263,6 @@ def delete_affinity_vm():
     reset_host_affinity(vm_id,key)
     session.flash = 'host affinity removed.'
     redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id))
-    #if request.env.http_referer:
-    #   redirect(request.env.http_referer)
-    #redirect(request.env.http_referer)
       
    
 @check_moderator
@@ -580,111 +581,41 @@ def show_host_performance():
     return dict(host_id=host_id, host_identity=host_identity ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
 
 def create_graph_for_host():
-    data=[]
     ret={}
-    logger.debug(request.vars['graphType'])
-    logger.debug(request.vars['hostIdentity'])
-    logger.debug(request.vars['graphPeriod'])
-    logger.debug(request.vars['host_RAM'])
-    logger.debug(request.vars['mtype'])
-    logger.debug(request.vars['host_CPU'])
+
     graph_period=request.vars['graphPeriod']
     vm_ram=request.vars['host_RAM']
     vm_identity=request.vars['hostIdentity']
     g_type=request.vars['graphType']
     m_type=request.vars['mtype']
     host_cpu=request.vars['host_CPU']
-    title=check_graph_type(g_type,vm_ram,m_type)
+    title=check_graph_type(g_type, vm_ram, m_type)
    
     ret['valueformat']=check_graph_period(graph_period)
     ret['y_title']=title['y_title']
     ret['g_title']=title['g_title']
     
-    
     ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu)
     
-    
-    
-    if int(vm_ram)>1024:
-	mem=float(vm_ram)/(1024)
-    else:
-	mem=vm_ram
-    
-    ret['mem']=mem
+    ret['mem']=float(vm_ram)/(1024) if int(vm_ram)>1024 else vm_ram
     
 
     if g_type=='disk':
-	ret['legend_read']='disk read'
-	ret['legend_write']='disk write'
+        ret['legend_read']='disk read'
+        ret['legend_write']='disk write'
     
     elif g_type=='nw':
-	ret['legend_read']='network read'
-	ret['legend_write']='network write'
+        ret['legend_read']='network read'
+        ret['legend_write']='network write'
     elif g_type=='cpu':
-	ret['name']='cpu'
+        ret['name']='cpu'
     else:
-	ret['name']='mem'	
+        ret['name']='mem'	
     import json
     
-    json_str = json.dumps(ret,ensure_ascii=False)
+    json_str = json.dumps(ret, ensure_ascii=False)
     
     return json_str
-
-def machine_info():
-        
-	cont_data={}
-	nat_data={}
-     
-	logger.debug("checking controller info")
-	import os
-	cmds="ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2"
-	#subprocess.check_output("ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2")
-	
-        
-        cont_data['ip']=os.popen(cmds).read()
-	nat_ip=os.popen("route -n | sed -n '3p' | awk '{print $2}'").readline()
-        
-        nat_data['ip']=nat_ip
-	
-	cmds=" ifconfig baadal-br-int | grep 'HWaddr ' | awk '{ print $5} '"
-        cont_data['mac_addr']=execute_remote_cmd("localhost", 'root', cmds, None,  True)
-	nat_data['mac_addr']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip("\n")
-	cmds = "free -m | grep 'Mem:' | awk '{print $2}'"
-	cont_data['ram']=execute_remote_cmd("localhost", 'root', cmds, None,  True).strip("\n")
-	nat_data['ram']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip("\n")	
-	cmds="fdisk -l | grep Disk\ /dev |  awk '{print $3}'"
-        cont_data['hdd']=execute_remote_cmd("localhost", 'root', cmds, None,  True)
-	nat_data['hdd']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip("\n")
-	
-	
-	cmds='lshw | grep capacity | grep bit/s | sed -n "1 p" | tr -s " " | cut -f"3" -d" "' 
-	command_output =execute_remote_cmd("localhost", 'root', cmds, None,  True).strip("\n")
-        logger.debug(command_output)
-	cont_data['band']=command_output
-       	command_output = execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip('\n')
-	nat_data['band']=command_output
-	logger.debug(nat_data) 
-	cmds="nproc"
-	cont_data['cpu']=execute_remote_cmd("localhost", 'root', cmds, None,  True).strip("\n")
-	nat_data['cpu']=execute_remote_cmd('172.16.0.3', 'root', cmds, None,  True)[0].strip('\n')
-	
-
-	data={}
-	logger.debug(nat_data) 
-	logger.debug(cont_data)
-	cont_list=[]   
-        cont_list.append(cont_data)
-	nat_list=[]   
-        nat_list.append(nat_data)
-	data['cont']=cont_list
-	data['nat']=nat_list
-	logger.debug(data) 
-	import io, json,shutil
-        with io.open('/home/www-data/web2py/applications/baadal/static/mc_info.json', 'w', encoding='utf-8') as f:
-            f.write(unicode(json.dumps(data, ensure_ascii=False))) 
-        shutil.move('/home/www-data/web2py/applications/baadal/static/mc_info.json','/home/www-data/web2py/applications/baadal/static/machine_info.json') 
-        
-	return 
 
    
 def get_updated_host_graph():

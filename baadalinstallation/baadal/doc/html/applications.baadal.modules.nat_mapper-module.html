@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>applications.baadal.modules.nat_mapper</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Package&nbsp;applications ::
+        Package&nbsp;baadal ::
+        Package&nbsp;modules ::
+        Module&nbsp;nat_mapper
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="applications.baadal.modules.nat_mapper-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module nat_mapper</h1><p class="nomargin-top"><span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html">source&nbsp;code</a></span></p>
+<pre class="literalblock">
+nat_mapper.py: Manages NAT(Network Address Translation) machine so that;  
+a Linux machine can act as router
+
+Following scenarios are handled
+1. Create mapping between public IP and private IP by creating interface for public
+   IP and adding corresponding rules in IP tables
+2. Remove mapping between public IP and private IP by deleting interface for public
+   IP and removing corresponding rules from IP tables
+3. Create mapping between VNC_Server:VNC_port &amp; Host_Server:VNC_Port_of_VM by creating
+   interface for VNC server if not present already and adding corresponding rules in 
+   IP tables
+4. Removing mapping between VNC_Server:VNC_port &amp; Host_Server:VNC_Port_of_VM by deleting 
+   corresponding rules from IP tables
+5. Delete all VNC server mapping that has exceeded given duration
+
+</pre>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_nat_details"></a><span class="summary-sig-name">get_nat_details</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#get_nat_details">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_ip_tables_command"></a><span class="summary-sig-name">get_ip_tables_command</span>(<span class="summary-sig-arg">command_type</span>,
+        <span class="summary-sig-arg">source_ip</span>,
+        <span class="summary-sig-arg">destination_ip</span>,
+        <span class="summary-sig-arg">source_port</span>=<span class="summary-sig-default">-1</span>,
+        <span class="summary-sig-arg">destination_port</span>=<span class="summary-sig-default">-1</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#get_ip_tables_command">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_interfaces_command"></a><span class="summary-sig-name">get_interfaces_command</span>(<span class="summary-sig-arg">command_type</span>,
+        <span class="summary-sig-arg">source_ip</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#get_interfaces_command">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_mapping"></a><span class="summary-sig-name">create_mapping</span>(<span class="summary-sig-arg">source_ip</span>,
+        <span class="summary-sig-arg">destination_ip</span>,
+        <span class="summary-sig-arg">source_port</span>=<span class="summary-sig-default">-1</span>,
+        <span class="summary-sig-arg">destination_port</span>=<span class="summary-sig-default">-1</span>,
+        <span class="summary-sig-arg">duration</span>=<span class="summary-sig-default">-1</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#create_mapping">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="remove_mapping"></a><span class="summary-sig-name">remove_mapping</span>(<span class="summary-sig-arg">source_ip</span>,
+        <span class="summary-sig-arg">destination_ip</span>,
+        <span class="summary-sig-arg">source_port</span>=<span class="summary-sig-default">-1</span>,
+        <span class="summary-sig-arg">destination_port</span>=<span class="summary-sig-default">-1</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#remove_mapping">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="clear_all_nat_mappings"></a><span class="summary-sig-name">clear_all_nat_mappings</span>(<span class="summary-sig-arg">db</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#clear_all_nat_mappings">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="clear_all_timedout_vnc_mappings"></a><span class="summary-sig-name">clear_all_timedout_vnc_mappings</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#clear_all_timedout_vnc_mappings">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_vnc_mapping_in_nat"></a><span class="summary-sig-name">create_vnc_mapping_in_nat</span>(<span class="summary-sig-arg">vm_id</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#create_vnc_mapping_in_nat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_public_ip_mapping_in_nat"></a><span class="summary-sig-name">create_public_ip_mapping_in_nat</span>(<span class="summary-sig-arg">vm_id</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#create_public_ip_mapping_in_nat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="remove_vnc_mapping_from_nat"></a><span class="summary-sig-name">remove_vnc_mapping_from_nat</span>(<span class="summary-sig-arg">vm_id</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#remove_vnc_mapping_from_nat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="remove_public_ip_mapping_from_nat"></a><span class="summary-sig-name">remove_public_ip_mapping_from_nat</span>(<span class="summary-sig-arg">vm_id</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.nat_mapper-pysrc.html#remove_public_ip_mapping_from_nat">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="NAT_TYPE_SOFTWARE"></a><span class="summary-name">NAT_TYPE_SOFTWARE</span> = <code title="'software_nat'">'software_nat'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="NAT_TYPE_HARDWARE"></a><span class="summary-name">NAT_TYPE_HARDWARE</span> = <code title="'hardware_nat'">'hardware_nat'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="NAT_TYPE_MAPPING"></a><span class="summary-name">NAT_TYPE_MAPPING</span> = <code title="'mapping_nat'">'mapping_nat'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="NAT_PUBLIC_INTERFACE"></a><span class="summary-name">NAT_PUBLIC_INTERFACE</span> = <code title="'eth0'">'eth0'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VNC_ACCESS_STATUS_ACTIVE"></a><span class="summary-name">VNC_ACCESS_STATUS_ACTIVE</span> = <code title="'active'">'active'</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VNC_ACCESS_STATUS_INACTIVE"></a><span class="summary-name">VNC_ACCESS_STATUS_INACTIVE</span> = <code title="'inactive'">'inactive'</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Thu Oct 15 20:40:02 2015
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,633 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>applications.baadal.modules.vm_utilization</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Package&nbsp;applications ::
+        Package&nbsp;baadal ::
+        Package&nbsp;modules ::
+        Module&nbsp;vm_utilization
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="applications.baadal.modules.vm_utilization-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module vm_utilization</h1><p class="nomargin-top"><span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html">source&nbsp;code</a></span></p>
+<p>vm_utilization.py:  Captures utilization data for virtual machines 
+  &amp; hosts; and stores the information in a RRD database. RRD is a Round
+  Robin Database which is created for pre-defined time interval. When new 
+  data reaches the starting point, it overwrites existing data. The RRDtool
+  database is structured in such a way that it needs data at predefined 
+  time intervals. Then graphs can be directly generated from the 
+  information by specifying the Consolidation Function. For more 
+  information on rrdtool visit http://oss.oetiker.ch/rrdtool/</p>
+  <p>Following utilization data is captured for each Host and VM: Memory 
+  CPU Network(read &amp; write) Disk (read &amp; write)</p>
+  <p>For virtual machines, CPU, network and disk utilization information is
+  fetched from the respective domain running on the hypervisor. Memory 
+  utilization is fetched from host, since VMs run as processes on the 
+  host.</p>
+
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_rrd_file"></a><span class="summary-sig-name">get_rrd_file</span>(<span class="summary-sig-arg">identity</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_rrd_file">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_graph"></a><span class="summary-sig-name">create_graph</span>(<span class="summary-sig-arg">rrd_file_name</span>,
+        <span class="summary-sig-arg">graph_type</span>,
+        <span class="summary-sig-arg">rrd_file_path</span>,
+        <span class="summary-sig-arg">graph_period</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#create_graph">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_performance_graph"></a><span class="summary-sig-name">get_performance_graph</span>(<span class="summary-sig-arg">graph_type</span>,
+        <span class="summary-sig-arg">vm</span>,
+        <span class="summary-sig-arg">graph_period</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_performance_graph">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="fetch_rrd_data"></a><span class="summary-sig-name">fetch_rrd_data</span>(<span class="summary-sig-arg">rrd_file_name</span>,
+        <span class="summary-sig-arg">period</span>=<span class="summary-sig-default">VM_UTIL_24_HOURS</span>,
+        <span class="summary-sig-arg">period_no</span>=<span class="summary-sig-default">24</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#fetch_rrd_data">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="compare_rrd_data_with_threshold"></a><span class="summary-sig-name">compare_rrd_data_with_threshold</span>(<span class="summary-sig-arg">rrd_file_name</span>,
+        <span class="summary-sig-arg">thresholdcontext</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#compare_rrd_data_with_threshold">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="create_rrd"></a><span class="summary-sig-name">create_rrd</span>(<span class="summary-sig-arg">rrd_file</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#create_rrd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_dom_mem_usage"></a><span class="summary-sig-name">get_dom_mem_usage</span>(<span class="summary-sig-arg">dom</span>,
+        <span class="summary-sig-arg">host</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_dom_mem_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_dom_nw_usage"></a><span class="summary-sig-name">get_dom_nw_usage</span>(<span class="summary-sig-arg">dom_obj</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_dom_nw_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_dom_disk_usage"></a><span class="summary-sig-name">get_dom_disk_usage</span>(<span class="summary-sig-arg">dom_obj</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_dom_disk_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_current_dom_resource_usage"></a><span class="summary-sig-name">get_current_dom_resource_usage</span>(<span class="summary-sig-arg">dom</span>,
+        <span class="summary-sig-arg">host_ip</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_current_dom_resource_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_actual_usage"></a><span class="summary-sig-name">get_actual_usage</span>(<span class="summary-sig-arg">dom_obj</span>,
+        <span class="summary-sig-arg">host_ip</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_actual_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_host_cpu_usage"></a><span class="summary-sig-name">get_host_cpu_usage</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_host_cpu_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_host_disk_usage"></a><span class="summary-sig-name">get_host_disk_usage</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_host_disk_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_host_mem_usage"></a><span class="summary-sig-name">get_host_mem_usage</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_host_mem_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_host_nw_usage"></a><span class="summary-sig-name">get_host_nw_usage</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_host_nw_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="get_host_resources_usage"></a><span class="summary-sig-name">get_host_resources_usage</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#get_host_resources_usage">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_host_rrd"></a><span class="summary-sig-name">update_host_rrd</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#update_host_rrd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_vm_rrd"></a><span class="summary-sig-name">update_vm_rrd</span>(<span class="summary-sig-arg">dom</span>,
+        <span class="summary-sig-arg">active_dom_ids</span>,
+        <span class="summary-sig-arg">host_ip</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#update_vm_rrd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="set_domain_memoryStatsperiod"></a><span class="summary-sig-name">set_domain_memoryStatsperiod</span>(<span class="summary-sig-arg">host_ip</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#set_domain_memoryStatsperiod">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="update_rrd"></a><span class="summary-sig-name">update_rrd</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#update_rrd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="fetch_info_graph"></a><span class="summary-sig-name">fetch_info_graph</span>(<span class="summary-sig-arg">vm_identity</span>,
+        <span class="summary-sig-arg">graph_period</span>,
+        <span class="summary-sig-arg">g_type</span>,
+        <span class="summary-sig-arg">vm_ram</span>,
+        <span class="summary-sig-arg">m_type</span>,
+        <span class="summary-sig-arg">host_cpu</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#fetch_info_graph">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="check_graph_period"></a><span class="summary-sig-name">check_graph_period</span>(<span class="summary-sig-arg">graph_period</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#check_graph_period">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="check_graph_type"></a><span class="summary-sig-name">check_graph_type</span>(<span class="summary-sig-arg">g_type</span>,
+        <span class="summary-sig-arg">vm_ram</span>,
+        <span class="summary-sig-arg">m_type</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.vm_utilization-pysrc.html#check_graph_type">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_10_MINS"></a><span class="summary-name">VM_UTIL_10_MINS</span> = <code title="1">1</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_24_HOURS"></a><span class="summary-name">VM_UTIL_24_HOURS</span> = <code title="2">2</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_ONE_WEEK"></a><span class="summary-name">VM_UTIL_ONE_WEEK</span> = <code title="3">3</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_ONE_MNTH"></a><span class="summary-name">VM_UTIL_ONE_MNTH</span> = <code title="4">4</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_THREE_MNTH"></a><span class="summary-name">VM_UTIL_THREE_MNTH</span> = <code title="5">5</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_ONE_YEAR"></a><span class="summary-name">VM_UTIL_ONE_YEAR</span> = <code title="6">6</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="HOURS"></a><span class="summary-name">HOURS</span> = <code title="15">15</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="MINS"></a><span class="summary-name">MINS</span> = <code title="16">16</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="VM_UTIL_20_DAYS"></a><span class="summary-name">VM_UTIL_20_DAYS</span> = <code title="20">20</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="STEP"></a><span class="summary-name">STEP</span> = <code title="300">300</code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a name="TIME_DIFF_MS"></a><span class="summary-name">TIME_DIFF_MS</span> = <code title="550">550</code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Thu Oct 15 20:40:02 2015
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

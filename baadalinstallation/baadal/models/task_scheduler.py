@@ -5,8 +5,8 @@ if 0:
     from gluon import db,request, cache
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd, config
-from vm_helper import install, shutdown, start, suspend, resume, destroy, delete, migrate, snapshot,\
+from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd
+from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot,\
     revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore,\
     save_as_template, delete_template
 from host_helper import host_status_sanity_check, collect_data_from_host
@@ -14,6 +14,7 @@ from vm_utilization import update_rrd
 from nat_mapper import clear_all_timedout_vnc_mappings
 from log_handler import logger, rrd_logger
 from host_helper import HOST_STATUS_UP
+from load_balancer import find_host_and_guest_list, loadbalance_vm
 
 from gluon import current
 current.cache = cache
@@ -311,10 +312,7 @@ def vm_utilization_rrd(host_ip,m_type=None):
         rrd_logger.debug(host_ip)
         
         if is_pingable(host_ip):
-	   if m_type is None: 
-	        update_rrd(host_ip)
-	   else:
-		update_rrd(host_ip,m_type)
+            update_rrd(host_ip,m_type)
  
         else:
             rrd_logger.error("UNABLE TO UPDATE RRDs for host : %s" % host_ip)
@@ -329,21 +327,17 @@ def vm_utilization_rrd(host_ip,m_type=None):
 
 def task_rrd():
     list_host=[]
-    controller_ip=controller_ip=os.popen("ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2").readlines()
+    controller_ip = os.popen("ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2").readlines()
     rrd_logger.info(controller_ip[0].strip("\n"))
     controller_ip=controller_ip[0].strip("\n")
-    nat_ip=os.popen("route -n | sed -n '3p' | awk '{print $2}'").readlines()
-    nat_ip=nat_ip[0].strip("\n")
+    nat_ip = os.popen("route -n | sed -n '3p' | awk '{print $2}'").readlines()
+    nat_ip = nat_ip[0].strip("\n")
     list_host.append(controller_ip)
     list_host.append(nat_ip)
     for ip in list_host:
-        if controller_ip==ip:
-	    m_type="controller"    
-        else:
-	    m_type="nat"  
-	vm_utilization_rrd(ip,m_type)
-
-
+        
+        m_type="controller" if controller_ip==ip else "nat"
+        vm_utilization_rrd(ip, m_type)
 
 
 ## Below function will check for the shutdown VM's and unused VM's and sends warning email to the user
@@ -380,7 +374,7 @@ def process_unusedvm():
 def process_loadbalancer():
     logger.info("ENTERING PROCESS LOADBALANCER VM ........")
     try:
-        (host_list,vm_list)=find_host_and_guest_list()
+        (host_list,vm_list) = find_host_and_guest_list()
         loadbalance_vm(host_list,vm_list) 
     except:
         log_exception()
@@ -392,10 +386,10 @@ def check_compile_folder(file_path):
     compile_cmd='gcc ' + str(file_path) + '/memhog.c -o  ' + str(file_path) +'/memhog'
     logger.debug(compile_cmd)
     if  "memhog" not in os.listdir(file_path):
-	logger.debug("Memhog compiled file does not exist...Compiling memgog file...")
+        logger.debug("Memhog compiled file does not exist...Compiling memgog file...")
         os.system(compile_cmd)
         logger.debug("Compiled memgog file...")
-	
+
 
 def overload_memory():
     logger.debug("Executing overload memory task")

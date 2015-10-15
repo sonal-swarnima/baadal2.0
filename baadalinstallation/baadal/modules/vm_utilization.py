@@ -571,10 +571,10 @@ def set_domain_memoryStatsperiod(host_ip):
     finally:
         rrd_logger.info("Ending setting memory stats periods for VM's %s" % host_ip)
         if hypervisor_conn:
-           hypervisor_conn.close()
+            hypervisor_conn.close()
 
 
-def update_rrd(host_ip,m_type=None):
+def update_rrd(host_ip, m_type=None):
     #UPDATE CONTROLLER AND NAT RRD
     if m_type is not None:
     
@@ -639,7 +639,7 @@ def update_rrd(host_ip,m_type=None):
 def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
     
     start_time = None
-    consolidation = 'MIN' 
+#     consolidation = 'MIN' 
     end_time = 'now'
     rrd_file = get_rrd_file(vm_identity)
     if graph_period == 'hour':
@@ -665,13 +665,13 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         data_info = rrd_ret[2] 
         tim_info=rrd_ret[0][0]
         
-	cpu_idx = fld_info.index('cpu')
+        cpu_idx = fld_info.index('cpu')
         mem_idx = fld_info.index('ram')
         dskr_idx = fld_info.index('dr')
         dskw_idx = fld_info.index('dw')
         nwr_idx = fld_info.index('tx')
         nww_idx = fld_info.index('rx')
-        mem_data=[]
+#         mem_data=[]
 
         timeinterval=1
         for data in data_info:
@@ -681,73 +681,72 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
             timeinterval+=1
             
             
-	    if g_type=="cpu":
+            if g_type=="cpu":
                 if data[cpu_idx] != None: 
-		    cpu_no=host_cpu.split(" ")
-		    info['y']=round((float(data[cpu_idx])*100)/(float(int(cpu_no[0])*5*60*1000000000)),3)   #dividing the rrd value by no of cores*5min(converted into nanoseconds)
-	        else:
-		    info['y']=float(0)
-	        
-		info['x']=time_info 
+                    cpu_no=host_cpu.split(" ")
+                    info['y']=round((float(data[cpu_idx])*100)/(float(int(cpu_no[0])*5*60*1000000000)),3)   #dividing the rrd value by no of cores*5min(converted into nanoseconds)
+                else:
+                    info['y']=float(0)
+
+                info['x']=time_info 
                 result3.append(info) 
                 
             if g_type=="ram":
                 if data[mem_idx] != None and  data[mem_idx]>0: 
-		    if (int(vm_ram)>1024) or (m_type=='host'):
-		        mem=round(float(data[mem_idx])/(1024*1024*1024),2)
-		    else:
-			mem=round(float(data[mem_idx])/(1024*1024),2)
+                    if (int(vm_ram)>1024) or (m_type=='host'):
+                        mem=round(float(data[mem_idx])/(1024*1024*1024),2)
+                    else:
+                        mem=round(float(data[mem_idx])/(1024*1024),2)
                     
                     info['y']=mem
-		else:
-		    
-		    info['y']=float(0)
-		info['x']=time_info
+                else:		    
+                    info['y']=float(0)
+                    
+                info['x']=time_info
                 result3.append(info) 
-	      
-	    if g_type=="disk":
-		
-		if data[dskr_idx] != None: 
-                    info1['y']=round(float(data[dskr_idx])/(1024*1024),2)
-	        else:
-		    info1['y']=float(0)
-		
-		if data[dskw_idx] != None: 
-                    info['y']=round(float(data[dskw_idx])/(1024*1024),2)
-	        else:
-		    info['y']=float(0)
 
-	        info['x']=time_info 
-		info1['x']=time_info 
-		
-                result1.append(info1) 
-                result2.append(info)
-	        
-	    if g_type=="nw":
-                if data[nwr_idx] != None: 
-                    info1['y']=round(float(data[nwr_idx])/(1024*1024),2)
-	        else:
-		    info1['y']=float(0)
-		if data[nww_idx] != None: 
-                    info['y']=round(float(data[nww_idx])/(1024*1024),2)
-	        else:
-		    info['y']=float(0)
-	        info['x']=time_info 
-		info1['x']=time_info 
-                result1.append(info1) 
-                result2.append(info)	
-		
+        if g_type=="disk":
+        
+            if data[dskr_idx] != None: 
+                info1['y']=round(float(data[dskr_idx])/(1024*1024),2)
+            else:
+                info1['y']=float(0)
+
+            if data[dskw_idx] != None: 
+                info['y']=round(float(data[dskw_idx])/(1024*1024),2)
+            else:
+                info['y']=float(0)
+
+            info['x']=time_info 
+            info1['x']=time_info 
+            
+            result1.append(info1) 
+            result2.append(info)
+
+        if g_type=="nw":
+            if data[nwr_idx] != None: 
+                info1['y']=round(float(data[nwr_idx])/(1024*1024),2)
+            else:
+                info1['y']=float(0)
+            if data[nww_idx] != None: 
+                info['y']=round(float(data[nww_idx])/(1024*1024),2)
+            else:
+                info['y']=float(0)
+                
+            info['x']=time_info 
+            info1['x']=time_info 
+            result1.append(info1) 
+            result2.append(info)	
+
 
     if g_type=='ram' or g_type=='cpu':
-	return result3
+        return result3
 
     if g_type=='nw' or g_type=='disk':
-	result.append(result1) 
+        result.append(result1) 
         result.append(result2)	
-	return result
+        return result
 
-   
-    
 
 def check_graph_period(graph_period):
     if graph_period == 'hour':	
@@ -767,20 +766,20 @@ def check_graph_type(g_type,vm_ram,m_type):
     
     title={}
     if g_type=='cpu':
-       title['y_title']='cpu(%)'
-       title['g_title']="CPU PERFORMANCE"
+        title['y_title']='cpu(%)'
+        title['g_title']="CPU PERFORMANCE"
     if g_type=='disk':
-       title['y_title']='disk(MB/s)'
-       title['g_title']="DISK PERFORMANCE"
+        title['y_title']='disk(MB/s)'
+        title['g_title']="DISK PERFORMANCE"
     if g_type=='nw':
-       title['y_title']='net(MB/s)'
-       title['g_title']="NETWORK PERFORMANCE"
+        title['y_title']='net(MB/s)'
+        title['g_title']="NETWORK PERFORMANCE"
     if g_type=="ram":
        
-       if (int(vm_ram)>1024) or (m_type=='host'):
-           title['y_title']="ram(GB)"
-       else:
-           title['y_title']="ram(MB)"
-       title['g_title']="MEMORY PERFORMANCE"
+        if (int(vm_ram)>1024) or (m_type=='host'):
+            title['y_title']="ram(GB)"
+        else:
+            title['y_title']="ram(MB)"
+        title['g_title']="MEMORY PERFORMANCE"
     
     return title

@@ -131,13 +131,6 @@ db.define_table('public_ip_pool',
 db.public_ip_pool.public_ip.requires = [IS_IPV4(error_message=IP_ERROR_MESSAGE), IS_NOT_IN_DB(db,'public_ip_pool.public_ip')]
 
 
-
-db.define_table('host_affinity',
-    Field('vm_id','integer'),
-    Field('vm_name', 'string', length = 100, notnull = True),
-    Field('current_host', 'string', length = 20),
-    Field('affinity_host', 'string', length = 40))
-
 db.define_table('private_ip_pool',
     Field('private_ip', 'string', length = 15, notnull = True, unique = True),
     Field('mac_addr', 'string', length = 20, unique = True),
@@ -278,32 +271,14 @@ db.define_table('user_vm_map',
     Field('vm_id', db.vm_data),
     primarykey = ['user_id', 'vm_id'])
 
-db.define_table('vm_data_event',
-    Field('vm_id', 'integer'),
-    Field('vm_name', 'string', length = 100, notnull = True, label='Name'),
-    Field('vm_identity', 'string', length = 100, notnull = True),
-    Field('host_id', db.host),
-    Field('RAM', 'integer'),
-    Field('HDD', 'integer'),
-    Field('extra_HDD', 'integer'),
-    Field('vCPU', 'integer'),
-    Field('template_id', db.template),
-    Field('requester_id',db.user),
-    Field('owner_id', db.user),
-    Field('private_ip', 'string',length = 15),
-    Field('public_ip', 'string',length = 15),
-    Field('vnc_port', 'integer'),
-    Field('datastore_id', db.datastore),
-    Field('purpose', 'string', length = 512),
-    Field('expiry_date', 'date'),
-    Field('start_time', 'datetime', default = get_datetime()),
-    Field('end_time', 'datetime'),
-    Field('parent_id', 'integer'),
-    Field('status', 'integer'))
+db.define_table('host_affinity',
+    Field('vm_id', db.vm_data),
+    Field('affinity_host', db.host),
+    primarykey = ['vm_id', 'affinity_host'])
 
 db.define_table('attached_disks',
     Field('vm_id', db.vm_data, notnull = True),
-    Field('datastore_id', db.datastore,notnull = True),
+    Field('datastore_id', db.datastore, notnull = True),
     Field('attached_disk_name', 'string', length=100, notnull = True),
     Field('capacity', 'string',length = 45),
     primarykey = ['datastore_id', 'vm_id', 'attached_disk_name'])

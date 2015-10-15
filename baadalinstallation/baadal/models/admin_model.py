@@ -7,9 +7,12 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import IS_MAC_ADDRESS, get_ips_in_range, generate_random_mac, is_valid_ipv4
+from helper import IS_MAC_ADDRESS, get_ips_in_range, generate_random_mac
 from dhcp_helper import create_dhcp_entry, remove_dhcp_entry, create_dhcp_bulk_entry
-from host_helper import *
+from host_helper import is_host_available, get_host_mac_address, get_host_cpu,\
+    get_host_ram, get_host_hdd, get_host_type, HOST_STATUS_UP, HOST_STATUS_DOWN,\
+    host_power_up, HOST_STATUS_MAINTENANCE, migrate_all_vms_from_host,\
+    host_power_down
 from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
     VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS, VM_UTIL_THREE_MNTH
 from log_handler import logger
@@ -967,21 +970,19 @@ def get_mail_user_form():
 
 
 
-def add_data_into_affinity(params,vm_details):
-    current_host = vm_details['current_host']
-    current_host = current_host.split("(")
-    current_host = current_host[0]
+def add_data_into_affinity(params, vm_id):
+
     if isinstance(params['affinity_host'], str):
-       host_details = params['affinity_host'].split()
+        host_details = params['affinity_host'].split()
     else :
-       host_details = params['affinity_host'] 
+        host_details = params['affinity_host'] 
     if host_details != None:
-       for item in host_details:
-          db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=1)
-          if db.host_affinity(affinity_host=item):
-             db(db.host_affinity.affinity_host == item).update(affinity_host=item)
-          else :
-             db.host_affinity.insert(vm_id=vm_details['vm_id'],vm_name=vm_details['vm_name'], current_host=current_host, affinity_host=item)
+        for item in host_details:
+            db(db.vm_data.id == vm_id).update(affinity_flag=1)
+            if db.host_affinity(affinity_host=item):
+                db(db.host_affinity.affinity_host == item).update(affinity_host=item)
+            else :
+                db.host_affinity.insert(vm_id=vm_id, affinity_host=item)
     return host_details
 
 
@@ -990,9 +991,9 @@ def get_host_details(vm_name):
     host_details = {}
     logger.debug("host data is : " + str(host_data))
     if host_data != None :
-       host_details['current_host'] = "%s" %(host_data.current_host)   
-       host_details['available_hosts'] = dict((host.id, "%s"%(host.affinity_host))
-                                         for host in db((db.host_affinity.vm_name == host_data.vm_name)).select())
+        host_details['current_host'] = "%s" %(host_data.current_host)   
+        host_details['available_hosts'] = dict((host.id, "%s"%(host.affinity_host))
+                                          for host in db((db.host_affinity.vm_name == host_data.vm_name)).select())
     return host_details
    
 
@@ -1000,7 +1001,7 @@ def reset_host_affinity(vm_id,key):
     host_data = db(db.host_affinity.id == key).select().first()
     vm_details = get_migrate_vm_details(vm_id)
     if vm_details['current_host'] in host_data['affinity_host'] : 
-       return "we can not delete this host affinity because currently vm is on this host !!"
+        return "we can not delete this host affinity because currently vm is on this host !!"
     else :
-       db(db.host_affinity.id==key).delete()
-       db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=0)
+        db(db.host_affinity.id==key).delete()
+        db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=0)

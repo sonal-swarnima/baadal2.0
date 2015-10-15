@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
-# Added to enable code completion in IDE's.
-if 0:
-    from gluon import *  # @UnusedWildImport
-###################################################################################
 
-import sys, math, shutil, libvirt, os, time
-import xml.etree.ElementTree as etree
-from libvirt import *  # @UnusedWildImport
-from helper import *  # @UnusedWildImport
+from gluon import current
+from helper import get_constant, execute_remote_cmd, config, get_datetime, \
+    log_exception, is_pingable
+from libvirt import * # @UnusedWildImport
+from log_handler import logger
 from nat_mapper import create_mapping, remove_mapping
+import sys, math, shutil, libvirt, os, time, random
+import xml.etree.ElementTree as etree
+
 
 # Chooses datastore from a list of available datastores
 def choose_datastore():

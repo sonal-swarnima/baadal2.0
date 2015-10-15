@@ -1,0 +1,38 @@
+<html><head><title>Epydoc Redirect Page</title>
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="expires" content="0" />
+<meta http-equiv="pragma" content="no-cache" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+<!--
+var pages = ["applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-c", "applications.baadal.modules.maintenance.ThreadPool-c", "applications.baadal.modules.helper.IS_MAC_ADDRESS-c", "applications.baadal.modules.maintenance.Worker-c", "applications.baadal.models.garbage_collector-m", "applications.baadal.modules.vm_utilization-m", "applications.baadal.models.orgadmin_model-m", "applications.baadal.models.task_scheduler-m", "applications.baadal.modules.load_balancer-m", "applications.baadal.models.faculty_model-m", "applications.baadal.models.common_model-m", "applications.baadal.models.mail_handler-m", "applications.baadal.models.sanity_model-m", "applications.baadal.modules.dhcp_helper-m", "applications.baadal.modules.host_helper-m", "applications.baadal.modules.log_handler-m", "applications.baadal.modules.maintenance-m", "applications.baadal.models.admin_model-m", "applications.baadal.modules.nat_mapper-m", "applications.baadal.models.user_model-m", "applications.baadal.modules.auth_user-m", "applications.baadal.modules.vm_helper-m", "applications.baadal.modules.helper-m"];
+var dottedName = get_anchor();
+if (dottedName) {
+    var target = redirect_url(dottedName);
+    if (target) window.location.replace(target);
+}
+// -->
+</script>
+
+<h3>Epydoc Auto-redirect page</h3>
+
+<p>When javascript is enabled, this page will redirect URLs of
+the form <tt>redirect.html#<i>dotted.name</i></tt> to the
+documentation for the object with the given fully-qualified
+dotted name.</p>
+<p><a id="message"> &nbsp; </a></p>
+
+<script type="text/javascript">
+<!--
+if (dottedName) {
+    var msg = document.getElementById("message");
+    msg.innerHTML = "No documentation found for <tt>"+
+                    dottedName+"</tt>";
+}
+// -->
+</script>
+
+</body>
+</html>

@@ -2,18 +2,14 @@
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
-    from gluon import db,request, cache
+    from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd,config
-from log_handler import logger, rrd_logger
+from datetime import timedelta
+from helper import get_datetime, log_exception, config
+from log_handler import logger
 from vm_utilization import compare_rrd_data_with_threshold
-from vm_helper import getVirshDomain
 
-from gluon import current
-current.cache = cache
-
-import os
 
 def process_sendwarning_shutdownvm():
 
@@ -42,7 +38,7 @@ def process_sendwarning_shutdownvm():
                     if (send_email == 1):
                         vm_delete_time=send_email_vm_warning(VM_TASK_WARNING_DELETE,vm_users,vm_name,vm_shutdown_time)
                         logger.debug("Mail sent for vm_id:"+str(vm_details.vm_id)+"|vm_name:"+str(vm_name)+"|delete time:"+ str(vm_delete_time))
-                        db(db.vm_data.id == vm_details.vm_id).update(locked=T,delete_warning_date=vm_delete_time) 
+                        db(db.vm_data.id == vm_details.vm_id).update(locked=True, delete_warning_date=vm_delete_time) 
                         send_email=0
                     else:
                         logger.debug("Email has already been sent to VM_ID:"+str(vm_details.vm_id))
@@ -77,7 +73,7 @@ def process_sendwarning_unusedvm():
 
         vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED) & (db.vm_data.shutdown_warning_date == None) & (db.vm_data.start_time < (get_datetime() - timedelta(days=20)))).select()
         '''check vm should have been created 20days back'''
-        vmlist = []
+
         for vm in vms:
             logger.info("comparing threshold for the vm "+ str(vm.vm_identity))
             send_email=0
@@ -152,7 +148,7 @@ def process_purge_shutdownvm():
 
     try:
         # Fetch all the VM's which are locked and whose delete warning date is not null. 
-        for vm_data in db(db.vm_data.locked == T and db.vm_data.delete_warning_date!=None).select(db.vm_data.ALL):
+        for vm_data in db(db.vm_data.locked == True and db.vm_data.delete_warning_date!=None).select(db.vm_data.ALL):
             daysDiff=0
             daysDiff=(get_datetime()-vm_data.delete_warning_date).days
             if(daysDiff >=0 ):

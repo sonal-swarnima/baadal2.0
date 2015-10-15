@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>applications.baadal.models.task_scheduler</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Package&nbsp;applications ::
+        Package&nbsp;baadal ::
+        Package&nbsp;models ::
+        Module&nbsp;task_scheduler
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="applications.baadal.models.task_scheduler-module.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== MODULE DESCRIPTION ==================== -->
+<h1 class="epydoc">Module task_scheduler</h1><p class="nomargin-top"><span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html">source&nbsp;code</a></span></p>
+<!-- ==================== FUNCTIONS ==================== -->
+<a name="section-Functions"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Functions</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Functions"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="send_task_complete_mail"></a><span class="summary-sig-name">send_task_complete_mail</span>(<span class="summary-sig-arg">task_event</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#send_task_complete_mail">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="log_vm_event"></a><span class="summary-sig-name">log_vm_event</span>(<span class="summary-sig-arg">old_vm_data</span>,
+        <span class="summary-sig-arg">task_queue_data</span>)</span><br />
+      Logs action data into vm_event_log table</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#log_vm_event">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="process_task_queue"></a><span class="summary-sig-name">process_task_queue</span>(<span class="summary-sig-arg">task_event_id</span>)</span><br />
+      Invoked when scheduler runs task of type 'vm_task' For every task, 
+      function calls the corresponding handler and updates the database on 
+      the basis of the response</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_task_queue">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.models.task_scheduler-module.html#process_clone_task" class="summary-sig-name">process_clone_task</a>(<span class="summary-sig-arg">task_event_id</span>,
+        <span class="summary-sig-arg">vm_id</span>)</span><br />
+      Invoked when scheduler runs task of type 'clone_task' When multiple 
+      clones of a VM is requested, multiple tasks are created in scheduler,
+      so that they can run concurrently.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_clone_task">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="process_snapshot_vm"></a><span class="summary-sig-name">process_snapshot_vm</span>(<span class="summary-sig-arg">snapshot_type</span>,
+        <span class="summary-sig-arg">vm_id</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">frequency</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Handles snapshot task Invoked when scheduler runs task of type 
+      'snapshot_vm'</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_snapshot_vm">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="vm_sanity_check"></a><span class="summary-sig-name">vm_sanity_check</span>()</span><br />
+      Handles periodic VM sanity check Invoked when scheduler runs task of 
+      type 'vm_sanity'</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#vm_sanity_check">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="host_sanity_check"></a><span class="summary-sig-name">host_sanity_check</span>()</span><br />
+      Handles periodic Host sanity check Invoked when scheduler runs task 
+      of type 'host_sanity'</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#host_sanity_check">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="check_vnc_access"></a><span class="summary-sig-name">check_vnc_access</span>()</span><br />
+      Clears all timed out VNC Mappings Invoked when scheduler runs task of
+      type 'vnc_access'</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#check_vnc_access">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="vm_utilization_rrd"></a><span class="summary-sig-name">vm_utilization_rrd</span>(<span class="summary-sig-arg">host_ip</span>,
+        <span class="summary-sig-arg">m_type</span>=<span class="summary-sig-default">None</span>)</span><br />
+      Handles periodic collection of VM and Host utilization data and 
+      updation of respective RRD file.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#vm_utilization_rrd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="task_rrd"></a><span class="summary-sig-name">task_rrd</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#task_rrd">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="process_vmdaily_checks"></a><span class="summary-sig-name">process_vmdaily_checks</span>()</span><br />
+      Function will check for the shutdown VM's and sends email to the user</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_vmdaily_checks">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="process_unusedvm"></a><span class="summary-sig-name">process_unusedvm</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_unusedvm">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="process_loadbalancer"></a><span class="summary-sig-name">process_loadbalancer</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_loadbalancer">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="check_compile_folder"></a><span class="summary-sig-name">check_compile_folder</span>(<span class="summary-sig-arg">file_path</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#check_compile_folder">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="overload_memory"></a><span class="summary-sig-name">overload_memory</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#overload_memory">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="host_networking"></a><span class="summary-sig-name">host_networking</span>()</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#host_networking">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+</table>
+<!-- ==================== VARIABLES ==================== -->
+<a name="section-Variables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Variables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="applications.baadal.models.task_scheduler-module.html#task" class="summary-name">task</a> = <code title="{VM_TASK_CREATE: install, VM_TASK_START: start, VM_TASK_STOP: destroy,\
+ VM_TASK_SUSPEND: suspend, VM_TASK_RESUME: resume, VM_TASK_DESTROY: de\
+stroy, VM_TASK_DELETE: delete, VM_TASK_MIGRATE_HOST: migrate, VM_TASK_\
+MIGRATE_DS: migrate_datastore, VM_TASK_SNAPSHOT: snapshot, VM_TASK_REV\
+ERT_TO_SNAPSHOT: revert, VM_TASK_DELETE_SNAPSHOT: delete_snapshot, VM_\
+TASK_EDIT_CONFIG: edit_vm_config, VM_TASK_CLONE: clone, VM_TASK_ATTACH\
+_DISK: attach_extra_disk, VM_TASK_SAVE_AS_TEMPLATE: save_as_template, \
+VM_TASK_DELETE_TEMPLATE: delete_template}">{VM_TASK_CREATE: install, VM_TASK_START: start, VM_TASK<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="applications.baadal.models.task_scheduler-module.html#vm_scheduler" class="summary-name">vm_scheduler</a> = <code title="Scheduler(db, tasks= dict(vm_task= process_task_queue, clone_task= pro\
+cess_clone_task, snapshot_vm= process_snapshot_vm, vm_sanity= vm_sanit\
+y_check, vnc_access= check_vnc_access, host_sanity= host_sanity_check,\
+ vm_util_rrd= vm_utilization_rrd, vm_daily_checks= process_vmdaily_che\
+cks, vm_garbage_collector= process_unusedvm, memory_overload= overload\
+_memory, networking_host= host_networking, rrd_task= task_rrd, vm_load\
+balance= process_loadbalancer), group_names= ['vm_task', 'vm_sanity', \
+'host_task', 'vm_rrd', 'snapshot_task', 'host_network'])">Scheduler(db, tasks= dict(vm_task= process_task<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="applications.baadal.models.task_scheduler-module.html#midnight_time" class="summary-name">midnight_time</a> = <code title="request.now.replace(hour= 23, minute= 59, second= 59)">request.now.replace(hour= 23, minute= 59, seco<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+        <a href="applications.baadal.models.task_scheduler-module.html#active_host_list" class="summary-name">active_host_list</a> = <code title="db((db.host.status== HOST_STATUS_UP) &amp;(db.host.host_ip== db.private_ip\
+_pool.id)).select(db.private_ip_pool.private_ip)">db((db.host.status== HOST_STATUS_UP) &amp;(db.h<code class="variable-ellipsis">...</code></code>
+    </td>
+  </tr>
+</table>
+<!-- ==================== FUNCTION DETAILS ==================== -->
+<a name="section-FunctionDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Function Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-FunctionDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="process_clone_task"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">process_clone_task</span>(<span class="sig-arg">task_event_id</span>,
+        <span class="sig-arg">vm_id</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.models.task_scheduler-pysrc.html#process_clone_task">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Invoked when scheduler runs task of type 'clone_task' When multiple 
+  clones of a VM is requested, multiple tasks are created in scheduler, so 
+  that they can run concurrently. This function ensures that the status of 
+  clone request is updated on the basis of all corresponding asynchronous 
+  tasks</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== VARIABLES DETAILS ==================== -->
+<a name="section-VariablesDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Variables Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-VariablesDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="task"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">task</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+{VM_TASK_CREATE: install, VM_TASK_START: start, VM_TASK_STOP: destroy,<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ VM_TASK_SUSPEND: suspend, VM_TASK_RESUME: resume, VM_TASK_DESTROY: de<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+stroy, VM_TASK_DELETE: delete, VM_TASK_MIGRATE_HOST: migrate, VM_TASK_<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+MIGRATE_DS: migrate_datastore, VM_TASK_SNAPSHOT: snapshot, VM_TASK_REV<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ERT_TO_SNAPSHOT: revert, VM_TASK_DELETE_SNAPSHOT: delete_snapshot, VM_<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+TASK_EDIT_CONFIG: edit_vm_config, VM_TASK_CLONE: clone, VM_TASK_ATTACH<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+_DISK: attach_extra_disk, VM_TASK_SAVE_AS_TEMPLATE: save_as_template, <span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+VM_TASK_DELETE_TEMPLATE: delete_template}
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="vm_scheduler"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">vm_scheduler</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+Scheduler(db, tasks= dict(vm_task= process_task_queue, clone_task= pro<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+cess_clone_task, snapshot_vm= process_snapshot_vm, vm_sanity= vm_sanit<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+y_check, vnc_access= check_vnc_access, host_sanity= host_sanity_check,<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+ vm_util_rrd= vm_utilization_rrd, vm_daily_checks= process_vmdaily_che<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+cks, vm_garbage_collector= process_unusedvm, memory_overload= overload<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+_memory, networking_host= host_networking, rrd_task= task_rrd, vm_load<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+balance= process_loadbalancer), group_names= ['vm_task', 'vm_sanity', <span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+'host_task', 'vm_rrd', 'snapshot_task', 'host_network'])
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="midnight_time"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">midnight_time</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+request.now.replace(hour= 23, minute= 59, second= 59)
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<a name="active_host_list"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <h3 class="epydoc">active_host_list</h3>
+  
+  <dl class="fields">
+  </dl>
+  <dl class="fields">
+    <dt>Value:</dt>
+      <dd><table><tr><td><pre class="variable">
+db((db.host.status== HOST_STATUS_UP) &amp;(db.host.host_ip== db.private_ip<span class="variable-linewrap"><img src="crarr.png" alt="\" /></span>
+_pool.id)).select(db.private_ip_pool.private_ip)
+</pre></td></tr></table>
+</dd>
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Thu Oct 15 20:40:02 2015
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>

@@ -1,0 +1,689 @@
+<?xml version="1.0" encoding="ascii"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler</title>
+  <link rel="stylesheet" href="epydoc.css" type="text/css" />
+  <script type="text/javascript" src="epydoc.js"></script>
+</head>
+
+<body bgcolor="white" text="black" link="blue" vlink="#204080"
+      alink="#204080">
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table width="100%" cellpadding="0" cellspacing="0">
+  <tr valign="top">
+    <td width="100%">
+      <span class="breadcrumbs">
+        Package&nbsp;applications ::
+        Package&nbsp;baadal ::
+        Package&nbsp;modules ::
+        <a href="applications.baadal.modules.log_handler-module.html">Module&nbsp;log_handler</a> ::
+        Class&nbsp;ConcurrentRotatingFileHandler
+      </span>
+    </td>
+    <td>
+      <table cellpadding="0" cellspacing="0">
+        <!-- hide/show private -->
+        <tr><td align="right"><span class="options">[<a href="javascript:void(0);" class="privatelink"
+    onclick="toggle_private();">hide&nbsp;private</a>]</span></td></tr>
+        <tr><td align="right"><span class="options"
+            >[<a href="frames.html" target="_top">frames</a
+            >]&nbsp;|&nbsp;<a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html"
+            target="_top">no&nbsp;frames</a>]</span></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS DESCRIPTION ==================== -->
+<h1 class="epydoc">Class ConcurrentRotatingFileHandler</h1><p class="nomargin-top"><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler">source&nbsp;code</a></span></p>
+<pre class="base-tree">
+          object --+                    
+                   |                    
+    logging.Filterer --+                
+                       |                
+         logging.Handler --+            
+                           |            
+       logging.StreamHandler --+        
+                               |        
+             logging.FileHandler --+    
+                                   |    
+logging.handlers.BaseRotatingHandler --+
+                                       |
+                                      <strong class="uidshort">ConcurrentRotatingFileHandler</strong>
+</pre>
+
+<hr />
+<p>Handler for logging to a set of files, which switches from one file to
+  the next when the current file reaches a certain size. Multiple processes
+  can write to the log file concurrently, but this may mean that the file 
+  will exceed the given size.</p>
+
+<!-- ==================== INSTANCE METHODS ==================== -->
+<a name="section-InstanceMethods"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Instance Methods</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-InstanceMethods"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#__init__" class="summary-sig-name">__init__</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">filename</span>,
+        <span class="summary-sig-arg">mode</span>=<span class="summary-sig-default">'a'</span>,
+        <span class="summary-sig-arg">maxBytes</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">backupCount</span>=<span class="summary-sig-default">0</span>,
+        <span class="summary-sig-arg">encoding</span>=<span class="summary-sig-default">None</span>,
+        <span class="summary-sig-arg">debug</span>=<span class="summary-sig-default">True</span>)</span><br />
+      Open the specified file and use it as the stream for logging.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.__init__">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_openFile"></a><span class="summary-sig-name">_openFile</span>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">mode</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler._openFile">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#acquire" class="summary-sig-name">acquire</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Acquire thread and file locks.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.acquire">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#release" class="summary-sig-name">release</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Release file and thread locks.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.release">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#close" class="summary-sig-name">close</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      Closes the stream.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.close">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#flush" class="summary-sig-name">flush</a>(<span class="summary-sig-arg">self</span>)</span><br />
+      flush():  Do nothing.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.flush">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#_degrade" class="summary-sig-name" onclick="show_private();">_degrade</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrade</span>,
+        <span class="summary-sig-arg">msg</span>,
+        <span class="summary-sig-arg">*args</span>)</span><br />
+      Set degrade mode or not.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler._degrade">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#_degrade_debug" class="summary-sig-name" onclick="show_private();">_degrade_debug</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">degrade</span>,
+        <span class="summary-sig-arg">msg</span>,
+        <span class="summary-sig-arg">*args</span>)</span><br />
+      A more colorful version of _degade().</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler._degrade_debug">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="doRollover"></a><span class="summary-sig-name">doRollover</span>(<span class="summary-sig-arg">self</span>)</span><br />
+      Do a rollover, as described in __init__().</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.doRollover">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr>
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a href="applications.baadal.modules.log_handler.ConcurrentRotatingFileHandler-class.html#shouldRollover" class="summary-sig-name">shouldRollover</a>(<span class="summary-sig-arg">self</span>,
+        <span class="summary-sig-arg">record</span>)</span><br />
+      Determine if rollover should occur.</td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.shouldRollover">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+<tr class="private">
+    <td width="15%" align="right" valign="top" class="summary">
+      <span class="summary-type">&nbsp;</span>
+    </td><td class="summary">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td><span class="summary-sig"><a name="_shouldRollover"></a><span class="summary-sig-name">_shouldRollover</span>(<span class="summary-sig-arg">self</span>)</span></td>
+          <td align="right" valign="top">
+            <span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler._shouldRollover">source&nbsp;code</a></span>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>logging.handlers.BaseRotatingHandler</code></b>:
+      <code>emit</code>
+      </p>
+    <div class="private">    <p class="indent-wrapped-lines"><b>Inherited from <code>logging.FileHandler</code></b> (private):
+      <code>_open</code>
+      </p></div>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>logging.Handler</code></b>:
+      <code>createLock</code>,
+      <code>format</code>,
+      <code>get_name</code>,
+      <code>handle</code>,
+      <code>handleError</code>,
+      <code>setFormatter</code>,
+      <code>setLevel</code>,
+      <code>set_name</code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>logging.Filterer</code></b>:
+      <code>addFilter</code>,
+      <code>filter</code>,
+      <code>removeFilter</code>
+      </p>
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__delattr__</code>,
+      <code>__format__</code>,
+      <code>__getattribute__</code>,
+      <code>__hash__</code>,
+      <code>__new__</code>,
+      <code>__reduce__</code>,
+      <code>__reduce_ex__</code>,
+      <code>__repr__</code>,
+      <code>__setattr__</code>,
+      <code>__sizeof__</code>,
+      <code>__str__</code>,
+      <code>__subclasshook__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== CLASS VARIABLES ==================== -->
+<a name="section-ClassVariables"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Class Variables</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-ClassVariables"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>logging.Handler</code></b>:
+      <code>name</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== PROPERTIES ==================== -->
+<a name="section-Properties"></a>
+<table class="summary" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Properties</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-Properties"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  <tr>
+    <td colspan="2" class="summary">
+    <p class="indent-wrapped-lines"><b>Inherited from <code>object</code></b>:
+      <code>__class__</code>
+      </p>
+    </td>
+  </tr>
+</table>
+<!-- ==================== METHOD DETAILS ==================== -->
+<a name="section-MethodDetails"></a>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr bgcolor="#70b0f0" class="table-header">
+  <td colspan="2" class="table-header">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr valign="top">
+        <td align="left"><span class="table-header">Method Details</span></td>
+        <td align="right" valign="top"
+         ><span class="options">[<a href="#section-MethodDetails"
+         class="privatelink" onclick="toggle_private();"
+         >hide private</a>]</span></td>
+      </tr>
+    </table>
+  </td>
+</tr>
+</table>
+<a name="__init__"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">__init__</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">filename</span>,
+        <span class="sig-arg">mode</span>=<span class="sig-default">'a'</span>,
+        <span class="sig-arg">maxBytes</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">backupCount</span>=<span class="sig-default">0</span>,
+        <span class="sig-arg">encoding</span>=<span class="sig-default">None</span>,
+        <span class="sig-arg">debug</span>=<span class="sig-default">True</span>)</span>
+    <br /><em class="fname">(Constructor)</em>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.__init__">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Open the specified file and use it as the stream for logging.</p>
+  <p>By default, the file grows indefinitely. You can specify particular 
+  values of maxBytes and backupCount to allow the file to rollover at a 
+  predetermined size.</p>
+  <p>Rollover occurs whenever the current log file is nearly maxBytes in 
+  length. If backupCount is &gt;= 1, the system will successively create 
+  new files with the same pathname as the base file, but with extensions 
+  &quot;.1&quot;, &quot;.2&quot; etc. appended to it. For example, with a 
+  backupCount of 5 and a base file name of &quot;app.log&quot;, you would 
+  get &quot;app.log&quot;, &quot;app.log.1&quot;, &quot;app.log.2&quot;, 
+  ... through to &quot;app.log.5&quot;. The file being written to is always
+  &quot;app.log&quot; - when it gets filled up, it is closed and renamed to
+  &quot;app.log.1&quot;, and if files &quot;app.log.1&quot;, 
+  &quot;app.log.2&quot; etc. exist, then they are renamed to 
+  &quot;app.log.2&quot;, &quot;app.log.3&quot; etc. respectively.</p>
+  <p>If maxBytes is zero, rollover never occurs.</p>
+  <p>On Windows, it is not possible to rename a file that is currently 
+  opened by another process.  This means that it is not possible to rotate 
+  the log files if multiple processes is using the same log file.  In this 
+  case, the current log file will continue to grow until the rotation can 
+  be completed successfully.  In order for rotation to be possible, all of 
+  the other processes need to close the file first.  A mechanism, called 
+  &quot;degraded&quot; mode, has been created for this scenario.  In 
+  degraded mode, the log file is closed after each log message is written.
+  So once all processes have entered degraded mode, the next rotate log 
+  attempt should be successful and then normal logging can be resumed.</p>
+  <p>This log handler assumes that all concurrent processes logging to a 
+  single file will are using only this class, and that the exact same 
+  parameters are provided to each instance of this class.  If, for example,
+  two different processes are using this class, but with different values 
+  for 'maxBytes' or 'backupCount', then odd behavior is expected. The same 
+  is true if this class is used by one application, but the 
+  RotatingFileHandler is used by another.</p>
+  <p>NOTE:  You should always provide 'filename' as an absolute path, since
+  this class will need to re-open the file during rotation. If your 
+  application call os.chdir() then subsequent log files could be created in
+  the wrong directory.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        object.__init__
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="acquire"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">acquire</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.acquire">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Acquire thread and file locks. Also re-opening log file when running 
+  in 'degraded' mode.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        logging.Handler.acquire
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="release"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">release</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.release">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Release file and thread locks. Flush stream and take care of closing 
+  stream in 'degraded' mode.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        logging.Handler.release
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="close"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">close</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.close">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Closes the stream.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        logging.Handler.close
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="flush"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">flush</span>(<span class="sig-arg">self</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.flush">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>flush():  Do nothing.</p>
+  <p>Since a flush is issued in release(), we don't do it here. To do a 
+  flush here, it would be necessary to re-lock everything, and it is just 
+  easier and cleaner to do it all in release(), rather than requiring two 
+  lock ops per handle() call.</p>
+  <p>Doing a flush() here would also introduces a window of opportunity for
+  another process to write to the log file in between calling 
+  stream.write() and stream.flush(), which seems like a bad thing.</p>
+  <dl class="fields">
+    <dt>Overrides:
+        logging.Handler.flush
+    </dt>
+  </dl>
+</td></tr></table>
+</div>
+<a name="_degrade"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_degrade</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degrade</span>,
+        <span class="sig-arg">msg</span>,
+        <span class="sig-arg">*args</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler._degrade">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Set degrade mode or not.  Ignore msg.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="_degrade_debug"></a>
+<div class="private">
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">_degrade_debug</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">degrade</span>,
+        <span class="sig-arg">msg</span>,
+        <span class="sig-arg">*args</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler._degrade_debug">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>A more colorful version of _degade(). (This is enabled by passing 
+  &quot;debug=True&quot; at initialization).</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<a name="shouldRollover"></a>
+<div>
+<table class="details" border="1" cellpadding="3"
+       cellspacing="0" width="100%" bgcolor="white">
+<tr><td>
+  <table width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr valign="top"><td>
+  <h3 class="epydoc"><span class="sig"><span class="sig-name">shouldRollover</span>(<span class="sig-arg">self</span>,
+        <span class="sig-arg">record</span>)</span>
+  </h3>
+  </td><td align="right" valign="top"
+    ><span class="codelink"><a href="applications.baadal.modules.log_handler-pysrc.html#ConcurrentRotatingFileHandler.shouldRollover">source&nbsp;code</a></span>&nbsp;
+    </td>
+  </tr></table>
+  
+  <p>Determine if rollover should occur.</p>
+  <p>For those that are keeping track. This differs from the standard 
+  library's RotatingLogHandler class. Because there is no promise to keep 
+  the file size under maxBytes we ignore the length of the current 
+  record.</p>
+  <dl class="fields">
+  </dl>
+</td></tr></table>
+</div>
+<br />
+<!-- ==================== NAVIGATION BAR ==================== -->
+<table class="navbar" border="0" width="100%" cellpadding="0"
+       bgcolor="#a0c0ff" cellspacing="0">
+  <tr valign="middle">
+
+  <!-- Tree link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="module-tree.html">Trees</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Index link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="identifier-index.html">Indices</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Help link -->
+      <th>&nbsp;&nbsp;&nbsp;<a
+        href="help.html">Help</a>&nbsp;&nbsp;&nbsp;</th>
+
+  <!-- Project homepage -->
+      <th class="navbar" align="right" width="100%">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <tr><th class="navbar" align="center"
+            >baadal</th>
+          </tr></table></th>
+  </tr>
+</table>
+<table border="0" cellpadding="0" cellspacing="0" width="100%%">
+  <tr>
+    <td align="left" class="footer">
+    Generated by Epydoc 3.0.1 on Thu Oct 15 20:40:02 2015
+    </td>
+    <td align="right" class="footer">
+      <a target="mainFrame" href="http://epydoc.sourceforge.net"
+        >http://epydoc.sourceforge.net</a>
+    </td>
+  </tr>
+</table>
+
+<script type="text/javascript">
+  <!--
+  // Private objects are initially displayed (because if
+  // javascript is turned off then we want them to be
+  // visible); but by default, we want to hide them.  So hide
+  // them unless we have a cookie that says to show them.
+  checkCookie();
+  // -->
+</script>
+</body>
+</html>
