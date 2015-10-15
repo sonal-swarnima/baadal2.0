@@ -39,20 +39,6 @@ def contact():
     return dict()
 
 def team():
-    query = ((db.private_ip_pool.is_active == True))
-    ip_list = db(query).select()
-    dhcp_info_list = []
-    for ips in ip_list:
-        if ips.vlan != HOST_VLAN_ID:
-            dhcp_info_list.append((None, ips.mac_addr, ips.private_ip))
-        else:
-            dhcp_info_list.append(('host', ips.mac_addr, ips.private_ip))
-        
-    for dhcp_info in dhcp_info_list: 
-        host_name = ('host_' + dhcp_info[2].replace(".", '_')) if dhcp_info[0] != None else ('IP_' + dhcp_info[2].replace(".", '_'))
-        dhcp_cmd = 'echo "host %s {\n\thardware ethernet %s;\n\tfixed-address %s;\n}\n" > /home/www-data/1_%s.conf'%(host_name, dhcp_info[1], dhcp_info[2], host_name)
-        logger.debug(dhcp_cmd);
-        execute_remote_cmd('localhost', 'root', dhcp_cmd)    
     return dict()
 
 def faq():
