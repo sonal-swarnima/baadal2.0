@@ -623,6 +623,18 @@ def get_migrate_vm_details(vm_id):
 
     return vm_details
 
+
+def get_vm_details(vm_id):
+    vm_data = db.vm_data[vm_id]
+    vm_details = {}
+    vm_details['vm_id'] = vm_id
+    vm_details['vm_name'] = vm_data.vm_identity
+    vm_details['current_host'] = "%s (%s)" %(vm_data.host_id.host_name, vm_data.host_id.host_ip.private_ip)
+    vm_details['available_hosts'] = dict((host.id, "%s (%s)"%(host.host_name, host.host_ip.private_ip))
+                                         for host in db(db.host.status == 1).select())
+    logger.debug("vm_details is : " + str(vm_details))
+    return vm_details
+
 # Check if vm is running
 def is_vm_running(vmid):
     vm_status = db(db.vm_data.id == vmid).select().first()['status']
@@ -999,12 +1011,6 @@ def get_host_details(vm_id):
 
 def reset_host_affinity(vm_id,key):  
     host_data = db(db.host_affinity.affinity_host == key).select().first()
-    vm_details = get_vm_details(vm_id)
-    affinity_host = host_data['affinity_host']
-    host = db(db.host.id == affinity_host).select().first()
-    if host.host_name in vm_details['current_host']: 
-        session.flash = "we can not delete this host affinity because currently vm is on this host !!"
-    else :
-        db(db.host_affinity.affinity_host==key).delete()
-        db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=0)
-        session.flash = 'host affinity removed.'
+    vm_details = get_vm_details(vm_id) 
+    db(db.host_affinity.affinity_host==key).delete()
+    db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=0)

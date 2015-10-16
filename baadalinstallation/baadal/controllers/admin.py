@@ -260,6 +260,7 @@ def delete_affinity_vm():
     vm_id = request.args[0]
     key = request.args[1]
     reset_host_affinity(vm_id,key)
+    session.flash = 'host affinity removed.'
     redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id))
       
    

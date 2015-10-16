@@ -271,10 +271,6 @@ db.define_table('user_vm_map',
     Field('vm_id', db.vm_data),
     primarykey = ['user_id', 'vm_id'])
 
-db.define_table('host_affinity',
-    Field('vm_id', db.vm_data),
-    Field('affinity_host', db.host),
-    primarykey = ['vm_id', 'affinity_host'])
 
 db.define_table('attached_disks',
     Field('vm_id', db.vm_data, notnull = True),
@@ -328,3 +324,9 @@ db.define_table('vnc_access',
     Field('time_requested', 'datetime', default = get_datetime()),
     Field('expiry_time', compute=lambda r: r['time_requested']+ timedelta(seconds=r['duration'])))
 
+
+
+db.define_table('host_affinity',
+    Field('vm_id', db.vm_data),
+    Field('affinity_host', db.host),
+    primarykey = ['vm_id', 'affinity_host'])
