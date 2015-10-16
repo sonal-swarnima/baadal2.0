@@ -228,9 +228,9 @@ def migrate_vm():
         redirect(URL(c = 'admin', f = 'hosts_vms'))
     logger.debug("vm_details[affinity flag] :  " + str(vm_details['affinity_flag']))
     if vm_details['affinity_flag'] != 0:
-        host_details = get_host_details(vm_details['vm_name'])
-        logger.debug("available_hosts : " + str(host_details['available_hosts']))
-        vm_details['available_hosts'] = host_details['available_hosts']
+      host_details = get_host_details(vm_details['vm_name'])
+      logger.debug("available_hosts : " + str(host_details['available_hosts']))
+      vm_details['available_hosts'] = host_details['available_hosts']
     return dict(vm_details=vm_details)
 
 
@@ -238,30 +238,28 @@ def migrate_vm():
 @handle_exception
 def affinity_host():
     vm_id = request.args[0]
-#     vm_details = get_migrate_vm_details(vm_id)
-#     vm_name=vm_details['vm_name']
+    vm_details = get_vm_details(vm_id)
     host_details={}
     host_data=''
     host_details = get_host_details(vm_id)
-    params={}
-#     host_detail=[]
+    params={} 
+    host_detail=[]
     if len(request.args) > 1:
-        if request.args[1] == 'affinity_host':
-            host_details = get_host_details(vm_id)
-        params['affinity_host'] = request.vars['test']
-        host_data=add_data_into_affinity(params, vm_id)  
-        if host_data == None:
-            session.flash = 'Please select host for set Affinity'
-            redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id)) 
-    host_details = get_host_details(vm_id) 
-    return dict(host_details=host_details,host_data=host_data)
+       if request.args[1] == 'affinity_host':
+          host_details = get_host_details(vm_id)
+       params['affinity_host'] = request.vars['test']
+       host_data=add_data_into_affinity(params,vm_details)  
+       if host_data == None:
+          session.flash = 'Please select host for set Affinity'
+          redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id)) 
+       host_details = get_host_details(vm_id) 
+    return dict(vm_details=vm_details,host_details=host_details,host_data=host_data)
     
 
 def delete_affinity_vm():
     vm_id = request.args[0]
     key = request.args[1]
     reset_host_affinity(vm_id,key)
-    session.flash = 'host affinity removed.'
     redirect(URL(r = request, c = 'admin', f = 'affinity_host',args = vm_id))
       
    

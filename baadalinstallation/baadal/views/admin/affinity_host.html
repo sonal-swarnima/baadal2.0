@@ -20,12 +20,11 @@
             <td><b>{{=vm_details['current_host']}}</b></td>
            </tr>
            <tr>
-           <td>Affinity Hosts:</td>
-             <td><input value={{=vm_details['current_host']}} type="checkbox" name="test" />{{=vm_details['current_host']}}</td> 
+           <td>Affinity Hosts:</td> 
               {{ for key in vm_details['available_hosts']:}}
                    <tr>
-                   <td></td><td><input value={{=vm_details['available_hosts'][key]}} type="checkbox" name="test" />{{=vm_details['available_hosts'][key]}}</td>
-                   </tr>
+                  <td></td> <td><input value={{=key}} type="checkbox" name="test" />{{=vm_details['available_hosts'][key]}}</td>
+                  </tr> 
                 {{pass}}
           </tr>
           <tr>
