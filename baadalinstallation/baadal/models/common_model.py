@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+common_model.py: This model has functions to handle database transaction for 
+functionalities that is common across user, faculty, organization admin and 
+administrator roles.
+"""
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
@@ -48,7 +53,7 @@ def get_hosted_vm_list(vms):
     return vmlist
 
 #Update the dictionary with values specific to pending Install request tab
-def update_install_vm_request(vm_request, element):
+def _update_install_vm_request(vm_request, element):
 
     collaborators = '-'
     if vm_request.collaborators != None:
@@ -65,18 +70,18 @@ def update_install_vm_request(vm_request, element):
         element['HDD'] = str(vm_request.HDD)+'GB + ' + str(vm_request.extra_HDD) + 'GB'
     
 #Update the dictionary with values specific to pending Clone request tab
-def update_clone_vm_request(vm_request, element):
+def _update_clone_vm_request(vm_request, element):
     element['clone_count'] = vm_request.clone_count
     
 #Update the dictionary with values specific to pending Attach Disk request tab
-def update_attach_disk_request(vm_request, element):
+def _update_attach_disk_request(vm_request, element):
     element['parent_vm_id'] = vm_request.parent_id
     element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD != None else '-'
     element['attach_disk'] = str(vm_request.attach_disk) + 'GB'
     
 
 #Update the dictionary with values specific to pending Edit Configuration request tab
-def update_edit_config_request(vm_request, element):
+def _update_edit_config_request(vm_request, element):
     vm_data = db.vm_data[vm_request.parent_id]
     
     element['parent_vm_id'] = vm_request.parent_id
@@ -141,13 +146,13 @@ def get_pending_request_list(vm_requests):
                    'status' : vm_request.status}
         
         if vm_request.request_type == VM_TASK_CREATE:
-            update_install_vm_request(vm_request, element)
+            _update_install_vm_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_CLONE:
-            update_clone_vm_request(vm_request, element)
+            _update_clone_vm_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_ATTACH_DISK:
-            update_attach_disk_request(vm_request, element)
+            _update_attach_disk_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_EDIT_CONFIG:
-            update_edit_config_request(vm_request, element)
+            _update_edit_config_request(vm_request, element)
         
         request_list.append(element)
     return request_list

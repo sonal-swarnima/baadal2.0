@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+user.py: This controller has functions that corresponds to the requested actions 
+by users with role of 'user'.
+"""
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:

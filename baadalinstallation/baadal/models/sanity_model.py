@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+sanity_model.py: This model has functions to check sanity of the system
+and sync database information with ground reality.
+By default, in case of discrepancy database information of VM is updated 
+with actual status of hosted VMs.
+It also provides functionalities to update VM definition and snapshots as 
+per the information stored in database.
+"""
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
@@ -51,6 +59,15 @@ def get_host_sanity_form():
 
 
 def check_vm_sanity(host_id = 0):
+    """
+    Checks if database information of VM status is in sync with ground reality.
+    In case of discrepancy database is updated.
+        - For each host, get list of the domains(running and not running).
+        - If VM has migrated to another host; host information updated in database.
+        - If VM not in sync with actual state of VM; status of VM updated in DB.
+        - If VM is not present in database, it is marked Orphan.
+        - If VM is not found on any of the hosts, it is marked Undefined.
+    """
     vmcheck=[]
     vm_list = []
     
@@ -139,7 +156,10 @@ def check_vm_sanity(host_id = 0):
 
 
 def add_orphan_vm(vm_name, host_id):
-
+    """
+    Add Orphan VM information to database. VM information is retrieved from the VM definition XML.
+    'System User' is added as owner of the VM.
+    """
     host_details = db.host[host_id]
     host_ip = host_details.host_ip.private_ip
     connection_object = libvirt.openReadOnly("qemu+ssh://root@" + host_ip + "/system")
@@ -197,7 +217,10 @@ def add_orphan_vm(vm_name, host_id):
     return
 
 def delete_vm_info(vm_identity):
-
+    """
+    For undefined VMs, VM info and references are deleted from the database.
+    Public IP mapping is removed, if present
+    """
     vm_details = db(db.vm_data.vm_identity == vm_identity).select().first()
 
     # updating the used entry of database
@@ -214,6 +237,9 @@ def delete_vm_info(vm_identity):
 
 
 def check_vm_snapshot_sanity(vm_id):
+    """
+    Checks if the snapshot information of VM is in sync with actual snapshots of the VM.
+    """
     vm_data = db.vm_data[vm_id]
     snapshot_check = []
     try:
@@ -253,7 +279,10 @@ def check_vm_snapshot_sanity(vm_id):
 
 
 def delete_orphan_snapshot(domain_name, snapshot_name):
-    
+    """
+    Deletes orphan snapshot of the VM.
+    Orphan snapshots are checkpoints of VM that are not present in database.
+    """
     logger.debug('Deleting orphan snapshot %s of VM %s' %(snapshot_name, domain_name))
     vm_data = db(db.vm_data.vm_identity == domain_name).select().first()
 
@@ -266,6 +295,10 @@ def delete_orphan_snapshot(domain_name, snapshot_name):
     logger.debug('Orphan VM deleted')    
 
 def delete_snapshot_info(snapshot_id):
+    """
+    Deletes undefined snapshot info of the VM from database.
+    These are checkpoints of VM that is present in database but not on VM.
+    """
     logger.debug('Deleting snapshot info for ' + str(snapshot_id))
     del db.snapshot[snapshot_id]
     logger.debug('Snapshot info deleted')

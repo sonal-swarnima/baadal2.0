@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+faculty_model.py: This model has functions to handle database transaction for 
+functionalities that is accessible to users with faculty role.
+"""
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+user_model.py: This model has functions to handle database transaction for 
+functionalities that is accessible to users with user role.
+"""
 ###################################################################################
 # Added to enable code completion in IDE's.
 if 0:
@@ -15,14 +19,21 @@ from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
 from datetime import timedelta
 
 def get_my_requests():
-    """Get list of pending requests from request_queue"""
-
+    """
+    Returns list of request_queue elements requested by authenticated user
+    @return: List of requests. 
+    @rtype: C{list} 
+    """
     requests = db(db.request_queue.requester_id==auth.user.id).select(db.request_queue.ALL)
     return get_pending_request_list(requests)
 
 
 def get_my_hosted_vm():
-    """Get list of hosted virtual machines for a user"""
+    """
+    Get list of hosted virtual machines for a user
+    @return: List of hosted VMs. 
+    @rtype: C{list} 
+    """
     vms = db((~db.vm_data.status.belongs(VM_STATUS_IN_QUEUE, VM_STATUS_UNKNOWN)) 
              & (db.vm_data.id==db.user_vm_map.vm_id) 
              & (db.user_vm_map.user_id==auth.user.id)).select(db.vm_data.ALL)
@@ -30,8 +41,11 @@ def get_my_hosted_vm():
     return get_hosted_vm_list(vms)
 
 def get_configuration_elem(form):
-    """Create configuration dropdowns"""
-    
+    """
+    Generates html component of configuration dropdowns
+    This is displayed on 'Request VM' page.
+    @rtype: C{None} 
+    """    
     templates = db().select(db.template.ALL)
     _label = LABEL(SPAN('Configuration:', ' ', SPAN('*', _class='fld_required'), ' '))
 
@@ -49,8 +63,12 @@ def get_configuration_elem(form):
         form[0].insert(2,config_elem)#insert tr element in the form
 
 def set_configuration_elem(form):
-    """Gets CPU, RAM and HDD information on the basis of template selected."""
-
+    """
+    Gets CPU, RAM and HDD information on the basis of selected template, which
+    is set individually in the form component.
+    This is called on submit of 'Request VM' page.
+    @rtype: C{None} 
+    """    
     configVal = form.vars.configuration_0 #Default configuration dropdown
     template = form.vars.template_id
     
@@ -68,8 +86,11 @@ def set_configuration_elem(form):
 
 
 def validate_approver(form):
-    """Validate if the approver user belongs to group FACULTY."""
-
+    """
+    Validate if the approver user belongs to group FACULTY.
+    In case user is not a faculty, error is updated in form.
+    @rtype: C{None} 
+    """    
     faculty_user_name = request.post_vars.faculty_user
     
     faculty_info = get_user_info(faculty_user_name, [FACULTY])
@@ -244,6 +265,15 @@ def get_my_task_list(task_status, task_num):
 
    
 def get_vm_config(vm_id):
+    """
+    Fetches VM information for the given ID.
+    Creates a map of parameters and corresponding display strings 
+    
+    @param vm_id: VM ID 
+    @type vm_id: C{int} 
+    @return: Map of vm parameters an its display values. 
+    @rtype: C{map} 
+    """
 
     vminfo = get_vm_info(vm_id)
     if not vminfo : return

@@ -589,7 +589,7 @@ def update_vm_rrd(dom, active_dom_ids, host_ip):
             rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
 
 
-def set_domain_memoryStatsperiod(host_ip):
+def _set_domain_memoryStatsperiod(host_ip):
     """
     Dynamically changes the domain memory balloon driver statistics collection period
     """
@@ -625,7 +625,7 @@ def update_rrd(host_ip, m_type=None):
 
         rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
         #Adding the call for setting stat periods for all VM's on the host
-        set_domain_memoryStatsperiod(host_ip)
+        _set_domain_memoryStatsperiod(host_ip)
 
         #UPDATE RRD for ALL VMs on GIVEN HOST
         hypervisor_conn = None
