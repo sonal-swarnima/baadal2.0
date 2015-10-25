@@ -21,7 +21,7 @@ PROFILE = iitd
 # Please update this ip address after migration is complete, and make
 # sure it's reachable from any (all) subnets of IITD including hostels.
 #PROFILE_PPA = http://10.208.20.131/openvswitch
-PROFILE_PPA = http://10.237.22.42/openvswitch
+#PROFILE_PPA = http://10.237.22.42/openvswitch
   
 HOST_ID = 1
   
@@ -138,12 +138,12 @@ openvswitch: sources-list-setup
 	apt-get update || true
 	apt-get -y install python-software-properties
 	apt-get -y install openvswitch-switch
-	apt-get -y install openvswitch-common=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-pki=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-controller=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-datapath-dkms=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install openvswitch-switch=2.0.2-0ubuntu0.14.04.1
-	apt-get -y install python-openvswitch=2.0.2-0ubuntu0.14.04.1
+	#apt-get -y install openvswitch-common=2.0.2-0ubuntu0.14.04.1
+	#apt-get -y install openvswitch-pki=2.0.2-0ubuntu0.14.04.1
+	#apt-get -y install openvswitch-controller=2.0.2-0ubuntu0.14.04.1
+	#apt-get -y install openvswitch-datapath-dkms=2.0.2-0ubuntu0.14.04.1
+	#apt-get -y install openvswitch-switch=2.0.2-0ubuntu0.14.04.1
+	#apt-get -y install python-openvswitch=2.0.2-0ubuntu0.14.04.1
 
 $(BIN_CONFIGURE): $(BIN_DIR) $(LOGS_DIR) $(UTILS_LOCAL_DIR) $(SRC_DIR)/configure/*
 	@ cat $(SRC_DIR)/*.sh $(SRC_DIR)/configure/*.sh > $@

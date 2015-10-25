@@ -101,18 +101,22 @@ Enbl_Modules()
 		cd libvirt-python-1.2.6
                         /root/libvirt-1.2.6/run python setup.py build
                         /root/libvirt-1.2.6/run python setup.py install
-        cd -
+                cd -
 
 		tar -xvzf virt-manager-0.10.0.tar.gz -C /root
 		cd /root/virt-manager-0.10.0
-		python setup.py install --prefix=/usr
+			python setup.py install --prefix=/usr
+	        cd -	
 
-	cd -	
-
-    cd /cfengine
-         dpkg --install cfengine-community_3.6.3-1_amd64.deb
-         cf-agent --bootstrap 172.16.0.4
-    cd -
+            if !(IS_SANDBOX) then
+		    mkdir -p /cfengine
+        	         cp cfengine-community_3.6.3-1_amd64.deb /cfengine
+                	 cd /cfengine
+	        		 dpkg --install cfengine-community_3.6.3-1_amd64.deb
+			         cf-agent --bootstrap CFENGINE_IP
+        	         cd -
+		    cd -
+             fi
 
 
 	mkdir -p LOCAL_MOUNT_POINT
