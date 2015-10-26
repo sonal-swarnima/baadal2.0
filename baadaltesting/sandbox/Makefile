@@ -37,7 +37,7 @@ LIBVIRT_SOURCE = http://libvirt.org/sources/libvirt-1.2.6.tar.gz
 
 LIBVIRTPYTHON = $(UTILS_DIR)/libvirt-python-1.2.6
 LIBVIRTPYTHON_SOURCE = http://libvirt.org/sources/python/libvirt-python-1.2.6.tar.gz
-LIBVIRTPYTHON_TAR=libvirt-python-1.2.6.tar.gz
+LIBVIRTPYTHON_TAR=$(UTILS_DIR)/libvirt-python-1.2.6.tar.gz
 
 VIRTMANAGER = $(UTILS_DIR)/virt-manager-0.10.0.tar.gz
 VIRTMANAGER_SOURCE = https://git.fedorahosted.org/cgit/virt-manager.git/snapshot/virt-manager-0.10.0.tar.gz
