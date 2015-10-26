@@ -19,6 +19,8 @@ function run
 
   config_get INTERFACE
 
+  INTERFACE=`ip route get 8.8.8.8 | awk '{ print $5; exit }'`
+
   MAC_INTERFACE=$(ifconfig $INTERFACE | grep HWaddr | cut -d ' ' -f 1,11 | cut -d ' ' -f 2)
   ovs-vsctl set bridge $OVS_BRIDGE_EXTERNAL other-config:hwaddr=${MAC_INTERFACE}
 
@@ -98,22 +100,6 @@ function run
   else
     $ECHO_OK dnsmasq
   fi
-
-  # Running wake-on-lan listener
-  bash -c "tcpdump -i $OVS_BRIDGE_INTERNAL -l \
-    | grep --line-buffered ffff \
-    | while read -r lineraw ; \
-        do echo $lineraw \
-          | awk '{print $5,$6,$7}' \
-          | sed 's:\ ::g' \
-          | sed 's/../&:/g;s/:$//' ;\
-        done \
-    | while read -r mac ; \
-        do \
-          if [[ -n ${MAC_VM[$mac]} ]]; \
-            then virsh start ${MAC_VM[$mac]};\
-          fi ;\
-        done" 1>>$LOGS/log.out 2>>$LOGS/log.err &
 
   $ECHO_OK Switch Installation Complete
 }
