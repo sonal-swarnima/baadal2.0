@@ -89,8 +89,8 @@ $(LIBVIRT):
   
 $(LIBVIRTPYTHON_TAR):
 	@ mkdir -p $(UTILS_DIR)
-	@ wget -c $(LIBVIRTPYTHON_SOURCE) -O $(UTILS_DIR)/$@ || (rm $@ && false)
-	@ cd $(UTILS_DIR) ; tar -xvzf $(LIBVIRTPYTHON_TAR)  1>/dev/null  
+	@ wget -c $(LIBVIRTPYTHON_SOURCE) -O $@ || (rm $@ && false)
+	@ tar -xvzf $(LIBVIRTPYTHON_TAR) -C $(UTILS_DIR)/ 1>/dev/null  
 
 
 $(VIRTMANAGER):
