@@ -52,6 +52,7 @@ function libvirt_install
 {
   VERSION=$(virsh --version 2>/dev/null)
   if [[ $VERSION != "1.2.6" || ${LIBVIRT_INSTALL} == "yes" ]]; then
+    package_install python-libxml2
     package_install libxml2-dev
     package_install libgnutls-dev
     package_install libyajl-dev
