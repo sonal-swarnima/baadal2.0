@@ -47,13 +47,14 @@ make
 (mkdir -p /baadal
 cd /baadal
 wget http://PXE_IP/newbaadal.tar
+tar xvf newbaadal.tar
+rm newbaadal.tar
+cd -
 
 mkdir -p /cfengine
 cd /cfengine
 wget http://PXE_IP/cfengine-community_3.6.3-1_amd64.deb
-
-tar xvf newbaadal.tar
-rm newbaadal.tar
+cd -
 
 cp /etc/apt/sources.list /etc/apt/sources.list.bak
 cp /baadal/baadal/baadalinstallation/pxe_host_setup/sources.list /etc/apt/sources.list
