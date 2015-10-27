@@ -564,12 +564,19 @@ def show_cont_performance():
     m_type="host"
     return dict(host_identity=cont_ip ,host_ram=cont_ram, m_type=m_type,host_cpu=cont_cpu)
 
+@check_moderator
+@handle_exception 
 def show_nat_performance():
-
-    host_cpu=40
-    host_ram=64384
+    ip_cmd="/sbin/route -n | sed -n '3p' | awk '{print $2}'"
+    cpu_cmd="nproc"
+    mem_cmd = "free -m | grep 'Mem:' | awk '{print $2}'"
+    host_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
+    nat_cpu=execute_remote_cmd(host_ip, 'root', cpu_cmd, None,  True)[0].strip()
+    nat_ram=execute_remote_cmd(host_ip, 'root', mem_cmd, None,  True)[0].strip()
+    nat_ip=host_ip.replace(".","_")
     m_type="host"
-    return dict(host_identity='172_16_0_3' ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
+    return dict(host_identity= nat_ip ,host_ram=nat_ram, m_type=m_type,host_cpu=nat_cpu)
+
 
 @check_moderator
 @handle_exception       
