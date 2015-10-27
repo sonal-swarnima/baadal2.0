@@ -328,19 +328,22 @@ def vm_utilization_rrd(host_ip,m_type=None):
         rrd_logger.debug("Completing RRD Processing for Host: %s" % host_ip)
         logger.debug("EXITING RRD UPDATION/CREATION........on host: %s" % host_ip)
 
+#Updating NAT/Controller rrd file
 def task_rrd():
     list_host=[]
-    controller_ip = os.popen("ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2").readlines()
+    ip_cmd="/sbin/ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2"
     rrd_logger.info(controller_ip[0].strip("\n"))
-    controller_ip=controller_ip[0].strip("\n")
-    nat_ip = os.popen("route -n | sed -n '3p' | awk '{print $2}'").readlines()
-    nat_ip = nat_ip[0].strip("\n")
+    cont_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
+    nat_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
     list_host.append(controller_ip)
     list_host.append(nat_ip)
     for ip in list_host:
-        
-        m_type="controller" if controller_ip==ip else "nat"
-        vm_utilization_rrd(ip, m_type)
+        if controller_ip==ip:
+	    m_type="controller"    
+        else:
+	    m_type="nat"  
+	vm_utilization_rrd(ip,m_type)
+
 
 
 def process_vmdaily_checks():
