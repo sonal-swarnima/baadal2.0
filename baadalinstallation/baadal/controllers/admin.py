@@ -553,13 +553,16 @@ def start_bootup():
 
 
 @check_moderator
-@handle_exception       
+@handle_exception             
 def show_cont_performance():
-
-    host_cpu=16
-    host_ram="24102"
+    ip_cmd="/sbin/ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2"
+    cpu_cmd="nproc"
+    mem_cmd = "free -m | grep 'Mem:' | awk '{print $2}'"
+    cont_cpu=execute_remote_cmd("localhost", 'root', cpu_cmd, None,  True).strip()
+    cont_ram=execute_remote_cmd("localhost", 'root', mem_cmd, None,  True).strip()
+    cont_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).replace(".","_").strip()
     m_type="host"
-    return dict(host_identity='172_16_0_9' ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
+    return dict(host_identity=cont_ip ,host_ram=cont_ram, m_type=m_type,host_cpu=cont_cpu)
 
 def show_nat_performance():
 
