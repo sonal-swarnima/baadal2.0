@@ -157,6 +157,8 @@ db.define_table('host',
     Field('extra', 'string', length = 50),
     Field('host_type', 'string', length = 20, default = HOST_TYPE_PHYSICAL))
 
+db.host.extra.widget=SQLFORM.widgets.text.widget
+
 db.define_table('datastore',
     Field('ds_name', 'string', notnull = True, length = 30, unique = True, label='Name of Datastore'),
     Field('ds_ip', 'string', length = 15, requires=IS_IPV4(error_message=IP_ERROR_MESSAGE), label='Mount IP'),

@@ -13,8 +13,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from log_handler import logger
-from vm_utilization import check_graph_type, check_graph_period, \
-    get_performance_graph, fetch_info_graph
+from vm_utilization import check_graph_type, check_graph_period, fetch_info_graph
 
 @auth.requires_login()
 @handle_exception
@@ -239,21 +238,6 @@ def create_graph():
     
     return json_str
 
-@auth.requires_login()
-@handle_exception       
-def get_updated_graph():
-
-        logger.debug(request.vars['graphType'])
-        logger.debug(request.vars['vmIdentity'])
-        logger.debug(request.vars['graphPeriod'])
-        graphRet = get_performance_graph(request.vars['graphType'], request.vars['vmIdentity'], request.vars['graphPeriod'])
-        if not isinstance(graphRet, IMG):
-            if is_moderator():
-                return H3(graphRet)
-            else:
-                return H3('VMs RRD File Unavailable!!!')
-        else:
-            return graphRet
 
 @check_vm_owner
 @handle_exception       

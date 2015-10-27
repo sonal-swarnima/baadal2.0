@@ -332,18 +332,14 @@ def vm_utilization_rrd(host_ip,m_type=None):
 def task_rrd():
     list_host=[]
     ip_cmd="/sbin/ifconfig | grep 'inet addr' | sed -n '1p' | awk '{print $2}' | cut -d ':' -f 2"
+    controller_ip = execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
     rrd_logger.info(controller_ip[0].strip("\n"))
-    cont_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
     nat_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
     list_host.append(controller_ip)
     list_host.append(nat_ip)
     for ip in list_host:
-        if controller_ip==ip:
-	    m_type="controller"    
-        else:
-	    m_type="nat"  
-	vm_utilization_rrd(ip,m_type)
-
+        m_type="controller" if controller_ip==ip else "nat"
+    vm_utilization_rrd(ip,m_type)
 
 
 def process_vmdaily_checks():

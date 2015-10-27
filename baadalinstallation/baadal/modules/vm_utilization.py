@@ -20,8 +20,8 @@ the respective domain running on the hypervisor. Memory utilization is fetched f
 host, since VMs run as processes on the host.
 
 """
-from gluon import IMG, URL, current
-from helper import get_constant, get_context_path, execute_remote_cmd
+from gluon import current
+from helper import get_constant, execute_remote_cmd
 from log_handler import rrd_logger
 from xml.etree import ElementTree
 import os
@@ -694,20 +694,20 @@ def check_graph_period(graph_period):
 def check_graph_type(g_type,vm_ram,m_type):
     title={}
     if g_type=='cpu':
-       title['y_title']='cpu(%)'
-       title['g_title']="CPU PERFORMANCE"
+        title['y_title']='cpu(%)'
+        title['g_title']="CPU PERFORMANCE"
     if g_type=='disk':
-       title['y_title']='disk(MB/s)'
-       title['g_title']="DISK PERFORMANCE"
+        title['y_title']='disk(MB/s)'
+        title['g_title']="DISK PERFORMANCE"
     if g_type=='nw':
-       title['y_title']='net(MB/s)'
-       title['g_title']="NETWORK PERFORMANCE"
+        title['y_title']='net(MB/s)'
+        title['g_title']="NETWORK PERFORMANCE"
     if g_type=="ram":
        
-       if (int(vm_ram)>1024) or (m_type=='host'):
-           title['y_title']="ram(GB)"
-       else:
-           title['y_title']="ram(MB)"
-       title['g_title']="MEMORY PERFORMANCE"
+        if (int(vm_ram)>1024) or (m_type=='host'):
+            title['y_title']="ram(GB)"
+        else:
+            title['y_title']="ram(MB)"
+        title['g_title']="MEMORY PERFORMANCE"
     
     return title

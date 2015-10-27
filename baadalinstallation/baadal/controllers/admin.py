@@ -10,7 +10,7 @@ if 0:
     from gluon import request, session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_constant
+from helper import get_constant, execute_remote_cmd
 from vm_utilization import VM_UTIL_24_HOURS
 from host_helper import delete_orhan_vm, HOST_STATUS_MAINTENANCE, HOST_STATUS_UP, \
     HOST_STATUS_DOWN
@@ -18,7 +18,7 @@ from log_handler import logger
 from maintenance import shutdown_baadal, bootup_baadal
 from simplejson import dumps
 from vm_utilization import VM_UTIL_10_MINS, check_graph_type, check_graph_period, \
-    fetch_info_graph, get_performance_graph
+    fetch_info_graph
 
 
 @check_moderator

@@ -549,11 +549,10 @@ def get_configure_host_form():
 
 
 def get_add_host_form():
-    form_fields = ['host_ip','host_name','HDD','RAM','CPUs', 'host_type']
-    form_labels = {'host_ip':'Host IP','host_name':'Host Name','HDD':'Harddisk(GB)','RAM':'RAM size in GB:','CPUs':'No. of CPUs:'}
+    form_fields = ['host_ip','host_name','HDD','RAM','CPUs', 'host_type', 'extra']
+    form_labels = {'host_ip':'Host IP','host_name':'Host Name','HDD':'Harddisk(GB)','RAM':'RAM size in GB:','CPUs':'No. of CPUs:', 'extra':'Comments'}
 
     form = SQLFORM(db.host, fields = form_fields, labels = form_labels, submit_button = 'Add Host')
-    db.host.host_ip.writable=False
     return form
 
 
@@ -565,7 +564,6 @@ def get_host_form(host_ip):
         form.vars.host_ip = private_ip_data.id
         form.vars.host_name = 'host'+str(host_ip.split('.')[3])
         if is_host_available(host_ip):
-            form.vars.mac_addr = get_host_mac_address(host_ip)
             form.vars.CPUs = get_host_cpu(host_ip)
             form.vars.RAM  = get_host_ram(host_ip)
             form.vars.HDD = get_host_hdd(host_ip)
