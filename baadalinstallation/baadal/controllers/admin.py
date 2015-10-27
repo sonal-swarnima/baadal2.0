@@ -630,20 +630,6 @@ def create_graph_for_host():
     
     return json_str
 
-   
-def get_updated_host_graph():
-#     logger.debug("in")
-    logger.debug(request.vars['graphType'])
-    logger.debug(request.vars['hostIdentity'])
-    logger.debug(request.vars['graphPeriod'])
-    graphRet = get_performance_graph(request.vars['graphType'], request.vars['hostIdentity'], request.vars['graphPeriod'])
-    if not isinstance(graphRet, IMG):
-        if is_moderator():
-            return H3(graphRet)
-        else:
-            return H3('VMs RRD File Unavailable!!!')
-    else:
-        return graphRet
         
 @check_moderator
 @handle_exception       
