@@ -50,44 +50,6 @@ def _get_rrd_file(identity):
 
 
 
-    
-
-def get_performance_graph(graph_type, vm, graph_period):
-    """
-    Fetch graph for given RRD file and period
-    """
-    error = None
-    img = IMG(_src = URL("static" , "images/no_graph.jpg") , _style = "height:100px")
-
-    try:
-        rrd_file =_get_rrd_file(vm)
-  
-        if os.path.exists(rrd_file):
-            if create_graph(vm, graph_type, rrd_file, graph_period):   
-                img_pos = "images/vm_graphs/" + vm + "_" + graph_type + ".png"
-                img = IMG(_src = URL("static", img_pos), _style = "height:100%")
-                rrd_logger.info("Graph created successfully")
-            else:
-                rrd_logger.warn("Unable to create graph from rrd file!!!")
-                error = "Unable to create graph from rrd file"
-        else:
-            rrd_logger.warn("VMs RRD File Unavailable!!!")
-            error = "VMs RRD File Unavailable!!!"
-    except: 
-        rrd_logger.warn("Error occured while creating graph.")
-        import sys, traceback
-        etype, value, tb = sys.exc_info()
-        error = ''.join(traceback.format_exception(etype, value, tb, 10))
-        rrd_logger.debug(error)
-
-    finally:
-        if error != None:
-            return error
-        else:
-            rrd_logger.info("Returning image.")
-            return img
-
-
 def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
     """
     Fetch RRD data to display in tabular format
