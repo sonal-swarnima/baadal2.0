@@ -562,6 +562,7 @@ def update_rrd(host_ip, m_type=None):
                 hypervisor_conn.close()
         
 
+#fetch graph data for vm/host from their respective rrd file
 def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
     
     start_time = None
@@ -603,7 +604,7 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         for data in data_info:
             info1={}
             info={}
-            time_info=(int(tim_info) + 300*timeinterval)*1000
+            time_info=(int(tim_info) + 300*timeinterval)*1000 #changing timestamp from rrd into javascript timezone to represent time on graph
             timeinterval+=1
             
             
