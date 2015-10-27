@@ -673,36 +673,40 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         result.append(result2)	
         return result
 
-
+#check graph period to display time
 def check_graph_period(graph_period):
-    graph_period_format = {
-            'hour'  :  'hh:mm TT',
-            'day'   :  'hh:mm TT',
-            'month' :  'DDMMM',
-            'week'  :  'DDD,hh:mm TT',
-            'year'  :  'MMMYY'
-        }
-    return graph_period_format[graph_period]
-
-
-def check_graph_type(g_type,vm_ram,m_type):
+    if graph_period == 'hour':	
+        valueformat="hh:mm TT"
+    elif graph_period == 'day':
+        valueformat=" hh:mm TT"
+    elif graph_period == 'month':
+        valueformat="DDMMM"
+    elif graph_period == 'week':
+        valueformat="DDD,hh:mm TT"
+    elif graph_period == 'year':
+        valueformat="MMMYY "
     
+    return valueformat
+
+
+#check graph type
+def check_graph_type(g_type,vm_ram,m_type):
     title={}
     if g_type=='cpu':
-        title['y_title']='cpu(%)'
-        title['g_title']="CPU PERFORMANCE"
+       title['y_title']='cpu(%)'
+       title['g_title']="CPU PERFORMANCE"
     if g_type=='disk':
-        title['y_title']='disk(MB/s)'
-        title['g_title']="DISK PERFORMANCE"
+       title['y_title']='disk(MB/s)'
+       title['g_title']="DISK PERFORMANCE"
     if g_type=='nw':
-        title['y_title']='net(MB/s)'
-        title['g_title']="NETWORK PERFORMANCE"
+       title['y_title']='net(MB/s)'
+       title['g_title']="NETWORK PERFORMANCE"
     if g_type=="ram":
        
-        if (int(vm_ram)>1024) or (m_type=='host'):
-            title['y_title']="ram(GB)"
-        else:
-            title['y_title']="ram(MB)"
-        title['g_title']="MEMORY PERFORMANCE"
+       if (int(vm_ram)>1024) or (m_type=='host'):
+           title['y_title']="ram(GB)"
+       else:
+           title['y_title']="ram(MB)"
+       title['g_title']="MEMORY PERFORMANCE"
     
     return title
