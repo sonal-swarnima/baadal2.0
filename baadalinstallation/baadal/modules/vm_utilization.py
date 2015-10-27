@@ -49,74 +49,7 @@ def _get_rrd_file(identity):
     return rrd_file
 
 
-def create_graph(rrd_file_name, graph_type, rrd_file_path, graph_period):
-    """
-    Generate graph for given RRD file and period
-    """
-    rrd_logger.debug(rrd_file_name+" : "+graph_type+" : "+rrd_file_path+" : "+graph_period)
-    #rrd_file = rrd_file_name + '.rrd'       
 
-    #shutil.copyfile(rrd_file_path, rrd_file)
-    graph_file = rrd_file_name + "_" + graph_type + ".png"
-    graph_file_dir = os.path.join(get_context_path(), 'static' + get_constant('graph_file_dir'))
-    graph_file_path = graph_file_dir + os.sep + graph_file
-
-    start_time = None
-    consolidation = 'MIN'
-    ds = ds1 = ds2 = None
-    line = line1 = line2 = None
-
-    
-    if graph_period == 'hour':
-        start_time = 'now - ' + str(24*60*60)
-    elif graph_period == 'day':
-        start_time = '-1w'
-    elif graph_period == 'month':
-        start_time = '-1y'
-    elif graph_period == 'week':
-        start_time = '-1m'
-    elif graph_period == 'year':
-        start_time = '-5y'
-  
-    if ((graph_type == 'ram') or (graph_type == 'cpu')):
-
-        if graph_type == 'ram':
-            ds = 'DEF:ram=' + rrd_file_path + ':ram:' + consolidation
-            line = 'LINE1:ram#0000FF:Memory'
-            graph_type += " (Bytes/Sec)"
-            upper_limit = ""
-        elif graph_type == 'cpu':
-            ds = 'DEF:cpu=' + rrd_file_path + ':cpu:' + consolidation
-            line = 'LINE1:cpu#0000FF:CPU'
-            graph_type += " (%)"
-            upper_limit = "-u 100"
-                
-        rrdtool.graph(graph_file_path, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + rrd_file_name, ds, line, "-l 0 --alt-y-grid -L 6" + upper_limit )
-
-    else:
-
-        if graph_type == 'nw':
-            ds1 = 'DEF:nwr=' + rrd_file_path + ':tx:' + consolidation
-            ds2 = 'DEF:nww=' + rrd_file_path + ':rx:' + consolidation
-            line1 = 'LINE1:nwr#0000FF:Transmit'
-            line2 = 'LINE1:nww#FF7410:Receive'
-
-        elif graph_type == 'disk':
-            ds1 = 'DEF:diskr=' + rrd_file_path + ':dr:' + consolidation
-            ds2 = 'DEF:diskw=' + rrd_file_path + ':dw:' + consolidation
-            line1 = 'LINE1:diskr#0000FF:DiskRead'
-            line2 = 'LINE1:diskw#FF7410:DiskWrite'
-
-        graph_type += " (Bytes/Sec)"
-
-        rrdtool.graph(graph_file_path, '--start', start_time, '--end', 'now', '--vertical-label', graph_type, '--watermark', time.asctime(), '-t', ' ' + rrd_file_name, ds1, ds2, line1, line2, "-l 0 --alt-y-grid -L 6" )
-
-    rrd_logger.debug(graph_file_path)
-
-    if os.path.exists(graph_file_path):
-        return True
-    else:
-        return False
     
 
 def get_performance_graph(graph_type, vm, graph_period):
