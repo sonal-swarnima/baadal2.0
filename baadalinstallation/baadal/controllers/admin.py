@@ -569,12 +569,11 @@ def show_nat_performance():
     ip_cmd="/sbin/route -n | sed -n '3p' | awk '{print $2}'"
     cpu_cmd="nproc"
     mem_cmd = "free -m | grep 'Mem:' | awk '{print $2}'"
-    host_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
-    nat_cpu=execute_remote_cmd(host_ip, 'root', cpu_cmd, None,  True)[0].strip()
-    nat_ram=execute_remote_cmd(host_ip, 'root', mem_cmd, None,  True)[0].strip()
-    nat_ip=host_ip.replace(".","_")
-    return dict(host_identity= nat_ip ,host_ram=nat_ram, m_type="host",host_cpu=nat_cpu)
-
+    nat_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
+    nat_cpu=execute_remote_cmd(nat_ip, 'root', cpu_cmd, None,  True)[0].strip()
+    nat_ram=execute_remote_cmd(nat_ip, 'root', mem_cmd, None,  True)[0].strip()
+    nat_identity=host_ip.replace(".","_")
+    return dict(host_identity= nat_identity ,host_ram=nat_ram, m_type="host",host_cpu=nat_cpu)
 
 @check_moderator
 @handle_exception       
