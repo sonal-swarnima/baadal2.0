@@ -561,8 +561,7 @@ def show_cont_performance():
     cont_cpu=execute_remote_cmd("localhost", 'root', cpu_cmd, None,  True).strip()
     cont_ram=execute_remote_cmd("localhost", 'root', mem_cmd, None,  True).strip()
     cont_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).replace(".","_").strip()
-    m_type="host"
-    return dict(host_identity=cont_ip ,host_ram=cont_ram, m_type=m_type,host_cpu=cont_cpu)
+    return dict(host_identity=cont_ip ,host_ram=cont_ram, m_type="host",host_cpu=cont_cpu)
 
 @check_moderator
 @handle_exception 
@@ -574,8 +573,7 @@ def show_nat_performance():
     nat_cpu=execute_remote_cmd(host_ip, 'root', cpu_cmd, None,  True)[0].strip()
     nat_ram=execute_remote_cmd(host_ip, 'root', mem_cmd, None,  True)[0].strip()
     nat_ip=host_ip.replace(".","_")
-    m_type="host"
-    return dict(host_identity= nat_ip ,host_ram=nat_ram, m_type=m_type,host_cpu=nat_cpu)
+    return dict(host_identity= nat_ip ,host_ram=nat_ram, m_type="host",host_cpu=nat_cpu)
 
 
 @check_moderator
