@@ -845,7 +845,7 @@ Start_Web2py()
 	su www-data -c "python web2py.py -K baadal:vm_task,baadal:vm_sanity,baadal:host_task,baadal:vm_rrd,baadal:snapshot_task &"
 	cd -
 
-        sed -i -e "s@exit 0\$@/baadal/baadal/baadalinstallation/web2py_start.sh -d\nexit 0@" /etc/rc.local
+        sed -i -e "s@exit 0\$@/baadal/baadal/baadalinstallation/web2py_start.sh\nexit 0@" /etc/rc.local
 	echo "Controller Installation Complete!!!"
 }
 
