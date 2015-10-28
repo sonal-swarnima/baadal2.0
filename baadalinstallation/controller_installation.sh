@@ -701,6 +701,9 @@ mkdir -p $TFTP_DIR
 sed -i -e 's/^/^#/g' /etc/default/tftpd-hpa
 echo -e "RUN_DAEMON=\"yes\"\nOPTIONS=\"-l -s $TFTP_DIR\"" > /etc/default/tftpd-hpa
 echo -e "TFTP_USERNAME=\"tftp\"\nTFTP_DIRECTORY=\"$TFTP_DIR\"\nTFTP_ADDRESS=\"0.0.0.0:69\"\nTFTP_OPTIONS=\"-s -c -l\"" >> /etc/default/tftpd-hpa
+#hftp_pid=$(ps -ef | grep tftp | grep -v grep | awk '{print $2}')
+#echo $hftp_pid
+#kill -9 $hftp_pid
 service tftpd-hpa stop
 service tftpd-hpa start
 
@@ -842,6 +845,7 @@ Start_Web2py()
 	su www-data -c "python web2py.py -K baadal:vm_task,baadal:vm_sanity,baadal:host_task,baadal:vm_rrd,baadal:snapshot_task &"
 	cd -
 
+        sed -i -e "s@exit 0\$@/baadal/baadal/baadalinstallation/web2py_start.sh -d\nexit 0@" /etc/rc.local
 	echo "Controller Installation Complete!!!"
 }
 

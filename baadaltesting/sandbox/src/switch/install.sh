@@ -9,7 +9,8 @@ function run
   virtmanager_install
 
   libvirtd -d 1>>$LOGS/log.out 2>>$LOGS/log.err
-
+  sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
+  
   dns_get
 
   ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
