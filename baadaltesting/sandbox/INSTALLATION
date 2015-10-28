@@ -16,6 +16,7 @@
    This will setup the internal bridges on the sandbox machine. These
    arguments reinstall libvirt and virtmanager -- this may be required
    if the machine has old versions of these programs.
+Note:- If you are stuck somewhere, press 'Enter'.
 
 5. make baadal-transfer-tar
    This will create a ~/.baadal/utils/baadal.tar file, which is to be
@@ -28,6 +29,14 @@
    before installing the controller, because the controller's post VM
    installation script requires NAT to be setup.
 
+NOTE: Install virt-viewer on sandbox machine(apt-get install virt-viewer)
+      To view console of nat machine-
+          - virsh list --all (It will display all vms on host)
+          - virt-viewer baadal_nat
+      Once installation of nat is complete, nat machine will shoutdown.
+      Start nat machine with command 'virsh start nat'.
+      Once its started you can ssh to it using ip 10.0.0.3 or 192.168.0.3 dependending on ip range you choose in STEP 2. 
+
 
 7.. Go to the NAT VM and type
    $ cd /baadal/baadal/baadaltesting/sandbox
@@ -38,7 +47,8 @@ NOTE: Restart NAT machine after executing make nat-setup file and before proceed
 
 
 
-NOTE: For better performance you may use the sandbox machine as the filer. So you may skip STEP 8 and run STEP 9 on sandbox machine.
+NOTE: For better performance you may use the sandbox machine as the filer. So you may skip STEP 8 and 
+      Run STEP 9 on sandbox machine.
 
 8. make filer 
    This will create the filer VM. Can be tested by mounting x.y.0.4:/baadal/data
@@ -55,9 +65,13 @@ NOTE: For better performance you may use the sandbox machine as the filer. So yo
     $ cd /baadal/baadal/baadaltesting/sandbox
     $ make openvswitch
     $ make controller-setup
-    On controller machine edit /baadal/baadal/baadalinstallation/controller_installation.cfg
+    On icontroller machine edit /baadal/baadal/baadalinstallation/controller_installation.cfg
     $ cd /baadal/baadal/baadalinstallation
     $ ./controller_installtion.sh
+
+NOTE: Changes to be done on controller_installation.cfg file:
+      AUTH_TYPE=db
+      STORAGE_SERVER_IP=10.0.0.1
 
 ---- start creating hosts ----
 

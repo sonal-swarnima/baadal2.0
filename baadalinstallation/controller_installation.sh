@@ -388,7 +388,7 @@ Instl_Pkgs()
 		    	/tmp/libvirt-1.2.6/run python setup.py build
 				/tmp/libvirt-1.2.6/run python setup.py install
 			cd -
-        cd -
+        cd /baadal/baadal/baadalinstallation
 
 	if test "$AUTH_TYPE" == "ldap"; then
 		Setup_Ldap_Kerberos
