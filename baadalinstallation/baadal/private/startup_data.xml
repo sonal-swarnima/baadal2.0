@@ -17,7 +17,7 @@
 		<row name="extra_disks_dir" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
 		<row name="archives_dir" value="vm_deleted"/>
-        <row name="vm_migration_data" value="vm_migration_data"/>
+                <row name="vm_migration_data" value="vm_migration_data"/>
 		<row name="vncport_start_range" value="20000"/>
 		<row name="vncport_end_range" value="50000"/>
 		<row name="vm_rrds_dir" value="vm_rrds"/>
