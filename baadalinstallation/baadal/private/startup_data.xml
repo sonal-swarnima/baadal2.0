@@ -57,10 +57,10 @@
 
 	<table name="private_ip_pool">
 		<row id="1" private_ip="10.0.0.5" mac_addr="52:52:00:01:15:05" vlan="1" is_active="True"/>
-		<row id="1" private_ip="10.0.0.6" mac_addr="52:52:00:01:15:06" vlan="1" is_active="True"/>
-		<row id="1" private_ip="10.0.0.7" mac_addr="52:52:00:01:15:07" vlan="1" is_active="True"/>
-		<row id="1" private_ip="10.0.0.8" mac_addr="52:52:00:01:15:08" vlan="1" is_active="True"/>
-		<row id="1" private_ip="10.0.0.9" mac_addr="52:52:00:01:15:09" vlan="1" is_active="True"/>
+		<row id="2" private_ip="10.0.0.6" mac_addr="52:52:00:01:15:06" vlan="1" is_active="True"/>
+		<row id="3" private_ip="10.0.0.7" mac_addr="52:52:00:01:15:07" vlan="1" is_active="True"/>
+		<row id="4" private_ip="10.0.0.8" mac_addr="52:52:00:01:15:08" vlan="1" is_active="True"/>
+		<row id="5" private_ip="10.0.0.9" mac_addr="52:52:00:01:15:09" vlan="1" is_active="True"/>
 	</table>
 
 	<table name="datastore">
