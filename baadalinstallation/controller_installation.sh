@@ -418,7 +418,7 @@ Setup_Baadalapp()
 
         sed -i -e 's/mysql_ip=/'"mysql_ip=localhost"'/g' $baadalapp_config_path
 
-        sed -i -e 's/dhcp_ip=/'"dhcp_ip=localhost"'/g' $baadalapp_config_path
+        sed -i -e 's/dhcp_ip=/'"dhcp_ip=127.0.0.1"'/g' $baadalapp_config_path
 
         sed -i -e 's/mysql_user=/'"mysql_user=root"'/g' $baadalapp_config_path
 
