@@ -24,7 +24,7 @@
 		<row name="graph_file_dir" value="/images/vm_graphs/"/>
 		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
 		<row name="vms" value="/vm_images"/>
-        <row name="memory_overload_file_path" value="/baadal/baadal/baadalinstallation/baadal/private"/>
+		<row name="memory_overload_file_path" value="/baadal/baadal/baadalinstallation/baadal/private"/>
 	</table>
 
 	<table name="vlan">
@@ -53,6 +53,18 @@
 
 	<table name="public_ip_pool">
 		<row id="-1" public_ip="0.0.0.0" is_active="False" />
+	</table>
+
+	<table name="private_ip_pool">
+		<row id="1" private_ip="10.0.0.5" mac_addr="52:52:00:01:15:05" vlan="1" is_active="True"/>
+		<row id="1" private_ip="10.0.0.6" mac_addr="52:52:00:01:15:06" vlan="1" is_active="True"/>
+		<row id="1" private_ip="10.0.0.7" mac_addr="52:52:00:01:15:07" vlan="1" is_active="True"/>
+		<row id="1" private_ip="10.0.0.8" mac_addr="52:52:00:01:15:08" vlan="1" is_active="True"/>
+		<row id="1" private_ip="10.0.0.9" mac_addr="52:52:00:01:15:09" vlan="1" is_active="True"/>
+	</table>
+
+	<table name="datastore">
+		<row id="1" ds_name="filer01" ds_ip="10.0.0.1" capacity="10" username="root" path="/baadal/data/" used="0" system_mount_point="/mnt/datastore/"/>
 	</table>
 
 </dataset>
