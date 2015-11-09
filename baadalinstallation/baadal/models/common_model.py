@@ -48,6 +48,9 @@ def get_hosted_vm_list(vms):
                    'hostip'       : vm.host_id.host_ip.private_ip,
                    'RAM'          : str(round((vm.RAM/1024.0),2)) + ' GB',
                    'vcpus'        : str(vm.vCPU) + ' CPU',
+		   'identity'     : vm.vm_identity,
+		   'hdd'          : vm.HDD,
+		   'extra_hdd'     : vm.extra_HDD,
                    'status'       : get_vm_status(vm.status)}
         vmlist.append(element)
     return vmlist
