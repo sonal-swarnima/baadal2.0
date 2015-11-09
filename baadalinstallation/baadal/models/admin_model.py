@@ -1022,3 +1022,122 @@ def reset_host_affinity(vm_id,key):
         db(db.host_affinity.affinity_host==key).delete()
         db(db.vm_data.id == vm_details['vm_id']).update(affinity_flag=0)
         session.flash = 'host affinity removed.'
+
+
+################################# host and organisation tree ###########################################
+
+
+def get_organisation_vm_list(vms):
+    vmlist = []
+    for vm in vms:
+        logger.debug("printing vm info")
+        logger.debug(vm.vm_data.id)
+        element = {'id'           : vm.vm_data.id,
+                   'name'         : vm.vm_data.vm_name,
+                   'organisation' : vm.vm_data.owner_id.organisation_id.name if vm.vm_data.owner_id > 0 else 'System',
+                   'owner'        : vm.vm_data.owner_id.first_name + ' ' + vm.vm_data.owner_id.last_name if vm.vm_data.owner_id > 0 else 'System User', 
+                   'private_ip'   : vm.vm_data.private_ip.private_ip, 
+                   'public_ip'    : vm.vm_data.public_ip.public_ip if vm.vm_data.public_ip else PUBLIC_IP_NOT_ASSIGNED, 
+                   'hostip'       : vm.vm_data.host_id.host_ip.private_ip,
+                   'RAM'          : str(round((vm.vm_data.RAM/1024.0),2)) + ' GB',
+                   'vcpus'        : str(vm.vm_data.vCPU) + ' CPU',
+		   'identity'     : vm.vm_data.vm_identity,
+		   'hdd'          : vm.vm_data.HDD,
+		   'extra_hdd'     : vm.vm_data.extra_HDD,
+                   'status'       : get_vm_status(vm.vm_data.status)}
+        vmlist.append(element)
+    return vmlist
+
+def get_all_organisations() :
+
+    organisations = db().select(db.organisation.ALL, orderby = db.organisation.name)
+    logger.debug(organisations)
+    results = []
+    for organisation in organisations:
+        results.append({'ip'    :organisation.public_ip, 
+                        'id'    :organisation.id, 
+                        'name'  :organisation.name
+                        })    
+    logger.debug("organisations list info" + str(results))
+    return results
+
+
+def get_all_vm_oforg(org_id):
+    vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) 
+             & (db.user.organisation_id == org_id ) & (db.vm_data.requester_id == db.user.id )).select()
+    logger.debug("vm list" + str(vms))
+    return get_organisation_vm_list(vms)
+
+
+def get_vm_groupby_organisations() :
+    organisations = get_all_organisations()              
+    orgvmlist = []
+    for org in organisations:    # for each organisations get all the vm's that runs on it and add them to list                          
+        vmlist = get_all_vm_oforg(org['id'])
+        logger.debug("organisations info............" + str(org))
+        orgvms = {'org_id':org['id'],
+                   'org_name':org['name'], 
+                   'details':vmlist}
+        orgvmlist.append(orgvms)    
+    logger.debug("organisations list" + str(orgvmlist))
+    return (orgvmlist)
+
+
+def tree_info(g_type):  
+	logger.debug("fetching info.....................")  
+	root_info={}
+	child_list=[]
+        if g_type=="host":
+            graph_name="HOST DETAILS" 
+	    hostvmlist = get_vm_groupby_hosts() 
+	else:
+	    graph_name="ORGANISATION DETAILS" 
+	    hostvmlist = get_vm_groupby_organisations() 
+	root_info["name"]=graph_name
+	for o_row in hostvmlist:
+	    rows=o_row['details']
+            logger.debug(rows)
+            if rows:
+		child_info={}
+                if g_type=="host":
+		    
+		    rrd_file_name=o_row['host_ip'].replace(".","_")
+                    util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
+                    host_info= str(o_row['host_RAM'])+"GB "+str( o_row['host_CPUs'])+"core "+str(o_row['host_HDD']) + "GB"
+		    
+		    child_info["name"]=str(o_row['host_ip']) +"("+ str(host_info)+")---CPU "+str(util_data[0]) +"%  MEM " +str(util_data[1]) +"% -- DISK READ " +str(util_data[2])+ "% -- DISK WRITE " +str(util_data[3])+"% --NET READ" + str(util_data[4]) +"% -- NET WRITE" +str(util_data[5])
+            	    
+		else:
+	    	    child_info["name"]=o_row['org_name']
+	        for row in rows:
+		    logger.debug(row)
+	            vm_info={}
+		    vm_util=[]
+		    cpu_info={}
+		    mem_info={}
+		    disk_info={}
+		    net_info={}
+		    child_util=[]
+	            rrd_file_name=row['identity']
+                    util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
+		    logger.debug(util_data)
+		    cpu=row["vcpus"]
+		    ram=row["RAM"]
+		    hdd=row["hdd"]
+		    cpu_info['name']="cpuinfo: " + str(cpu) + "----Utilization--->  " + str(util_data[0]) + "%"
+		    mem_info['name']="meminfo: " +str(ram) + "----Utilization--->" + str(util_data[1]) + "%"
+		    disk_info['name']="diskinfo: "+str(hdd) + " GB----Utilization Disk read--->" + str(util_data[2]) + "%  Disk write  " + str(util_data[3]) +" %"
+		    net_info['name']="netinfo: Utilization Network read--->" + str(util_data[4]) + "%  Nework write--->" + str(util_data[5]) + " %"
+		    vm_util.append(cpu_info)
+		    vm_util.append(mem_info)
+		    vm_util.append(disk_info)
+		    vm_util.append(net_info)
+		    vm_info["name"]="VM Name---->"+ str(row['name'])
+		    vm_info["children"]=vm_util
+	            child_util.append(vm_info)
+	        child_info["children"]=child_util
+	        child_list.append(child_info)       
+	root_info['children']=child_list
+        logger.debug(root_info)  
+        return root_info
+    
