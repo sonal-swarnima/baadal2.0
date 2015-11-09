@@ -450,7 +450,6 @@ def add_user_vm_access(vm_id, user_id) :
 def update_vm_lock(vminfo,flag) :
         db(db.vm_data.id == vminfo.id).update(locked = flag)
 
-
 def get_all_hosts() :
     
     hosts = db().select(db.host.ALL, orderby = db.host.host_name)
@@ -462,6 +461,7 @@ def get_all_hosts() :
                         'status':host.status, 
                         'RAM'   :host.RAM,
                         'CPUs'  :host.CPUs,
+			'HDD'  : host.HDD,
                         'info'  :host.extra if host.extra != None else '-'})    
     return results
 
@@ -473,9 +473,13 @@ def get_vm_groupby_hosts() :
         vmlist = get_all_vm_ofhost(host['id'])
         hostvms = {'host_id':host['id'],
                    'host_ip':host['ip'], 
+		   'host_RAM':host['RAM'],
+                   'host_CPUs':host['CPUs'], 
+		    'host_HDD':host['HDD'],
                    'details':vmlist}
         hostvmlist.append(hostvms)    
     return (hostvmlist)
+
 
 
 def get_task_by_status(task_status, task_num):
