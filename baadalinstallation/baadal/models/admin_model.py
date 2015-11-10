@@ -1143,10 +1143,7 @@ def tree_info(g_type):
 		    mem_info['name']="meminfo: " +str(ram) + "----Utilization--->" + str(ram_utilization) + "%"
 		    disk_info['name']="diskinfo: "+str(hdd) + " GB----Utilization Disk read--->" + str(round(util_data[2], 2)) + "%  Disk write  " + str(round(util_data[3], 2)) +" %"
 		    net_info['name']="netinfo: Utilization Network read--->" + str(round(util_data[4], 2)) + "%  Nework write--->" + str(round(util_data[5], 2)) + " %"
-		    '''cpu_info['name']="cpuinfo: " + str(cpu) + "----Utilization--->  " + str(util_data[0]) + "%"
-		    mem_info['name']="meminfo: " +str(ram) + "----Utilization--->" + str(util_data[1]) + "%"
-		    disk_info['name']="diskinfo: "+str(hdd) + " GB----Utilization Disk read--->" + str(util_data[2]) + "%  Disk write  " + str(util_data[3]) +" %"
-		    net_info['name']="netinfo: Utilization Network read--->" + str(util_data[4]) + "%  Nework write--->" + str(util_data[5]) + " %"'''
+		   
 		    vm_util.append(cpu_info)
 		    vm_util.append(mem_info)
 		    vm_util.append(disk_info)
