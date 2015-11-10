@@ -1091,6 +1091,8 @@ def tree_info(g_type):
 	logger.debug("fetching info.....................")  
 	root_info={}
 	child_list=[]
+       
+        
         if g_type=="host":
             graph_name="HOST DETAILS" 
 	    hostvmlist = get_vm_groupby_hosts() 
@@ -1100,38 +1102,51 @@ def tree_info(g_type):
 	root_info["name"]=graph_name
 	for o_row in hostvmlist:
 	    rows=o_row['details']
-            logger.debug(rows)
             if rows:
 		child_info={}
-                if g_type=="host":
-		    
+		child_util=[]
+	        c_inf=[]
+	        c_info={}
+                if g_type=="host": 
 		    rrd_file_name=o_row['host_ip'].replace(".","_")
                     util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
+		   
                     host_info= str(o_row['host_RAM'])+"GB "+str( o_row['host_CPUs'])+"core "+str(o_row['host_HDD']) + "GB"
-		    
-		    child_info["name"]=str(o_row['host_ip']) +"("+ str(host_info)+")---CPU "+str(util_data[0]) +"%  MEM " +str(util_data[1]) +"% -- DISK READ " +str(util_data[2])+ "% -- DISK WRITE " +str(util_data[3])+"% --NET READ" + str(util_data[4]) +"% -- NET WRITE" +str(util_data[5])
+		    c_info['name']=str(o_row['host_ip']) +"("+ str(host_info)+")"
+		    child_info["name"]="CPU "+str(util_data[0]) +"%  MEM " +str(round(((util_data[1]/(o_row['host_RAM'] * 1024*1024))*100), 2)) +"% -- DISK READ " +str(round(util_data[2], 2))+ "% -- DISK WRITE " +str(round(util_data[3], 2))+"% --NET READ" + str(round(util_data[4], 2)) +"% -- NET WRITE" +str(round(util_data[5], 2))
             	    
 		else:
 	    	    child_info["name"]=o_row['org_name']
 	        for row in rows:
-		    logger.debug(row)
+		    
 	            vm_info={}
 		    vm_util=[]
 		    cpu_info={}
 		    mem_info={}
 		    disk_info={}
 		    net_info={}
-		    child_util=[]
+		    
 	            rrd_file_name=row['identity']
                     util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
 		    logger.debug(util_data)
 		    cpu=row["vcpus"]
 		    ram=row["RAM"]
 		    hdd=row["hdd"]
+		    cpu_info['size']=3938
+		    mem_info['size']=3938
+		    disk_info['size']=3938
+		    net_info['size']=3938
+		    
+		    ram_utilization=round((util_data[1]/float(ram.split(" ")[0])*1024*1024*100), 2)
+		    logger.debug(ram_utilization)
 		    cpu_info['name']="cpuinfo: " + str(cpu) + "----Utilization--->  " + str(util_data[0]) + "%"
+		    mem_info['name']="meminfo: " +str(ram) + "----Utilization--->" + str(ram_utilization) + "%"
+		    disk_info['name']="diskinfo: "+str(hdd) + " GB----Utilization Disk read--->" + str(round(util_data[2], 2)) + "%  Disk write  " + str(round(util_data[3], 2)) +" %"
+		    net_info['name']="netinfo: Utilization Network read--->" + str(round(util_data[4], 2)) + "%  Nework write--->" + str(round(util_data[5], 2)) + " %"
+		    '''cpu_info['name']="cpuinfo: " + str(cpu) + "----Utilization--->  " + str(util_data[0]) + "%"
 		    mem_info['name']="meminfo: " +str(ram) + "----Utilization--->" + str(util_data[1]) + "%"
 		    disk_info['name']="diskinfo: "+str(hdd) + " GB----Utilization Disk read--->" + str(util_data[2]) + "%  Disk write  " + str(util_data[3]) +" %"
-		    net_info['name']="netinfo: Utilization Network read--->" + str(util_data[4]) + "%  Nework write--->" + str(util_data[5]) + " %"
+		    net_info['name']="netinfo: Utilization Network read--->" + str(util_data[4]) + "%  Nework write--->" + str(util_data[5]) + " %"'''
 		    vm_util.append(cpu_info)
 		    vm_util.append(mem_info)
 		    vm_util.append(disk_info)
@@ -1139,9 +1154,12 @@ def tree_info(g_type):
 		    vm_info["name"]="VM Name---->"+ str(row['name'])
 		    vm_info["children"]=vm_util
 	            child_util.append(vm_info)
+		    
 	        child_info["children"]=child_util
-	        child_list.append(child_info)       
+                c_inf.append(child_info)
+		c_info['children']=c_inf
+	        child_list.append(c_info)       
 	root_info['children']=child_list
-        logger.debug(root_info)  
+        
         return root_info
     
