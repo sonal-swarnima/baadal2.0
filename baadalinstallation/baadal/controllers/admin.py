@@ -704,4 +704,16 @@ def create_tree():
 def host_tree():
     return dict()
 
-         
+############### host tree ##################
+def create_zoom_tree():
+    g_type=request.vars['graphType']
+    ret={}
+    ret=zoom_info(g_type)
+    import json
+    json_str = json.dumps(ret, ensure_ascii=False)
+    return json_str
+
+
+def zoom_tree():
+    return dict()
+                
