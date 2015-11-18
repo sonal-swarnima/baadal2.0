@@ -1160,3 +1160,44 @@ def tree_info(g_type):
         
         return root_info
     
+####################Utilizations page################################3
+def zoom_info(g_type):  	
+	root_info={}    
+        if g_type=="host":
+            graph_name="HOST DETAILS" 
+	    hostvmlist = get_vm_groupby_hosts() 
+	else:
+	    graph_name="ORGANISATION DETAILS" 
+	    hostvmlist = get_vm_groupby_organisations() 
+	root_info["name"]=graph_name
+	parent_util=[]
+	for o_row in hostvmlist:
+	    rows=o_row['details']           
+            if rows:
+		child_info={}
+		child_util=[]	       
+                if g_type=="host":		    
+		    rrd_file_name=o_row['host_ip'].replace(".","_")
+                    util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
+		    hdd=round(float(o_row['host_HDD'])/1024,2)
+                    host_info= " (RAM: "+str(o_row['host_RAM'])+" GB CPU: "+str( o_row['host_CPUs'])+" core HDD: "+str(hdd) + " TB)"
+		    
+		    child_info["name"]=str(o_row['host_ip'])+" "+str(host_info) + ":: UTILIZATION  MEM: " +str(round(((util_data[1]/(o_row['host_RAM'] * 1024*1024*1024))*100), 2)) +"% " +" CPU: "+str(round((float(util_data[1])*100)/(float(int(o_row['host_CPUs'])*5*60*1000000000)),2)) + "%"
+            	    
+		else:
+	    	    child_info["name"]=o_row['org_name']                    
+	        for row in rows:		    
+	            vm_info={}
+		    vm_util=[]		    
+	            rrd_file_name=row['identity']
+                    util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)		   
+		    ram_utilization=round(((util_data[0]/(float(row["RAM"].split(" ")[0])* 1024*1024*1024))*100), 2)		   
+		    cpu_utilization=round((float(util_data[1])*100)/(float(int(row['vcpus'].split(" ")[0])*5*60*1000000000)),2)		    
+		    vm_info['name']=str(row['name']) + "  ("+ str(row['RAM'])+" "+str( row['vcpus'])+" "+str(row['hdd']) + "GB) mem: " + str(ram_utilization) + "% cpu: " + str(cpu_utilization) + "%"
+		   
+	            child_util.append(vm_info)		    
+	        child_info["children"]=child_util		
+                parent_util.append(child_info)        
+	root_info['children']=parent_util
+        return root_info
+    
