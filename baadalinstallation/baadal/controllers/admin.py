@@ -691,18 +691,6 @@ def network_graph():
 def host_network_graph():
     return dict()
 
-############### host tree ##################
-def create_tree():
-    g_type=request.vars['graphType']
-    ret={}
-    ret=tree_info(g_type)
-    import json
-    json_str = json.dumps(ret, ensure_ascii=False)
-    return json_str
-
-
-def host_tree():
-    return dict()
 
 ############### host tree ##################
 def create_zoom_tree():
