@@ -20,8 +20,8 @@ the respective domain running on the hypervisor. Memory utilization is fetched f
 host, since VMs run as processes on the host.
 
 """
-from gluon import current
-from helper import get_constant, execute_remote_cmd
+from gluon import IMG, URL, current
+from helper import get_constant, get_context_path, execute_remote_cmd
 from log_handler import rrd_logger
 from xml.etree import ElementTree
 import os
@@ -43,18 +43,17 @@ VM_UTIL_20_DAYS = 20
 STEP         = 300
 TIME_DIFF_MS = 550
 
-def _get_rrd_file(identity):
+def get_rrd_file(identity):
 
     rrd_file = get_constant("vmfiles_path") + os.sep + get_constant("vm_rrds_dir") + os.sep + identity + ".rrd"
     return rrd_file
 
 
 
+
+""""Fetch RRD data to display in tabular format"""
 def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
-    """
-    Fetch RRD data to display in tabular format
-    """
-    rrd_file = _get_rrd_file(rrd_file_name)
+    rrd_file = get_rrd_file(rrd_file_name)
    
     start_time = 'now-' + str(24*60*60) 
     end_time = 'now'
@@ -81,7 +80,7 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
     nww_data = []
     if os.path.exists(rrd_file):
         rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)
-
+	
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2]
         cpu_idx = fld_info.index('cpu')
@@ -100,7 +99,9 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
             if row[nwr_idx] != None: nwr_data.append(float(row[nwr_idx]))
             if row[nww_idx] != None: nww_data.append(float(row[nww_idx]))
 
-    
+    if str(rrd_file)=="/mnt/datastore/vm_rrds/IITD_cs5100299_Openvswitch_Host.rrd":
+        rrd_logger.debug("cpu_utilization over 24hrs is :" + str(cpu_data)) 
+        rrd_logger.debug("cpu_utilization over 24hrs is :" + str(sum(cpu_data)) + " " + str(len(cpu_data)))
     return (sum(mem_data)/float(len(mem_data)) if len(mem_data) > 0 else 0, 
             sum(cpu_data)/float(len(cpu_data)) if len(cpu_data) > 0 else 0, 
             sum(dskr_data)/float(len(dskr_data)) if len(dskr_data) > 0 else 0,
@@ -109,14 +110,21 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
             sum(nww_data)/float(len(nww_data)) if len(nww_data) > 0 else 0)
   
 
+''' check last 20 days data and compare against threshold.'''
+
 def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
-    """
-    Check last 20 days data and compare against threshold.
-    """
+     
     start_time = 'now - ' + str(VM_UTIL_20_DAYS*24*60*60)
     ''' start_time = 'now - ' + str(60*60) '''
     end_time = 'now'
-    rrd_file = _get_rrd_file(rrd_file_name)
+    rrd_file = get_rrd_file(rrd_file_name)
+
+    cpu_data = []
+    mem_data = []
+    dskr_data = []
+    dskw_data = []
+    nwr_data = []
+    nww_data = []
 
     rrd_logger.info("inside compare_rrd_data_with_threshold function rrd file is :"+str(rrd_file_name))
     if os.path.exists(rrd_file):
@@ -125,6 +133,9 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2]
         cpu_idx = fld_info.index('cpu')
+        mem_idx = fld_info.index('ram')
+        dskr_idx = fld_info.index('dr')
+        dskw_idx = fld_info.index('dw')
         nwr_idx = fld_info.index('tx')
         nww_idx = fld_info.index('rx')
 
@@ -147,7 +158,7 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
             if (row[nww_idx] != None) : 
                 NWWNoneIdentifier='N'
                 if int(row[nww_idx]) > int(thresholdcontext['WriteThreshold']) : write_threshold='Y'
-
+		
             if (cpu_threshold=='Y' or read_threshold=='Y' or write_threshold=='Y') :
                 rrd_logger.info("Info about the VM:%s,row[cpu_idx]:%s,row[nwr_idx]:%s,row[nww_idx]:%s" %(rrd_file_name,row[cpu_idx],row[nwr_idx],row[nww_idx])) 
                 rrd_logger.info("Threshold is reached once.. VM:"+str(rrd_file_name)+" is in use") 
@@ -162,15 +173,24 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
             return False 
 
 
-def create_rrd(rrd_file):
-    """
-    Create new Round Robin Database (RRD) file with
-        - step size
-        - start time
-        - data sources
-        - archive (An archive consists of a number of data values or statistics for each of the defined data-sources)
-    """
-    ret = rrdtool.create( rrd_file, "--step", str(STEP) ,"--start", str(int(time.time())),
+def create_rrd(rrd_file,m_type="None"):
+    if m_type=="host":
+        ret = rrdtool.create( rrd_file, "--step", str(STEP) ,"--start", str(int(time.time())),
+        "DS:cpu:GAUGE:%s:0:U"   % str(TIME_DIFF_MS),
+        "DS:ram:GAUGE:%s:0:U"     % str(TIME_DIFF_MS),
+        "DS:dr:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
+        "DS:dw:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
+        "DS:tx:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "DS:rx:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "DS:tmp:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "DS:pwr:GAUGE:%s:0:U"      % str(TIME_DIFF_MS),
+        "RRA:MIN:0:1:200000",       # Data stored for every five minute
+        "RRA:AVERAGE:0.5:12:100",   # Average data stored for every hour (300*12)
+        "RRA:AVERAGE:0.5:288:50",   # Average data stored for every day (300*288)
+        "RRA:AVERAGE:0.5:8928:24",  # Average data stored for every month (300*8928)
+        "RRA:AVERAGE:0.5:107136:10")# Average data stored for every year (300*107136)
+    else:
+        ret = rrdtool.create( rrd_file, "--step", str(STEP) ,"--start", str(int(time.time())),
         "DS:cpu:GAUGE:%s:0:U"   % str(TIME_DIFF_MS),
         "DS:ram:GAUGE:%s:0:U"     % str(TIME_DIFF_MS),
         "DS:dr:GAUGE:%s:0:U"    % str(TIME_DIFF_MS),
@@ -186,23 +206,25 @@ def create_rrd(rrd_file):
     if ret:
         rrd_logger.warn(rrdtool.error())
 
+"""Captures memory utilization of a VM from the host.
+   VMs run on host as individual processes. Memory utilization of the process is derived."""
 
 def get_dom_mem_usage(dom, host):
-    """
-    Captures memory utilization of a VM from the host.
-    VMs run on host as individual processes. Memory utilization of the process is derived.
-    """
     rrd_logger.info("memory stats for VM:%s is %s" %(dom.name(),dom.memoryStats()))
-    domain_memUsed=(dom.memoryStats()['available']-dom.memoryStats()['unused'])
-    rrd_logger.info("domain_memUsed is : "+str(domain_memUsed))
+    rrd_logger.warn(dom.memoryStats())
+    try:
+      domain_memUsed=(dom.memoryStats()['available']-dom.memoryStats()['unused'])
+      rrd_logger.info("domain_memUsed is : "+str(domain_memUsed))
+    except:
+      domain_memUsed=(dom.memoryStats()['rss'])
+      rrd_logger.info("in except and rss value is : "+str(domain_memUsed))
     return (domain_memUsed*1024)
 
 
+"""Uses libvirt function to extract interface device statistics for a domain
+   to find network usage of virtual machine."""
 def get_dom_nw_usage(dom_obj):
-    """
-    Uses libvirt function to extract interface device statistics for a domain
-    to find network usage of virtual machine.
-    """
+
     tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
     rx = 0
     tx = 0
@@ -217,12 +239,10 @@ def get_dom_nw_usage(dom_obj):
 
     return [rx, tx] #returned value in Bytes by default
 
-
+"""Uses libvirt function to extract block device statistics for a domain
+   to find disk usage of virtual machine."""
 def get_dom_disk_usage(dom_obj):
-    """
-    Uses libvirt function to extract block device statistics for a domain
-    to find disk usage of virtual machine.
-    """
+
     tree = ElementTree.fromstring(dom_obj.XMLDesc(0))
     bytesr = 0
     bytesw = 0
@@ -243,9 +263,7 @@ def get_dom_disk_usage(dom_obj):
     return [bytesr, bytesw] #returned value in Bytes by default
 
 def get_current_dom_resource_usage(dom, host_ip):
-    """
-    Get resource usage information from the VM domain
-    """
+
     dom_memusage   = get_dom_mem_usage(dom, host_ip)
     dom_nw_usage   = get_dom_nw_usage(dom)
     dom_disk_usage = get_dom_disk_usage(dom)
@@ -266,11 +284,8 @@ def get_current_dom_resource_usage(dom, host_ip):
     return dom_stats
 
 def get_actual_usage(dom_obj, host_ip):
-    """
-    Get actual usage by computing the difference between current values and values
-    stored during previous cycle.
-    Previous domain stat value is fetched from cache
-    """
+
+
     dom_name = dom_obj.name()
     cache_id = str(dom_name)
 
@@ -306,11 +321,8 @@ def get_actual_usage(dom_obj, host_ip):
    
     return usage 
 
-
+"""Uses iostat tool to capture CPU statistics of host"""
 def get_host_cpu_usage(host_ip,m_type=None):
-    """
-    Uses iostat tool to capture CPU statistics of host
-    """
     rrd_logger.info("getting cpu info")
     command = "cat /proc/stat | awk 'FNR == 1{print $2+$3+$4}'"
     
@@ -347,11 +359,9 @@ def get_host_cpu_usage(host_ip,m_type=None):
     rrd_logger.info("CPU stats of host %s is %s" % ( host_ip, cpu_usage))
     return (cpu_usage)
 
-
+"""Uses iostat tool to capture input/output statistics for host"""
 def get_host_disk_usage(host_ip,m_type=None):
-    """
-    Uses iostat tool to capture input/output statistics for host
-    """
+
     command = "iostat -d | sed '1,2d'"
     
     if m_type=="controller":
@@ -363,11 +373,9 @@ def get_host_disk_usage(host_ip,m_type=None):
     rrd_logger.info("Disk stats of host %s is dr: %s dw: %s" % (host_ip, disk_stats[2], disk_stats[3]))  
     return [float(disk_stats[2]), float(disk_stats[3])] #return memory in KB/sec
 
-
+"""Uses top command to capture memory usage for host"""
 def get_host_mem_usage(host_ip,m_type=None):
-    """
-    Uses top command to capture memory usage for host
-    """
+
     command = "free -k | grep 'buffers/cache' | awk '{print $3}'"
     if m_type=="controller":
         command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
@@ -380,10 +388,36 @@ def get_host_mem_usage(host_ip,m_type=None):
     return used_mem_in_kb #return memory in KB
 
 
+"""EXtracting impi output """
+def get_impi_output(cmd):
+    output=execute_remote_cmd(host_ip, cmd, None,  True)
+    logger.debug(output[0].split("|")[4].split(" ")[1])
+    ret=ret[0].split("|")[4].split(" ")[1]
+    return ret
+
+"""Uses IMPITOOL to get host temp """
+def get_host_temp_usage(host_ip):
+    command='ipmitool sdr elist full'
+    ret=execute_remote_cmd(host_ip, 'root', command, None,  True)
+    if "Inlet Temp" in ret:
+        temp=get_impi_output('ipmitool sdr elist full | grep "Inlet Temp"')
+    if "Ambient Temp" in ret:
+	temp=get_impi_output('ipmitool sdr elist full | grep "Ambient Temp"')
+    return temp # returning temperature in degree Celsius
+
+"""Uses IMPITOOL to get host power consumption"""
+def get_host_power_usage(host_ip):
+    execute_remote_cmd(host_ip, 'root', command, None,  True)
+    ret=ret=os.popen('ipmitool sdr elist full').readlines()
+    if "System Level" in ret:
+        pwr_usage=get_impi_output('ipmitool sdr elist full | grep "System Level"')
+    if "Pwr Consumption" in ret:
+        pwr_usage=get_impi_output('ipmitool sdr elist full | grep "Pwr Consumption"')
+    return pwr_usage # returining power in Watt
+
+"""Uses ifconfig command to capture network usage for host"""
 def get_host_nw_usage(host_ip,m_type=None):
-    """
-    Uses ifconfig command to capture network usage for host
-    """
+
     command = "ifconfig baadal-br-int | grep 'RX bytes:'"
     if m_type=="controller":
         command_output =execute_remote_cmd("localhost", 'root', command, None,  True)
@@ -396,46 +430,42 @@ def get_host_nw_usage(host_ip,m_type=None):
     rrd_logger.info("Network stats of host %s is rx: %s tx: %s" % (host_ip, rx, tx))
     return [rx, tx] # return network in Bytes
 
-
 def get_host_resources_usage(host_ip,m_type=None):
-    """
-    Get following resource usage information from host
-        - CPU
-        - RAM
-        - Disk
-        - Network
-    """
+    host_usage={}
     rrd_logger.info("getting data for RRD file")
     if m_type is None:
         host_cpu_usage = get_host_cpu_usage(host_ip)
         host_disk_usage = get_host_disk_usage(host_ip)
         host_mem_usage = get_host_mem_usage(host_ip)
         host_nw_usage = get_host_nw_usage(host_ip)
+        host_temp_usage =get_host_temp_usage(host_ip)
+        host_power_usage =get_host_power_usage(host_ip)
+        host_usage.update({'tmp' : host_temp_usage}) #in Degree Celsius
+        host_usage.update({'pwr' : host_power_usage}) #in Watt
     else:
 
         host_cpu_usage = get_host_cpu_usage(host_ip,m_type)
         host_disk_usage = get_host_disk_usage(host_ip,m_type)
         host_mem_usage = get_host_mem_usage(host_ip,m_type)
         host_nw_usage = get_host_nw_usage(host_ip,m_type)
-
+	
     host_usage = {'cpu' : host_cpu_usage} #percent cpu usage
     host_usage.update({'dr' : host_disk_usage[0]*1024}) #Bytes/s
     host_usage.update({'dw' : host_disk_usage[1]*1024})
     host_usage.update({'ram' : host_mem_usage*1024}) #Bytes
     host_usage.update({'rx' : host_nw_usage[0]}) #in Bytes
     host_usage.update({'tx' : host_nw_usage[1]}) #in Bytes
+    
 
     rrd_logger.info("Host %s stats:  %s" % (host_ip, host_usage))
     return host_usage
 
-
+#Update host rrd file on an interval of 5 min
 def update_host_rrd(host_ip,m_type=None):
-    """
-    Updates the RRD file for host with resource utilization data
-    """
+
     try:
    
-        rrd_file = _get_rrd_file(host_ip.replace(".","_"))
+        rrd_file = get_rrd_file(host_ip.replace(".","_"))
         rrd_logger.info(rrd_file)
         timestamp_now = time.time()
         rrd_logger.info(timestamp_now)
@@ -444,50 +474,51 @@ def update_host_rrd(host_ip,m_type=None):
 
             rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
             rrd_logger.warn("Creating new RRD file")
-            create_rrd(rrd_file)
+	    if m_type is None:
+                create_rrd(rrd_file,"host")
+	    else:
+		create_rrd(rrd_file)
        
         else:
             rrd_logger.info("updating  RRD file")
             if m_type is None:
                 host_stats = get_host_resources_usage(host_ip)
+                rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx'],host_stats['tmp'], host_stats['pwr']))
             else:
                 host_stats = get_host_resources_usage(host_ip,m_type)
                 
-            rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
+                rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
+	    
  
     except Exception, e:
  
         rrd_logger.debug("Error occured while creating/updating rrd for host: %s" % (host_ip))
         rrd_logger.debug(e)
 
+#Update host rrd file on an interval of 5 min
 def update_vm_rrd(dom, active_dom_ids, host_ip):
-    """
-    Updates the RRD file for VM with resource utilization data
-    """
-    dom_name = dom.name()
-    rrd_file = _get_rrd_file(dom.name())
-    
-    if not (os.path.exists(rrd_file)):
-        rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
-        rrd_logger.warn("Creating new RRD file")
-        create_rrd(rrd_file)
-    
-    else:
-    
-        timestamp_now = time.time()
-    
-        if dom.ID() in active_dom_ids:
-            vm_usage = get_actual_usage(dom, host_ip)
-            rrd_logger.debug("Usage Info for VM %s: %s" % (dom_name, vm_usage))
-            rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, vm_usage['cpu'], vm_usage['ram'], vm_usage['dr'], vm_usage['dw'], vm_usage['tx'], vm_usage['rx']))
+
+        dom_name = dom.name()
+        rrd_file = get_rrd_file(dom.name())
+ 
+        if not (os.path.exists(rrd_file)):
+            rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
+            rrd_logger.warn("Creating new RRD file")
+            create_rrd(rrd_file)
+ 
         else:
-            rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
+ 
+            timestamp_now = time.time()
+ 
+            if dom.ID() in active_dom_ids:
+                vm_usage = get_actual_usage(dom, host_ip)
+                rrd_logger.debug("Usage Info for VM %s: %s" % (dom_name, vm_usage))
+                rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, vm_usage['cpu'], vm_usage['ram'], vm_usage['dr'], vm_usage['dw'], vm_usage['tx'], vm_usage['rx']))
+            else:
+                rrdtool.update(rrd_file, "%s:0:0:0:0:0:0" % (timestamp_now))
 
 
-def _set_domain_memoryStatsperiod(host_ip):
-    """
-    Dynamically changes the domain memory balloon driver statistics collection period
-    """
+def set_domain_memoryStatsperiod(host_ip):
     try:
         hypervisor_conn = libvirt.open("qemu+ssh://root@" + host_ip + "/system")
         active_dom_ids  = hypervisor_conn.listDomainsID()
@@ -499,10 +530,10 @@ def _set_domain_memoryStatsperiod(host_ip):
     finally:
         rrd_logger.info("Ending setting memory stats periods for VM's %s" % host_ip)
         if hypervisor_conn:
-            hypervisor_conn.close()
+           hypervisor_conn.close()
 
 
-def update_rrd(host_ip, m_type=None):
+def update_rrd(host_ip,m_type=None):
     #UPDATE CONTROLLER AND NAT RRD
     if m_type is not None:
     
@@ -520,7 +551,7 @@ def update_rrd(host_ip, m_type=None):
 
         rrd_logger.info("Startiing rrd updation for VMs on host %s" % (host_ip))
         #Adding the call for setting stat periods for all VM's on the host
-        _set_domain_memoryStatsperiod(host_ip)
+        set_domain_memoryStatsperiod(host_ip)
 
         #UPDATE RRD for ALL VMs on GIVEN HOST
         hypervisor_conn = None
@@ -560,15 +591,13 @@ def update_rrd(host_ip, m_type=None):
             rrd_logger.info("Ending rrd updation for vms on host %s" % host_ip)
             if hypervisor_conn:
                 hypervisor_conn.close()
-        
-
 #fetch graph data for vm/host from their respective rrd file
 def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
-    
+    rrd_logger.debug("fetch_info graph")
     start_time = None
 #     consolidation = 'MIN' 
     end_time = 'now'
-    rrd_file = _get_rrd_file(vm_identity)
+    rrd_file = get_rrd_file(vm_identity)
     if graph_period == 'hour':
         start_time = 'now - ' + str(12*300)
     elif graph_period == 'day':
@@ -584,10 +613,10 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
     result1=[]
     result2=[]
     result3=[]
-
+    rrd_logger.debug(rrd_file)
     if os.path.exists(rrd_file):
         rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)    
-        
+        rrd_logger.debug("fetched rrd data")
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2] 
         tim_info=rrd_ret[0][0]
@@ -598,7 +627,10 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         dskw_idx = fld_info.index('dw')
         nwr_idx = fld_info.index('tx')
         nww_idx = fld_info.index('rx')
-#         mem_data=[]
+        if m_type=="host":
+	    tmp_idx = fld_info.index('tmp')
+	    power_idx = fld_info.index('pwr')
+	    rrd_logger.debug("tmp poser")
 
         timeinterval=1
         for data in data_info:
@@ -631,47 +663,66 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
                     
                 info['x']=time_info
                 result3.append(info) 
+            if m_type=="host":
+                if g_type=="tmp":
+                    if data[tmp_idx] != None and  data[tmp_idx]>0: 
+                        info['y']=data[tmp_idx]
+                    else:		    
+                        info['y']=float(0)                    
+                    info['x']=time_info
+                    result3.append(info) 
 
-        if g_type=="disk":
+                if g_type=="power":
+                     if data[power_idx] != None and  data[power_idx]>0: 
+                    
+                         info['y']=data[power_idx]
+                     else:		    
+                         info['y']=float(0)                    
+                     info['x']=time_info
+                     result3.append(info) 
+
+            if g_type=="disk":
         
-            if data[dskr_idx] != None: 
-                info1['y']=round(float(data[dskr_idx])/(1024*1024),2)
-            else:
-                info1['y']=float(0)
+                if data[dskr_idx] != None: 
+                    info1['y']=round(float(data[dskr_idx])/(1024*1024),2)
+                else:
+                    info1['y']=float(0)
 
-            if data[dskw_idx] != None: 
-                info['y']=round(float(data[dskw_idx])/(1024*1024),2)
-            else:
-                info['y']=float(0)
+                if data[dskw_idx] != None: 
+                    info['y']=round(float(data[dskw_idx])/(1024*1024),2)
+                else:
+                    info['y']=float(0)
 
-            info['x']=time_info 
-            info1['x']=time_info 
+                info['x']=time_info 
+                info1['x']=time_info 
             
-            result1.append(info1) 
-            result2.append(info)
+                result1.append(info1) 
+                result2.append(info)
 
-        if g_type=="nw":
-            if data[nwr_idx] != None: 
-                info1['y']=round(float(data[nwr_idx])/(1024*1024),2)
-            else:
-                info1['y']=float(0)
-            if data[nww_idx] != None: 
-                info['y']=round(float(data[nww_idx])/(1024*1024),2)
-            else:
-                info['y']=float(0)
+            if g_type=="nw":
+                if data[nwr_idx] != None: 
+                    info1['y']=round(float(data[nwr_idx])/(1024*1024),2)
+                else:
+                    info1['y']=float(0)
+                if data[nww_idx] != None: 
+                    info['y']=round(float(data[nww_idx])/(1024*1024),2)
+                else:
+                    info['y']=float(0)
                 
-            info['x']=time_info 
-            info1['x']=time_info 
-            result1.append(info1) 
-            result2.append(info)	
+                info['x']=time_info 
+                info1['x']=time_info 
+                result1.append(info1) 
+                result2.append(info)	
 
 
-    if g_type=='ram' or g_type=='cpu':
+    if g_type=='ram' or g_type=='cpu' or g_type=='tmp' or g_type=='power':
+	rrd_logger.debug("result3")
         return result3
 
     if g_type=='nw' or g_type=='disk':
         result.append(result1) 
         result.append(result2)	
+	rrd_logger.debug("result")
         return result
 
 #check graph period to display time
@@ -709,5 +760,15 @@ def check_graph_type(g_type,vm_ram,m_type):
         else:
             title['y_title']="ram(MB)"
         title['g_title']="MEMORY PERFORMANCE"
-    
+    if m_type=='host':
+        if g_type=='tmp':
+            title['y_title']='t(Degree Celcius)'
+            title['g_title']="TEMPERATURE PERFORMANCE"
+        if g_type=='power':
+            title['y_title']='power(Watt)'
+            title['g_title']="POWER PERFORMANCE"
     return title
+
+
+###############################################################################################################################################
+
