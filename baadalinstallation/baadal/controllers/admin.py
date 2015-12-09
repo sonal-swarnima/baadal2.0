@@ -600,13 +600,13 @@ def create_graph_for_host():
     m_type=request.vars['mtype']
     host_cpu=request.vars['host_CPU']
     title=check_graph_type(g_type, vm_ram, m_type)
-   
+    logger.debug("Checking machine type :" + str(m_type))
     ret['valueformat']=check_graph_period(graph_period)
     ret['y_title']=title['y_title']
     ret['g_title']=title['g_title']
     
     ret['data']=fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu)
-    
+    logger.debug(ret['data'])
     ret['mem']=float(vm_ram)/(1024) if int(vm_ram)>1024 else vm_ram
     
 
@@ -619,6 +619,10 @@ def create_graph_for_host():
         ret['legend_write']='network write'
     elif g_type=='cpu':
         ret['name']='cpu'
+    elif g_type=='tmp':
+        ret['name']='tmp'
+    elif g_type=='power':
+        ret['name']='power'
     else:
         ret['name']='mem'	
     import json
@@ -626,6 +630,7 @@ def create_graph_for_host():
     json_str = json.dumps(ret, ensure_ascii=False)
     
     return json_str
+
 
         
 @check_moderator
