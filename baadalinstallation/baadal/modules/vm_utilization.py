@@ -681,7 +681,7 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
             if m_type=="host":
                 if g_type=="tmp":
                     if data[tmp_idx] != None and  data[tmp_idx]>0: 
-                        info['y']=data[tmp_idx]
+                        info['y']=round(float(data[tmp_idx]),2)
                     else:		    
                         info['y']=float(0)                    
                     info['x']=time_info
