@@ -85,7 +85,7 @@ window.onload = function () {
                     var data1={};
                     data1['y']=data2[i].y;
 	            data1['x']=new Date(data2[i].x);
-                    if (data1['y']>ret['mem']){
+                    if (data1['y']>ret['limit']){
                         data1['markerColor']='red';
                         }
 		   
@@ -102,6 +102,12 @@ window.onload = function () {
 		    
 	            info[i]=data4;
 		    info1[i]=data3;
+		    if (data3['y']>ret['limit']){
+                        data3['markerColor']='red';
+                        }
+		    if (data4['y']>ret['limit']){
+                        data4['markerColor']='green';
+                        }
 		    }
 		
 	        }
