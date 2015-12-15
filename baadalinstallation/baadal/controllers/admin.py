@@ -590,6 +590,7 @@ def show_host_performance():
     m_type="host"
     return dict(host_id=host_id, host_identity=host_identity ,host_ram=host_ram, m_type=m_type,host_cpu=host_cpu)
 
+
 def create_graph_for_host():
     ret={}
 
@@ -613,24 +614,28 @@ def create_graph_for_host():
     if g_type=='disk':
         ret['legend_read']='disk read'
         ret['legend_write']='disk write'
-    
+        ret['limit']=400000000
     elif g_type=='nw':
         ret['legend_read']='network read'
         ret['legend_write']='network write'
+	ret['limit']=3,00,000
     elif g_type=='cpu':
         ret['name']='cpu'
+	ret['limit']=100
     elif g_type=='tmp':
         ret['name']='tmp'
+	ret['limit']=60
     elif g_type=='power':
         ret['name']='power'
+	ret['limit']=400
     else:
-        ret['name']='mem'	
-    import json
+        ret['name']='mem'
+	ret['limit']=ret['mem']	
+    
     
     json_str = json.dumps(ret, ensure_ascii=False)
     
     return json_str
-
 
 
         
