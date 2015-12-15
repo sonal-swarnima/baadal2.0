@@ -389,30 +389,40 @@ def get_host_mem_usage(host_ip,m_type=None):
 
 
 """EXtracting impi output """
-def get_impi_output(cmd):
-    output=execute_remote_cmd(host_ip, cmd, None,  True)
-    logger.debug(output[0].split("|")[4].split(" ")[1])
-    ret=ret[0].split("|")[4].split(" ")[1]
-    return ret
+def get_impi_output(cmd,host_ip):
+    rrd_logger.debug("entering ipmi")
+    output=execute_remote_cmd(host_ip,'root', cmd, None,  True)
+    rrd_logger.debug(output)
+    rrd_logger.debug(output[0].split("|")[4].split(" ")[1])
+    ret=output[0].split("|")[4].split(" ")[1]
+    rrd_logger.debug("cheecking ret"+str(ret))
+    return int(ret)
 
 """Uses IMPITOOL to get host temp """
 def get_host_temp_usage(host_ip):
+    rrd_logger.info("Checking temp on host"+str(type(host_ip)))
     command='ipmitool sdr elist full'
     ret=execute_remote_cmd(host_ip, 'root', command, None,  True)
-    if "Inlet Temp" in ret:
-        temp=get_impi_output('ipmitool sdr elist full | grep "Inlet Temp"')
-    if "Ambient Temp" in ret:
-	temp=get_impi_output('ipmitool sdr elist full | grep "Ambient Temp"')
+    if str(ret).find("Inlet Temp")!=int(-1):
+        rrd_logger.debug("Entering")
+        temp=get_impi_output('ipmitool sdr elist full | grep "Inlet Temp"',host_ip)
+    if str(ret).find("Ambient Temp")!=int(-1):
+	rrd_logger.debug("Entering")
+	temp=get_impi_output('ipmitool sdr elist full | grep "Ambient Temp"',host_ip)
+    rrd_logger.info("temp stats" +str(type(temp)))
+    rrd_logger.info("temp stats" +str(temp))
     return temp # returning temperature in degree Celsius
 
 """Uses IMPITOOL to get host power consumption"""
 def get_host_power_usage(host_ip):
-    execute_remote_cmd(host_ip, 'root', command, None,  True)
-    ret=ret=os.popen('ipmitool sdr elist full').readlines()
-    if "System Level" in ret:
-        pwr_usage=get_impi_output('ipmitool sdr elist full | grep "System Level"')
-    if "Pwr Consumption" in ret:
-        pwr_usage=get_impi_output('ipmitool sdr elist full | grep "Pwr Consumption"')
+    rrd_logger.info("Checking power on host"+str(host_ip))
+    command='ipmitool sdr elist full'
+    ret=execute_remote_cmd(host_ip, 'root', command, None,  True)
+    if str(ret).find("System Level")!=int(-1):
+        pwr_usage=get_impi_output('ipmitool sdr elist full | grep "System Level"',host_ip)
+    if str(ret).find("Pwr Consumption")!=int(-1):
+        pwr_usage=get_impi_output('ipmitool sdr elist full | grep "Pwr Consumption"',host_ip)
+    rrd_logger.info("power stats of host %s is %s" % (host_ip, str(pwr_usage)))
     return pwr_usage # returining power in Watt
 
 """Uses ifconfig command to capture network usage for host"""
@@ -431,7 +441,7 @@ def get_host_nw_usage(host_ip,m_type=None):
     return [rx, tx] # return network in Bytes
 
 def get_host_resources_usage(host_ip,m_type=None):
-    host_usage={}
+    
     rrd_logger.info("getting data for RRD file")
     if m_type is None:
         host_cpu_usage = get_host_cpu_usage(host_ip)
@@ -440,8 +450,8 @@ def get_host_resources_usage(host_ip,m_type=None):
         host_nw_usage = get_host_nw_usage(host_ip)
         host_temp_usage =get_host_temp_usage(host_ip)
         host_power_usage =get_host_power_usage(host_ip)
-        host_usage.update({'tmp' : host_temp_usage}) #in Degree Celsius
-        host_usage.update({'pwr' : host_power_usage}) #in Watt
+	rrd_logger.info("host_cpu_usage"+str(type(host_cpu_usage)))
+        rrd_logger.info("host_temp_usage"+str(type(host_temp_usage)))
     else:
 
         host_cpu_usage = get_host_cpu_usage(host_ip,m_type)
@@ -455,14 +465,17 @@ def get_host_resources_usage(host_ip,m_type=None):
     host_usage.update({'ram' : host_mem_usage*1024}) #Bytes
     host_usage.update({'rx' : host_nw_usage[0]}) #in Bytes
     host_usage.update({'tx' : host_nw_usage[1]}) #in Bytes
-    
-
+    if m_type is None:
+	host_usage.update({'tmp' : host_temp_usage}) #in Degree Celsius
+        host_usage.update({'pwr' : host_power_usage}) #in Watt
+        
     rrd_logger.info("Host %s stats:  %s" % (host_ip, host_usage))
+    
     return host_usage
 
 #Update host rrd file on an interval of 5 min
 def update_host_rrd(host_ip,m_type=None):
-
+    
     try:
    
         rrd_file = get_rrd_file(host_ip.replace(".","_"))
@@ -482,8 +495,10 @@ def update_host_rrd(host_ip,m_type=None):
         else:
             rrd_logger.info("updating  RRD file")
             if m_type is None:
+		rrd_logger.debug("host_ip is"+ str(host_ip))
                 host_stats = get_host_resources_usage(host_ip)
-                rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx'],host_stats['tmp'], host_stats['pwr']))
+                output=rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx'],host_stats['tmp'], host_stats['pwr']))
+		rrd_logger.debug("update status"+str(output))
             else:
                 host_stats = get_host_resources_usage(host_ip,m_type)
                 
