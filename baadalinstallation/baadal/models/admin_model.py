@@ -1088,16 +1088,29 @@ def get_vm_groupby_organisations() :
 
 
     
-####################Utilizations page################################3
-def zoom_info(g_type):  	
-	root_info={}    
+    
+def get_avg_utilizations_hosts(avg_ram_host):
+    avg=sum(avg_ram_host)/len(avg_ram_host)
+    return avg
+   
+
+
+####################Utilizations page################################
+
+def zoom_info(g_type): 
+        avg_ram_host=[] 
+        avg_cpu_host=[]	
+	root_info={}   
+        total_ram_host=[] 
+        total_cpu_host=[]
+	total_hdd_host=[] 
         if g_type=="host":
             graph_name="HOST DETAILS" 
 	    hostvmlist = get_vm_groupby_hosts() 
 	else:
 	    graph_name="ORGANISATION DETAILS" 
 	    hostvmlist = get_vm_groupby_organisations() 
-	root_info["name"]=graph_name
+	    root_info['name']=graph_name
 	parent_util=[]
 	for o_row in hostvmlist:
 	    rows=o_row['details']           
@@ -1109,9 +1122,15 @@ def zoom_info(g_type):
                     util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
 		    hdd=round(float(o_row['host_HDD'])/1024,2)
                     host_info= " (RAM: "+str(o_row['host_RAM'])+" GB CPU: "+str( o_row['host_CPUs'])+" core HDD: "+str(hdd) + " TB)"
+		    host_ram_util=round(((util_data[0]/(o_row['host_RAM'] * 1024*1024*1024))*100), 2)
+		    host_cpu_util=round((float(util_data[1])*100)/(float(int(o_row['host_CPUs'])*5*60*1000000000)),2)
+		    child_info["name"]=str(o_row['host_ip'])+" "+str(host_info) + ":: UTILIZATION  MEM: " +str(host_ram_util) +"% " +" CPU: "+str(host_cpu_util) + "%"
 		    
-		    child_info["name"]=str(o_row['host_ip'])+" "+str(host_info) + ":: UTILIZATION  MEM: " +str(round(((util_data[1]/(o_row['host_RAM'] * 1024*1024*1024))*100), 2)) +"% " +" CPU: "+str(round((float(util_data[1])*100)/(float(int(o_row['host_CPUs'])*5*60*1000000000)),2)) + "%"
-            	    
+            	    avg_ram_host.append(host_ram_util)	
+                    avg_cpu_host.append(host_cpu_util) 
+                    total_ram_host.append(o_row['host_RAM'])
+        	    total_cpu_host.append(o_row['host_CPUs'])
+		    total_hdd_host.append(hdd)
 		else:
 	    	    child_info["name"]=o_row['org_name']                    
 	        for row in rows:		    
@@ -1122,10 +1141,20 @@ def zoom_info(g_type):
 		    ram_utilization=round(((util_data[0]/(float(row["RAM"].split(" ")[0])* 1024*1024*1024))*100), 2)		   
 		    cpu_utilization=round((float(util_data[1])*100)/(float(int(row['vcpus'].split(" ")[0])*5*60*1000000000)),2)		    
 		    vm_info['name']=str(row['name']) + "  ("+ str(row['RAM'])+" "+str( row['vcpus'])+" "+str(row['hdd']) + "GB) mem: " + str(ram_utilization) + "% cpu: " + str(cpu_utilization) + "%"
-		   
-	            child_util.append(vm_info)		    
+	            child_util.append(vm_info)	
+                
+		
 	        child_info["children"]=child_util		
-                parent_util.append(child_info)        
+                parent_util.append(child_info)  
+        if g_type=="host":	     
+	    avg_ram=get_avg_utilizations_hosts(avg_ram_host)   
+	    avg_cpu=get_avg_utilizations_hosts(avg_cpu_host) 
+            avl_ram=sum(total_ram_host) 
+	    avl_cpu=sum(total_cpu_host)
+	    avl_hdd=sum(total_hdd_host)
+           
+            all_host_info= " (RAM: "+str(avl_ram)+" GB CPU: "+str(avl_cpu)+" core HDD: "+str(avl_hdd) + " TB)"
+	    root_info['name']="HOST DETAILS :" + str(all_host_info) + " :: UTILIZATION  MEM: " + str(round(avg_ram,2)) + "% CPU: " + str(round(avg_cpu,2)) +"%"
 	root_info['children']=parent_util
         return root_info
     
