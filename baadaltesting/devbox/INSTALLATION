@@ -1,0 +1,7 @@
+1. update machine
+   apt-get update
+
+2. install make and firefox
+ apt-get install make firefox
+
+3. make devbox

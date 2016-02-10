@@ -1,0 +1,21 @@
+<network>
+<name>ovs-net</name>
+<forward mode='bridge'/>
+<bridge name='baadal-br-int'/>
+<virtualport type='openvswitch'/>
+<portgroup name='vlan1'>
+	<vlan><tag id='1'/></vlan>
+</portgroup>
+<portgroup name='vlan2'>
+	<vlan><tag id='2'/></vlan>
+</portgroup>
+<portgroup name='vlan3'>
+	<vlan><tag id='3'/></vlan>
+</portgroup>
+<portgroup name='vlan4'>
+	<vlan><tag id='4'/></vlan>
+</portgroup>
+<portgroup name='vlan5'>
+	<vlan><tag id='5'/></vlan>
+</portgroup>
+</network>
