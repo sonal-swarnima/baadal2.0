@@ -1,7 +1,16 @@
-1. update machine
+Execute below steps to install devbox on your system.
+
+1. update your machine and install some packages
    apt-get update
+   apt-get install make
+   apt-get install firefox
 
-2. install make and firefox
- apt-get install make firefox
+2. make devbox
 
-3. make devbox
+3. open firefox and open baadal GUI, http://localhost/baadal
+   user:- admin
+   passwd:- baadal
+
+   Request for a VM in user menu.
+   VM's default user is "cirros" and password is "cubswin:)"
+

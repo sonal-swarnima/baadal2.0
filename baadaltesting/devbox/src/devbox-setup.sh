@@ -261,8 +261,7 @@ run()
     $ECHO_OK iptables-persistent found
   fi
 
-  ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL
-  ovsvsctl_del_br $OVS_BRIDGE_INTERNAL
+  ovsvsctl_del_br $OVS_BRIDGE_EXTERNAL ;  ovsvsctl_del_br $OVS_BRIDGE_INTERNAL ; dhclient -v eth0
 
   ovsvsctl_add_br $OVS_BRIDGE_EXTERNAL
 
@@ -374,14 +373,16 @@ run()
    Instl_Pkgs
    echo "Pkgs Installed"
    ##installing libvirt packages
-   cd /baadal/baadal/baadaltesting/sandbox/utils
+   cd ../utils
       tar -xvzf libvirt-1.2.6.tar.gz
+      
       mv libvirt-1.2.6 /tmp/libvirt-1.2.6
 
       cd /tmp/libvirt-1.2.6
          ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc --with-esx=yes
           make
           make install
+	  killall libvirtd
           /usr/sbin/libvirtd -d
           if test $? -ne 0; then
               echo "Unable to start libvirtd. Check installation and try again"
@@ -391,6 +392,7 @@ run()
           sed -i -e "s@exit 0\$@/usr/sbin/libvirtd -d\nexit 0@" /etc/rc.local
       cd -
 
+      tar -xvzf libvirt-python-1.2.6.tar.gz 
       cd libvirt-python-1.2.6
           /tmp/libvirt-1.2.6/run python setup.py build
           /tmp/libvirt-1.2.6/run python setup.py install
@@ -401,7 +403,7 @@ run()
           python setup.py install --prefix=/usr
       cd -
 
-   cd /baadal/baadal/baadaltesting/devbox/src
+   cd ../src
 
    virsh net-destroy default
    virsh net-autostart --disable default

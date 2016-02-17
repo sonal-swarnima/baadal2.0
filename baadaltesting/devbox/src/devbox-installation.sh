@@ -105,10 +105,10 @@ Chk_installation_config()
         ###       exit 1
         ###fi 
 
-        if test ! -d $ABSOLUTE_PATH_OF_BAADALREPO; then
-                echo "Baadal Repo not Found!!!"
-                exit 1
-        fi 
+        #if test ! -d $ABSOLUTE_PATH_OF_BAADALREPO; then
+        #       echo "Baadal Repo not Found!!!"
+        #        exit 1
+        #fi 
 
 
         if test ! -d $BAADAL_APP_DIR_PATH; then
@@ -314,7 +314,7 @@ Instl_Pkgs()
         echo "If you have done all the steps correctly, Congo!!!"
 
 
-        cd /baadal/baadal/baadalinstallation
+        cd ../../../baadalinstallation
 
 	echo "Packages Installed Successfully..................................."
 }
@@ -481,7 +481,7 @@ if test -d "/home/www-data/web2py/"; then
 	
 fi
 
-cd /baadal/baadal/baadalinstallation
+cd ../../../baadalinstallation
 if test $install_web2py -eq 1; then
 		
 	echo "Initializing Web2py Setup"	
@@ -553,8 +553,7 @@ Enbl_Modules()
 	shopt -s nocasematch
 	case $DB_TYPE in
 		
-		mysql) /etc/init.d/mysql restart
-
+		mysql) 
 			    if test $? -ne 0; then
 					echo "UNABLE TO RESTART MYSQL!!!"
 			  		echo "EXITING INSTALLATION......................................"
@@ -590,7 +589,8 @@ Enbl_Modules()
 					echo "UNABLE TO CREATE DATABASE!!!"
 			  		echo "EXITING INSTALLATION......................................"
 					exit 1						
-				fi					
+				fi				
+                          /etc/init.d/mysql restart	
 	esac
 
 	mkdir -p $LOCAL_MOUNT_POINT
@@ -829,7 +829,7 @@ filer_setup()
   fi
 
   # copy template to datastore
-  cp /baadal/baadal/baadaltesting/devbox/template.qcow2 /baadal/data/vm_templates 
+  cp $PWD/../template.qcow2 /baadal/data/vm_templates 
 
   $ECHO_OK Filer has been setup.
 }
