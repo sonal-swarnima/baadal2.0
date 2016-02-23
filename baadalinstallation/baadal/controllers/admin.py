@@ -27,6 +27,11 @@ def list_all_vm():
     vm_list = get_all_vm_list()
     return dict(vmlist = vm_list)
 
+
+def list_all_object_store():
+    ob_list = get_all_object_list()
+    return dict(oblist = ob_list)
+
 @check_moderator
 @handle_exception
 def list_all_pending_requests():
@@ -36,7 +41,8 @@ def list_all_pending_requests():
     return dict(install_requests = requests[0], 
                 clone_requests   = requests[1], 
                 disk_requests    = requests[2], 
-                edit_requests    = requests[3])
+                edit_requests    = requests[3],
+                install_object_store_requests = requests[4])
 
 @check_moderator
 @handle_exception
@@ -232,9 +238,9 @@ def migrate_vm():
         redirect(URL(c = 'admin', f = 'hosts_vms'))
     logger.debug("vm_details[affinity flag] :  " + str(vm_details['affinity_flag']))
     if vm_details['affinity_flag'] != 0:
-        host_details = get_host_details(vm_details['vm_name'])
-        logger.debug("available_hosts : " + str(host_details['available_hosts']))
-        vm_details['available_hosts'] = host_details['available_hosts']
+      host_details = get_host_details(vm_details['vm_name'])
+      logger.debug("available_hosts : " + str(host_details['available_hosts']))
+      vm_details['available_hosts'] = host_details['available_hosts']
     return dict(vm_details=vm_details)
 
 

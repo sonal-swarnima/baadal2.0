@@ -1,0 +1,43 @@
+{{extend 'layout.html'}}
+
+<div id="tabs-task">
+
+  <ul>
+    <li><a href="#vmTab", onclick="set_tab_cookie(0);">My Object Store</a></li>
+  </ul>
+  
+  <div id="vmTab">
+  {{
+    if not my_object_store:
+  }}
+  <h3>No Available Object Store</h3>
+  {{else:}}
+ <br/> <li>You can download the sample program from here  <a href="{{=URL(args='../download_sample_obect_program')}}"><b><mark>Download</mark></b></a></li>
+  <table id="myobs" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Size</th>
+        <th>Type</th>
+        <th>Download_Keys</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{for ob in my_object_store:}}
+      <tr>
+        <td>{{=ob['name']}}</td>
+        <td>{{=ob['owner']}}</td>
+        <td>{{=ob['size']}}</td>
+        <td>{{=ob['type']}}</td>
+        <td>{{=A(IMG(_src=URL('static','images/save.png'), _height=18, _width=18),
+        _href=URL(r=request, f='download_object_keys', args=[ob['name'],ob['owner']]), _id="ob"+str(ob['name']), 
+        _title="download", 
+        _alt="download")}}</td>
+      </tr>
+    {{pass}}
+    </tbody>
+  </table>
+  {{pass}}
+  </div>
+</div>

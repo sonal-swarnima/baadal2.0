@@ -22,7 +22,11 @@ from helper import logger, get_datetime
 def schedule_task(fields, _id):
     #Add entry into task_queue_event
     vm_id = fields['parameters']['vm_id'] if 'vm_id' in fields['parameters'] else None
-    vm_name = db.vm_data[vm_id].vm_name if vm_id else ""
+    if fields['task_type'] != Object_Store_TASK_CREATE:
+        vm_name = db.vm_data[vm_id].vm_name if vm_id else ""
+    else:
+        vm_name = ""
+        vm_id = -1
 
     task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
@@ -40,6 +44,15 @@ def schedule_task(fields, _id):
                                     start_time = request.now, 
                                     timeout = 30 * MINUTES, 
                                     group_name = 'vm_task')
+
+    elif fields['task_type'] == Object_Store_TASK_CREATE:
+        logger.info("\n ENTERING OBJECT_TASK	........")
+        vm_scheduler.queue_task('object_task' ,
+                                pvars = dict(task_event_id = task_event_id),
+                                start_time = request.now, 
+                                timeout = 30 * MINUTES, 
+                                group_name = 'vm_task')
+
     else:
         vm_scheduler.queue_task('vm_task', 
                                 pvars = dict(task_event_id = task_event_id),

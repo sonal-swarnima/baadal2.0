@@ -1,0 +1,141 @@
+{{extend 'layout.html'}}
+
+<div class="post">
+    <h2 class="subtitle">{{=T('Request Object Store')}}</h2>
+    <div class="entry">
+        {{=form}}
+    </div>
+</div>
+    
+
+<script>
+jQuery(document).ready(function(){
+    template_check();
+    if($('#faculty_user').val() != undefined)
+    {
+    	verify_faculty();
+    }
+    var vm_users = jQuery('#collaborator').val();
+    users = vm_users.split('|');
+    for (i = 0; i < users.length; i++) {
+        if(users[i] != ''){
+            add_collaborator(users[i], false);
+        }
+    }
+    jQuery('#collaborator').val('');
+});
+
+jQuery('#request_queue_template_id').change(function(){
+    template_check();
+});
+
+function template_check() {
+    var _value=$('#request_queue_template_id').val();
+    
+    jQuery('[id^=config_row__]').hide();    
+    
+    if(jQuery('#config_row__'+_value).length == 0){
+        jQuery('#config_row__0').show();   
+    }else
+    {
+        jQuery('#config_row__'+_value).show();
+    }
+}
+  
+function verify_faculty() {
+	jQuery('.flash').hide().html('');
+    var verify_url = "{{=URL('verify_faculty')}}";
+    var faculty_user = jQuery('#faculty_user').val();
+    if(faculty_user.trim() != '')
+    {
+        jQuery.post(verify_url, {keywords:faculty_user},
+            function(result){
+                if(result != 'None'){
+                    if($('#faculty_name_row'))
+                    {
+                        $('#faculty_name_row').remove();
+                    }
+                    $('<tr id="faculty_name_row"><td></td><td>'+result+'</td><td></td></tr>').insertAfter($('#faculty_row'));
+                }else
+                {
+                    if($('#faculty_name_row'))
+                    {
+                        $('#faculty_name_row').remove();
+                    }
+                    jQuery('.flash').html('Faculty Approver Username is not valid').slideDown();
+                }
+            }
+        );
+    }
+}
+
+function check_collaborator(){
+    var vm_users = jQuery('[name="vm_users"]').val();
+    var vm_username = jQuery('#collaborator').val();
+
+    var users_num = jQuery('[id^=user_]').length;
+    if(users_num == 5){
+        jQuery('.flash').html('Only upto 5 collaborators can be added to the VM').slideDown();
+        return;
+    }
+    if(vm_users.indexOf('|'+vm_username+'|') != -1)
+    {
+        $('.flash').html('A collaborator cannot be added twice').slideDown();
+        $('#collaborator').val('');
+        return;
+    }
+    if(vm_username.toUpperCase() == '{{=auth.user.username}}'.toUpperCase())
+    {
+        $('.flash').html('Requester name need not be added as collaborator.').slideDown();
+        $('#collaborator').val('');
+        return;
+    }
+    if($('#faculty_user').val() != undefined)
+    {
+        if(vm_username.toUpperCase() == $('#faculty_user').val().toUpperCase())
+        {
+            $('.flash').html('Faculty approver need not be added as collaborator.').slideDown();
+            $('#collaborator').val('');
+            return;
+        }    
+    }
+    
+    add_collaborator(vm_username, true)
+}
+
+function add_collaborator(vm_username, showmsg) {
+
+    var verify_url = "{{=URL('add_collaborator')}}";
+    jQuery.post(verify_url, {keywords:vm_username},
+        function(result){
+            if(result != 'None'){
+                jQuery('[name="vm_users"]').val($('[name="vm_users"]').val() + vm_username + '|');
+                
+                $('<tr id="user_'+vm_username+'"><td></td><td>'+result+'</td><td><a href="#" onclick="remove_collaborator(\''+vm_username+'\')">Remove</a></td></tr>').insertAfter($('#collaborator_row'));
+                
+                jQuery('#collaborator').val('');
+                if(showmsg){
+                    jQuery('.flash').html('Collaborator added').slideDown();
+                }
+            }else
+            {
+                if(showmsg){
+                    jQuery('.flash').html('Collaborator Username is not valid').slideDown();
+                }
+            }
+        }
+    );
+}
+
+function remove_collaborator(vm_user){
+    var vm_users = jQuery('[name="vm_users"]').val()
+    vm_users = vm_users.replace(vm_user+'|', '');
+    jQuery('[name="vm_users"]').val(vm_users);
+    $('#user_'+vm_user).remove();
+}
+
+jQuery('form').submit(function(){
+    $('#collaborator').val($('[name="vm_users"]').val())
+});
+
+</script>

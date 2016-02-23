@@ -1,0 +1,74 @@
+{{extend 'layout.html'}}
+{{
+  if not oblist:
+}}
+<center><h3>No Object Store</h3></center>
+
+{{else:}}
+
+
+<div class = "toolbar" style=" position: relative;" >
+   <label for="search">
+   <strong> Search </strong>
+   </label>     
+   <input type ="text" id = "search"  placeholder ="search list"/>
+</div>
+<h2 class="subtitle">{{=T('All Object Store')}}</h2>
+  <table id="listallobject" class="tablesorter">
+    <thead>  
+      <tr >
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Size</th>
+        <th>Type</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{for vm in oblist:}}
+      <form>
+      <tr>
+        <td>{{=vm['name']}}</td>
+        <td>{{=vm['owner']}}</td>
+        <td>{{=vm['size']}}</td>
+        <td>{{=vm['type']}}</td>
+      </tr>
+      </form>
+    {{pass}}
+    </tbody>
+  </table>
+{{pass}}
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script>
+jQuery(document).ready(function(){ 
+      
+	$('#search').keyup(function()
+	{
+		searchTable($(this).val());
+	});
+});
+
+
+function searchTable(inputVal)
+{
+	var table = $('#listallobject');
+	table.find('tr').each(function(index, row)
+	{
+		var allCells = $(row).find('td');
+		if(allCells.length > 0)
+		{
+			var found = false;
+			allCells.each(function(index, td)
+			{
+				var regExp = new RegExp(inputVal, 'i');
+				if(regExp.test($(td).text()))
+				{
+					found = true;
+					return false;
+				}
+			});
+			if(found == true)$(row).show();else $(row).hide();
+		}
+	});
+}
+
+</script>

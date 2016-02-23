@@ -40,6 +40,20 @@ def get_my_hosted_vm():
 
     return get_hosted_vm_list(vms)
 
+
+def get_my_object_store():
+    """get list of object store"""
+    
+    try:
+        object_store = db((~db.object_store_data.status.belongs(VM_STATUS_IN_QUEUE, VM_STATUS_UNKNOWN))
+                          & (db.object_store_data.id==db.user_object_map.ob_id)
+                          & (db.user_object_map.user_id==auth.user.id)).select(db.object_store_data.ALL)
+        return get_my_object_store_list(object_store)
+    except:
+        msg = 'Some Error Occurred. Please try later'
+        l = []
+        return l     
+
 def get_configuration_elem(form):
     """
     Generates html component of configuration dropdowns
@@ -126,6 +140,30 @@ def get_request_status():
 
     return status
 
+def is_object_store_name_unique(user_set, object_store_name=None, vm_id=None):
+    """
+    Check if Object Store name is unique for the user.
+    This function checks both user's existing object store 
+    and pending requests in queue"""
+    """ To be done Later   
+    if vm_id != None:
+        vm_data = db.vm_data[vm_id]
+        vm_name = vm_data.vm_name
+        
+    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
+             (db.user_vm_map.user_id.belongs(user_set)) & 
+             (db.vm_data.vm_name.like(vm_name))).select()
+    
+    if vms:
+        return False
+    """
+    requests = db(((db.request_queue.owner_id.belongs(user_set)) |
+                   (db.request_queue.requester_id.belongs(user_set))) & 
+                   (db.request_queue.object_store_name.like(object_store_name))).select()
+    
+    return False if requests else True
+
+
 def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
     """
     Check if VM name is unique for the user.
@@ -148,6 +186,32 @@ def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
                    (db.request_queue.vm_name.like(vm_name))).select()
     
     return False if requests else True
+
+    
+def request_object_store_validation(form):
+    
+    form.vars.status = get_request_status()
+
+    if is_vm_user():
+        validate_approver(form)
+    else:
+        form.vars.owner_id = auth.user.id
+
+    vm_users = request.post_vars.vm_users
+    user_list = []
+    if vm_users and len(vm_users) > 1:
+        for vm_user in vm_users[1:-1].split('|'):
+            user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    
+    if request.post_vars.faculty_user:
+        user_list.append(form.vars.owner_id)
+    form.vars.collaborators = user_list
+
+    user_set = set(user_list)
+    user_set.add(auth.user.id)
+
+    if not is_object_store_name_unique(user_set, form.vars.object_store_name):
+        form.errors.object_store_name = 'Object Store name should be unique for the user. Choose another name.'
 
     
 def request_vm_validation(form):
@@ -205,6 +269,27 @@ def add_collaborators(form):
                         verify_function = 'check_collaborator()', 
                         verify_label = 'Add',
                         row_id = 'collaborator_row')
+
+def get_request_object_store_form():
+    
+    form_fields = ['object_store_name','object_store_size','object_store_type','purpose']
+
+    db.request_queue.request_type.default = Object_Store_TASK_CREATE
+    db.request_queue.requester_id.default = auth.user.id
+    sd_query = (db.security_domain.visible_to_all == True) | (db.security_domain.org_visibility.contains(auth.user.organisation_id))
+    db.request_queue.security_domain.requires = IS_IN_DB(db(sd_query), 'security_domain.id', '%(name)s', zero=None)
+    db.request_queue.security_domain.default = 2
+    db.request_queue.security_domain.notnull = True
+    db.request_queue.template_id.notnull = True
+
+    mark_required(db.request_queue)
+    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
+    get_configuration_elem(form) # Create dropdowns for configuration
+    
+    if is_vm_user(): add_faculty_approver(form)
+    
+    add_collaborators(form)
+    return form
 
 
 def get_request_vm_form():

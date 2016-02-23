@@ -40,7 +40,10 @@ def get_edit_pending_request_form(request_id):
     db.request_queue.vm_name.writable=False
     db.request_queue.request_type.writable=False
     db.request_queue.purpose.writable=False
-    form_fields = ['vm_name', 'request_type']
+    if edit_req.request_type == Object_Store_TASK_CREATE:
+        form_fields = ['object_store_name', 'request_type', 'object_store_size']
+    else:    
+        form_fields = ['vm_name', 'request_type']
     
     if edit_req.request_type in (VM_TASK_CREATE, VM_TASK_EDIT_CONFIG) :
         db.request_queue.RAM.requires = IS_IN_SET(VM_RAM_SET, zero=None)

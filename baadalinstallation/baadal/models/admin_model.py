@@ -325,6 +325,10 @@ def get_all_vm_list():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
     return get_hosted_vm_list(vms)
 
+def get_all_object_list():
+     obs = db(db.object_store_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+     return get_my_object_store_list(obs) 
+
 def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) 
              & (db.vm_data.host_id == hostid )).select()
@@ -381,6 +385,18 @@ def create_clone_task(req_data, params):
     params.update({'clone_vm_id':vm_id_list})
     add_vm_task_to_queue(req_data.parent_id, VM_TASK_CLONE, params=params, requested_by=req_data.requester_id)
 
+def object_store_install_task(req_data, params):
+    ob_id = db.object_store_data.insert(
+                  object_store_name = req_data.object_store_name,
+                  object_store_size = req_data.object_store_size,
+                  object_store_type = req_data.object_store_type,
+                  requester_id = req_data.requester_id,
+                  owner_id = req_data.owner_id,
+                  purpose = req_data.purpose,
+                  status = VM_STATUS_IN_QUEUE)
+    add_object_users(ob_id, req_data.requester_id, req_data.owner_id, req_data.collaborators)
+    add_vm_task_to_queue(ob_id, Object_Store_TASK_CREATE, params=params, requested_by=req_data.requester_id)
+
 def create_install_task(req_data, params):
 
     vm_id = db.vm_data.insert(
@@ -428,6 +444,8 @@ def enqueue_vm_request(request_id):
     elif req_data.request_type == VM_TASK_ATTACH_DISK:
         params.update({'disk_size' : req_data.attach_disk})
         add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params, requested_by=req_data.requester_id)
+    elif req_data.request_type == Object_Store_TASK_CREATE:
+        object_store_install_task(req_data, params)
     
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 

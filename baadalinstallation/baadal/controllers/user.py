@@ -14,6 +14,19 @@ if 0:
 ###################################################################################
 from log_handler import logger
 from vm_utilization import check_graph_type, check_graph_period, fetch_info_graph
+def request_object_store():
+    form = get_request_object_store_form()
+    
+    # After validation, read selected configuration and set RAM, CPU and HDD accordingly
+    if form.accepts(request.vars, session, onvalidation=request_object_store_validation):
+        
+        send_email_to_object_requester(form.vars.ob_name)
+        if is_vm_user():
+            send_remind_faculty_email(form.vars.id)
+
+        logger.debug('Object Store requested successfully')
+        redirect(URL(c='default', f='index'))
+    return dict(form=form)
 
 @auth.requires_login()
 @handle_exception
@@ -56,10 +69,48 @@ def list_my_vm():
     saved_templates = get_my_saved_templates()   
     return dict(hosted_vm = hosted_vm, saved_templates = saved_templates)
 
+def list_my_object_store():
+    my_object_store = get_my_object_store()
+    return dict(my_object_store = my_object_store)
+
+def download_sample_obect_program():
+    file_name = 's3_object_key.txt'
+    file_path = os.path.join(get_context_path(), 'private/Object_keys/' + file_name)
+    logger.debug(file_path+"\n")
+    response.headers['Content-Type'] = "text"
+    response.headers['Content-Disposition']="attachment; filename=" +file_name
+    try:
+        return response.stream(get_file_stream(file_path),chunk_size=4096)
+    except Exception:
+        session.flash = "Unable to download your Keys."
+    redirect(URL(r = request, c = 'user', f = 'list_my_object_store'))
+
 @check_vm_owner
 @handle_exception
-def settings():
 
+def download_object_keys():
+    #user_info=get_user_details()
+    #user_name=user_info['username'].title()
+    logger.debug(request.args[1])
+    if '_' in request.args[1]:
+        user_name,b=request.args[1].split('_', 1)
+    else:
+        user_name=request.args[1]
+    object_store_name=request.args[0]
+    logger.debug(object_store_name)
+    file_name = object_store_name+'_key.txt'
+    file_path = os.path.join(get_context_path(), 'private/Object_keys/' + file_name)
+    logger.debug(file_path+"\n")
+    response.headers['Content-Type'] = "text"
+    response.headers['Content-Disposition']="attachment; filename=" +file_name
+    try:
+        return response.stream(get_file_stream(file_path),chunk_size=4096)
+    except Exception:
+        session.flash = "Unable to download your Keys."
+    redirect(URL(r = request, c = 'user', f = 'list_my_object_store'))
+   
+
+def settings():
     vm_id=request.args[0]
     vm_users = None
     vm_info = get_vm_config(vm_id)

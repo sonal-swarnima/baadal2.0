@@ -27,7 +27,8 @@ def pending_approvals():
     return dict(install_requests = requests[0], 
                 clone_requests = requests[1], 
                 disk_requests = requests[2], 
-                edit_requests= requests[3])
+                edit_requests = requests[3],
+                install_object_store_requests = requests[4])
     
 @check_orgadmin
 @handle_exception

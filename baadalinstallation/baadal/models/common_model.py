@@ -55,6 +55,33 @@ def get_hosted_vm_list(vms):
         vmlist.append(element)
     return vmlist
 
+def get_my_object_store_list(obs):
+    oblist = []
+    for ob in obs:
+        element = {'name'         : ob.object_store_name,
+                   'size'         : ob.object_store_size,
+                   'type'         : ob.object_store_type,
+                   'owner'        : ob.owner_id.first_name + ' ' + ob.owner_id.last_name if ob.owner_id > 0 else 'System User'}
+        oblist.append(element)
+    return oblist
+
+
+
+#Update the dictionary with values specific to pending Install object store request tab
+def update_install_Object_Store_request(vm_request, element):
+
+    collaborators = '-'
+    if vm_request.collaborators != None:
+        vm_users = db(db.user.id.belongs(vm_request.collaborators)).select()
+        if len(vm_users) > 0:
+            collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
+
+    element['collaborators'] = collaborators
+    
+    element['object_store_name'] = vm_request.object_store_name
+    element['object_store_size'] = vm_request.object_store_size
+    element['object_store_type'] = vm_request.object_store_type
+
 #Update the dictionary with values specific to pending Install request tab
 def _update_install_vm_request(vm_request, element):
 
@@ -146,7 +173,10 @@ def get_pending_request_list(vm_requests):
                    'RAM' : str(round((vm_request.RAM/1024.0),2)) + ' GB' if vm_request.RAM else None, 
                    'HDD' : str(vm_request.HDD) + ' GB' if vm_request.HDD else None,
                    'request_type' : vm_request.request_type,
-                   'status' : vm_request.status}
+                   'status' : vm_request.status,
+                   'object_store_name' : vm_request.object_store_name,
+                   'object_store_size' : vm_request.object_store_size,
+                   'object_store_type' : vm_request.object_store_type}
         
         if vm_request.request_type == VM_TASK_CREATE:
             _update_install_vm_request(vm_request, element)
@@ -156,6 +186,8 @@ def get_pending_request_list(vm_requests):
             _update_attach_disk_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_EDIT_CONFIG:
             _update_edit_config_request(vm_request, element)
+        elif vm_request.request_type == Object_Store_TASK_CREATE:
+            update_install_Object_Store_request(vm_request, element)
         
         request_list.append(element)
     return request_list
@@ -166,6 +198,7 @@ def get_segregated_requests(request_list):
     clone_requests = []
     disk_requests = []
     edit_requests = []
+    install_object_store_requests = []
     for req in request_list:
         if req['request_type'] == VM_TASK_CREATE:
             install_requests.append(req)
@@ -175,7 +208,9 @@ def get_segregated_requests(request_list):
             disk_requests.append(req)
         elif req['request_type'] == VM_TASK_EDIT_CONFIG:
             edit_requests.append(req)
-    return (install_requests, clone_requests, disk_requests, edit_requests)
+        elif req['request_type'] == Object_Store_TASK_CREATE:
+            install_object_store_requests.append(req)
+    return (install_requests, clone_requests, disk_requests, edit_requests, install_object_store_requests)
    
 def get_users_with_organisation(pending_users):
     users_with_org=[]
@@ -275,6 +310,15 @@ def add_vm_users(_vm_id, requester_id, owner_id, vm_users=None):
     if vm_users: user_list.extend(vm_users)
     for _user_id in set(user_list):
         db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
+
+
+
+def add_object_users(_ob_id, requester_id, owner_id, vm_users=None):
+    user_list = [requester_id, owner_id]
+    if vm_users: user_list.extend(vm_users)
+    for _user_id in set(user_list):
+        db.user_object_map.insert(user_id=_user_id,ob_id=_ob_id);
+
 
 
 # Generic exception handler decorator

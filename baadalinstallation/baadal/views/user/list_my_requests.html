@@ -5,6 +5,7 @@
     <li><a href="#cloneTab", onclick="set_tab_cookie(1);">Clone VM ({{=len(clone_requests)}})</a></li>
     <li><a href="#diskTab", onclick="set_tab_cookie(2);">Attach Disk ({{=len(disk_requests)}})</a></li>
     <li><a href="#editTab", onclick="set_tab_cookie(3);">Edit Configuration ({{=len(edit_requests)}})</a></li>
+    <li><a href="#objectTab", onclick="set_tab_cookie(4);">Object Store ({{=len(install_object_store_requests)}})</a></li>
 </ul>
 
 
@@ -233,6 +234,52 @@
 
 </div>
 
+<div id="objectTab">
+
+{{if len(install_object_store_requests) == 0:}}
+<h3>No Pending Requests</h3>
+    {{else:}}
+
+    <table id="sortTable5" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Requested By</th>
+        <th>Faculty</th>
+        <th>Object Store Name</th>
+        <th>Object Store Size</th>
+        <th>Object Store Type</th>
+        <th>Status</th>
+      </tr> 
+      </thead>
+      <tbody>
+      {{for pend_request in install_object_store_requests:}}
+       <tr id='Row_{{=pend_request['id']}}'>
+            <td>{{=pend_request['requester_name']}}</td>
+            <td>{{=pend_request['faculty_name']}}</td>
+            <td>{{=pend_request['object_store_name']}}</td>
+            <td>{{=pend_request['object_store_size']}}</td>
+            <td>{{=pend_request['object_store_type']}}</td>
+            <td>
+               {{if pend_request['status'] == REQ_STATUS_REQUESTED:}}
+                   Waiting for faculty approval
+               {{elif pend_request['status'] == REQ_STATUS_VERIFIED:}}
+                   Waiting for org admin approval
+               {{elif pend_request['status'] == REQ_STATUS_APPROVED:}}
+                   Waiting for admin approval
+               {{elif pend_request['status'] == REQ_STATUS_IN_QUEUE:}}
+                   Approved. In Queue.
+               {{elif pend_request['status'] == REQ_STATUS_FAILED:}}
+                   Task failed. Contact administrator.
+               {{pass}}
+            </td>
+          </tr>
+      {{pass}}
+    </tbody>
+    </table>
+{{pass}}
+
+</div>
+
 </div>
 
 <script>
@@ -240,6 +287,7 @@ jQuery(document).ready(function(){
       jQuery("#sortTable1").tablesorter({ headers: {6: {sorter:"ipAddress"}} }); 
       jQuery("#sortTable2").tablesorter(); 
       jQuery("#sortTable3").tablesorter(); 
-      jQuery("#sortTable4").tablesorter(); 
+      jQuery("#sortTable4").tablesorter();
+      jQuery("#sortTable5").tablesorter(); 
 });
 </script>

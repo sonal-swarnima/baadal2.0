@@ -6,7 +6,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_datetime, log_exception, is_pingable, execute_remote_cmd
-from vm_helper import install, start, suspend, resume, destroy, delete, migrate, snapshot,\
+from vm_helper import create_object_store,install, start, suspend, resume, destroy, delete, migrate, snapshot,\
     revert, delete_snapshot, edit_vm_config, clone, attach_extra_disk, migrate_datastore,\
     save_vm_as_template, delete_template
 from host_helper import host_status_sanity_check, collect_data_from_host
@@ -50,6 +50,19 @@ def _send_task_complete_mail(task_event):
     else:
         vm_users.append(task_event.requester_id)
     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
+
+
+def send_object_task_complete_mail(task_event, object_name):
+
+    vm_users = []
+    vm_id = task_event.parameters['vm_id'] if 'vm_id' in task_event.parameters else None
+    if vm_id:
+        for user in db(db.user_object_map.ob_id == vm_id).select(db.user_vm_map.user_id):
+            vm_users.append(user['user_id'])
+    else:
+        vm_users.append(task_event.requester_id)
+    send_email_to_vm_user(task_event.task_type, object_name, task_event.start_time, vm_users)
+
     
 def _log_vm_event(old_vm_data, task_queue_data):
     """
@@ -110,6 +123,53 @@ def _log_vm_event(old_vm_data, task_queue_data):
                                requester_id = task_queue_data.requester_id,
                                old_value = str(old_vm_data.extra_HDD)+' GB',
                                new_value = str(vm_data.extra_HDD)+' GB')
+
+
+def process_object_task(task_event_id):
+    """Invoked when scheduler runs task of type 'object_task'
+    For every task, function calls the corresponding handler
+    and updates the database on the basis of the response """
+
+    logger.info("\n ENTERING OBJECT_TASK	........")
+    task_event_data = db.task_queue_event[task_event_id]
+    task_queue_data = db.task_queue[task_event_data.task_id]
+    object_data = db.object_store_data[task_event_data.parameters['vm_id']] if task_event_data.parameters['vm_id'] != None else None
+    try:
+        #Update attention_time for task in the event table
+        task_event_data.update_record(attention_time=get_datetime(), status=TASK_QUEUE_STATUS_PROCESSING)
+        #Call the corresponding function from vm_helper
+        logger.debug("Starting OBJECT_TASK processing...")
+        ret = create_object_store(task_event_id,object_data)
+        logger.debug("Completed OBJECT_TASK processing...")
+        #On return, update the status and end time in task event table
+        task_event_data.update_record(status=ret[0], message=ret[1], end_time=get_datetime())
+
+        if ret[0] == TASK_QUEUE_STATUS_FAILED:
+            logger.debug("OBJECT_TASK FAILED")
+            logger.debug("OBJECT_TASK Error Message: %s" % ret[1])
+            task_queue_data.update_record(status=TASK_QUEUE_STATUS_FAILED)
+
+        elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
+            # Create log event for the task
+            logger.debug("OBJECT_TASK SUCCESSFUL")
+            if object_data:
+                logger.info("\n object_data: %s" %object_data)
+            # For successful task, delete the task from queue 
+            if db.task_queue[task_queue_data.id]:
+                del db.task_queue[task_queue_data.id]
+            if 'request_id' in task_queue_data.parameters:
+                del db.request_queue[task_queue_data.parameters['request_id']]
+
+            send_object_task_complete_mail(task_event_data, object_data['object_store_name'])
+    except:
+        msg = log_exception()
+        task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
+
+    finally:
+        db.commit()
+        logger.info("EXITING OBJECT_TASK........\n")
+
+
 
 def process_task_queue(task_event_id):
     """
@@ -458,10 +518,11 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_garbage_collector=process_unusedvm,
                                         memory_overload=overload_memory,
+                                        object_task=process_object_task,
                 		                networking_host=host_networking,
 					                    rrd_task=task_rrd,
                                         vm_loadbalance=process_loadbalancer), 
-                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task','host_network'])
+                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task','object_task','host_network'])
 
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)

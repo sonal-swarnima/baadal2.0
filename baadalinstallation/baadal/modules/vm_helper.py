@@ -555,6 +555,45 @@ def update_db_after_vm_installation(vm_details, vm_properties, parent_id = None)
     return
 
 
+def create_object_store(parameters,object_data):
+        try:
+            logger.debug("In create_object_store() function...")
+            user_id=object_data['requester_id']
+            user_details=current.db.user[user_id]
+            object_name=object_data['object_store_name']
+            size_limit=object_data['object_store_size']
+            command = "sh /home/www-data/web2py/applications/baadal/private/object_storage.sh"+" "+object_name +" "+ str(size_limit)
+            logger.debug("command :%s" %command)
+            file_name=  object_data['object_store_name'] + "_key.txt" 
+            cmd=execute_remote_cmd( "127.0.0.1" , "root" , command , "baadal" )
+            file_path = os.path.join(get_context_path(), 'private/Object_keys/' + file_name)
+            cp = os.open(file_path,os.O_RDWR|os.O_CREAT)
+            co = os.fdopen(cp,"rw+")
+            fd = os.open('/home/key.txt',os.O_RDWR|os.O_CREAT)
+            fo = os.fdopen(fd,"r+")
+            key_s3_secret= fo.readline();
+            co.write(key_s3_secret);
+            key_s3_access= fo.readline();
+            co.write(key_s3_access);
+            key_swift_secret= fo.readline();
+            co.write(key_swift_secret); 
+            swift_user= 'Swift_user: ' + object_name + ':swift'
+            co.write(swift_user)
+            co.close()
+            a,b,key_swift_secret= key_swift_secret.partition(' ')
+            a,b,key_s3_secret= key_s3_secret.partition(' ')
+            a,b,key_s3_access= key_s3_access.partition(' ')
+            #print key_s3_secret, key_s3_access , key_swift_secret
+            object_data.update_record(swift_access_key= key_swift_secret.strip() , s3_secret_key= key_s3_secret.strip(), s3_access_key= key_s3_access.strip(), status=3)
+            fo.close()
+            message = "Object Store is created successfully."
+            return (current.TASK_QUEUE_STATUS_SUCCESS, message)
+            
+        except:
+            logger.debug("Task Status: FAILED Error: %s " % log_exception())
+            return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
+
+# Installs a vm
 def install(parameters):
     """
     Installs a vm

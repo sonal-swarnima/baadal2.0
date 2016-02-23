@@ -25,6 +25,8 @@ if auth.is_logged_in():
         (H2('USER MENU'),False, dict(_href='#', _id='menu_user')),
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
+        (T('Request Object Store'), False, URL('user','request_object_store')),
+        (T('My Object Store'), False, URL('user','list_my_object_store')),
         (T('Pending Requests'), False, URL('user','list_my_requests')),
         (T('My VMs'), False, URL('user','list_my_vm')),
         (T('My Tasks'), False, URL('user','list_my_task')),
@@ -53,6 +55,7 @@ if auth.is_logged_in():
         response.admin_menu = [
             (H2('ADMIN MENU'),False, dict(_href='#', _id='menu_admin')),
             (T('All VM''s'), False, URL('admin','list_all_vm')),
+            (T('All Object Store'), False, URL('admin','list_all_object_store')),
             (T('All Pending Requests {'+str(get_all_pending_req_count())+'} '), False, URL('admin','list_all_pending_requests')),
             (T('VM Utilization'), False, URL('admin','vm_utilization')),
             (T('Host and VMs'), False, URL('admin','hosts_vms')),

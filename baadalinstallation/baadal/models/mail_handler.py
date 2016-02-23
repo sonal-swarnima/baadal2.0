@@ -26,9 +26,18 @@ REGISTRATION_DENIED_BODY = "Dear {0[userName]},\n\n"\
                             
 VM_REQUEST_SUBJECT = "VM request successful"
 
+OB_REQUEST_SUBJECT = "OBJECT request successful"
+
+
 VM_REQUEST_BODY="Dear {0[userName]},\n\n"\
     "Your request for VM({0[vmName]}) creation has been successfully registered. "\
     "Please note that you will be getting a separate email on successful VM creation."
+
+
+OB_REQUEST_BODY="Dear {0[userName]},\n\n"\
+    "Your request for OBJECT STORE({0[obName]}) creation has been successfully registered. "\
+    "Please note that you will be getting a separate email on successful OBJECT STORE creation."
+
                     
 APPROVAL_REMINDER_SUBJECT = "Request waiting for your approval"
 
@@ -37,6 +46,14 @@ APPROVAL_REMINDER_BODY = "Dear {0[approverName]},\n\n"\
     "It is waiting for your approval."
                     
 VM_CREATION_SUBJECT = "VM created successfully"
+
+OBJECT_CREATION_SUBJECT = "Object Store created successfully"
+
+OBJECT_CREATION_BODY="Dear {0[userName]},\n\n"\
+    "The Object Store {0[obName]} requested on {0[requestTime]} is "\
+    "successfully created and is now available for use.\n"\
+    "For other details, Please login to baadal WEB interface."
+
 
 VM_CREATION_BODY="Dear {0[userName]},\n\n"\
     "The VM {0[vmName]} requested on {0[requestTime]} is "\
@@ -125,6 +142,18 @@ def send_email_to_requester(vm_name):
                        userName = user_info[0])
     
         send_email(user_info[1], VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
+
+
+def send_email_to_object_requester(ob_name):
+
+    user_info = get_user_details(auth.user.id)
+    if user_info[1] != None:
+        context = dict(obName = ob_name,
+                       userName = user_info[0])
+
+        send_email(user_info[1], OB_REQUEST_SUBJECT, OB_REQUEST_BODY, context)
+
+
     
 def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
 
@@ -138,6 +167,12 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
             if task_type == VM_TASK_CREATE:
                 context.update({'gatewayVM':config.get("GENERAL_CONF","gateway_vm")})
                 send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
+            elif task_type == Object_Store_TASK_CREATE:
+                context = dict(obName = vm_name,
+                           userName = user_info[0],
+                           taskType = task_type,
+                           requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
+                send_email(user_info[1], OBJECT_CREATION_SUBJECT, OBJECT_CREATION_BODY, context)
             else:
                 subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
                 send_email(user_info[1], subject, TASK_COMPLETE_BODY, context)

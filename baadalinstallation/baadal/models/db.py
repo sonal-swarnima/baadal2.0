@@ -190,6 +190,23 @@ db.define_table('template',
             '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag))
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
+db.define_table('object_store_data',
+    Field('object_store_name', 'string', length = 100, notnull = True, label='Name'),
+    Field('object_store_size', 'integer', notnull = True, label='Size(GB)'),
+    Field('object_store_type', 'string', notnull = True, label='Type'), 
+    Field('requester_id',db.user, label='Requester'),
+    Field('owner_id', db.user, label='Owner'),
+    Field('purpose', 'string', length = 512),
+    Field('start_time', 'datetime', default = get_datetime()),
+    Field('parent_id', 'reference vm_data'),
+    Field('locked', 'boolean', default = False),
+    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
+    Field('s3_secret_key', 'string'),
+    Field('s3_access_key', 'string'),
+    Field('swift_access_key', 'string'))
+
+
+
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 100, notnull = True, label='Name'),
     Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
@@ -224,6 +241,9 @@ db.vm_data.private_ip.requires = IS_EMPTY_OR(IS_IN_DB(db, 'private_ip_pool.id', 
 
 db.define_table('request_queue',
     Field('vm_name', 'string', length = 100, notnull = True, label='VM Name'),
+    Field('object_store_name', 'string', length = 100, notnull = True, label='Object Store Name'),
+    Field('object_store_size', 'integer', notnull = True, label='Object Store Size(GB)'),
+    Field('object_store_type', 'string', notnull = True, label='Object Store Type'),
     Field('parent_id', 'reference vm_data'),
     Field('request_type', 'string', length = 20, notnull = True),
     Field('RAM', 'integer', label='RAM(MB)'),
@@ -244,6 +264,7 @@ db.define_table('request_queue',
 
 db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
 db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
+db.request_queue.object_store_size.requires=IS_INT_IN_RANGE(0,513)
 db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
@@ -272,6 +293,12 @@ db.define_table('user_vm_map',
     Field('user_id', db.user),
     Field('vm_id', db.vm_data),
     primarykey = ['user_id', 'vm_id'])
+
+db.define_table('user_object_map',
+    Field('user_id', db.user),
+    Field('ob_id', db.object_store_data),
+    primarykey = ['user_id', 'ob_id'])
+
 
 db.define_table('host_affinity',
     Field('vm_id', db.vm_data),
