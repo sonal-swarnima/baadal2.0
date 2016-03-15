@@ -384,6 +384,58 @@ def get_vm_config(vm_id):
         vm_info_map.update({'vnc_ip' : str(vnc_info[0].vnc_server_ip), 'vnc_port' : str(vnc_info[0].vnc_source_port)})
 
     return vm_info_map  
+
+def get_vpn_user_details():
+   user_info=db((db.user.id==auth.user.id)).select(db.user.ALL)
+   logger.debug("userinfo"+ str(user_info))
+   for info in user_info:
+       user_details={'username':info['username'],
+         'first_name':info['first_name'],
+          'last_name':info['last_name']}
+       return user_details
+
+def transfer_vpn_files(user_name,vpn_ip,passwd):
+    import paramiko
+    paramiko.util.log_to_file('/tmp/paramiko.log')
+# Open a transport
+    port = 22
+    transport = paramiko.Transport((vpn_ip, port))
+# Auth
+    transport.connect(username ='root', password = passwd)
+# Go!
+    sftp = paramiko.SFTPClient.from_transport(transport)
+# Download
+    filepath="/etc/openvpn/easy-rsa/keys/tar_files/"+str(user_name)+"_baadalVPN.tar"
+    localpath="/home/www-data/web2py/applications/baadal/private/VPN/"+str(user_name)+"_baadalVPN.tar"
+    var=sftp.get(filepath,localpath)
+# Close
+    sftp.close()
+    transport.close()
+
+
+#request vpn function will fire up the script for vpn request and copy the key to controller
+def request_vpn():
+    user_info=get_vpn_user_details()
+    logger.debug(type(user_info))
+    user_name=user_info['username']
+    cmd="./vpn_client_creation.sh "+ str(user_name)
+    vpn_ip="172.16.10.6"
+    #vpn_ip=config.get("VPN_CONF","vpn_server_ip")
+
+    passwd="baadal123"
+    #password=config.get("VPN_CONF","passwd")
+    try:
+        var = execute_remote_cmd(vpn_ip, 'root',cmd, passwd, True)
+        transfer_vpn_files(user_name,vpn_ip,passwd)
+        if  "false" in str(var):
+            return 1
+        elif "true" in str(var):
+            return 3
+    #transfer_vpn_files(user_name,vpn_ip,password)
+    except Exception:
+        return 2
+
+
     
     
 def get_vm_user_list(vm_id) :		

@@ -1,0 +1,33 @@
+{{extend 'layout.html'}}
+
+<h2 class= "title">Quick  openvpn client setup guide</h2>
+<div class="entry"><br/>
+    <ol>
+        <li>
+            Make sure your source list is up-to-date.<br/>
+            <i>apt-get update</i>
+        </li>
+        <li>
+            Install openvpn. <br/>
+            <i>apt-get install openvpn</i>
+        </li>
+        <li>
+            Untar downloaded .tar file. Move following extracted files to <b>/etc/openvpn</b>
+            <ul>
+            <li>ca.crt</li>
+       		<li>user_name.key</li>
+       		<li>user_name.crt</li>
+       		<li>client.conf</li>
+            </ul>
+        </li>
+
+        <li>
+            Start openvpn service.<br/>
+            <i>service openvpn start</i>
+        </li>
+        <li>
+            You will be prompted for the username and passwd. Enter your LDAP(GCL) credentials. 
+            On successful connection, client will be automatically assigned an IP addess in the range 10.8.0.x with routes set to the Baadal internal VLANs.
+        </li>
+    </ol>
+</div>

@@ -1,0 +1,34 @@
+{{extend 'layout.html'}}
+
+<h2 class="title">VPN</h2>
+<div class="entry"></br>
+    <p>In what follows, we briefly describe the configuration details:</p>
+    <div>
+        <ol>
+	    <li>
+		The 
+		<a href="http://en.wikipedia.org/wiki/OpenVPN" target="_blank">OpenVPN</a>
+		server runs on the 
+		<em>UDP port 1194</em>
+	    </li>
+            <li>
+                <strong><a href="{{=URL(args='../request_user_vpn')}}">Register</a></strong> your Self for VPN.
+
+            </li> 
+            <li>
+                <strong><a href="{{=URL(args='../download_vpn_keys')}}">Download</a></strong> your VPN keys.  
+            </li>
+	<li>
+	   See the <a href="/baadal/user/vpn_setup_guide">quick  openvpn client setup guide for ubuntu </a>. You can Further Check out <a href="http://openvpn.net/index.php/open-source/documentation/howto.html" target="_blank">the OpenVPN howto</a>	    for details on how to setup and start an OpenVPN client on your Windows, Linux or Mac laptops. 
+	    <li>
+		On successful connection the client will be automatically assigned an IP addess in the range 10.8.0.x with routes set to the Baadal internal VLANs. Your 
+		<em>default route</em>
+		will not be altered from what has been set to connect to your ISP.
+		<br>
+		The VPN connection will be 
+		<em>point-to-point</em>
+		and the broadcast traffic of the 10.8.0.x VLAN will not be available to the client.
+		</li>
+</div>
+</div></br></br>
+

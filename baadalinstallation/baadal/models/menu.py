@@ -30,6 +30,7 @@ if auth.is_logged_in():
         (T('Pending Requests'), False, URL('user','list_my_requests')),
         (T('My VMs'), False, URL('user','list_my_vm')),
         (T('My Tasks'), False, URL('user','list_my_task')),
+        (T('VPN'),False, URL('user','vpn')), 
         (T('Mail Admin'), False, URL('user','mail_admin'))
         ]
     
