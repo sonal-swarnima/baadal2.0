@@ -12,7 +12,7 @@ Baadal is a multi-tenant implementation, which means that different organization
 Features
 --------
 
-Some of the main features of Baadal are:
+Some of the main features of Baadal are :
 * Facilities for suspend, resume, shutdown, power off, power on and specifying resource requirement of virtual machines.
 * Dynamic resource utilization monitoring.
 * Dynamic resource scheduling and power management.
