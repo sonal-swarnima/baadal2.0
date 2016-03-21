@@ -414,15 +414,16 @@ def transfer_vpn_files(user_name,vpn_ip,passwd):
 
 
 #request vpn function will fire up the script for vpn request and copy the key to controller
+#in vpn_ip and passwd you need to supply vpn server ip and passwd
 def request_vpn():
     user_info=get_vpn_user_details()
     logger.debug(type(user_info))
     user_name=user_info['username']
     cmd="./vpn_client_creation.sh "+ str(user_name)
-    vpn_ip="172.16.10.6"
+    vpn_ip=""
     #vpn_ip=config.get("VPN_CONF","vpn_server_ip")
 
-    passwd="baadal123"
+    passwd=""
     #password=config.get("VPN_CONF","passwd")
     try:
         var = execute_remote_cmd(vpn_ip, 'root',cmd, passwd, True)
