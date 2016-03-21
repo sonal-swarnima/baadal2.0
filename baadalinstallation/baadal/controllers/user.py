@@ -110,6 +110,59 @@ def download_object_keys():
     redirect(URL(r = request, c = 'user', f = 'list_my_object_store'))
    
 
+
+def vpn():
+   return dict()
+
+def vpn_setup_guide():
+   return dict()
+
+@auth.requires_login()
+@handle_exception
+def request_user_vpn():
+    var = request_vpn()
+    logger.debug("request user vpn var value "+str(var))
+    if var== 1 :
+        session.flash = "Download your client.conf ca.crt baadalVPN.crt  baadalVPN.key files from the link given below  "
+
+    elif var == 2 :
+        session.flash = "Unable to process  your Request. Please contact Baadal Team"
+    else :
+        session.flash = "You already have VPN files  you can  download it from  given link "
+    redirect(URL(r = request, c = 'user', f = 'vpn'))
+
+
+@auth.requires_login()
+@handle_exception
+def download_vpn_keys():
+    user_info=get_vpn_user_details()
+    logger.debug(type(user_info))
+    user_name=user_info['username']
+    logger.debug(user_name+"\n")
+    file_name = user_name+'_baadalVPN.tar'
+    file_path = os.path.join(get_context_path(), 'private/VPN/' + file_name)
+    logger.debug(file_path+"\n")
+
+    #import contenttype as c
+    response.headers['Content-Type'] = "application/zip"
+    #response.headers['ContentType'] ="application/octet-stream";
+    response.headers['Content-Disposition']="attachment; filename=" +file_name
+    logger.debug("******************************************************")
+    try:
+        return response.stream(get_file_stream(file_path),chunk_size=4096)
+    #logger.debug(user_name)
+    #try :
+    #file_path = "http://127.0.0.1:/home/www-data/web2py/applications/baadal/static/VPN"+str(user_name)+"_baadalVPN.zip"
+    #return response.stream(file_path, 1024)    
+    except Exception:
+        session.flash = "Unable to download your VPN files. Please Register first if you have not registered yet."
+    redirect(URL(r = request, c = 'user', f = 'vpn'))
+
+
+
+
+@check_vm_owner
+@handle_exception
 def settings():
     vm_id=request.args[0]
     vm_users = None
