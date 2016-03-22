@@ -14,6 +14,7 @@ if 0:
 ###################################################################################
 from log_handler import logger
 from vm_utilization import check_graph_type, check_graph_period, fetch_info_graph
+from helper import get_file_stream
 def request_object_store():
     form = get_request_object_store_form()
     
