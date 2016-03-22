@@ -149,6 +149,10 @@ def get_ips_in_range(ipFrom, ipTo):
     return ip_addr_lst
 
 
+def get_file_stream(file_path):
+    return open(file_path,'rb')
+    
+
 
 def generate_random_mac():
     """
