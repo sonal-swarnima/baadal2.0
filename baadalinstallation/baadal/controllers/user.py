@@ -124,7 +124,7 @@ def request_user_vpn():
     var = request_vpn()
     logger.debug("request user vpn var value "+str(var))
     if var== 1 :
-        session.flash = "Download your client.conf ca.crt baadalVPN.crt  baadalVPN.key files from the link given below  "
+        session.flash = "Get your baadalVPN key's  tar file from the Download link given below "
 
     elif var == 2 :
         session.flash = "Unable to process  your Request. Please contact Baadal Team"
