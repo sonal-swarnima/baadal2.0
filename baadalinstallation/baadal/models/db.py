@@ -8,9 +8,16 @@ if 0:
 from simplejson import loads, dumps
 from ast import literal_eval
 from helper import config,get_datetime, IS_MAC_ADDRESS
-from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP
+from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP,AUTH_TYPE_DB
 from datetime import timedelta
 from host_helper import HOST_TYPE_PHYSICAL
+from gluon.contrib.login_methods.oauth20_account import OAuthAccount
+#import iitd_oauth
+import json,simplejson,requests
+import urllib2
+import urllib
+from urllib import urlencode
+from gluon import current, redirect, HTTP
 
 #### Connection Pooling of Db is also possible
 
@@ -59,6 +66,35 @@ auth.settings.create_user_groups = config.getboolean("AUTH_CONF","create_user_gr
 auth.settings.actions_disabled = config.get("AUTH_CONF",config.get("AUTH_CONF","actions_disabled"))
 auth.settings.remember_me_form = config.getboolean("AUTH_CONF","remember_me_form")
 
+############for oauth  ##############
+from gluon.http import HTTP
+cl_id=config.get("OAUTH_CONF","client_id")
+cl_secret=config.get("OAUTH_CONF","client_secret")
+
+#Derived class from base class OAuthAccount    
+class IITD_Oauth(OAuthAccount):      
+        auth_url= config.get("OAUTH_CONF","auth_url")
+        token_url=config.get("OAUTH_CONF","token_url")
+        def __init__(self,g=globals()):
+            OAuthAccount.__init__(self,g,client_id=cl_id,client_secret=cl_secret,auth_url=self.auth_url,token_url=self.token_url,state='xyz')
+     
+       
+     
+        def get_user(self):
+            token=self.accessToken()
+            if not token:
+                return None
+            
+            uri=config.get("OAUTH_CONF","resource_url")
+            r=requests.get(uri,params={'access_token':token})
+            userdata=r.json()
+            fn,ln=userdata['name'].split()
+            hd=userdata['hd']
+            
+            return dict(first_name=fn,last_name=ln,email=userdata['email'],username = userdata['user_id'] )
+            
+oauth_login = IITD_Oauth(globals())
+
 db.define_table(
     auth.settings.table_user_name,
     Field('first_name', length = 128, default = ''),
@@ -96,16 +132,18 @@ auth.settings.table_membership = db.define_table(
     Field('group_id', db.user_group),
     primarykey = ['user_id', 'group_id'])
 
+#auth.settings.login_form=oauth_login
+
 ###############################################################################
-auth.define_tables(username = True)
+auth.define_tables(username=True)
 ###############################################################################
 if current.auth_type == AUTH_TYPE_LDAP :
-    from gluon.contrib.login_methods.pam_auth import pam_auth
-    auth.settings.login_methods = [pam_auth()]
-    auth.settings.login_onaccept = [login_ldap_callback]
-else:
-    auth.settings.login_onaccept = [login_callback]
-    auth.settings.registration_requires_approval = True
+   from gluon.contrib.login_methods.pam_auth import pam_auth
+   auth.settings.login_methods = [pam_auth()]
+   auth.settings.login_onaccept = [login_ldap_callback]
+if current.auth_type == AUTH_TYPE_DB:
+   auth.settings.login_onaccept = [login_callback]
+   auth.settings.registration_requires_approval = True
 ###############################################################################
 
 db.define_table('vlan',

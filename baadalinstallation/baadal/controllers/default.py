@@ -10,6 +10,11 @@ if 0:
 ###################################################################################
 from helper import get_constant
 from maintenance import BAADAL_STATUS_UP
+from gluon.contrib.login_methods.oauth20_account import OAuthAccount
+#import iitd_oauth
+from gluon import current
+current.auth_type = config.get("AUTH_CONF","auth_type")
+from auth_user import login_callback,login_ldap_callback,AUTH_TYPE_DB
 
 def user():
     """
@@ -24,6 +29,9 @@ def user():
         @auth.requires_membership('group name')
     to decorate functions that need access control
 	"""
+    
+    if current.auth_type != AUTH_TYPE_DB:
+           auth.settings.login_form = oauth_login
     return dict(form=auth())
 
 
