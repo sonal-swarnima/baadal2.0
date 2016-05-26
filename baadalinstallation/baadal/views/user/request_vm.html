@@ -10,11 +10,14 @@
 
 <script>
 jQuery(document).ready(function(){
+  
     template_check();
     if($('#faculty_user').val() != undefined)
     {
     	verify_faculty();
+	
     }
+   
     var vm_users = jQuery('#collaborator').val();
     users = vm_users.split('|');
     for (i = 0; i < users.length; i++) {
@@ -23,6 +26,7 @@ jQuery(document).ready(function(){
         }
     }
     jQuery('#collaborator').val('');
+    jQuery('#request_queue_expiry_date').val('');
 });
 
 jQuery('#request_queue_template_id').change(function(){
@@ -136,6 +140,45 @@ function remove_collaborator(vm_user){
 
 jQuery('form').submit(function(){
     $('#collaborator').val($('[name="vm_users"]').val())
+    date_check();
 });
+
+
+
+
+jQuery('#request_queue_expiry_date').change(function(){
+    date_check();});
+
+jQuery('#submit_record').submit(function(){
+    date_check();});
+
+function date_check(){
+    var fullDate = new Date();
+    
+    var twoDigitMonth = ((fullDate.getMonth().length+1) === 1)? (fullDate.getMonth()+1) : '0' + (fullDate.getMonth()+1);
+    var today = fullDate.getFullYear() + "-" + twoDigitMonth + "-" +  fullDate.getDate();
+    var expiry_date=$('#request_queue_expiry_date').val();
+    e_list=expiry_date.split('-');
+  
+    if (e_list[0]<=fullDate.getFullYear()){
+          if (e_list[1]<=twoDigitMonth){
+                if (e_list[2]<fullDate.getDate()){
+		    $('#request_queue_expiry_date').remove();
+                      
+		   }
+	 }
+        else {$('#request_queue_expiry_date').remove();
+              }
+           }
+    else {$('#request_queue_expiry_date').remove();
+             }
+
+   
+   
+   
+  
+   
+};
+
 
 </script>
