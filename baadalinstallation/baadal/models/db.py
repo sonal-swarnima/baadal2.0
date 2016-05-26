@@ -299,6 +299,7 @@ db.define_table('request_queue',
     Field('purpose', 'string', length = 512),
     Field('status', 'integer'),
     Field('request_time', 'datetime', default = get_datetime()))
+    Field('expiry_date', 'date'))
 
 db.request_queue.vm_name.requires=[IS_MATCH('^[a-zA-Z0-9][\w\-]*$', error_message=NAME_ERROR_MESSAGE), IS_LENGTH(30,1)]
 db.request_queue.extra_HDD.requires=IS_EMPTY_OR(IS_INT_IN_RANGE(0,1025))
@@ -306,6 +307,8 @@ db.request_queue.object_store_size.requires=IS_INT_IN_RANGE(0,513)
 db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
+db.request_queue.expiry_date.widget=SQLFORM.widgets.date.widget
+db.request_queue.expiry_date.requires=IS_DATE(error_message=T("Don't select previous date"))
 if not auth.user:
     tmp_query = db.template
 elif is_moderator():
