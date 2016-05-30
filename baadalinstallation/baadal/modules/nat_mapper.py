@@ -16,7 +16,7 @@ Following scenarios are handled
     5. Delete all VNC server mapping that has exceeded given duration
 """
 
-from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception
+from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception,execute_remote_cmd
 from gluon import current
 
 #nat types
@@ -238,60 +238,33 @@ def clear_all_nat_mappings(db):
         
 
 def clear_all_timedout_vnc_mappings():
-    """
-    Deletes all timed-out VNC mappings from NAT
-    """    
-    nat_type, nat_ip, nat_user = _get_nat_details()
-
-    if nat_type == NAT_TYPE_SOFTWARE:
-       
-        logger.debug("Clearing all timed out VNC mappings from NAT box %s" %(nat_ip)) 
-
-        # Get all active VNC mappings from DB
+    # Get all active VNC mappings from DB
+        current.db("FLUSH QUERY CACHE")
         vnc_mappings = current.db((current.db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE) & 
                                   (current.db.vnc_access.expiry_time < get_datetime())).select()
         if (vnc_mappings != None) & (len(vnc_mappings) != 0):
-            # Delete the VNC mapping from NAT if the duration of access has past its requested time duration
-            command = ''
-            for mapping in vnc_mappings:
+
+           for mapping in vnc_mappings: 
                 logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping.vm_id, mapping.host_id, mapping.vnc_server_ip, mapping.vnc_source_port, mapping.vnc_destination_port))
-                host_ip = mapping.host_id.host_ip.private_ip
-                # Delete rules from iptables on NAT box
-                command += '''
-                iptables -D PREROUTING -t nat -i %s -p tcp -d %s --dport %s -j DNAT --to %s:%s
-                iptables -D FORWARD -p tcp -d %s --dport %s -j ACCEPT''' %(NAT_PUBLIC_INTERFACE, mapping.vnc_server_ip, mapping.vnc_source_port, host_ip, mapping.vnc_destination_port, host_ip, mapping.vnc_destination_port)
+                f = open("/home/www-data/token.list","r")
+                lines = f.readlines()
+                f.close()
+                f = open("/home/www-data/token.list","w")
+                token = mapping.vnc_server_ip
+                logger.debug("token is : " + str(token))
+                logger.debug("token type is : " + str(type(token)))
+                for line in lines:
+                    if token  not  in line:
+                       logger.debug("lines are : "  + str(line))
+                       f.write(line)
+                f.close()
+                current.db(current.db.vnc_access.id == mapping.id).delete()
+                current.db.commit()
+                logger.debug("Done clearing novnc mappings")    
+        else:
+           raise Exception("NAT type is not supported")
 
-                # Update DB for each VNC access
-                current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
-
-            command += '''
-                /etc/init.d/iptables-persistent save
-                /etc/init.d/iptables-persistent reload
-                exit
-            ''' 
-
-            current.db.commit()
-            execute_remote_bulk_cmd(nat_ip, nat_user, command)
-        logger.debug("Done clearing vnc mappings")    
-    elif nat_type == NAT_TYPE_HARDWARE:
-        # This function is to be implemented
-        raise Exception("No implementation for NAT type hardware")
-    elif nat_type == NAT_TYPE_MAPPING:
-        # This function is to be implemented
-        logger.debug('Clearing all timed out VNC mappings') 
-
-        # Get all active VNC mappings from DB
-        vnc_mappings = current.db((current.db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE) & 
-                                  (current.db.vnc_access.expiry_time < get_datetime())).select()
-        if (vnc_mappings != None) & (len(vnc_mappings) != 0):
-
-            for mapping in vnc_mappings:
-                # Update DB for each VNC access
-                current.db(current.db.vnc_access.id == mapping.id).update(status=VNC_ACCESS_STATUS_INACTIVE)
-            current.db.commit()
-        logger.debug("Done clearing vnc mappings")    
-    else:
-        raise Exception("NAT type is not supported")
+                
 
 
 def create_vnc_mapping_in_nat(vm_id):

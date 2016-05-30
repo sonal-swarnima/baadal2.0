@@ -50,8 +50,9 @@ function confirm_vm_deletion(){
 	    <p><strong>Host: </strong>{{=vminfo['host']}}</p>
     {{pass}}
     {{if 'vnc_ip' in vminfo :}}<p>
-	    <strong>VNC IP: </strong>{{=vminfo['vnc_ip']}}<br/>
-	    <strong>VNC Port: </strong>{{=vminfo['vnc_port']}}</p>
+	    <!--<strong>VNC IP: </strong>{{=vminfo['vnc_ip']}}<br/>
+	    <strong>VNC Port: </strong>{{=vminfo['vnc_port']}}</p>-->
+            
     {{pass}}
  <p><strong>Purpose :</strong> {{=vminfo['purpose']}}</p>
 
