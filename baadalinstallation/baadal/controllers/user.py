@@ -344,6 +344,28 @@ def create_graph():
     return json_str
 
 
+
+@check_vm_owner
+@handle_exception
+
+def novnc_access():
+
+   token=request.vars['token']
+   port = config.get("NOVNC_CONF","port")
+   server_ip = config.get("NOVNC_CONF","server_ip")
+   url = "http://"+ str(server_ip)+ ":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)
+   return redirect(url)
+
+
+@check_vm_owner
+@handle_exception       
+def grant_vnc():
+    vm_id = request.args[0]   
+    token = grant_novnc_access(vm_id)
+    if token :
+       redirect(URL(r = request, f = 'novnc_access', args = vm_id, vars =dict(token=token)))
+
+
 @check_vm_owner
 @handle_exception       
 def clone_vm():
@@ -442,13 +464,7 @@ def vm_history():
     vm_history = get_vm_history(vm_id)        
     return dict(vm_id = vm_id, vm_history = vm_history)
 
-@check_vm_owner
-@handle_exception       
-def grant_vnc():
 
-    vm_id = request.args[0]
-    session.flash = grant_vnc_access(vm_id)
-    redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
 
 @check_vm_owner
 @handle_exception       

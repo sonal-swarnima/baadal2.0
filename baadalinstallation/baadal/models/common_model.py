@@ -447,7 +447,21 @@ def get_vm_operations(vm_id):
                 valid_operations_list.append(op_image)
             else:
                 if op_data[0] != None:
-                    valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
+                    if op_data[2] == 'Grant VNC Access':
+                        vm_data = db(db.vnc_access.vm_id == vm_id).select().first()      
+                        if vm_data: 
+                           
+                           token = vm_data.vnc_server_ip
+                           port = config.get("NOVNC_CONF","port")
+                           server_ip = config.get("NOVNC_CONF","server_ip")     
+                           url = "http://" + str(server_ip) +":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)                       
+                           valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
+                                                      _href=url))
+                        else:
+                         valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
+                                                   _href=URL(r=request, c = op_data[0] , f=valid_operation, args=[vm_id])))
+                    else :
+                        valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
                                                    _href=URL(r=request, c = op_data[0] , f=valid_operation, args=[vm_id])))
                 else:
                     valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
@@ -485,6 +499,8 @@ def get_vm_snapshots(vm_id):
                                        _title = "Revert to this snapshot", _alt = "Revert to this snapshot")
         vm_snapshots_list.append(snapshot_dict)
     return vm_snapshots_list
+
+
 
 def get_faculty_info(faculty_id):
     faculty_info = db(db.user.id==faculty_id).select()

@@ -14,7 +14,7 @@ if 0:
 ###################################################################################
 from auth_user import fetch_ldap_user, create_or_update_user, AUTH_TYPE_LDAP
 from log_handler import logger
-from helper import log_exception, get_datetime
+from helper import log_exception, get_datetime,get_file_append_mode
 from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
 from datetime import timedelta
 
@@ -634,6 +634,76 @@ def grant_vnc_access(vm_id):
                 pass
     return msg
 
+
+def create_novnc_mapping(vm_id,token):
+    """
+    Create mapping in NAT for VNC access
+    """
+    vm_data = current.db.vm_data[vm_id]
+    duration = 30*60 #30 minutes
+    host_ip = vm_data.host_id.host_ip.private_ip
+    vnc_port = vm_data.vnc_port
+    vnc = str(vnc_port)
+    vnc = vnc[1:]
+    vnc_id = current.db.vnc_access.update_or_insert(vm_id = vm_id,
+                                    host_id = vm_data.host_id,
+                                    vnc_server_ip =token,
+                                    vnc_source_port = vnc,
+                                    vnc_destination_port = vnc,
+                                    duration = duration,
+                                    status = VNC_ACCESS_STATUS_INACTIVE)
+
+    try:
+        current.db.vnc_access[vnc_id] = dict(status = VNC_ACCESS_STATUS_ACTIVE)
+    except:
+        log_exception()
+
+def grant_novnc_access(vm_id):
+    logger.debug("vm id is : " + str(vm_id))
+    details = ""
+    active_vnc = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).count()
+    if active_vnc > 0:
+        msg = 'VNC access already granted. Please check your mail for further details.'
+    else:
+        vnc_count = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.time_requested > (get_datetime() - timedelta(days=1)))).count()
+        if vnc_count >= MAX_VNC_ALLOWED_IN_A_DAY :
+            msg = 'VNC request has exceeded limit.'
+        else:
+            try:
+                import os
+                f = os.popen('openssl rand -hex 10')
+                token = f.read()
+                token = token.split("\n")
+                token=token[0]
+                create_novnc_mapping(vm_id,token)
+                vm_data = db(db.vm_data.id == vm_id).select().first()
+                host_ip = vm_data.host_id.host_ip.private_ip
+                vnc_port = vm_data.vnc_port
+                vnc = str(vnc_port)
+                file_token =str(token) +":" + " "  + str(host_ip)+ ":" + str(vnc) + "\n"
+                myfile=get_file_append_mode("/home/www-data/token.list")
+                myfile.write(file_token)
+                command = "ps -ef | grep websockify|awk '{print $2}'"
+                port = config.get("NOVNC_CONF","port")
+                server_ip = config.get("NOVNC_CONF","server_ip")
+                return_value = execute_remote_cmd(server_ip, 'root',command)
+                return_value=return_value.split()
+                if len(return_value) <=2:                 
+                   command = "./noVNC/utils/websockify/run --web /root/noVNC --target-config /home/www-data/token.list " +str(server_ip)+ ":"+str(port) + " > /dev/null 2>&1 &" 
+                   return_value = execute_remote_cmd(server_ip, 'root',command)
+                msg = 'VNC access granted. Please check your mail for further details.'
+            except:
+                msg = 'Some Error Occurred. Please try later'
+                log_exception()
+                pass
+    return token
+
+def check_vnc(vm_id):
+    logger.debug("checking vnc port")
+    details=db((db.vnc_access.vm_id == vm_id) & (db.private_ip_pool.id==db.host.host_ip) & (db.vnc_access.host_id==db.host.id)).select(db.private_ip_pool.private_ip,db.vnc_access.vnc_source_port)
+    logger.debug(details)
+    return details
+ 
 def update_snapshot_flag(vm_id, flag):
     vm_data = db.vm_data[vm_id]
     vm_data.update_record(snapshot_flag=int(flag))

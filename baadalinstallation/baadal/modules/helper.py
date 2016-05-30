@@ -153,7 +153,8 @@ def get_file_stream(file_path):
     return open(file_path,'rb')
     
 
-
+def get_file_append_mode(file_path):
+    return open(file_path,'a')
 def generate_random_mac():
     """
     Generates MAC address
