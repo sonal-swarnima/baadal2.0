@@ -15,7 +15,7 @@ if 0:
 from auth_user import fetch_ldap_user, create_or_update_user, AUTH_TYPE_LDAP
 from log_handler import logger
 from helper import log_exception, get_datetime,get_file_append_mode
-from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE
+from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE,VNC_ACCESS_STATUS_INACTIVE
 from datetime import timedelta
 
 def get_my_requests():
