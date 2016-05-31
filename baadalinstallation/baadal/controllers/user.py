@@ -352,8 +352,8 @@ def novnc_access():
 
    token=request.vars['token']
    port = config.get("NOVNC_CONF","port")
-   server_ip = config.get("NOVNC_CONF","server_ip")
-   url = "http://"+ str(server_ip)+ ":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)
+   url_ip = config.get("NOVNC_CONF","url_ip")
+   url = "http://"+ str(url_ip)+ ":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)
    return redirect(url)
 
 

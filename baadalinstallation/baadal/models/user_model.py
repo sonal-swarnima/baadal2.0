@@ -379,9 +379,9 @@ def get_vm_config(vm_id):
     if is_moderator():
         vm_info_map.update({'host' : str(vminfo.vm_data.host_id.host_ip.private_ip)})
     
-    vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
-    if vnc_info:
-        vm_info_map.update({'vnc_ip' : str(vnc_info[0].vnc_server_ip), 'vnc_port' : str(vnc_info[0].vnc_source_port)})
+    #vnc_info = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).select()
+    #if vnc_info:
+    #    vm_info_map.update({'vnc_ip' : str(vnc_info[0].vnc_server_ip), 'vnc_port' : str(vnc_info[0].vnc_source_port)})
 
     return vm_info_map  
 
@@ -420,11 +420,11 @@ def request_vpn():
     logger.debug(type(user_info))
     user_name=user_info['username']
     cmd="./vpn_client_creation.sh "+ str(user_name)
-    vpn_ip=""
-    #vpn_ip=config.get("VPN_CONF","vpn_server_ip")
+    #vpn_ip=""
+    vpn_ip=config.get("VPN_CONF","vpn_server_ip")
 
-    passwd=""
-    #password=config.get("VPN_CONF","passwd")
+    #passwd=""
+    password=config.get("VPN_CONF","passwd")
     try:
         var = execute_remote_cmd(vpn_ip, 'root',cmd, passwd, True)
         transfer_vpn_files(user_name,vpn_ip,passwd)
@@ -621,7 +621,7 @@ def grant_vnc_access(vm_id):
                         vm_users.append(user['user_id'])
     
                     send_email_vnc_access_granted(vm_users, 
-                                                  vnc_info[0].vnc_server_ip, 
+                                                  vnc_info[0].token, 
                                                   vnc_info[0].vnc_source_port, 
                                                   vnc_info[0].vm_id.vm_name, 
                                                   vnc_info[0].time_requested)
@@ -647,7 +647,7 @@ def create_novnc_mapping(vm_id,token):
     vnc = vnc[1:]
     vnc_id = current.db.vnc_access.update_or_insert(vm_id = vm_id,
                                     host_id = vm_data.host_id,
-                                    vnc_server_ip =token,
+                                    token =token,
                                     vnc_source_port = vnc,
                                     vnc_destination_port = vnc,
                                     duration = duration,

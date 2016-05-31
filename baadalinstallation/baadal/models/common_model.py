@@ -83,7 +83,7 @@ def update_install_Object_Store_request(vm_request, element):
     element['object_store_type'] = vm_request.object_store_type
 
 #Update the dictionary with values specific to pending Install request tab
-def _update_install_vm_request(vm_request, element):
+def update_install_vm_request(vm_request, element):
 
     collaborators = '-'
     if vm_request.collaborators != None:
@@ -100,18 +100,18 @@ def _update_install_vm_request(vm_request, element):
         element['HDD'] = str(vm_request.HDD)+'GB + ' + str(vm_request.extra_HDD) + 'GB'
     
 #Update the dictionary with values specific to pending Clone request tab
-def _update_clone_vm_request(vm_request, element):
+def update_clone_vm_request(vm_request, element):
     element['clone_count'] = vm_request.clone_count
     
 #Update the dictionary with values specific to pending Attach Disk request tab
-def _update_attach_disk_request(vm_request, element):
+def update_attach_disk_request(vm_request, element):
     element['parent_vm_id'] = vm_request.parent_id
     element['extra_HDD'] = str(vm_request.extra_HDD) + 'GB' if vm_request.extra_HDD != None else '-'
     element['attach_disk'] = str(vm_request.attach_disk) + 'GB'
     
 
 #Update the dictionary with values specific to pending Edit Configuration request tab
-def _update_edit_config_request(vm_request, element):
+def update_edit_config_request(vm_request, element):
     vm_data = db.vm_data[vm_request.parent_id]
     
     element['parent_vm_id'] = vm_request.parent_id
@@ -179,13 +179,13 @@ def get_pending_request_list(vm_requests):
                    'object_store_type' : vm_request.object_store_type}
         
         if vm_request.request_type == VM_TASK_CREATE:
-            _update_install_vm_request(vm_request, element)
+            update_install_vm_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_CLONE:
-            _update_clone_vm_request(vm_request, element)
+            update_clone_vm_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_ATTACH_DISK:
-            _update_attach_disk_request(vm_request, element)
+            update_attach_disk_request(vm_request, element)
         elif vm_request.request_type == VM_TASK_EDIT_CONFIG:
-            _update_edit_config_request(vm_request, element)
+            update_edit_config_request(vm_request, element)
         elif vm_request.request_type == Object_Store_TASK_CREATE:
             update_install_Object_Store_request(vm_request, element)
         
@@ -246,6 +246,7 @@ def get_full_name(user_id):
     return get_user_details(user_id)[0]
     
     
+
 # Returns VM info, if VM exist
 def get_vm_info(_vm_id):
     #Get VM Info, if it is not locked
@@ -451,10 +452,10 @@ def get_vm_operations(vm_id):
                         vm_data = db(db.vnc_access.vm_id == vm_id).select().first()      
                         if vm_data: 
                            
-                           token = vm_data.vnc_server_ip
+                           token = vm_data.token
                            port = config.get("NOVNC_CONF","port")
-                           server_ip = config.get("NOVNC_CONF","server_ip")     
-                           url = "http://" + str(server_ip) +":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)                       
+                           url_ip = config.get("NOVNC_CONF","url_ip")     
+                           url = "http://" + str(url_ip) +":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)                       
                            valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
                                                       _href=url))
                         else:
