@@ -245,12 +245,12 @@ def clear_all_timedout_vnc_mappings():
         if (vnc_mappings != None) & (len(vnc_mappings) != 0):
 
            for mapping in vnc_mappings: 
-                logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping.vm_id, mapping.host_id, mapping.vnc_server_ip, mapping.vnc_source_port, mapping.vnc_destination_port))
+                logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping.vm_id, mapping.host_id, mapping.token, mapping.vnc_source_port, mapping.vnc_destination_port))
                 f = open("/home/www-data/token.list","r")
                 lines = f.readlines()
                 f.close()
                 f = open("/home/www-data/token.list","w")
-                token = mapping.vnc_server_ip
+                token = mapping.token
                 logger.debug("token is : " + str(token))
                 logger.debug("token type is : " + str(type(token)))
                 for line in lines:
