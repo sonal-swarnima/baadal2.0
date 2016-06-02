@@ -179,6 +179,13 @@ def settings():
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
 
 
+
+def get_vnc_url():
+    vm_id=request.vars['vm_id']
+    vnc_url=create_vnc_url(vm_id)
+    return vnc_url
+    
+
 def handle_vm_operation(vm_id, task_type):
 
     if is_request_in_queue(vm_id, VM_TASK_DELETE):
