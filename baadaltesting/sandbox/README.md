@@ -1,6 +1,6 @@
 Baadal Testing Sandbox
 ===============================================
-This sandbox installation script is tested on Ubuntu-12.04-LTS-Server
+This sandbox installation script is tested on Ubuntu-14.04
 
 Pre-requisites
 -----------------------------------------------
