@@ -159,25 +159,23 @@ function date_check(){
     var today = fullDate.getFullYear() + "-" + twoDigitMonth + "-" +  fullDate.getDate();
     var expiry_date=$('#request_queue_expiry_date').val();
     e_list=expiry_date.split('-');
-  
-    if (e_list[0]<=fullDate.getFullYear()){
-          if (e_list[1]<=twoDigitMonth){
-                if (e_list[2]<fullDate.getDate()){
-		    $('#request_queue_expiry_date').remove();
-                      
-		   }
-	 }
-        else {$('#request_queue_expiry_date').remove();
-              }
-           }
-    else {$('#request_queue_expiry_date').remove();
-             }
+    
+    var validDate = true;
+    if (e_list[0]<fullDate.getFullYear()){
+        validDate = false;
+    }else if (e_list[0]==fullDate.getFullYear()){
+        if (e_list[1]<twoDigitMonth){
+            validDate = false;
+        }else if (e_list[1]==twoDigitMonth){
+            if (e_list[2]<fullDate.getDate()){
+                validDate = false;
+            }
+        }
+    }
+    if(!validDate){
+        $('#request_queue_expiry_date').remove();
+    }
 
-   
-   
-   
-  
-   
 };
 
 
