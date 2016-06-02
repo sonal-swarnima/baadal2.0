@@ -401,11 +401,11 @@ def get_vm_operations(vm_id):
                      'edit_vm_config'        : ('user', 'editme.png', 'Edit VM Config'),
                      'show_vm_performance'   : ('user', 'performance.jpg', 'Check VM Performance'),
                      'vm_history'            : ('user', 'history.png', 'Show VM History'),
-                     'grant_vnc'             : ('user', 'vnc.jpg', 'Grant VNC Access'),
                      'confirm_vm_deletion()' : ( None, 'delete.png', 'Delete this virtual machine'),
+		     'vnc_url()'             : ('user', 'vnc.jpg', 'Grant VNC Access'),
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
-                     'save_vm_as_template'      : ('user', 'save.png', 'Save as Template'),
+                     'save_as_template'      : ('user', 'save.png', 'Save as Template'),
                      'mail_user'             : ('admin','email_icon.png','Send Mail to users of the VM'),
                      'affinity_host'         : ('admin','affinity.png','Set Affinity')}
 
@@ -426,7 +426,7 @@ def get_vm_operations(vm_id):
                     is_request_in_queue(vm_id, VM_TASK_ATTACH_DISK)):
                 valid_operations.extend(['start_vm'])
 
-            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk', 'save_vm_as_template'])
+            valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk', 'save_as_template'])
 
         if not is_vm_user():
             valid_operations.extend(['confirm_vm_deletion()'])
@@ -435,7 +435,7 @@ def get_vm_operations(vm_id):
                 valid_operations.extend(['user_details'])
                 valid_operations.extend(['mail_user'])
 
-        valid_operations.extend(['grant_vnc', 'vm_history'])
+        valid_operations.extend(['vnc_url()', 'vm_history'])
         
         #Disable all links if Delete VM option is in queue
         link_disabled = True if is_request_in_queue(vm_id, VM_TASK_DELETE) else False
@@ -448,23 +448,16 @@ def get_vm_operations(vm_id):
                 valid_operations_list.append(op_image)
             else:
                 if op_data[0] != None:
-                    if op_data[2] == 'Grant VNC Access':
-                        vm_data = db(db.vnc_access.vm_id == vm_id).select().first()      
-                        if vm_data: 
-                           
-                           token = vm_data.token
-                           port = config.get("NOVNC_CONF","port")
-                           url_ip = config.get("NOVNC_CONF","url_ip")     
-                           url = "http://" + str(url_ip) +":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)                       
-                           valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
-                                                      _href=url))
-                        else:
-                         valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
-                                                   _href=URL(r=request, c = op_data[0] , f=valid_operation, args=[vm_id])))
-                    else :
-                        valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
+                    if op_data[2]=='Grant VNC Access':
+		    	logger.debug("checking vnc" + str(valid_operation))
+			valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
+                                                   _onclick=valid_operation))
+		    else:
+		        valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
+		    
                                                    _href=URL(r=request, c = op_data[0] , f=valid_operation, args=[vm_id])))
                 else:
+		    logger.debug("checking vnc" + str(valid_operation))
                     valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
                                                    _onclick=valid_operation))
    
@@ -472,6 +465,7 @@ def get_vm_operations(vm_id):
         logger.error("INVALID VM STATUS!!!")
         raise
     return valid_operations_list  
+
 
 def get_snapshot_type(snapshot_type):
     snapshot_map = {SNAPSHOT_USER    : 'User',
