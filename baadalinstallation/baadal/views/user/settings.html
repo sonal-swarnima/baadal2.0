@@ -1,4 +1,39 @@
 {{extend 'layout.html'}}
+<script>
+jQuery('#target_vnc').click(function(e){
+    e.preventDefault();
+    
+    var url=$("#target_vnc").text();
+    console.debug(url);
+
+    window.open(url);
+});
+
+function vnc_url()
+{
+
+
+Vm_id={{=vminfo['id']}};
+
+
+jQuery.ajax({type:"POST",url:"{{=URL('get_vnc_url')}}", data:{vm_id:Vm_id},dataType:"text", success:function(ret) {
+	ret = ret.replace('<html>','');
+       ret = ret.replace('</html>','');
+       ret = ret.replace('<body>','');
+       ret = ret.replace('</body>','');
+       ret = ret.replace('<p>','');
+       ret = ret.replace('</p>','');
+
+	 $("#target_vnc").attr("target", "_blank");
+       $("#target_vnc").text(ret);
+       $("#target_vnc").attr("href",ret);
+	
+       } }); 
+
+}
+    
+
+</script>
 
 <script>
 
@@ -11,7 +46,6 @@ function confirm_vm_deletion(){
             }
     }
 }
-
 </script>
 
 {{if vminfo:}}
@@ -49,11 +83,9 @@ function confirm_vm_deletion(){
     {{if is_moderator():}}
 	    <p><strong>Host: </strong>{{=vminfo['host']}}</p>
     {{pass}}
-    {{if 'vnc_ip' in vminfo :}}<p>
-	    <!--<strong>VNC IP: </strong>{{=vminfo['vnc_ip']}}<br/>
-	    <strong>VNC Port: </strong>{{=vminfo['vnc_port']}}</p>-->
+<p><strong>VNC Link :</strong><a id="target_vnc">Please click on VNC button to get VNC link</a>
             
-    {{pass}}
+    
  <p><strong>Purpose :</strong> {{=vminfo['purpose']}}</p>
 
 </div>
