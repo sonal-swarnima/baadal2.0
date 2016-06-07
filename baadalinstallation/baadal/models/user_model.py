@@ -294,7 +294,7 @@ def get_request_object_store_form():
 
 def get_request_vm_form():
     
-    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'security_domain', 'public_ip']
+    form_fields = ['vm_name','template_id','extra_HDD','purpose', 'security_domain', 'expiry_date']
 
     db.request_queue.request_type.default = VM_TASK_CREATE
     db.request_queue.requester_id.default = auth.user.id
@@ -303,7 +303,7 @@ def get_request_vm_form():
     db.request_queue.security_domain.default = 2
     db.request_queue.security_domain.notnull = True
     db.request_queue.template_id.notnull = True
-
+    db.request_queue.expiry_date.notnull = True
     mark_required(db.request_queue)
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
