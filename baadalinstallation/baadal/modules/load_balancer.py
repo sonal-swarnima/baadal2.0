@@ -4,13 +4,16 @@
     basis of the recorded resource utilization by VMs.
 """
 from gluon import current
+from libvirt import *
 from helper import execute_remote_cmd
 from host_helper import HOST_STATUS_UP
 from log_handler import logger, rrd_logger
 from operator import itemgetter
-from vm_helper import migrate_domain
+from vm_helper import migrate_domain,getVirshDomain
+import libvirt, os
 from vm_utilization import get_host_resources_usage, get_host_mem_usage, \
     get_dom_mem_usage
+
 
 
 def loadbalance_vm(host_list=[],vm_list=[]):
@@ -26,10 +29,10 @@ def loadbalance_vm(host_list=[],vm_list=[]):
                 guests_map[guest] = False
   
             for vm_details in guests_map:
-                if (vm_details.status == VM_STATUS_SHUTDOWN or vm_details.status == VM_STATUS_SUSPENDED):
+                if (vm_details.status == current.VM_STATUS_SHUTDOWN or vm_details.status == current.VM_STATUS_SUSPENDED):
                     logger.debug("VM: "+vm_details.vm_name+" is shutoff, no need to migrate VM")
                     shutdown_vm_list[vm_details] = False
-                elif (vm_details.status == VM_STATUS_RUNNING):
+                elif (vm_details.status == current.VM_STATUS_RUNNING):
                     logger.debug("VM:"+vm_details.vm_name+" is running, need live migration")
                     for host in host_list:
                         if (check_affinity(vm_details,host) and schedule_vm(vm_details,host,1)):
