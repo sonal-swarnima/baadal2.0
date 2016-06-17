@@ -1614,6 +1614,7 @@ def create_new_template(vm_details):
         if not os.path.exists (new_template_dir):
             os.makedirs(new_template_dir)
         template = new_template_dir + '/' + vm_details.vm_identity + '_template.qcow2'
+        template_location =  '/' + vm_details.requester_id.first_name + '/' + vm_details.vm_identity + '_template.qcow2'
         old_template = new_template_dir + '/' + vm_details.vm_identity + '_template_old.qcow2'
         if os.path.exists (template):
             # move template to some other path
@@ -1647,29 +1648,36 @@ def create_new_template(vm_details):
                 domain = connection_object.defineXML(xmlfile)
 
                 connection_object.close()
-                return (True, template, old_template)
+                return (True, template_location, old_template)
             else:
                 logger.debug("domain is not running on host")
-                return (False, template, old_template)
+                return (False, template_location, old_template)
 
         elif(vm_details.status == current.VM_STATUS_SHUTDOWN):
             if domain.isActive():
                 logger.debug("Domain is still active...Please try again after some time!!!")
-                return (False, template, old_template)
+                return (False, template_location, old_template)
             else:
                 logger.debug("copying")
-                rc = os.system("cp %s %s" % (current_disk_file, template))
+                copy_command = "cp "+current_disk_file+" "+template
+                logger.debug("copy_command"+copy_command)
+                #rc = os.system("cp %s %s" % (current_disk_file, template))
+                logger.debug("copy command running on " + vm_details.host_id.host_ip.private_ip + " host")
+                command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', copy_command)
+                logger.debug(command_output)
 
-                if rc != 0:
-                    logger.error("Copy not successful")
-                    raise Exception("Copy not successful")
-                    return (False, template, old_template)
-                else:
-                    logger.debug("Copied successfully")
-                    return (True, template, old_template)
+                #if rc != 0:
+                #    logger.error("Copy not successful")
+                #    raise Exception("Copy not successful")
+                #    return (False, template, old_template)
+                #else:
+                #    logger.debug("Copied successfully")
+                #    return (True, template, old_template)
+                return (True, template_location, old_template)
+
     except:
         if not domain.isPersistent():
             domain = connection_object.defineXML(xmlfile)
         connection_object.close()
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
-        return (False, template, old_template)
+        return (False, template_location, old_template)
