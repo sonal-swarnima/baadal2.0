@@ -90,7 +90,7 @@ class IITD_Oauth(OAuthAccount):
             userdata=r.json()
             user_info={}
             if ' ' in userdata['name']:
-                user_info['first_name'],user_info['last_name']=userdata['name'].split()
+                user_info['first_name'],user_info['middle_name'],user_info['last_name']=userdata['name'].split()
             else:
                 user_info['first_name']=userdata['name']
                 user_info['last_name']=' '
