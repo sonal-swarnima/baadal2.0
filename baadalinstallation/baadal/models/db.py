@@ -88,11 +88,25 @@ class IITD_Oauth(OAuthAccount):
             uri=config.get("OAUTH_CONF","resource_url")
             r=requests.get(uri,params={'access_token':token})
             userdata=r.json()
-            fn,ln=userdata['name'].split()
+            user_info={}
+            if ' ' in userdata['name']:
+                user_info['first_name'],user_info['last_name']=userdata['name'].split()
+            else:
+                user_info['first_name']=userdata['name']
+                user_info['last_name']=' '
             hd=userdata['hd']
-            
-            return dict(first_name=fn,last_name=ln,email=userdata['email'],username = userdata['user_id'] )
-            
+            user_info['user_name'] = userdata['user_id']
+            user_info['email'] = userdata['email']
+
+            user_info['roles'] = fetch_user_role(user_info['user_name'])
+            # If user has super admin rights; it is added to separate organization
+            if current.ADMIN in user_info['roles']:
+               user_info['organisation'] = 'ADMIN'
+            else:
+               user_info['organisation'] = 'IITD'
+            create_or_update_user(user_info, False)
+            return dict(first_name=user_info['first_name'],last_name=user_info['last_name'],email=userdata['email'],username = userdata['user_id'] )
+
 oauth_login = IITD_Oauth(globals())
 
 db.define_table(
@@ -137,10 +151,10 @@ auth.settings.table_membership = db.define_table(
 ###############################################################################
 auth.define_tables(username=True)
 ###############################################################################
-if current.auth_type == AUTH_TYPE_LDAP :
-   from gluon.contrib.login_methods.pam_auth import pam_auth
-   auth.settings.login_methods = [pam_auth()]
-   auth.settings.login_onaccept = [login_ldap_callback]
+#if current.auth_type == AUTH_TYPE_LDAP :
+#   from gluon.contrib.login_methods.pam_auth import pam_auth
+#   auth.settings.login_methods = [pam_auth()]
+#   auth.settings.login_onaccept = [login_ldap_callback]
 if current.auth_type == AUTH_TYPE_DB:
    auth.settings.login_onaccept = [login_callback]
    auth.settings.registration_requires_approval = True
