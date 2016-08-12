@@ -242,6 +242,40 @@ db.define_table('template',
             '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag))
 db.template.hdd.requires=IS_INT_IN_RANGE(1,1025)
 
+db.define_table('object_store_data',
+    Field('object_store_name', 'string', length = 100, notnull = True, label='Name'),
+    Field('object_store_size', 'integer', notnull = True, label='Size(GB)'),
+    Field('object_store_type', 'string', notnull = True, label='Type'), 
+    Field('requester_id',db.user, label='Requester'),
+    Field('owner_id', db.user, label='Owner'),
+    Field('purpose', 'string', length = 512),
+    Field('start_time', 'datetime', default = get_datetime()),
+    Field('parent_id', 'reference object_store_data'),
+    Field('locked', 'boolean', default = False),
+    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
+    Field('s3_secret_key', 'string'),
+    Field('s3_access_key', 'string'),
+    Field('swift_access_key', 'string'))
+
+db.define_table('container_data',
+    Field('name', 'string', length = 100, notnull = True, unique = True, label='Name'),
+    Field('RAM', 'integer', notnull=True, label='RAM(MB)'),
+    Field('vCPU', 'integer', notnull=True, label='CPUs'),
+    Field('UUID', 'string',length = 100),
+    Field('image_id', 'integer'),
+    Field('image_profile', 'string',length = 100),
+    Field('restart_policy', default = "Restart Until Stop", requires = IS_IN_SET(('Restart Until Stop','Restart Once','Never')), label='Restart Policy'),
+    Field('env_vars', 'text', default={}),
+    Field('requester_id',db.user, label='Requester'),
+    Field('owner_id', db.user, label='Owner'),
+    Field('purpose', 'string', length = 512),
+    Field('creation_time', 'datetime', default = get_datetime()),
+    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
+    )
+db.container_data.env_vars.filter_in = lambda obj, dumps=dumps: dumps(obj)
+db.container_data.env_vars.filter_out = lambda txt, loads=loads: loads(txt)
+
+
 db.define_table('vm_data',
     Field('vm_name', 'string', length = 100, notnull = True, label='Name'),
     Field('vm_identity', 'string', length = 100, notnull = True, unique = True),
@@ -274,23 +308,8 @@ db.vm_data.purpose.widget=SQLFORM.widgets.text.widget
 db.vm_data.public_ip.requires = IS_EMPTY_OR(IS_IN_DB(db, 'public_ip_pool.id', '%(public_ip)s', zero=None))
 db.vm_data.private_ip.requires = IS_EMPTY_OR(IS_IN_DB(db, 'private_ip_pool.id', '%(private_ip)s', zero=None))
 
-db.define_table('object_store_data',
-    Field('object_store_name', 'string', length = 100, notnull = True, label='Name'),
-    Field('object_store_size', 'integer', notnull = True, label='Size(GB)'),
-    Field('object_store_type', 'string', notnull = True, label='Type'), 
-    Field('requester_id',db.user, label='Requester'),
-    Field('owner_id', db.user, label='Owner'),
-    Field('purpose', 'string', length = 512),
-    Field('start_time', 'datetime', default = get_datetime()),
-    Field('parent_id', 'reference vm_data'),
-    Field('locked', 'boolean', default = False),
-    Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),
-    Field('s3_secret_key', 'string'),
-    Field('s3_access_key', 'string'),
-    Field('swift_access_key', 'string'))
-
 db.define_table('request_queue',
-    Field('vm_name', 'string', length = 100, notnull = True, label='VM Name'),
+    Field('vm_name', 'string', length = 100, notnull = True, label='Name'),
     Field('object_store_name', 'string', length = 100, notnull = True, label='Object Store Name'),
     Field('object_store_size', 'integer', notnull = True, label='Object Store Size(GB)'),
     Field('object_store_type', 'string', notnull = True, label='Object Store Type'),
@@ -298,6 +317,8 @@ db.define_table('request_queue',
     Field('request_type', 'string', length = 20, notnull = True),
     Field('RAM', 'integer', label='RAM(MB)'),
     Field('HDD', 'integer', label='HDD(GB)'),
+    Field('restart_policy', default = "Restart Until Stop", requires = IS_IN_SET(('Restart Until Stop','Restart Once','Never')), label='Restart Policy'),
+    Field('env_vars', 'text', default={}, label='Environment Variable'),
     Field('extra_HDD', 'integer', label='Extra HDD(GB)'),
     Field('attach_disk', 'integer', label='Disk Size(GB)'),
     Field('vCPU', 'integer', label='CPUs'),
@@ -320,7 +341,8 @@ db.request_queue.extra_HDD.filter_in = lambda x: 0 if x == None else x
 db.request_queue.attach_disk.requires=IS_INT_IN_RANGE(1,1025)
 db.request_queue.purpose.widget=SQLFORM.widgets.text.widget
 db.request_queue.expiry_date.widget=SQLFORM.widgets.date.widget
-db.request_queue.expiry_date.requires=IS_DATE(error_message=T("Select an appropriate date"))
+db.request_queue.expiry_date.requires=IS_DATE(error_message='Select an appropriate date')
+
 if not auth.user:
     tmp_query = db.template
 elif is_moderator():
@@ -333,6 +355,8 @@ db.request_queue.template_id.requires = IS_IN_DB(tmp_query, 'template.id', lambd
                                                  '%s %s %s %s %sGB (%s)'%(r.os_name, r.os_version, r.os_type, r.arch, r.hdd, r.tag), zero=None)
     
 db.request_queue.clone_count.requires=IS_INT_IN_RANGE(1,101)
+db.request_queue.env_vars.filter_in = lambda obj, dumps=dumps: dumps(obj)
+db.request_queue.env_vars.filter_out = lambda txt, loads=loads: loads(txt)
 
 db.define_table('vm_event_log',
     Field('vm_id', db.vm_data),
@@ -352,6 +376,10 @@ db.define_table('user_object_map',
     Field('ob_id', db.object_store_data),
     primarykey = ['user_id', 'ob_id'])
 
+db.define_table('user_container_map',
+    Field('user_id', db.user),
+    Field('cont_id', db.container_data),
+    primarykey = ['user_id', 'cont_id'])
 
 db.define_table('host_affinity',
     Field('vm_id', db.vm_data),
@@ -387,6 +415,7 @@ db.define_table('task_queue_event',
     Field('task_id', 'integer', notnull = False),
     Field('task_type', 'string', length = 30, notnull = True),
     Field('vm_id', db.vm_data, notnull = False),
+    Field('cont_id', db.container_data, notnull = False),
     Field('vm_name', 'string', length = 100, notnull = True),
     Field('requester_id', db.user),
     Field('parameters', 'text', default={}),
@@ -409,4 +438,3 @@ db.define_table('vnc_access',
     Field('status', 'string', length = 15, notnull = True, default = 'inactive'),
     Field('time_requested', 'datetime', default = get_datetime()),
     Field('expiry_time', compute=lambda r: r['time_requested']+ timedelta(seconds=r['duration'])))
-

@@ -10,19 +10,18 @@ if 0:
     from gluon import db, request, session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-
+from dhcp_helper import create_dhcp_entry, remove_dhcp_entry, \
+    create_dhcp_bulk_entry
 from helper import IS_MAC_ADDRESS, get_ips_in_range, generate_random_mac
-from dhcp_helper import create_dhcp_entry, remove_dhcp_entry, create_dhcp_bulk_entry
-from host_helper import is_host_available, get_host_mac_address, get_host_cpu,\
-    get_host_ram, get_host_hdd, get_host_type, HOST_STATUS_UP, HOST_STATUS_DOWN,\
-    host_power_up, HOST_STATUS_MAINTENANCE, migrate_all_vms_from_host,\
-    host_power_down
-from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, VM_UTIL_ONE_MNTH, \
-    VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS, VM_UTIL_THREE_MNTH
+from host_helper import is_host_available, get_host_cpu, get_host_ram, \
+    get_host_hdd, get_host_type, HOST_STATUS_UP, HOST_STATUS_DOWN, host_power_up, \
+    HOST_STATUS_MAINTENANCE, migrate_all_vms_from_host, host_power_down
+from images import getImageProfile
 from log_handler import logger
-from vm_helper import launch_existing_vm_image, get_vm_image_location,\
+from vm_helper import launch_existing_vm_image, get_vm_image_location, \
     get_extra_disk_location
-
+from vm_utilization import fetch_rrd_data, VM_UTIL_24_HOURS, VM_UTIL_ONE_WEEK, \
+    VM_UTIL_ONE_MNTH, VM_UTIL_ONE_YEAR, VM_UTIL_10_MINS, VM_UTIL_THREE_MNTH
 
 
 def get_manage_template_form(req_type):
@@ -37,6 +36,22 @@ def get_manage_template_form(req_type):
     form = SQLFORM.grid(query, orderby=default_sort_order, paginate=ITEMS_PER_PAGE, 
                         csv=False, searchable=False, details=False, showbuttontext=False, maxtextlength=30)
     return form
+
+
+"""Checks if template can be deleted. If a VM is created with given template;
+   it is marked is_active=False instead of deleting"""
+def check_delete_container(template_id):
+    
+    if db.container_data(saved_template = template_id):
+        add_vm_task_to_queue(-1, VM_TASK_DELETE_TEMPLATE, {'template_id' : template_id})
+
+    if db.container_data(template_id = template_id):
+        db(db.template.id== template_id).update(is_container=False)
+        return False
+    
+    return True
+
+
 
 """Checks if template can be deleted. If a VM is created with given template;
    it is marked is_active=False instead of deleting"""
@@ -326,8 +341,12 @@ def get_all_vm_list():
     return get_hosted_vm_list(vms)
 
 def get_all_object_list():
-     obs = db(db.object_store_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
-     return get_my_object_store_list(obs) 
+    obs = db(db.object_store_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    return get_my_object_store_list(obs) 
+
+def get_all_container_list():
+    conts = db(db.container_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    return get_my_container_list(conts) 
 
 def get_all_vm_ofhost(hostid):
     vms = db((db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)) 
@@ -384,6 +403,30 @@ def create_clone_task(req_data, params):
         
     params.update({'clone_vm_id':vm_id_list})
     add_vm_task_to_queue(req_data.parent_id, VM_TASK_CLONE, params=params, requested_by=req_data.requester_id)
+
+
+def container_install_task(req_data, params):
+    
+    
+    env_vars = req_data.env_vars
+    image_id = int(env_vars.pop('image_profile'))
+    image_profile = getImageProfile(image_id)['type']
+#     env_vars['image_profile'] = None
+    cont_id = db.container_data.insert(
+                  name = req_data.vm_name,
+                  RAM = req_data.RAM,
+                  vCPU = req_data.vCPU,
+                  env_vars = env_vars,
+                  image_id = image_id,
+                  image_profile = image_profile,
+                  restart_policy = req_data.restart_policy,
+                  requester_id = req_data.requester_id,
+                  owner_id = req_data.owner_id,
+                  purpose = req_data.purpose,
+                  status = VM_STATUS_IN_QUEUE)
+
+    add_container_users(cont_id, req_data.requester_id, req_data.owner_id, req_data.collaborators)
+    add_cont_task_to_queue(cont_id, CONTAINER_TASK_CREATE, params=params, requested_by=req_data.requester_id)
 
 def object_store_install_task(req_data, params):
     ob_id = db.object_store_data.insert(
@@ -446,6 +489,8 @@ def enqueue_vm_request(request_id):
         add_vm_task_to_queue(req_data.parent_id, req_data.request_type, params=params, requested_by=req_data.requester_id)
     elif req_data.request_type == Object_Store_TASK_CREATE:
         object_store_install_task(req_data, params)
+    elif req_data.request_type == CONTAINER_TASK_CREATE:
+        container_install_task(req_data, params)
     
     db(db.request_queue.id == request_id).update(status=REQ_STATUS_IN_QUEUE)
 
@@ -1116,63 +1161,46 @@ def get_avg_utilizations_hosts(avg_ram_host):
 ####################Utilizations page################################
 
 def zoom_info(g_type): 
-        avg_ram_host=[] 
-        avg_cpu_host=[]	
-	root_info={}   
-        total_ram_host=[] 
-        total_cpu_host=[]
-	total_hdd_host=[] 
-        if g_type=="host":
-            graph_name="HOST DETAILS" 
-	    hostvmlist = get_vm_groupby_hosts() 
-	else:
-	    graph_name="ORGANISATION DETAILS" 
-	    hostvmlist = get_vm_groupby_organisations() 
-	    root_info['name']=graph_name
-	parent_util=[]
-	for o_row in hostvmlist:
-	    rows=o_row['details']           
-            if rows:
-		child_info={}
-		child_util=[]	       
-                if g_type=="host":		    
-		    rrd_file_name=o_row['host_ip'].replace(".","_")
-                    util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
-		    hdd=round(float(o_row['host_HDD'])/1024,2)
-                    host_info= " (RAM: "+str(o_row['host_RAM'])+" GB CPU: "+str( o_row['host_CPUs'])+" core HDD: "+str(hdd) + " TB)"
-		    host_ram_util=round(((util_data[0]/(o_row['host_RAM'] * 1024*1024*1024))*100), 2)
-		    host_cpu_util=round((float(util_data[1])*100)/(float(int(o_row['host_CPUs'])*5*60*1000000000)),2)
-		    child_info["name"]=str(o_row['host_ip'])+" "+str(host_info) + ":: UTILIZATION  MEM: " +str(host_ram_util) +"% " +" CPU: "+str(host_cpu_util) + "%"
-		    
-            	    avg_ram_host.append(host_ram_util)	
-                    avg_cpu_host.append(host_cpu_util) 
-                    total_ram_host.append(o_row['host_RAM'])
-        	    total_cpu_host.append(o_row['host_CPUs'])
-		    total_hdd_host.append(hdd)
-		else:
-	    	    child_info["name"]=o_row['org_name']                    
-	        for row in rows:		    
-	            vm_info={}
-		    vm_util=[]		    
-	            rrd_file_name=row['identity']
-                    util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)		   
-		    ram_utilization=round(((util_data[0]/(float(row["RAM"].split(" ")[0])* 1024*1024*1024))*100), 2)		   
-		    cpu_utilization=round((float(util_data[1])*100)/(float(int(row['vcpus'].split(" ")[0])*5*60*1000000000)),2)		    
-		    vm_info['name']=str(row['name']) + "  ("+ str(row['RAM'])+" "+str( row['vcpus'])+" "+str(row['hdd']) + "GB) mem: " + str(ram_utilization) + "% cpu: " + str(cpu_utilization) + "%"
-	            child_util.append(vm_info)	
+    avg_ram_host=[] 
+    avg_cpu_host=[]	
+    root_info={}   
+    total_ram_host=[] 
+    total_cpu_host=[]
+    total_hdd_host=[] 
+    if g_type=="host":
+        graph_name="HOST DETAILS" 
+        hostvmlist = get_vm_groupby_hosts() 
+    else:
+        graph_name="ORGANISATION DETAILS" 
+        hostvmlist = get_vm_groupby_organisations() 
+        root_info['name']=graph_name
+        parent_util=[]
+
+    for o_row in hostvmlist:
+        rows=o_row['details']           
+        if rows:
+            child_info={}
+            child_util=[]	       
+            if g_type=="host":		    
+                rrd_file_name=o_row['host_ip'].replace(".","_")
+                util_data=fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24)
+                hdd=round(float(o_row['host_HDD'])/1024,2)
+                host_info= " (RAM: "+str(o_row['host_RAM'])+" GB CPU: "+str( o_row['host_CPUs'])+" core HDD: "+str(hdd) + " TB)"
+                host_ram_util=round(((util_data[0]/(o_row['host_RAM'] * 1024*1024*1024))*100), 2)
+                host_cpu_util=round((float(util_data[1])*100)/(float(int(o_row['host_CPUs'])*5*60*1000000000)),2)
+                child_info["name"]=str(o_row['host_ip'])+" "+str(host_info) + ":: UTILIZATION  MEM: " +str(host_ram_util) +"% " +" CPU: "+str(host_cpu_util) + "%"
                 
-		
-	        child_info["children"]=child_util		
+                child_info["children"]=child_util		
                 parent_util.append(child_info)  
+
         if g_type=="host":	     
-	    avg_ram=get_avg_utilizations_hosts(avg_ram_host)   
-	    avg_cpu=get_avg_utilizations_hosts(avg_cpu_host) 
+            avg_ram=get_avg_utilizations_hosts(avg_ram_host)   
+            avg_cpu=get_avg_utilizations_hosts(avg_cpu_host) 
             avl_ram=sum(total_ram_host) 
-	    avl_cpu=sum(total_cpu_host)
-	    avl_hdd=sum(total_hdd_host)
-           
+            avl_cpu=sum(total_cpu_host)
+            avl_hdd=sum(total_hdd_host)
+            
             all_host_info= " (RAM: "+str(avl_ram)+" GB CPU: "+str(avl_cpu)+" core HDD: "+str(avl_hdd) + " TB)"
-	    root_info['name']="HOST DETAILS :" + str(all_host_info) + " :: UTILIZATION  MEM: " + str(round(avg_ram,2)) + "% CPU: " + str(round(avg_cpu,2)) +"%"
-	root_info['children']=parent_util
-        return root_info
-    
+            root_info['name']="HOST DETAILS :" + str(all_host_info) + " :: UTILIZATION  MEM: " + str(round(avg_ram,2)) + "% CPU: " + str(round(avg_cpu,2)) +"%"
+    root_info['children']=parent_util
+    return root_info

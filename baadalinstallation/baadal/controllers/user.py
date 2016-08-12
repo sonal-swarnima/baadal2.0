@@ -7,14 +7,18 @@ by users with role of 'user'.
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
-    from gluon import auth,request,session
+    from gluon import auth,request,session,response
     import gluon
     global auth; auth = gluon.tools.Auth()
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from helper import config, get_file_stream, get_context_path
 from log_handler import logger
-from vm_utilization import check_graph_type, check_graph_period, fetch_info_graph
-from helper import get_file_stream
+from vm_utilization import check_graph_type, check_graph_period, \
+    fetch_info_graph
+import os
+
+
 def request_object_store():
     form = get_request_object_store_form()
     
@@ -22,7 +26,7 @@ def request_object_store():
     if form.accepts(request.vars, session, onvalidation=request_object_store_validation):
         
         send_email_to_object_requester(form.vars.ob_name)
-        if is_vm_user():
+        if is_general_user():
             send_remind_faculty_email(form.vars.id)
 
         logger.debug('Object Store requested successfully')
@@ -38,10 +42,26 @@ def request_vm():
     if form.accepts(request.vars, session, onvalidation=request_vm_validation):
         
         send_email_to_requester(form.vars.vm_name)
-        if is_vm_user():
+        if is_general_user():
             send_remind_faculty_email(form.vars.id)
 
         logger.debug('VM requested successfully')
+        redirect(URL(c='default', f='index'))
+    return dict(form=form)
+
+@auth.requires_login()
+@handle_exception
+def request_container():
+    form = get_request_container_form()
+    
+    # After validation, read selected configuration and set RAM, CPU and HDD accordingly
+    if form.accepts(request.vars, session, onvalidation=request_container_validation):
+#         print "dfsklj"
+        #send_email_to_requester(form.vars.vm_name)
+        if is_general_user():
+            #send_remind_faculty_email(form.vars.id)
+            print "sdfklsd"
+        logger.debug('Container requested successfully')
         redirect(URL(c='default', f='index'))
     return dict(form=form)
 
@@ -74,6 +94,11 @@ def list_my_object_store():
     my_object_store = get_my_object_store()
     return dict(my_object_store = my_object_store)
 
+
+def list_my_container():
+    my_container = get_my_container()
+    return dict(my_container = my_container)
+
 def download_sample_obect_program():
     file_name = 's3_object_key.txt'
     file_path = os.path.join(get_context_path(), 'private/Object_keys/' + file_name)
@@ -93,10 +118,10 @@ def download_object_keys():
     #user_info=get_user_details()
     #user_name=user_info['username'].title()
     logger.debug(request.args[1])
-    if '_' in request.args[1]:
-        user_name,b=request.args[1].split('_', 1)
-    else:
-        user_name=request.args[1]
+#     if '_' in request.args[1]:
+#         user_name,b=request.args[1].split('_', 1)
+#     else:
+#         user_name=request.args[1]
     object_store_name=request.args[0]
     logger.debug(object_store_name)
     file_name = object_store_name+'_key.txt'
@@ -113,10 +138,10 @@ def download_object_keys():
 
 
 def vpn():
-   return dict()
+    return dict()
 
 def vpn_setup_guide():
-   return dict()
+    return dict()
 
 @auth.requires_login()
 @handle_exception
@@ -151,15 +176,10 @@ def download_vpn_keys():
     logger.debug("******************************************************")
     try:
         return response.stream(get_file_stream(file_path),chunk_size=4096)
-    #logger.debug(user_name)
-    #try :
-    #file_path = "http://127.0.0.1:/home/www-data/web2py/applications/baadal/static/VPN"+str(user_name)+"_baadalVPN.zip"
-    #return response.stream(file_path, 1024)    
+
     except Exception:
         session.flash = "Unable to download your VPN files. Please Register first if you have not registered yet."
     redirect(URL(r = request, c = 'user', f = 'vpn'))
-
-
 
 
 @check_vm_owner
@@ -170,7 +190,7 @@ def settings():
     vm_info = get_vm_config(vm_id)
     if not vm_info:
         redirect(URL(f='list_my_vm'))
-    if not is_vm_user():
+    if not is_general_user():
         vm_users = get_vm_user_list(vm_id)
     
     vm_operations = get_vm_operations(vm_id)
@@ -178,6 +198,17 @@ def settings():
     
     return dict(vminfo = vm_info , vmoperations = vm_operations, vmsnapshots = vm_snapshots, vmusers = vm_users)     
 
+@check_cont_owner
+@handle_exception
+def cont_settings():
+    cont_id=request.args[0]
+    cont_info = get_cont_config(cont_id)
+    if not cont_info:
+        redirect(URL(f='list_my_container'))
+    
+    cont_operations = get_cont_operations(cont_id)
+    
+    return dict(cont_info = cont_info , cont_operations = cont_operations)     
 
 
 def get_vnc_url():
@@ -196,6 +227,76 @@ def handle_vm_operation(vm_id, task_type):
         add_vm_task_to_queue(vm_id,task_type)
         session.flash = '%s request added to queue.' %task_type
     redirect(URL(r = request, c = 'user', f = 'settings', args = vm_id))
+
+def handle_cont_operation(cont_id, task_type):
+
+    add_cont_task_to_queue(cont_id,task_type)
+    session.flash = '%s request added to queue.' %task_type
+    redirect(URL(r = request, c = 'user', f = 'cont_settings', args = cont_id))
+
+@check_cont_owner
+@handle_exception
+def container_logs():
+    cont_id = request.args[0]
+    cont_logs = get_container_logs(cont_id)
+    return dict(cont_id = cont_id, cont_logs = cont_logs)
+
+@check_cont_owner
+@handle_exception
+def container_stats():
+    cont_id = request.args[0]
+    cont_uuid = get_container_uuid(cont_id)
+    cont_stats = get_container_stats(cont_uuid)
+    return dict(cont_uuid = cont_uuid, cont_id = cont_id, cont_stats = cont_stats)
+
+@check_cont_owner
+@handle_exception
+def container_top():
+    cont_id = request.args[0]
+    cont_top = get_container_top(cont_id)
+    return dict(cont_id = cont_id, cont_top = cont_top)
+
+@check_cont_owner
+@handle_exception
+def container_execute():
+    cont_id = request.args[0]
+    cont_uuid = get_container_uuid(cont_id)
+    return dict(cont_uuid = cont_uuid, cont_id = cont_id)
+
+@check_cont_owner
+@handle_exception
+def start_cont():
+    handle_cont_operation(request.args[0], CONTAINER_START)
+
+@check_cont_owner
+@handle_exception
+def pause_cont():
+    handle_cont_operation(request.args[0], CONTAINER_SUSPEND)
+
+@check_cont_owner
+@handle_exception
+def resume_cont():
+    handle_cont_operation(request.args[0], CONTAINER_RESUME)
+
+@check_cont_owner
+@handle_exception
+def stop_cont():
+    handle_cont_operation(request.args[0], CONTAINER_STOP)
+
+@check_cont_owner
+@handle_exception
+def restart_cont():
+    handle_cont_operation(request.args[0], CONTAINER_RESTART)
+
+@check_cont_owner
+@handle_exception
+def delete_cont():
+    handle_cont_operation(request.args[0], CONTAINER_DELETE)
+
+@check_cont_owner
+@handle_exception
+def recreate_cont():
+    handle_cont_operation(request.args[0], CONTAINER_RECREATE)
 
 @check_vm_owner
 @handle_exception
@@ -352,16 +453,30 @@ def create_graph():
 
 
 
+
+def create_container_graph():
+    
+    logger.debug('INSIDE create_container_graph' + request.args[0])
+    logger.debug(request.args[0])
+    cont_uuid = request.args[0]
+    cont_stats = get_container_stats(cont_uuid)
+    
+    import json
+    
+    json_str = json.dumps(cont_stats,ensure_ascii=False)
+    
+    return json_str
+
 @check_vm_owner
 @handle_exception
 
 def novnc_access():
 
-   token=request.vars['token']
-   port = config.get("NOVNC_CONF","port")
-   url_ip = config.get("NOVNC_CONF","url_ip")
-   url = "http://"+ str(url_ip)+ ":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)
-   return redirect(url)
+    token=request.vars['token']
+    port = config.get("NOVNC_CONF","port")
+    url_ip = config.get("NOVNC_CONF","url_ip")
+    url = "http://"+ str(url_ip)+ ":" + str(port)+"/vnc_auto.html?path=?token=" + str(token)
+    return redirect(url)
 
 
 @check_vm_owner
@@ -370,7 +485,7 @@ def grant_vnc():
     vm_id = request.args[0]   
     token = grant_novnc_access(vm_id)
     if token :
-       redirect(URL(r = request, f = 'novnc_access', args = vm_id, vars =dict(token=token)))
+        redirect(URL(r = request, f = 'novnc_access', args = vm_id, vars =dict(token=token)))
 
 
 @check_vm_owner
@@ -461,10 +576,12 @@ def list_my_requests():
     return dict(install_requests = requests[0], 
                 clone_requests = requests[1], 
                 disk_requests = requests[2], 
-                edit_requests= requests[3])
+                edit_requests= requests[3],
+		        install_object_store_requests= requests[4],
+		        install_container_requests= requests[5])
         
 @check_vm_owner
-@handle_exception       
+@handle_exception
 def vm_history():
 
     vm_id = request.args[0]
@@ -479,4 +596,6 @@ def configure_snapshot():
 
     vm_id = int(request.args[0])
     flag = request.vars['snapshot_flag']
-    update_snapshot_flag(vm_id, flag) 
+    update_snapshot_flag(vm_id, flag)
+
+

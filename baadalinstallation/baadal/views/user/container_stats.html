@@ -1,0 +1,126 @@
+{{extend 'layout.html'}}
+
+<script src="{{=URL('static','js/stats.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','js/jquery.canvasjs.min.js')}}"  ,type="text/javascript"></script>
+
+<script>
+stattoDisplay = 1;
+
+function statscontainer(containerid){
+
+    curr_id = containerid;
+    
+    switch(stattoDisplay){
+        case 1 :
+        {
+            chartheading = "CPU Chart";
+        }break;
+        case 2:
+        {
+           chartheading ="Memory Chart"
+        }
+            break;
+        case 3:{
+            chartheading = "Network Chart"
+        }break;
+    }
+
+  var charts = [];
+  charts[0] = new CanvasJS.Chart("cpuchartContainer",{title:{
+        text: 'Cpu '
+    },
+
+  data:[
+      {
+
+          type:"area",
+          xValueType: "dateTime",
+      }
+  ]})
+  charts[1] = new CanvasJS.Chart("memorychartContainer",{title:{
+        text: 'Memory'
+    },
+
+  data:[
+      {
+
+          type:"area",
+          xValueType: "dateTime",
+      }
+  ]})
+  charts[2] = new CanvasJS.Chart("networkchartContainer",{title:{
+        text: 'Networks'
+    },
+
+  data:[
+      {
+
+          type:"area",
+          xValueType: "dateTime",
+      }
+  ]}) 
+    plotcharts(containerid,charts);
+    for (x in charts){
+		charts[x].render();
+		}
+    
+}
+
+function getstats(id,callback){
+
+
+    var httpRequest;
+    handleButtonPress();
+    function handleButtonPress(e) {
+        httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = handleResponse;
+        httpRequest.open("GET", "{{=URL(r=request,c='user' ,f='create_container_graph')}}"+"/"+id);
+        httpRequest.send();
+       // console.log("done1");
+
+    }
+    function handleResponse(){
+       // console.log("done2");
+
+        if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+            var dfg =  JSON.parse(httpRequest.responseText);
+            callback(dfg);
+    }
+}}
+
+
+
+
+</script>
+
+
+<h2 class="subtitle">{{=T('Container Stats')}}</h2>
+
+{{
+  if not cont_stats:
+}}
+<h3>No log information to display</h3>
+{{else:}}
+
+<div id="cpuchartContainer" style="height: 300px; width: 100%;"></div>
+<div id="memorychartContainer" style="height: 300px; width: 100%;"></div>
+<div id="networkchartContainer" style="height: 300px; width: 100%;"></div>
+</body>
+
+
+
+{{pass}}
+<div>
+    {{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
+    _href=URL(r=request, f='cont_settings', args=[cont_id]), 
+    _title="Settings", 
+    _alt="Settings")}}
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+	statscontainer('{{=cont_uuid}}');
+
+});
+</script>

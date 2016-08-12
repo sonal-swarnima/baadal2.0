@@ -1,0 +1,53 @@
+{{extend 'layout.html'}}
+
+<div id="tabs-task">
+
+  <ul>
+    <li><a href="#ContainerTab", onclick="set_tab_cookie(0);">My Container</a></li>
+  </ul>
+
+<div id="ContainerTab">
+  {{
+    if not my_container:
+  }}
+  <h3>No Available CONTAINER</h3>
+  {{else:}}
+  <table id="mycont" class="tablesorter">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Enviornment Variable</th>
+        <th>Template</th>
+        <th>Restart Policy</th>
+		<th>RAM</th>
+		<th>vCPUs</th>
+        <th>Status</th>
+        <th>Settings</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{for cont in my_container:}}
+      <tr>
+        <td>{{=cont['name']}}</td>
+        <td>{{=(cont['owner'])}}</td>
+        <td>{{=cont['env_vars']}}</td>
+        <td>{{=cont['template']}}</td>
+        <td>{{=cont['restart_policy']}}</td>
+        <td>{{=cont['RAM']}}</td>
+		<td>{{=cont['vcpus']}}</td>
+        <td>{{=cont['status']}}</td>
+        <td>
+        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+        _href=URL(r=request, f='cont_settings', args=[cont['id']]), _id="cont_"+str(cont['id']), 
+        _title="Settings", 
+        _alt="Settings")}}
+        </td>
+      </tr>
+    {{pass}}
+    </tbody>
+  </table>
+  {{pass}}
+
+  </div>
+</div>

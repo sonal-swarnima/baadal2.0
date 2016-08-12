@@ -1,0 +1,22 @@
+{{extend 'layout.html'}}
+<h2 class="subtitle">{{=T('Container Logs')}}</h2>
+
+{{
+  if not cont_logs:
+}}
+<h3>No log information to display</h3>
+{{else:}}
+
+<div style="height:600px;width:600px;border:1px solid #ccc;overflow:auto;">
+
+{{=cont_logs}}
+
+</div>
+{{pass}}
+<div>
+    {{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
+    _href=URL(r=request, f='cont_settings', args=[cont_id]), 
+    _title="Settings", 
+    _alt="Settings")}}
+</div>
+

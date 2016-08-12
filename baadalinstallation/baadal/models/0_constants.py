@@ -12,6 +12,14 @@ current.TASK_QUEUE_STATUS_SUCCESS = TASK_QUEUE_STATUS_SUCCESS
 current.TASK_QUEUE_STATUS_FAILED = TASK_QUEUE_STATUS_FAILED
 
 #Task type
+CONTAINER_TASK_CREATE = 'Create Container'
+CONTAINER_START = 'Start Container'
+CONTAINER_STOP = 'Stop Container'
+CONTAINER_SUSPEND = 'Suspend Container'
+CONTAINER_RESUME = 'Resume Container'
+CONTAINER_DELETE = 'Delete Container'
+CONTAINER_RESTART = 'Restart Container'
+CONTAINER_RECREATE = 'Re-create Container'
 Object_Store_TASK_CREATE = 'Create Object Store'
 VM_TASK_CREATE = 'Create VM'
 VM_TASK_START = 'Start VM'
@@ -157,6 +165,3 @@ MAX_VNC_ALLOWED_IN_A_DAY = 10
 SYSTEM_USER = -1
 #Added so that changes in modules are instantlly loaded and reflected.
 from gluon.custom_import import track_changes; track_changes(True)
-
-
-

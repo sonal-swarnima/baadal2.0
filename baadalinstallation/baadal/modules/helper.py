@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 ###################################################################################
 
-import os, re, random
-import paramiko
-from gluon.validators import Validator
 from gluon import current
+from gluon.validators import Validator
 from log_handler import logger
+import os
+import paramiko
+import random
+import re
 
 
 def get_context_path():
@@ -114,6 +116,30 @@ def execute_remote_bulk_cmd(machine_ip, user_name, command, password=None):
     return output
 
 
+def sftp_files(machine_ip, user_name, remote_file_path, local_file_path):
+    """
+    FTP file using paramiko SSHClient
+    """
+    logger.debug("executing remote ftp on %s with %s:"  %(machine_ip, user_name))
+
+    try:
+        transport = paramiko.Transport((machine_ip, 22))
+        privatekeyfile = os.path.expanduser('~/.ssh/id_rsa')
+        mykey = paramiko.RSAKey.from_private_key_file(privatekeyfile)
+        transport.connect(username = user_name, pkey = mykey)
+        logger.debug("Connected to host %s " % machine_ip)
+       
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        sftp.get(remote_file_path, local_file_path)
+    except paramiko.SSHException:
+        log_exception()
+        raise
+    finally:
+        if sftp:
+            sftp.close()
+        if transport:
+            transport.close()
+
 def is_valid_ipv4(value):
     """
     Checks if string represents 4 octets seperated by decimal.
@@ -195,6 +221,16 @@ def is_pingable(ip):
     
     return not(response)
 
+def get_docker_daemon_address():
+    docker_machine_ip = config.get("DOCKER_CONF","docker_machine_ip");
+    docker_machine_port = config.get("DOCKER_CONF","docker_machine_port");
+    return (docker_machine_ip,docker_machine_port);
+
+def get_nginx_server_address():
+    nginx_machine_ip = config.get("DOCKER_CONF","nginx_machine_ip");
+    nginx_machine_user = config.get("DOCKER_CONF","nginx_machine_user");
+    nginx_machine_passwd = config.get("DOCKER_CONF","nginx_machine_passwd");
+    return (nginx_machine_ip, nginx_machine_user,nginx_machine_passwd);
 
 class IS_MAC_ADDRESS(Validator):
     """

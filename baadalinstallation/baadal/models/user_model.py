@@ -13,10 +13,16 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from auth_user import fetch_ldap_user, create_or_update_user, AUTH_TYPE_LDAP
-from log_handler import logger
-from helper import log_exception, get_datetime,get_file_append_mode
-from nat_mapper import create_vnc_mapping_in_nat, VNC_ACCESS_STATUS_ACTIVE,VNC_ACCESS_STATUS_INACTIVE
+from cont_handler import Container
+from container_create import list_container
 from datetime import timedelta
+from helper import log_exception, get_datetime, get_file_append_mode, config, \
+    execute_remote_cmd, sftp_files, get_context_path
+from images import getImageProfileList
+from log_handler import logger
+from nat_mapper import VNC_ACCESS_STATUS_ACTIVE, VNC_ACCESS_STATUS_INACTIVE
+import datetime
+import os
 
 def get_my_requests():
     """
@@ -50,9 +56,16 @@ def get_my_object_store():
                           & (db.user_object_map.user_id==auth.user.id)).select(db.object_store_data.ALL)
         return get_my_object_store_list(object_store)
     except:
-        msg = 'Some Error Occurred. Please try later'
+        logger.debug("Exception occurred: %s " % log_exception())
         l = []
-        return l     
+        return l    
+
+
+def get_my_container():
+    """get list of container"""
+    container = db((~db.container_data.status.belongs(VM_STATUS_IN_QUEUE, VM_STATUS_UNKNOWN))& (db.container_data.id==db.user_container_map.cont_id)& (db.user_container_map.user_id==auth.user.id)).select(db.container_data.ALL)
+    return get_my_container_list(container)
+     
 
 def get_configuration_elem(form):
     """
@@ -137,26 +150,14 @@ def get_request_status():
         status = REQ_STATUS_APPROVED
     elif is_faculty():
         status = REQ_STATUS_VERIFIED
-
     return status
+
 
 def is_object_store_name_unique(user_set, object_store_name=None, vm_id=None):
     """
     Check if Object Store name is unique for the user.
     This function checks both user's existing object store 
     and pending requests in queue"""
-    """ To be done Later   
-    if vm_id != None:
-        vm_data = db.vm_data[vm_id]
-        vm_name = vm_data.vm_name
-        
-    vms = db((db.vm_data.id == db.user_vm_map.vm_id) & 
-             (db.user_vm_map.user_id.belongs(user_set)) & 
-             (db.vm_data.vm_name.like(vm_name))).select()
-    
-    if vms:
-        return False
-    """
     requests = db(((db.request_queue.owner_id.belongs(user_set)) |
                    (db.request_queue.requester_id.belongs(user_set))) & 
                    (db.request_queue.object_store_name.like(object_store_name))).select()
@@ -187,16 +188,25 @@ def is_vm_name_unique(user_set, vm_name=None, vm_id=None):
     
     return False if requests else True
 
+def is_container_name_unique(user_set, vm_name=None, vm_id=None):
+    """
+    Check if VM name is unique for the user.
+    This function checks both user's existing virtual machine 
+    and pending requests in queue"""
+
+    requests = db(((db.request_queue.owner_id.belongs(user_set)) |
+                   (db.request_queue.requester_id.belongs(user_set))) & 
+                   (db.request_queue.vm_name.like(vm_name))).select()
+    
+    return False if requests else True
+
     
 def request_object_store_validation(form):
-    
     form.vars.status = get_request_status()
-
-    if is_vm_user():
+    if is_general_user():
         validate_approver(form)
     else:
         form.vars.owner_id = auth.user.id
-
     vm_users = request.post_vars.vm_users
     user_list = []
     if vm_users and len(vm_users) > 1:
@@ -213,18 +223,55 @@ def request_object_store_validation(form):
     if not is_object_store_name_unique(user_set, form.vars.object_store_name):
         form.errors.object_store_name = 'Object Store name should be unique for the user. Choose another name.'
 
+def request_container_validation(form):
     
-def request_vm_validation(form):
-    
-    set_configuration_elem(form)
     form.vars.status = get_request_status()
-
-    if is_vm_user():
+    if is_general_user():
         validate_approver(form)
     else:
-        form.vars.owner_id = auth.user.id
+        form.vars.owner_id = auth.user.id    
+#     vm_users = request.post_vars.vm_users
+    env_vars = request.post_vars.env_var_list
+    logger.debug(form.vars)
+    
+    env_dict= {}
+    if env_vars and len(env_vars) > 1:
+        for env_var in env_vars[1:-1].split('|'):
+            vals = env_var.split("=")
+            logger.debug(vals[0])
+            if len(vals) == 2:
+                logger.debug(vals[1])
+                env_dict[vals[0]] = vals[1]
+    env_dict['image_profile'] = form.vars.image_profile
+    logger.debug(env_dict)
+    form.vars.env_vars = env_dict
+    user_list = []
+#     if vm_users and len(vm_users) > 1:
+#         for vm_user in vm_users[1:-1].split('|'):
+#             user_list.append(db(db.user.username == vm_user).select(db.user.id).first()['id'])
+    
+    if request.post_vars.faculty_user:
+        user_list.append(form.vars.owner_id)
+    form.vars.collaborators = user_list
 
+    user_set = set(user_list)
+    user_set.add(auth.user.id)
+
+    '''if not is_container_name_unique(user_set, form.vars.name):
+        form.errors.vm_name = "VM name should be unique for the user. Choose another name."'''
+        
+        
+        
+        
+def request_vm_validation(form):
+    set_configuration_elem(form)
+    form.vars.status = get_request_status()
+    if is_general_user():
+        validate_approver(form)
+    else:
+        form.vars.owner_id = auth.user.id    
     vm_users = request.post_vars.vm_users
+    
     user_list = []
     if vm_users and len(vm_users) > 1:
         for vm_user in vm_users[1:-1].split('|'):
@@ -286,11 +333,59 @@ def get_request_object_store_form():
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    if is_vm_user(): add_faculty_approver(form)
+    if is_general_user(): add_faculty_approver(form)
     
     add_collaborators(form)
     return form
 
+def add_env_var_row(form):
+
+    add_user_verify_row(form, 
+                        field_name = 'env_var', 
+                        field_label = 'Enviornment Variable', 
+                        verify_function = 'check_env_var()', 
+                        verify_label = 'Add',
+                        row_id = 'env_var_row')
+    
+
+def add_image_profile_row(form):
+    """
+    Generates html component of configuration dropdowns
+    """    
+
+    _label = LABEL(SPAN('Template:', ' ', SPAN('*', _class='fld_required'), ' '))
+
+    select = SELECT(_name='image_profile', _id='request_queue_image_profile')
+    
+    idx=1
+    for imageprofile in getImageProfileList():
+        display = imageprofile['type']
+        value = idx
+        idx=idx+1
+        select.insert(len(select), OPTION(display, _value=value))
+            
+    #Create TR tag, and insert label and select box
+    template_elem = TR(_label,select,TD())
+    form[0].insert(3, template_elem)#insert tr element in the form
+
+
+def get_request_container_form():    
+    form_fields = ['vm_name','RAM','vCPU','purpose','restart_policy']
+    db.request_queue.request_type.default = CONTAINER_TASK_CREATE
+    db.request_queue.requester_id.default = auth.user.id
+    db.request_queue.RAM.notnull = True  
+    db.request_queue.vCPU.notnull = True  
+    db.request_queue.RAM.requires=IS_INT_IN_RANGE(100,8193)
+    db.request_queue.vCPU.requires=IS_INT_IN_RANGE(1,9)
+    mark_required(db.request_queue)
+    
+    form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|',env_var_list='|'))
+    add_image_profile_row(form)
+    add_env_var_row(form)
+    
+    if is_general_user(): add_faculty_approver(form)    
+    add_collaborators(form)
+    return form
 
 def get_request_vm_form():
     
@@ -308,7 +403,7 @@ def get_request_vm_form():
     form =SQLFORM(db.request_queue, fields = form_fields, hidden=dict(vm_users='|'))
     get_configuration_elem(form) # Create dropdowns for configuration
     
-    if is_vm_user(): add_faculty_approver(form)
+    if is_general_user(): add_faculty_approver(form)
     
     add_collaborators(form)
     return form
@@ -385,32 +480,98 @@ def get_vm_config(vm_id):
 
     return vm_info_map  
 
+
+def get_cont_config(cont_id):
+    """
+    Fetches VM information for the given ID.
+    Creates a map of parameters and corresponding display strings 
+    
+    @param vm_id: VM ID 
+    @type vm_id: C{int} 
+    @return: Map of vm parameters an its display values. 
+    @rtype: C{map} 
+    """
+
+    cont_info = db.container_data[cont_id]
+    if not cont_info : return
+    
+    container = Container(cont_info.UUID);
+#     logger.debug(container.logs())
+#     logger.debug(list_container(cont_info.UUID))
+    
+    cont_details1 = list_container(cont_info.UUID)
+    container.updatedetails()
+    
+    if container:
+        cont_details = container.properties
+        logger.debug(cont_details)
+        cont_created = (datetime.datetime.fromtimestamp(cont_details1['Created'])).strftime('%A %d, %b %Y %H:%M') if cont_details1 else cont_details['Created']
+        cont_command = cont_details['Cmd']
+        cont_ports = cont_details['Ports'] if cont_details['Ports'] else {}
+        cont_status = cont_details1['Status'] if cont_details1 else cont_details['State']
+        logger.debug(cont_details['Ports'])
+    else:
+        cont_created = "-"
+        cont_command = "-"
+        cont_ports = [{u'IP': u'0.0.0.0', u'Type': u'', u'PublicPort': 0, u'PrivatePort': 0}]
+        cont_status = "Invalid"
+    
+    cont_info_map = {'id'           : cont_info.id,
+                   'name'           : cont_info.name,
+                   'RAM'            : str(round((cont_info.RAM/1024.0),2)) + ' GB',
+                   'vcpus'          : str(cont_info.vCPU) + ' CPU',
+                   'env_vars'       : str(cont_info.env_vars) ,
+                   'template'       : str(cont_info.image_profile) ,
+                   'restart_policy' : str(cont_info.restart_policy) ,
+                   'owner'          : cont_info.owner_id.first_name + ' ' + cont_info.owner_id.last_name if cont_info.owner_id > 0 else 'System User',
+                   'purpose'        : '-' if cont_info.purpose == '' else cont_info.purpose,
+                   'uuid'           : cont_info.UUID,
+                   'created'        : cont_created,
+                   'command'        : cont_command,
+                   'ports'          : cont_ports,
+                   'status'         : cont_status}
+
+
+    return cont_info_map  
+
+def get_container_uuid(cont_id):
+    cont_info = db.container_data[cont_id]
+    if not cont_info:
+        return None
+    else:
+        return cont_info.UUID
+
+def get_container_logs(cont_id):
+    
+    cont_info = db.container_data[cont_id]
+    if not cont_info : return
+    
+    container = Container(cont_info.UUID);
+    return container.logs()
+
+
+def get_container_stats(cont_uuid):
+    
+    container = Container(cont_uuid);
+    return container.stats()
+
+
+def get_container_top(cont_id):
+    cont_info = db.container_data[cont_id]
+    if not cont_info : return
+    
+    container = Container(cont_info.UUID);
+    return container.top()
+
+
 def get_vpn_user_details():
-   user_info=db((db.user.id==auth.user.id)).select(db.user.ALL)
-   logger.debug("userinfo"+ str(user_info))
-   for info in user_info:
-       user_details={'username':info['username'],
+    user_info=db((db.user.id==auth.user.id)).select(db.user.ALL)
+    logger.debug("userinfo"+ str(user_info))
+    for info in user_info:
+        user_details={'username':info['username'],
          'first_name':info['first_name'],
           'last_name':info['last_name']}
-       return user_details
-
-def transfer_vpn_files(user_name,vpn_ip,passwd):
-    import paramiko
-    paramiko.util.log_to_file('/tmp/paramiko.log')
-# Open a transport
-    port = 22
-    transport = paramiko.Transport((vpn_ip, port))
-# Auth
-    transport.connect(username ='root', password = passwd)
-# Go!
-    sftp = paramiko.SFTPClient.from_transport(transport)
-# Download
-    filepath="/etc/openvpn/easy-rsa/keys/tar_files/"+str(user_name)+"_baadalVPN.tar"
-    localpath="/home/www-data/web2py/applications/baadal/private/VPN/"+str(user_name)+"_baadalVPN.tar"
-    var=sftp.get(filepath,localpath)
-# Close
-    sftp.close()
-    transport.close()
+    return user_details
 
 
 #request vpn function will fire up the script for vpn request and copy the key to controller
@@ -422,12 +583,16 @@ def request_vpn():
     cmd="./vpn_client_creation.sh "+ str(user_name)
     #vpn_ip=""
     vpn_ip=config.get("VPN_CONF","vpn_server_ip")
+    vpn_key_path=config.get("VPN_CONF","vpn_key_path")
 
     #passwd=""
-    password=config.get("VPN_CONF","passwd")
+#     password=config.get("VPN_CONF","passwd")
     try:
-        var = execute_remote_cmd(vpn_ip, 'root',cmd, passwd, True)
-        transfer_vpn_files(user_name,vpn_ip,passwd)
+        var = execute_remote_cmd(vpn_ip, 'root',cmd, ret_list=True)
+        filepath=vpn_key_path+str(user_name)+"_baadalVPN.tar"
+        localpath = os.path.join(get_context_path(), 'private/VPN/' + str(user_name) +"_baadalVPN.tar")
+        sftp_files(vpn_ip, 'root', filepath, localpath)
+
         if  "false" in str(var):
             return 1
         elif "true" in str(var):
@@ -602,14 +767,13 @@ def get_vm_history(vm_id):
     return vm_history
 
 
-
 def grant_novnc_access(vm_id):
     
-    details = ""
+    msg = ""
     active_vnc = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).count()
     
     if active_vnc > 0:
-	vm_data = db(db.vnc_access.vm_id == vm_id).select().first() 
+        vm_data = db(db.vnc_access.vm_id == vm_id).select().first() 
         token = vm_data.token
         msg = 'VNC access already granted. Please check your mail for further details.'
     else:
@@ -618,7 +782,6 @@ def grant_novnc_access(vm_id):
             msg = 'VNC request has exceeded limit.'
         else:
             try:
-                import os
                 f = os.popen('openssl rand -hex 10')
                 token = f.read()
                 token = token.split("\n")
@@ -637,18 +800,16 @@ def grant_novnc_access(vm_id):
                 return_value = execute_remote_cmd(server_ip, 'root',command)
                 return_value=return_value.split()
                 if len(return_value) <=2:                 
-                   command = "./noVNC/utils/websockify/run --web /root/noVNC --target-config /home/www-data/token.list " +str(server_ip)+ ":"+str(port) + " > /dev/null 2>&1 &" 
-                   return_value = execute_remote_cmd(server_ip, 'root',command)
+                    command = "./noVNC/utils/websockify/run --web /root/noVNC --target-config /home/www-data/token.list " +str(server_ip)+ ":"+str(port) + " > /dev/null 2>&1 &" 
+                    return_value = execute_remote_cmd(server_ip, 'root',command)
                 msg = 'VNC access granted. Please check your mail for further details.'
             except:
-                msg = 'Some Error Occurred. Please try later'
+                logger.debug('Some Error Occurred. Please try later')
                 log_exception()
                 pass
 
+    logger.debug(msg)
     return token
-
-
-
 
 def create_vnc_url(vm_id):
     token = grant_novnc_access(vm_id)
@@ -658,15 +819,13 @@ def create_vnc_url(vm_id):
         vnc_url = "http://" + str(url_ip) +":" + str(port)+"/vnc_auto.html?path=?token=" + str(token) 
     return vnc_url 
 
-
-
 def create_novnc_mapping(vm_id,token):
     """
     Create mapping in NAT for VNC access
     """
     vm_data = current.db.vm_data[vm_id]
     duration = 30*60 #30 minutes
-    host_ip = vm_data.host_id.host_ip.private_ip
+
     vnc_port = vm_data.vnc_port
     vnc = str(vnc_port)
     vnc = vnc[1:]
@@ -682,46 +841,6 @@ def create_novnc_mapping(vm_id,token):
         current.db.vnc_access[vnc_id] = dict(status = VNC_ACCESS_STATUS_ACTIVE)
     except:
         log_exception()
-
-def grant_novnc_access(vm_id):
-    logger.debug("vm id is : " + str(vm_id))
-    details = ""
-    active_vnc = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.status == VNC_ACCESS_STATUS_ACTIVE)).count()
-    if active_vnc > 0:
-        msg = 'VNC access already granted. Please check your mail for further details.'
-    else:
-        vnc_count = db((db.vnc_access.vm_id == vm_id) & (db.vnc_access.time_requested > (get_datetime() - timedelta(days=1)))).count()
-        if vnc_count >= MAX_VNC_ALLOWED_IN_A_DAY :
-            msg = 'VNC request has exceeded limit.'
-        else:
-            try:
-                import os
-                f = os.popen('openssl rand -hex 10')
-                token = f.read()
-                token = token.split("\n")
-                token=token[0]
-                create_novnc_mapping(vm_id,token)
-                vm_data = db(db.vm_data.id == vm_id).select().first()
-                host_ip = vm_data.host_id.host_ip.private_ip
-                vnc_port = vm_data.vnc_port
-                vnc = str(vnc_port)
-                file_token =str(token) +":" + " "  + str(host_ip)+ ":" + str(vnc) + "\n"
-                myfile=get_file_append_mode("/home/www-data/token.list")
-                myfile.write(file_token)
-                command = "ps -ef | grep websockify|awk '{print $2}'"
-                port = config.get("NOVNC_CONF","port")
-                server_ip = config.get("NOVNC_CONF","server_ip")
-                return_value = execute_remote_cmd(server_ip, 'root',command)
-                return_value=return_value.split()
-                if len(return_value) <=2:                 
-                   command = "./noVNC/utils/websockify/run --web /root/noVNC --target-config /home/www-data/token.list " +str(server_ip)+ ":"+str(port) + " > /dev/null 2>&1 &" 
-                   return_value = execute_remote_cmd(server_ip, 'root',command)
-                msg = 'VNC access granted. Please check your mail for further details.'
-            except:
-                msg = 'Some Error Occurred. Please try later'
-                log_exception()
-                pass
-    return token
 
 def check_vnc(vm_id):
     logger.debug("checking vnc port")

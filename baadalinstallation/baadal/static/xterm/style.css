@@ -1,0 +1,30 @@
+ body {
+    font-family: helvetica, sans-serif, arial;
+    font-size: 1em;
+    color: #111;
+}
+
+h1 {
+    text-align: center;
+}
+
+#terminal-container {
+    width: 900px;
+    height: 400px;
+    margin: 50px auto;
+    padding: 2px;
+}
+
+#terminal-container .terminal {
+    background-color: #111;
+    color: #fafafa;
+    padding: 2px;
+    margin-bottom:100px;
+}
+
+#terminal-container .terminal:focus .terminal-cursor {
+    background-color: #fafafa;
+}
+#margin-correct{
+margin-top:50px;
+}

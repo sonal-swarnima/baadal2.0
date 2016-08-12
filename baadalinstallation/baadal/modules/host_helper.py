@@ -2,7 +2,7 @@
 ###################################################################################
 from gluon import current
 from helper import execute_remote_cmd, get_constant, config, log_exception, \
-    is_pingable
+    is_pingable, get_context_path
 from libvirt import VIR_DOMAIN_SHUTOFF, VIR_DOMAIN_PAUSED, VIR_DOMAIN_RUNNING, \
     VIR_DOMAIN_UNDEFINE_SNAPSHOTS_METADATA
 from log_handler import logger
@@ -11,6 +11,7 @@ import commands
 import csv
 import libvirt
 import math
+import os
 import paramiko
 
 #Host Status
@@ -401,7 +402,8 @@ def collect_data_from_host(host_ip_list,host_name_list):
         else :
             logger.debug("host is unreachable")
    
-    _file = open('/home/www-data/web2py/applications/baadal/static/sigma/graph.tsv', 'w');
+    file_path = os.path.join(get_context_path(), 'static/sigma/graph.tsv')
+    _file = open(file_path, 'w');
     writer = csv.writer(_file, dialect="excel-tab")
     for item in data:
         writer.writerow(item)

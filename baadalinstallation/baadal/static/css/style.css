@@ -1,0 +1,54 @@
+#loginbox{
+  position: absolute;
+    height:auto;
+    padding:15px;
+}
+.hidden{
+  visibility: hidden;
+    z-index: -100;
+}
+.show{
+    visibility: visible;
+    z-index: 100;
+}
+nav ul{
+}
+nav li{
+    list-style: none;
+    display: inline-block;
+
+}
+nav a {
+    text-decoration: none;
+}
+#loginbox button{
+    width:50px;
+    height:50px;
+    padding: 0px;
+    background-color: white;
+}
+#loginbox .imge {
+    position:absolute;
+    right:0px;
+    top:25px;
+
+}
+.nostyle{
+    text-decoration: none;
+
+}
+
+#contentdescription button{
+    margin:5px;
+    padding: 10px;
+}
+
+.visible{
+    visibility: visible;
+}
+.invisible{
+    visibility: hidden;
+}
+#preview pre{
+    display: inline;
+}

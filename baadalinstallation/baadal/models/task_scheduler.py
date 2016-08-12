@@ -15,30 +15,42 @@ from nat_mapper import clear_all_timedout_vnc_mappings
 from log_handler import logger, rrd_logger
 from host_helper import HOST_STATUS_UP
 from load_balancer import find_host_and_guest_list, loadbalance_vm
-
+from container_create import install_cont, start_cont, stop_cont, suspend_cont,\
+    resume_cont, delete_cont, restart_cont, recreate_cont
 from gluon import current
 current.cache = cache
 
 import os
 
-task = {VM_TASK_CREATE               :    install,
-        VM_TASK_START                :    start,
-        VM_TASK_STOP                 :    destroy,
-        VM_TASK_SUSPEND              :    suspend,
-        VM_TASK_RESUME               :    resume,
-        VM_TASK_DESTROY              :    destroy,
-        VM_TASK_DELETE               :    delete,
-        VM_TASK_MIGRATE_HOST         :    migrate,
-        VM_TASK_MIGRATE_DS           :    migrate_datastore,
-        VM_TASK_SNAPSHOT             :    snapshot,
-        VM_TASK_REVERT_TO_SNAPSHOT   :    revert,
-        VM_TASK_DELETE_SNAPSHOT      :    delete_snapshot,
-        VM_TASK_EDIT_CONFIG          :    edit_vm_config,
-        VM_TASK_CLONE                :    clone,
-        VM_TASK_ATTACH_DISK          :    attach_extra_disk,
-        VM_TASK_SAVE_AS_TEMPLATE     :    save_vm_as_template,
-        VM_TASK_DELETE_TEMPLATE      :    delete_template
+task = {
+	
+	    VM_TASK_CREATE              :    install,
+        VM_TASK_START               :    start,
+        VM_TASK_STOP                :    destroy,
+        VM_TASK_SUSPEND             :    suspend,
+        VM_TASK_RESUME              :    resume,
+        VM_TASK_DESTROY             :    destroy,
+        VM_TASK_DELETE              :    delete,
+        VM_TASK_MIGRATE_HOST        :    migrate,
+        VM_TASK_MIGRATE_DS          :    migrate_datastore,
+        VM_TASK_SNAPSHOT            :    snapshot,
+        VM_TASK_REVERT_TO_SNAPSHOT  :    revert,
+        VM_TASK_DELETE_SNAPSHOT     :    delete_snapshot,
+        VM_TASK_EDIT_CONFIG         :    edit_vm_config,
+        VM_TASK_CLONE               :    clone,
+        VM_TASK_ATTACH_DISK         :    attach_extra_disk,
+        VM_TASK_SAVE_AS_TEMPLATE    :    save_vm_as_template,
+        VM_TASK_DELETE_TEMPLATE     :    delete_template,
+        CONTAINER_TASK_CREATE       :    install_cont,
+        CONTAINER_START             :    start_cont,
+        CONTAINER_STOP              :    stop_cont,
+        CONTAINER_SUSPEND           :    suspend_cont,
+        CONTAINER_RESUME            :    resume_cont,
+        CONTAINER_DELETE            :    delete_cont,
+        CONTAINER_RESTART           :    restart_cont,
+        CONTAINER_RECREATE          :    recreate_cont
        }
+
 
 def _send_task_complete_mail(task_event):
     
@@ -170,7 +182,6 @@ def process_object_task(task_event_id):
         logger.info("EXITING OBJECT_TASK........\n")
 
 
-
 def process_task_queue(task_event_id):
     """
     Invoked when scheduler runs task of type 'vm_task'
@@ -220,6 +231,57 @@ def process_task_queue(task_event_id):
     finally:
         db.commit()
         logger.info("EXITING VM_TASK........\n")
+
+
+def process_container_queue(task_event_id):
+    """
+    Invoked when scheduler runs task of type 'Container_Task'
+    For every task, function calls the corresponding handler
+    and updates the database on the basis of the response 
+    """
+    logger.info("\n ENTERING Container_Task........")
+    
+    task_event_data = db.task_queue_event[task_event_id]
+    task_queue_data = db.task_queue[task_event_data.task_id]
+    container_data = db.container_data[task_event_data.cont_id] if task_event_data.cont_id != None else None
+    try:
+        #Update attention_time for task in the event table
+        task_event_data.update_record(attention_time=get_datetime(), status=TASK_QUEUE_STATUS_PROCESSING)
+        #Call the corresponding function from vm_helper
+        logger.debug("Starting Container_Task processing...")
+        ret = task[task_queue_data.task_type](task_queue_data.parameters)
+        logger.debug("Completed Container_Task processing...")
+
+        #On return, update the status and end time in task event table
+        task_event_data.update_record(status=ret[0], message=ret[1], end_time=get_datetime())
+        
+        if ret[0] == TASK_QUEUE_STATUS_FAILED:
+
+            logger.debug("Container_Task FAILED")
+            logger.debug("Container_Task Error Message: %s" % ret[1])
+            task_queue_data.update_record(status=TASK_QUEUE_STATUS_FAILED)
+
+        elif ret[0] == TASK_QUEUE_STATUS_SUCCESS:
+            # Create log event for the task
+            logger.debug("Container_Task SUCCESSFUL")
+            if container_data:
+                _log_vm_event(container_data, task_queue_data)
+            # For successful task, delete the task from queue 
+            if db.task_queue[task_queue_data.id]:
+                del db.task_queue[task_queue_data.id]
+            if 'request_id' in task_queue_data.parameters:
+                del db.request_queue[task_queue_data.parameters['request_id']]
+            
+            if task_event_data.task_type not in (VM_TASK_MIGRATE_HOST, VM_TASK_MIGRATE_DS):
+                _send_task_complete_mail(task_event_data)
+        
+    except:
+        msg = log_exception()
+        task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
+        
+    finally:
+        db.commit()
+        logger.info("EXITING Container_Task........\n")
 
 
 
@@ -398,11 +460,8 @@ def task_rrd():
     list_host.append(cont_ip)
     list_host.append(nat_ip)
     for ip in list_host:
-        if cont_ip==ip:
-	    m_type="controller"    
-        else:
-	    m_type="nat"  
-	vm_utilization_rrd(ip,m_type)
+        m_type="controller"if cont_ip==ip else "nat"
+    vm_utilization_rrd(ip,m_type)
 
 
 def process_vmdaily_checks():
@@ -514,15 +573,17 @@ vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue,
                                         vm_sanity=vm_sanity_check,
                                         vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
-                                        vm_util_rrd=vm_utilization_rrd,
+                                         vm_util_rrd=vm_utilization_rrd,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_garbage_collector=process_unusedvm,
                                         memory_overload=overload_memory,
                                         object_task=process_object_task,
-                		                networking_host=host_networking,
-					                    rrd_task=task_rrd,
+                                        container_task=process_container_queue,
+                                        networking_host=host_networking,
+                                        rrd_task=task_rrd,
                                         vm_loadbalance=process_loadbalancer), 
-                             group_names=['vm_task', 'vm_sanity', 'host_task', 'vm_rrd', 'snapshot_task','object_task','host_network'])
+                             group_names=
+['vm_task','vm_sanity','host_task','vm_rrd','snapshot_task','object_task','host_network'])
 
 
 midnight_time = request.now.replace(hour=23, minute=59, second=59)
@@ -644,4 +705,3 @@ vm_scheduler.queue_task(TASK_VNC,
                      timeout = 5 * MINUTES,
                      uuid = UUID_VNC_ACCESS,
                     group_name = 'vm_task')
-

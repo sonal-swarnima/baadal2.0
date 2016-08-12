@@ -1,0 +1,86 @@
+{{extend 'layout.html'}}
+{{
+  if not contlist:
+}}
+<center><h3>No Container</h3></center>
+
+{{else:}}
+
+
+<div class = "toolbar" style=" position: relative;" >
+   <label for="search">
+   <strong> Search </strong>
+   </label>     
+   <input type ="text" id = "search"  placeholder ="search list"/>
+</div>
+<h2 class="subtitle">{{=T('All Container')}}</h2>
+  <table id="listallcontainer" class="tablesorter">
+    <thead>  
+      <tr >
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Enviornment Variable</th>
+        <th>Restart Policy</th>
+	<th>RAM</th>
+        <th>vCPUs</th>
+        <th>Status</th>
+        <th>Settings</th>
+      </tr>
+    </thead>
+    <tbody>
+    {{for cont in contlist:}}
+      <form>
+      <tr>
+        <td>{{=cont['name']}}</td>
+        <td>{{=cont['owner']}}</td>
+        <td>{{=cont['env_vars']}}</td>
+        <td>{{=cont['restart_policy']}}</td>
+	 	<td>{{=cont['RAM']}}</td>
+		<td>{{=cont['vcpus']}}</td>
+        <td>{{=cont['status']}}</td>
+        <td>
+        {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+        _href=URL(r=request,c='user' ,f='cont_settings', args=[cont['id']]), _id="cont_"+str(cont['id']), 
+        _title="Settings", 
+        _alt="Settings")}}
+      </tr>
+      </form>
+    {{pass}}
+    </tbody>
+  </table>
+{{pass}}
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script>
+jQuery(document).ready(function(){ 
+      
+	$('#search').keyup(function()
+	{
+		searchTable($(this).val());
+	});
+});
+
+
+function searchTable(inputVal)
+{
+	var table = $('#listallobject');
+	table.find('tr').each(function(index, row)
+	{
+		var allCells = $(row).find('td');
+		if(allCells.length > 0)
+		{
+			var found = false;
+			allCells.each(function(index, td)
+			{
+				var regExp = new RegExp(inputVal, 'i');
+				if(regExp.test($(td).text()))
+				{
+					found = true;
+					return false;
+				}
+			});
+			if(found == true)$(row).show();else $(row).hide();
+		}
+	});
+}
+
+</script>

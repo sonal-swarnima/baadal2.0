@@ -7,10 +7,11 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_constant
+from helper import get_constant, config
 from auth_user import is_auth_type_db
 from maintenance import BAADAL_STATUS_UP, BAADAL_STATUS_DOWN, BAADAL_STATUS_UP_IN_PROGRESS, BAADAL_STATUS_DOWN_IN_PROGRESS
 
+docker_enabled = config.getboolean("GENERAL_CONF","docker_enabled")
 response.title = request.application
 response.google_analytics_id = None
 
@@ -26,15 +27,18 @@ if auth.is_logged_in():
         (T('Home'), False, URL('default','index')),
         (T('Request VM'), False, URL('user','request_vm')),
         (T('Request Object Store'), False, URL('user','request_object_store')),
-        (T('My Object Store'), False, URL('user','list_my_object_store')),
         (T('Pending Requests'), False, URL('user','list_my_requests')),
         (T('My VMs'), False, URL('user','list_my_vm')),
+        (T('My Object Stores'), False, URL('user','list_my_object_store')),
         (T('My Tasks'), False, URL('user','list_my_task')),
         (T('VPN'),False, URL('user','vpn')), 
         (T('Mail Admin'), False, URL('user','mail_admin'))
         ]
+    if docker_enabled:
+        response.user_menu.insert(4, (T('Request Container'), False, URL('user','request_container')))
+        response.user_menu.insert(8, (T('My Containers'), False, URL('user','list_my_container')))
     
-    if not is_vm_user():
+    if not is_general_user():
         response.faculty_menu = [
             (H2('FACULTY MENU'),False, dict(_href='#', _id='menu_faculty')),
             (T('Pending Approvals {'+str(get_pending_requests_count())+'} '), False, URL('faculty','pending_requests'))
@@ -63,6 +67,9 @@ if auth.is_logged_in():
             (T('Tasks'), False, URL('admin','task_list')),
             (T('Sanity Check'), False, URL('admin','sanity_check'))]
 
+        if docker_enabled:
+            response.admin_menu.insert(3, (T('All Containers'), False, URL('admin','list_all_containers')))
+
         if is_auth_type_db():
                 response.admin_menu.extend([(T('Approve Users'), False, URL('admin','approve_users')),
                                             (T('Modify User Role'), False, URL('admin','modify_user_role'))])
@@ -71,10 +78,10 @@ if auth.is_logged_in():
                 (T('Configure Host'), False, URL('admin','host_details')),
                 (T('Configure Template'), False, URL('admin','manage_template')),
                 (T('Configure Datastore'), False, URL('admin','manage_datastore')),
-		(T('Controller Performance'), False, URL('admin','show_cont_performance')),
-		(T('NAT Performance'), False, URL('admin','show_nat_performance')),
+		        (T('Controller Performance'), False, URL('admin','show_cont_performance')),
+		        (T('NAT Performance'), False, URL('admin','show_nat_performance')),
                 (T('Host Throughput Graph'), False, URL('admin','network_graph')),
-		(T('Host Latency Graph'), False, URL('admin','host_network_graph')),
+		        (T('Host Latency Graph'), False, URL('admin','host_network_graph')),
                 (T('Utilization'), False, URL('admin','zoom_tree')),
                 (T('Configure Security Domain'), False, URL('admin','manage_security_domain')),
                 (T('Configure Private IP Pool'), False, URL('admin','manage_private_ip_pool')),

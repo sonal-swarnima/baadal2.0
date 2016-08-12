@@ -14,7 +14,7 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 
-from helper import log_exception, logger
+from helper import log_exception, logger, config
 
 def get_vm_status(iStatus):
     vm_status_map = {
@@ -66,6 +66,33 @@ def get_my_object_store_list(obs):
     return oblist
 
 
+def get_my_container_list(container):
+    cont_list = []
+    for cont in container:
+        element = {'id'             : cont.id,
+                   'name'           : cont.name,
+                   'RAM'            : str(round((cont.RAM/1024.0),2)) + ' GB',
+                   'vcpus'          : str(cont.vCPU) + ' CPU',
+                   'env_vars'       : str(cont.env_vars) ,
+                   'template'       : str(cont.image_profile) ,
+                   'restart_policy' : str(cont.restart_policy) ,
+                   'owner'          : cont.owner_id.first_name + ' ' + cont.owner_id.last_name if cont.owner_id > 0 else 'System User',
+                   'status'         : get_vm_status(cont.status)}
+        cont_list.append(element)
+    return cont_list
+
+#Update the dictionary with values specific to pending Install Container tab
+def update_install_container_request(vm_request, element):
+
+    collaborators = '-'
+    if vm_request.collaborators != None:
+        vm_users = db(db.user.id.belongs(vm_request.collaborators)).select()
+        if len(vm_users) > 0:
+            collaborators = ', '.join((vm_user.first_name + ' ' + vm_user.last_name) for vm_user in vm_users)
+
+    element['collaborators'] = collaborators
+    element['restart_policy'] = vm_request.restart_policy
+    
 
 #Update the dictionary with values specific to pending Install object store request tab
 def update_install_Object_Store_request(vm_request, element):
@@ -162,7 +189,7 @@ def get_pending_request_list(vm_requests):
     for vm_request in vm_requests:
         
         element = {'id' : vm_request.id,
-                   'vm_name' : vm_request.vm_name, 
+                   'name' : vm_request.vm_name, 
                    'faculty_name' : vm_request.owner_id.first_name + ' ' + vm_request.owner_id.last_name, 
                    'requester_id' : vm_request.requester_id, 
                    'owner_id' : vm_request.owner_id,
@@ -174,6 +201,8 @@ def get_pending_request_list(vm_requests):
                    'HDD' : str(vm_request.HDD) + ' GB' if vm_request.HDD else None,
                    'request_type' : vm_request.request_type,
                    'status' : vm_request.status,
+                   'env_vars' : vm_request.env_vars,
+                   'restart_policy' : vm_request.restart_policy,
                    'object_store_name' : vm_request.object_store_name,
                    'object_store_size' : vm_request.object_store_size,
                    'object_store_type' : vm_request.object_store_type}
@@ -188,7 +217,8 @@ def get_pending_request_list(vm_requests):
             update_edit_config_request(vm_request, element)
         elif vm_request.request_type == Object_Store_TASK_CREATE:
             update_install_Object_Store_request(vm_request, element)
-        
+        elif vm_request.request_type == CONTAINER_TASK_CREATE:
+            update_install_container_request(vm_request, element)
         request_list.append(element)
     return request_list
 
@@ -199,6 +229,7 @@ def get_segregated_requests(request_list):
     disk_requests = []
     edit_requests = []
     install_object_store_requests = []
+    install_container_requests=[]
     for req in request_list:
         if req['request_type'] == VM_TASK_CREATE:
             install_requests.append(req)
@@ -210,7 +241,13 @@ def get_segregated_requests(request_list):
             edit_requests.append(req)
         elif req['request_type'] == Object_Store_TASK_CREATE:
             install_object_store_requests.append(req)
-    return (install_requests, clone_requests, disk_requests, edit_requests, install_object_store_requests)
+        elif req['request_type'] == CONTAINER_TASK_CREATE:
+            install_container_requests.append(req)
+            
+    if not config.getboolean("GENERAL_CONF","docker_enabled"):
+        install_container_requests = None
+            
+    return (install_requests, clone_requests, disk_requests, edit_requests, install_object_store_requests,install_container_requests)
    
 def get_users_with_organisation(pending_users):
     users_with_org=[]
@@ -267,6 +304,13 @@ def is_vm_owner(vm_id):
 
     return False
 
+def is_cont_owner(cont_id):
+    if auth.user:
+        if is_moderator() or is_orgadmin() or (db.user_container_map(cont_id=cont_id, user_id=auth.user.id)):
+            return True
+
+    return False
+
 def get_task_list(events):
 
     tasks = []
@@ -288,10 +332,9 @@ def get_task_num_form():
                 INPUT(_name = 'task_num', _class='task_num', requires = IS_INT_IN_RANGE(1,101), _id='task_num_id'),
                 A(SPAN(_class='icon-refresh'), _onclick = 'tab_refresh();$(this).closest(\'form\').submit()', _href='#'))
     return form
-    
+
 
 def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
-    
     if requested_by == None:
         if auth.user:
             requested_by = auth.user.id
@@ -305,12 +348,32 @@ def add_vm_task_to_queue(vm_id, task_type, params = {}, requested_by=None):
                          priority=TASK_QUEUE_PRIORITY_NORMAL,  
                          status=TASK_QUEUE_STATUS_PENDING)
 
+def add_cont_task_to_queue(cont_id, task_type, params = {}, requested_by=None):
+
+    if requested_by == None:
+        if auth.user:
+            requested_by = auth.user.id
+        else:
+            requested_by = SYSTEM_USER
+
+    params.update({'cont_id' : long(cont_id) if cont_id != -1 else None})
+    db.task_queue.insert(task_type   = task_type,
+                         requester_id= requested_by,
+                         parameters  = params,
+                         priority    = TASK_QUEUE_PRIORITY_NORMAL,
+                         status      = TASK_QUEUE_STATUS_PENDING)
 
 def add_vm_users(_vm_id, requester_id, owner_id, vm_users=None):
     user_list = [requester_id, owner_id]
     if vm_users: user_list.extend(vm_users)
     for _user_id in set(user_list):
         db.user_vm_map.insert(user_id=_user_id,vm_id=_vm_id);
+
+def add_container_users(_vm_id, requester_id, owner_id, vm_users=None):
+    user_list = [requester_id, owner_id]
+    if vm_users: user_list.extend(vm_users)
+    for _user_id in set(user_list):
+        db.user_container_map.insert(user_id=_user_id,cont_id=_vm_id);
 
 
 
@@ -368,7 +431,7 @@ def check_orgadmin(fn):
 # Generic check faculty decorator
 def check_faculty(fn):
     def decorator(*args, **kwargs):
-        if not is_vm_user():
+        if not is_general_user():
             return fn(*args, **kwargs)
         else:
             session.flash = "You don't have faculty privileges"
@@ -381,6 +444,18 @@ def check_vm_owner(fn):
     def decorator(*args, **kwargs):
         vm_id = request.args[0]
         if (is_vm_owner(vm_id)):
+            return fn(*args, **kwargs)
+        else:
+            session.flash = "Unauthorized access"
+            redirect(URL(c='default', f='index'))
+    return decorator    
+
+
+# checks container owner, assumes first argument of request is cont_id
+def check_cont_owner(fn):
+    def decorator(*args, **kwargs):
+        cont_id = request.args[0]
+        if (is_cont_owner(cont_id)):
             return fn(*args, **kwargs)
         else:
             session.flash = "Unauthorized access"
@@ -402,7 +477,7 @@ def get_vm_operations(vm_id):
                      'show_vm_performance'   : ('user', 'performance.jpg', 'Check VM Performance'),
                      'vm_history'            : ('user', 'history.png', 'Show VM History'),
                      'confirm_vm_deletion()' : ( None, 'delete.png', 'Delete this virtual machine'),
-		     'vnc_url()'             : ('user', 'vnc.jpg', 'Grant VNC Access'),
+                     'vnc_url()'             : ('user', 'vnc.jpg', 'Grant VNC Access'),
                      'migrate_vm'            : ('admin', 'migrate.png', 'Migrate this virtual machine'),
                      'user_details'          : ('admin', 'user_add.png', 'Add User to VM'),
                      'save_as_template'      : ('user', 'save.png', 'Save as Template'),
@@ -428,7 +503,7 @@ def get_vm_operations(vm_id):
 
             valid_operations.extend(['clone_vm', 'edit_vm_config', 'attach_extra_disk', 'save_as_template'])
 
-        if not is_vm_user():
+        if not is_general_user():
             valid_operations.extend(['confirm_vm_deletion()'])
             if is_moderator():
                 valid_operations.extend(['migrate_vm'])
@@ -449,21 +524,60 @@ def get_vm_operations(vm_id):
             else:
                 if op_data[0] != None:
                     if op_data[2]=='Grant VNC Access':
-		    	logger.debug("checking vnc" + str(valid_operation))
-			valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
+                        logger.debug("checking vnc" + str(valid_operation))
+                        valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
                                                    _onclick=valid_operation))
-		    else:
-		        valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
+                    else:
+                        valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
 		    
                                                    _href=URL(r=request, c = op_data[0] , f=valid_operation, args=[vm_id])))
                 else:
-		    logger.debug("checking vnc" + str(valid_operation))
+                    logger.debug("checking vnc" + str(valid_operation))
                     valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
                                                    _onclick=valid_operation))
    
     else:
         logger.error("INVALID VM STATUS!!!")
         raise
+    return valid_operations_list  
+
+def get_cont_operations(cont_id):
+
+    cont_operations = {'start_cont'          : ('user', 'on-off.png', 'Turn on this container'),
+                     'pause_cont'            : ('user', 'pause2.png', 'Suspend this Container'),
+                     'resume_cont'           : ('user', 'play2.png', 'Resume this virtual machine'),
+                     'stop_cont'             : ('user', 'shutdown2.png', 'Stop this Container'),
+                     'confirm_deletion()'    : ( None, 'delete.png', 'Delete this container'),
+                     'restart_cont'          : ('user', 'on-off.png', 'Restart this Container'),
+                     'confirm_recreate()'    : (None, 'recreate.png', 'Re-create this Container')}
+
+    valid_operations_list = []
+    
+    cont_status = db.container_data[cont_id].status
+
+    valid_operations = []
+    
+    if cont_status not in (VM_STATUS_UNKNOWN, VM_STATUS_IN_QUEUE):
+        if cont_status == VM_STATUS_RUNNING:
+            valid_operations.extend(['pause_cont' , 'stop_cont', 'restart_cont'])
+        elif cont_status == VM_STATUS_SUSPENDED:
+            valid_operations.extend(['resume_cont'])
+        elif cont_status == VM_STATUS_SHUTDOWN:
+                valid_operations.extend(['start_cont'])
+
+    valid_operations.extend(['confirm_deletion()','confirm_recreate()'])
+    for valid_operation in valid_operations:
+        
+        op_data = cont_operations[valid_operation]
+        op_image = IMG(_src=URL('static','images/'+op_data[1]), _style='height:20px;weight:20px')
+        
+        if op_data[0] != None:
+            valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2],
+                                           _href=URL(r=request, c = op_data[0] , f=valid_operation, args=[cont_id])))
+        else:
+            valid_operations_list.append(A(op_image, _title=op_data[2], _alt=op_data[2], 
+                                           _onclick=valid_operation))
+            
     return valid_operations_list  
 
 
@@ -526,5 +640,5 @@ def is_faculty():
 def is_orgadmin():
     return (ORGADMIN in auth.user_groups.values())
 
-def is_vm_user():
+def is_general_user():
     return not(is_moderator() or is_orgadmin() or is_faculty())

@@ -16,8 +16,9 @@ Following scenarios are handled
     5. Delete all VNC server mapping that has exceeded given duration
 """
 
-from helper import logger, config, get_datetime, execute_remote_bulk_cmd, log_exception,execute_remote_cmd
 from gluon import current
+from helper import logger, config, get_datetime, execute_remote_bulk_cmd, \
+    log_exception
 
 #nat types
 NAT_TYPE_SOFTWARE = 'software_nat'
@@ -244,7 +245,7 @@ def clear_all_timedout_vnc_mappings():
                                   (current.db.vnc_access.expiry_time < get_datetime())).select()
         if (vnc_mappings != None) & (len(vnc_mappings) != 0):
 
-           for mapping in vnc_mappings: 
+            for mapping in vnc_mappings: 
                 logger.debug('Removing VNC mapping for vm id: %s, host: %s, source IP: %s, source port: %s, destination port: %s' %(mapping.vm_id, mapping.host_id, mapping.token, mapping.vnc_source_port, mapping.vnc_destination_port))
                 f = open("/home/www-data/token.list","r")
                 lines = f.readlines()
@@ -255,14 +256,14 @@ def clear_all_timedout_vnc_mappings():
                 logger.debug("token type is : " + str(type(token)))
                 for line in lines:
                     if token  not  in line:
-                       logger.debug("lines are : "  + str(line))
-                       f.write(line)
+                        logger.debug("lines are : "  + str(line))
+                        f.write(line)
                 f.close()
                 current.db(current.db.vnc_access.id == mapping.id).delete()
                 current.db.commit()
                 logger.debug("Done clearing novnc mappings")    
         else:
-           raise Exception("NAT type is not supported")
+            raise Exception("NAT type is not supported")
 
                 
 

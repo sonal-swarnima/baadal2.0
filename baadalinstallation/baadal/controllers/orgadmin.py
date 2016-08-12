@@ -28,7 +28,8 @@ def pending_approvals():
                 clone_requests = requests[1], 
                 disk_requests = requests[2], 
                 edit_requests = requests[3],
-                install_object_store_requests = requests[4])
+                install_object_store_requests = requests[4],
+                install_container_requests = requests[5])
     
 @check_orgadmin
 @handle_exception

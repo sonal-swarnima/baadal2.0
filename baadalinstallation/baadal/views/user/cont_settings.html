@@ -1,0 +1,130 @@
+{{extend 'layout.html'}}
+
+<script>
+
+function confirm_deletion(){
+
+    if(confirm('Are you sure you want to delete this container?')) {
+    
+        window.location ='{{=URL(r=request, f='delete_cont', args=[cont_info['id']])}}'
+    }
+}
+
+
+function confirm_recreate(){
+
+    if(confirm('Are you sure you want to re-create this container?')) {
+    
+            if(confirm('New instance will be created with same configuration. Continue?')) {
+                window.location ='{{=URL(r=request, f='recreate_cont', args=[cont_info['id']])}}'
+            }
+    }
+}
+</script>
+
+{{if cont_info:}}
+
+<div class="post">
+
+    <h2 class="title">Container Configuration </h2>
+
+    <div class="TABLE">
+    <table id="configuration">
+        <tr>
+            <th>Name</th>
+            <th>RAM</th>
+            <th>VCPUs</th>
+            <th>Template</th>
+            <th>UUID</th>
+            <th>Created On</th>
+            <th>Status</th>
+        </tr>
+        <tr>
+            <td>{{=cont_info['name']}}</td>
+            <td>{{=cont_info['RAM']}}</td>
+            <td>{{=cont_info['vcpus']}}</td>
+            <td>{{=cont_info['template']}}</td>
+            <td>{{=cont_info['uuid']}}</td>
+            <td>{{=cont_info['created']}}</td>
+            <td>{{=cont_info['status']}}</td>
+        </tr>
+    </table>    
+    </div>
+
+<br/><br/>
+<table width="80%" border="0" padding="10px">
+<tr>
+<td><strong>Purpose:</strong></td>
+<td>{{=cont_info['purpose']}}</td>
+</tr>
+<tr>
+<td><strong>Environment Variables:</strong></td>
+<td>
+    {{for env in cont_info['env_vars']:}}
+    {{=env}}<br/>
+    {{pass}}
+</td>
+</tr>
+<tr>
+<td><strong>Command:</strong></td>
+<td>{{=cont_info['command']}}</td>
+</tr>
+
+<tr>
+<td><strong>Restart Policy:</strong></td>
+<td>{{=cont_info['restart_policy']}}</td>
+</tr>
+<tr>
+<td><strong>Logs:</strong></td>
+<td><a href="{{=URL('container_logs', args=[cont_info['id']])}}">stdout/stderr</a></td>
+</tr>
+<tr>
+<td><strong>Stats:</strong></td>
+<td><a href="{{=URL('container_stats', args=[cont_info['id']])}}">stats</a></td>
+</tr>
+<tr>
+<td><strong>Top:</strong></td>
+<td><a href="{{=URL('container_top', args=[cont_info['id']])}}">top</a></td>
+</tr>
+<tr>
+<td><strong>Execute:</strong></td>
+<td><a href="{{=URL('container_execute', args=[cont_info['id']])}}">terminal</a></td>
+</tr>
+</table>
+
+</div>
+<br/>
+{{pass}}
+
+{{if (cont_info['status'] != 'Invalid') & (cont_operations != None):}}
+<br/>
+<div class="post">
+    <h2 class="title">VM Operations</h2>
+    <table id="vm_ops">
+        <tr>
+      {{for operation in cont_operations:}}
+    <td>{{=operation}}</td>
+      {{pass}}
+        </tr>
+      </table>
+</div>
+{{pass}}
+
+
+<script>
+function configure_snapshot() {
+    var flag=0;
+    av=document.getElementsByName("flag");
+    for (e=0; e<av.length; e++) {
+       if (av[e].checked==true) {
+          flag= flag ^ parseInt(av[e].value,10);
+       }
+    }
+
+    var snapshot_url = "{{=URL('configure_snapshot', args=[cont_info['id']])}}";
+    
+    $.post(snapshot_url,{snapshot_flag:flag},function(result){
+      alert("Rolling snapshot frequency successfully configured");
+  });}
+
+</script>

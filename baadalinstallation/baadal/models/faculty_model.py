@@ -64,6 +64,10 @@ def get_edit_pending_request_form(request_id):
         db.request_queue.HDD.writable=False
         db.request_queue.extra_HDD.writable=False
         form_fields.extend(['HDD', 'extra_HDD', 'attach_disk'])
+    elif edit_req.request_type == CONTAINER_TASK_CREATE:
+        form_fields.extend(['RAM', 'vCPU'])
+        db.request_queue.RAM.requires=IS_INT_IN_RANGE(100,8192)
+        db.request_queue.vCPU.requires=IS_INT_IN_RANGE(1,8)
         
     form_fields.append('purpose')
     form = SQLFORM(db.request_queue, edit_req, fields=form_fields)

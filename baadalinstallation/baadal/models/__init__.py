@@ -32,7 +32,7 @@ __all__ =['add_collaborators', 'add_data_into_affinity', 'add_faculty_approver',
           'get_vm_history', 'get_vm_host_details', 'get_vm_info', 'get_vm_operations', 'get_vm_snapshots', 
           'get_vm_status', 'get_vm_user_list', 'get_vm_util_data', 'grant_vnc_access', 'handle_exception', 
           'is_faculty', 'is_ip_assigned', 'is_moderator', 'is_orgadmin', 'is_request_in_queue', 
-          'is_vm_name_unique', 'is_vm_owner', 'is_vm_running', 'is_vm_user', 'launch_vm_image_validation', 
+          'is_vm_name_unique', 'is_vm_owner', 'is_vm_running', 'is_general_user', 'launch_vm_image_validation', 
           'mark_required', 'process_purge_shutdownvm', 'process_sendwarning_shutdownvm', 
           'process_sendwarning_unusedvm', 'process_shutdown_unusedvm', 'reject_vm_request', 
           'request_vm_validation', 'reset_host_affinity', 'send_email_delete_vm_warning', 
@@ -42,7 +42,14 @@ __all__ =['add_collaborators', 'add_data_into_affinity', 'add_faculty_approver',
           'send_email_vnc_access_granted', 'send_remind_faculty_email', 'send_remind_orgadmin_email', 
           'send_shutdown_email_to_all', 'set_configuration_elem', 'specify_user_roles', 'update_host_status', 
           'update_snapshot_flag', 'update_task_ignore', 'update_task_retry', 'update_vm_lock', 
-          'validate_user', 'verify_vm_request', 'vm_has_snapshots']
+          'validate_user', 'verify_vm_request', 'vm_has_snapshots','get_request_object_store_form',
+          'request_object_store_validation','send_email_to_object_requester','get_request_container_form',
+          'request_container_validation','get_my_object_store','get_my_container','get_my_object_store',
+          'get_my_object_store_list','get_my_container_list','add_container_users','add_cont_task_to_queue',
+          'add_object_users','get_cont_config','get_cont_operations','request_vpn','get_vpn_user_details',
+          'create_vnc_url','grant_novnc_access','get_container_logs','get_container_stats','get_container_top',
+          'get_container_uuid','check_cont_owner','get_all_object_list','get_all_container_list',
+          'check_delete_container','get_manage_container_form','zoom_info']
 
 if 0:
     from admin_model import *

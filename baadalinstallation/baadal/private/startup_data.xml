@@ -17,22 +17,21 @@
 		<row name="extra_disks_dir" value="vm_extra_disks"/>
 		<row name="templates_dir" value="vm_templates"/>
 		<row name="archives_dir" value="vm_deleted"/>
-                <row name="vm_migration_data" value="vm_migration_data"/>
+        <row name="vm_migration_data" value="vm_migration_data"/>
 		<row name="vncport_start_range" value="20000"/>
 		<row name="vncport_end_range" value="50000"/>
 		<row name="vm_rrds_dir" value="vm_rrds"/>
 		<row name="graph_file_dir" value="/images/vm_graphs/"/>
 		<row name="admin_email" value="baadalsupport@cse.iitd.ernet.in"/>
 		<row name="vms" value="/vm_images"/>
-		<row name="memory_overload_file_path" value="/baadal/baadal/baadalinstallation/baadal/private"/>
+        <row name="memory_overload_file_path" value="/baadal/baadal/baadalinstallation/baadal/private"/>
 	</table>
 
 	<table name="vlan">
-		<row id="1" name="vlan0" vlan_tag="1" vlan_addr="10.0.0.0" />
+		<row id="1" name="vlan0" vlan_tag="0" vlan_addr="10.0.0.0" />
 		<row id="2" name="vlan1" vlan_tag="1" vlan_addr="10.0.1.0" />
 		<row id="3" name="vlan2" vlan_tag="2" vlan_addr="10.0.2.0" />
-		<row name="vlan3" vlan_tag="3" vlan_addr="10.0.3.0" />
-		<row name="vlan4" vlan_tag="4" vlan_addr="10.0.4.0" />
+		<row id="4" name="vlan3" vlan_tag="3" vlan_addr="10.0.3.0" />
 	</table>
 
 	<table name="security_domain">
@@ -43,12 +42,20 @@
 
 	<table name="user">
 		<row id="-1" first_name="System" last_name="User" email="System@baadal.tmp" username="system" registration_id="system" organisation_id="1"/>
-		<row id="1" first_name="Admin" last_name="User" email="Admin@baadal.tmp" username="admin" password="baadal" organisation_id="1"/>
+		<row id="1" first_name="UXXAD" last_name="User" email="uxxad@tmp.edu" username="user1001d" registration_id="user1001d" password="baadal" organisation_id="1"/>
+		<row id="2" first_name="UXOXD" last_name="User" email="uxoxd@tmp.edu" username="user1010d" registration_id="user1010d" password="baadal" organisation_id="1"/>
+		<row id="3" first_name="UFXXD" last_name="User" email="ufxxd@tmp.edu" username="user1100d" registration_id="user1100d" password="baadal" organisation_id="1"/>
+		<row id="4" first_name="UXXXD" last_name="User" email="uxxxd@tmp.edu" username="user1000d" registration_id="user1000d" password="baadal" organisation_id="1"/>
 	</table>
 
 	<table name="user_membership">
 		<row user_id="1" group_id="1"/>
 		<row user_id="1" group_id="4"/>
+		<row user_id="2" group_id="2"/>
+		<row user_id="2" group_id="4"/>
+		<row user_id="3" group_id="3"/>
+		<row user_id="3" group_id="4"/>
+		<row user_id="4" group_id="4"/>
 	</table>
 
 	<table name="public_ip_pool">

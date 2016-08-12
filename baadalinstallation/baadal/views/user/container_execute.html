@@ -1,0 +1,88 @@
+{{extend 'layout.html'}}
+
+<link rel="stylesheet" href="{{=URL('static','xterm/src/xterm.css')}}" />
+<link rel="stylesheet" href="{{=URL('static','xterm/addons/fullscreen/fullscreen.css')}}" />
+<link rel="stylesheet" href="{{=URL('static','xterm/style.css')}}" />
+
+<script src="{{=URL('static','xterm/src/xterm.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','xterm/addons/attach/attach.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','xterm/addons/fit/fit.js')}}"  ,type="text/javascript"></script>
+<script src="{{=URL('static','xterm/addons/fullscreen/fullscreen.js')}}"  ,type="text/javascript"></script>
+
+<script>
+
+var term, socket;
+var containerid;
+
+function createTerminal() {
+
+	var terminalContainer = document.getElementById('terminal-container');
+	while (terminalContainer.children.length) {
+		terminalContainer.removeChild(terminalContainer.children[0]);
+	}
+	term = new Terminal({
+	  
+		cursorBlink: true
+	});
+	var protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+	var socketURL = protocol + location.hostname + ':8888/ws?uid='+containerid;
+	console.log(socketURL)
+	socket = new WebSocket(socketURL);
+	console.log(socket)
+	
+	term.open(terminalContainer);
+	//term.fit();
+	term.resize(98,63)
+	socket.onopen = runRealTerminal;
+	socket.onclose = runFakeTerminal;
+	socket.onerror = runFakeTerminal;
+}
+
+
+function runRealTerminal() {
+  term.attach(socket);
+  term._initialized = true;
+}
+
+function runFakeTerminal() {
+  /*if (term._initialized) {
+    return;
+  }*/
+
+  term._initialized = true;
+
+  var shellprompt = '$ ';
+
+  term.prompt = function () {
+    term.write('\r\n' + shellprompt);
+  };
+
+  term.writeln('Welcome to our web based ssh service for containers. ');
+  term.writeln('This is a local terminal emulation, without a real terminal in the back-end.');
+  term.writeln('You are recieving this screen because Either connection has observed error or is unable to connect.');
+  term.writeln('Try to reconnect. If error persists , contact to admin');
+  //term.prompt(); 
+}
+
+</script>
+
+<h2 class="subtitle">{{=T('Container Execute')}}</h2>
+
+<div id="terminal-container"></div>
+
+
+<div>
+    {{=A(IMG(_src=URL('static','images/arrow_back.png'), _style='height:20px;weight:20px'),
+    _href=URL(r=request, f='cont_settings', args=[cont_id]), 
+    _title="Settings", 
+    _alt="Settings")}}
+</div>
+
+<script>
+jQuery(document).ready(function(){
+
+	containerid = '{{=cont_uuid}}'
+	createTerminal();
+
+});
+</script>

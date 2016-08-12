@@ -22,13 +22,24 @@ from helper import logger, get_datetime
 def schedule_task(fields, _id):
     #Add entry into task_queue_event
     vm_id = fields['parameters']['vm_id'] if 'vm_id' in fields['parameters'] else None
-    if fields['task_type'] != Object_Store_TASK_CREATE:
-        vm_name = db.vm_data[vm_id].vm_name if vm_id else ""
+    '''if fields['task_type'] != Object_Store_TASK_CREATE:
+        vm_name = db.object_store_data[vm_id].object_store_name if vm_id else ""'''
+
+    if fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART, CONTAINER_RECREATE):
+        cont_id = fields['parameters']['cont_id'] if 'cont_id' in fields['parameters'] else None
+        vm_name = db.container_data[cont_id].name if cont_id else ""
+        task_event_id = db.task_queue_event.insert(task_id = _id,
+                            task_type = fields['task_type'],
+                            cont_id = cont_id,
+                            vm_name = vm_name,
+                            requester_id = fields['requester_id'],
+                            parameters = fields['parameters'],
+                            status = TASK_QUEUE_STATUS_PENDING)
     else:
         vm_name = ""
         vm_id = -1
 
-    task_event_id = db.task_queue_event.insert(task_id = _id,
+        task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             vm_id = vm_id,
                             vm_name = vm_name,
@@ -48,6 +59,14 @@ def schedule_task(fields, _id):
     elif fields['task_type'] == Object_Store_TASK_CREATE:
         logger.info("\n ENTERING OBJECT_TASK	........")
         vm_scheduler.queue_task('object_task' ,
+                                pvars = dict(task_event_id = task_event_id),
+                                start_time = request.now, 
+                                timeout = 30 * MINUTES, 
+                                group_name = 'vm_task')
+
+    elif fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART):
+        logger.info("\n ENTERING CONTAINER_TASK	........")
+        vm_scheduler.queue_task('container_task' ,
                                 pvars = dict(task_event_id = task_event_id),
                                 start_time = request.now, 
                                 timeout = 30 * MINUTES, 
@@ -90,7 +109,7 @@ db.task_queue._after_update = [task_queue_update_callback]
 def vm_data_delete_callback(dbset):
 
     for vm_data in dbset.select():
-        logger.debug('Deleting references for ' + vm_data.vm_identity)        
+        logger.debug('Deleting references for ' + vm_data.vm_identity)
         db(db.vm_data.parent_id == vm_data.id).update(parent_id = None)
 
 db.vm_data._before_delete = [vm_data_delete_callback]
@@ -113,7 +132,7 @@ def scheduler_task_update_callback(dbset, new_fields):
                 task_timeout_cleanup(task_event_id,row)
             else:
                 logger.debug("Task TimedOut without cleanup")
-          
+
 db.scheduler_task._after_update = [scheduler_task_update_callback]
 
 

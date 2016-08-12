@@ -23,7 +23,8 @@ def pending_requests():
                 clone_requests = requests[1], 
                 disk_requests = requests[2], 
                 edit_requests = requests[3],
-                install_object_store_requests = requests[4])
+                install_object_store_requests = requests[4],
+                install_container_requests = requests[5])
         
 @check_faculty
 @handle_exception

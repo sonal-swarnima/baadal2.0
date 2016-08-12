@@ -11,14 +11,14 @@ if 0:
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from helper import get_constant, execute_remote_cmd
-from vm_utilization import VM_UTIL_24_HOURS
 from host_helper import delete_orhan_vm, HOST_STATUS_MAINTENANCE, HOST_STATUS_UP, \
     HOST_STATUS_DOWN
 from log_handler import logger
 from maintenance import shutdown_baadal, bootup_baadal
 from simplejson import dumps
 from vm_utilization import VM_UTIL_10_MINS, check_graph_type, check_graph_period, \
-    fetch_info_graph
+    fetch_info_graph, VM_UTIL_24_HOURS
+import json
 
 
 @check_moderator
@@ -32,6 +32,10 @@ def list_all_object_store():
     ob_list = get_all_object_list()
     return dict(oblist = ob_list)
 
+def list_all_containers():
+    cont_list = get_all_container_list()
+    return dict(contlist = cont_list)
+
 @check_moderator
 @handle_exception
 def list_all_pending_requests():
@@ -42,7 +46,8 @@ def list_all_pending_requests():
                 clone_requests   = requests[1], 
                 disk_requests    = requests[2], 
                 edit_requests    = requests[3],
-                install_object_store_requests = requests[4])
+                install_object_store_requests = requests[4],
+	         	install_container_requests = requests[5])
 
 @check_moderator
 @handle_exception
@@ -88,13 +93,10 @@ def modify_roles():
 @check_moderator
 @handle_exception
 def hosts_vms():
-
     form = get_util_period_form(submit_form=False)
     util_period = VM_UTIL_10_MINS
     form.vars.util_period = util_period
-
-    host_util_data = get_host_util_data(util_period)
-    
+    host_util_data = get_host_util_data(util_period)   
     hostvmlist = get_vm_groupby_hosts()        
     return dict(hostvmlist = hostvmlist, host_util_data = dumps(host_util_data), util_form=form)
 
@@ -113,7 +115,6 @@ def manage_template():
         can_delete = check_delete_template(request.args(2))
         if not can_delete:
             redirect(URL(c='admin', f='manage_template'))
-
     form = get_manage_template_form(request.args(0))
     return dict(form = form)
 
@@ -238,9 +239,9 @@ def migrate_vm():
         redirect(URL(c = 'admin', f = 'hosts_vms'))
     logger.debug("vm_details[affinity flag] :  " + str(vm_details['affinity_flag']))
     if vm_details['affinity_flag'] != 0:
-      host_details = get_host_details(vm_details['vm_name'])
-      logger.debug("available_hosts : " + str(host_details['available_hosts']))
-      vm_details['available_hosts'] = host_details['available_hosts']
+        host_details = get_host_details(vm_details['vm_name'])
+        logger.debug("available_hosts : " + str(host_details['available_hosts']))
+        vm_details['available_hosts'] = host_details['available_hosts']
     return dict(vm_details=vm_details)
 
 
@@ -578,7 +579,7 @@ def show_nat_performance():
     nat_ip=execute_remote_cmd("localhost", 'root', ip_cmd, None,  True).strip()
     nat_cpu=execute_remote_cmd(nat_ip, 'root', cpu_cmd, None,  True)[0].strip()
     nat_ram=execute_remote_cmd(nat_ip, 'root', mem_cmd, None,  True)[0].strip()
-    nat_identity=host_ip.replace(".","_")
+    nat_identity=nat_ip.replace(".","_")
     return dict(host_identity= nat_identity ,host_ram=nat_ram, m_type="host",host_cpu=nat_cpu)
 
 @check_moderator
@@ -624,25 +625,23 @@ def create_graph_for_host():
     elif g_type=='nw':
         ret['legend_read']='network read'
         ret['legend_write']='network write'
-	ret['limit']=3,00,000
+        ret['limit']=3,00,000
     elif g_type=='cpu':
         ret['name']='cpu'
-	ret['limit']=100
+        ret['limit']=100
     elif g_type=='tmp':
         ret['name']='tmp'
-	ret['limit']=60
+        ret['limit']=60
     elif g_type=='power':
         ret['name']='power'
-	ret['limit']=400
+        ret['limit']=400
     else:
         ret['name']='mem'
-	ret['limit']=ret['mem']	
-    
+        ret['limit']=ret['mem']	
     
     json_str = json.dumps(ret, ensure_ascii=False)
     
     return json_str
-
 
         
 @check_moderator
@@ -712,13 +711,11 @@ def host_network_graph():
 ############### host tree ##################
 def create_zoom_tree():
     g_type=request.vars['graphType']
-    ret={}
     ret=zoom_info(g_type)
-    import json
     json_str = json.dumps(ret, ensure_ascii=False)
     return json_str
 
 
 def zoom_tree():
     return dict()
-                
+
