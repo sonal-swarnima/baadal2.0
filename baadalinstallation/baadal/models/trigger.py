@@ -20,25 +20,28 @@ if 0:
 from helper import logger, get_datetime
 
 def schedule_task(fields, _id):
-    #Add entry into task_queue_event
-    vm_id = fields['parameters']['vm_id'] if 'vm_id' in fields['parameters'] else None
-    '''if fields['task_type'] != Object_Store_TASK_CREATE:
-        vm_name = db.object_store_data[vm_id].object_store_name if vm_id else ""'''
 
+    #Add entry into task_queue_event
     if fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART, CONTAINER_RECREATE):
         cont_id = fields['parameters']['cont_id'] if 'cont_id' in fields['parameters'] else None
-        vm_name = db.container_data[cont_id].name if cont_id else ""
+        cont_name = db.container_data[cont_id].name if cont_id else ""
         task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             cont_id = cont_id,
-                            vm_name = vm_name,
+                            vm_name = cont_name,
+                            requester_id = fields['requester_id'],
+                            parameters = fields['parameters'],
+                            status = TASK_QUEUE_STATUS_PENDING)
+    elif fields['task_type'] == Object_Store_TASK_CREATE:
+        task_event_id = db.task_queue_event.insert(task_id = _id,
+                            task_type = fields['task_type'],
+                            vm_name = "Object_Store",
                             requester_id = fields['requester_id'],
                             parameters = fields['parameters'],
                             status = TASK_QUEUE_STATUS_PENDING)
     else:
-        vm_name = ""
-        vm_id = -1
-
+        vm_id = fields['parameters']['vm_id'] if 'vm_id' in fields['parameters'] else None
+        vm_name = db.vm_data[vm_id].vm_name if vm_id else ""
         task_event_id = db.task_queue_event.insert(task_id = _id,
                             task_type = fields['task_type'],
                             vm_id = vm_id,
@@ -55,25 +58,18 @@ def schedule_task(fields, _id):
                                     start_time = request.now, 
                                     timeout = 30 * MINUTES, 
                                     group_name = 'vm_task')
-
-    elif fields['task_type'] == Object_Store_TASK_CREATE:
-        logger.info("\n ENTERING OBJECT_TASK	........")
-        vm_scheduler.queue_task('object_task' ,
-                                pvars = dict(task_event_id = task_event_id),
-                                start_time = request.now, 
-                                timeout = 30 * MINUTES, 
-                                group_name = 'vm_task')
-
-    elif fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART):
-        logger.info("\n ENTERING CONTAINER_TASK	........")
-        vm_scheduler.queue_task('container_task' ,
-                                pvars = dict(task_event_id = task_event_id),
-                                start_time = request.now, 
-                                timeout = 30 * MINUTES, 
-                                group_name = 'vm_task')
-
     else:
-        vm_scheduler.queue_task('vm_task', 
+        sch_task_name = "vm_task"
+        
+        if fields['task_type'] == Object_Store_TASK_CREATE:
+            logger.info("\n ENTERING OBJECT_TASK	........")
+            sch_task_name = 'object_task'
+    
+        elif fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART):
+            logger.info("\n ENTERING CONTAINER_TASK	........")
+            sch_task_name = 'container_task'
+    
+        vm_scheduler.queue_task(sch_task_name ,
                                 pvars = dict(task_event_id = task_event_id),
                                 start_time = request.now, 
                                 timeout = 30 * MINUTES, 
