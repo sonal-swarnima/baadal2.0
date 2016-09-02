@@ -69,10 +69,11 @@ def send_object_task_complete_mail(task_event, object_name):
     vm_users = []
     vm_id = task_event.parameters['vm_id'] if 'vm_id' in task_event.parameters else None
     if vm_id:
-        for user in db(db.user_object_map.ob_id == vm_id).select(db.user_vm_map.user_id):
+        for user in db(db.user_object_map.ob_id == vm_id).select(db.user_object_map.user_id):
             vm_users.append(user['user_id'])
     else:
         vm_users.append(task_event.requester_id)
+    logger.info("\n %s" %vm_users)
     send_email_to_vm_user(task_event.task_type, object_name, task_event.start_time, vm_users)
 
     
