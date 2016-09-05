@@ -1,7 +1,10 @@
 #!/bin/bash
 
 source ./devbox.cfg 2>> /dev/null
-Normal_pkg_lst=(apache2 aptitude apt-mirror build-essential cgroup-bin debconf-utils dhcp3-server gcc gconf2 inetutils-inetd intltool kvm-ipxe libapache2-mod-gnutls libapache2-mod-wsgi libcurl4-gnutls-dev libdevmapper-dev libglib2.0-dev libgnutls-dev libnl-dev libpciaccess-dev librsvg2-common libvirt-glib-1.0-dev libxml2-dev libyajl-dev netperf nfs-common openssh-server pkg-config python python2.7:python2.5 python-appindicator python-dbus python-dev python-glade2 python-gnome2 python-gtk2 python-gtk-vnc python-libxml2 python-lxml python-matplotlib python-paramiko python-reportlab python-rrdtool python-simplejson python-urlgrabber python-vte qemu-kvm qemu-utils smem sysbench sysstat tar tftpd-hpa unzip uuid-dev vim virt-what virt-viewer wget zip nfs-kernel-server)
+Normal_pkg_lst=(apache2 aptitude apt-mirror build-essential cgroup-bin debconf-utils dhcp3-server gcc gconf2 inetutils-inetd intltool kvm-ipxe libapache2-mod-gnutls libapache2-mod-wsgi libcurl4-gnutls-dev libdevmapper-dev libglib2.0-dev libgnutls-dev libnl-dev libpciaccess-dev librsvg2-common libvirt-glib-1.0-dev libxml2-dev libyajl-dev netperf nfs-common openssh-server pkg-config python python2.7:python2.5 python-appindicator python-dbus python-dev python-glade2 python-gnome2 python-gtk2 python-gtk-vnc python-libxml2 python-lxml python-matplotlib python-paramiko python-reportlab python-rrdtool python-simplejson python-urlgrabber python-vte qemu-kvm qemu-utils smem sysbench sysstat tar tftpd-hpa unzip uuid-dev vim virt-what virt-viewer wget zip nfs-kernel-server pip libpq-dev)
+
+#Changes made by Anmol Panda on 22 Aug 2016 to include new pakages in the installation procedure
+Pip_pkg_list=(docker-py psycopg2 dockerpty)
 
 #ECHO_PROGRESS="echo -e -n"
 #ECHO_OK="echo -e \"\r\033[K[\e[0;32mOK\e[0m]\t"
@@ -207,6 +210,31 @@ Instl_Pkgs()
 
 }
 
+Instl_pip_pkgs()
+{
+        #pip install pkg
+        echo "Installing Python Packages using Pip"
+        #Pkg_list = Pip_pkg_list
+
+        for pip_pkg in ${Pip_pkg_list[@]}; do
+        pip_pkg=(`echo $pip_pkg | tr ":" " " `)
+                for pkg in ${pip_pkg[@]}; do
+                        DEBIAN_FRONTEND=noninteractive pip install $pkg
+                 status=$?
+                 if test $status -eq 0 ; then
+                    echo "$pkg Pip - Package Installed Successfully" 
+                    break
+                 else
+                    echo "Pip - PACKAGE INSTALLATION UNSUCCESSFULL: ${pip_pkg[@]} !!!"
+                    echo "NETWORK CONNECTION ERROR/ REPOSITORY ERROR!!!"
+                    echo "EXITING INSTALLATION......................................"
+                    exit 1
+                 fi
+                 done
+         done
+
+}
+
 # function for ovs-vsctl add-br. always pass.
 ovsvsctl_add_fake_br_force()
 {
@@ -372,6 +400,11 @@ run()
    echo "Instl_Pkgs"
    Instl_Pkgs
    echo "Pkgs Installed"
+   
+   echo "Instl_pip_pkgs"
+   Instl_pip_pkgs
+   echo "Pip pkgs installed"
+   
    ##installing libvirt packages
    cd ../utils
       tar -xvzf libvirt-1.2.6.tar.gz
