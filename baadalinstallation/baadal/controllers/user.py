@@ -563,7 +563,12 @@ def mail_admin():
         email_type = form.vars.email_type
         email_subject = form.vars.email_subject
         email_message = form.vars.email_message
-        send_email_to_admin(email_subject, email_message, email_type)
+	#Appending user data to email_message
+	user_data = "\nRequester details: \nUsername: " + session.auth.user.username + "\nFirst name: " + session.auth.user.first_name + "\nLast name: " + session.auth.user.last_name + "\nEmail: " + session.auth.user.email
+	email_message = user_data + "\n\nMessage: " + email_message
+	#Taking logs for user data
+    	logger.debug("\nHello! Session data is: " + str(session) + "\nEmail message is :" + email_message)
+	send_email_to_admin(email_subject, email_message, email_type)
         redirect(URL(c='default', f='index'))
     return dict(form = form)
 
