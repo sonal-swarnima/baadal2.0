@@ -94,10 +94,10 @@ SHUTDOWN_WARNING_BODY="Dear {0[userName]},\n\n"\
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
 
-BAADAL_SHUTDOWN_BODY="Dear {0[userName]},\n\n"\
-    "Baadal services will be shutting down today from 12:00 PM to 6:00 PM for maintenance."\
-    "We will shutdown your VM {0[vmName]}({0[vmIp]}) to avoid any corruption of data.\n"\
-    "VM will be brought up as soon as possible."
+BAADAL_SHUTDOWN_BODY="\nDear {0[userName]},\n\n"\
+    "Baadal services will be shutting down today from 12:00 PM to 6:00 PM for maintenance. "\
+    "We will shutdown your VM(s) - {0[userVMs]} - to avoid any corruption of data.\n"\
+    "VM(s) will be brought up as soon as possible."
 
 MAIL_FOOTER = "\n\nRegards,\nBaadal Admin\n\n\n"\
     "NOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
@@ -254,20 +254,49 @@ def send_email_on_registration_denied(user_id):
 
 def send_shutdown_email_to_all():
     vms = db(db.vm_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED)).select()
+    #data structures to store user data; used in sending email
+    user_vms = {}
+    user_name = {}
+    user_email_ids = set()
+    
     for vm_data in vms:
         owner_info = get_user_details(vm_data.owner_id)
-        context = dict(vmName = vm_data.vm_name,
-                       userName = owner_info[0],
-                       vmIp = vm_data.private_ip)
         
+        #adding unique usernames to dict with email_id as key
+        user_name[owner_info[1]] = owner_info[0]
+        #storing VM_name in dict with user email-id as key
+        if owner_info[1] not in user_vms:
+            user_vms[owner_info[1]] =  vm_data.vm_name   
+        else:
+            user_vms[owner_info[1]] +=  ", " + vm_data.vm_name    
+        #extracting unique emil ids from owner_info	    
+        user_email_ids.add(owner_info[1])
+
         cc_user_list = []
         for user in db(db.user_vm_map.vm_id == vm_data.id).select(db.user_vm_map.user_id):
             if user.user_id != vm_data.owner_id:
                 user_info = get_user_details(user.user_id)
                 cc_user_list.append(user_info[1])
+                if user_info[1] not in user_vms:
+                    user_vms[user_info[1]] = vm_data.vm_name
+                else:
+                    user_vms[user_info[1]] += ", " + vm_data.vm_name
+                user_email_ids.add(user_info[1])
+                user_name[user_info[1]] = user_info[0]
+                #logger.info("\nUser of VM: " + str(user_info))
+	
+        logger.info("VM name: " + vm_data.vm_name + "\tOwner: " + str(owner_info[0]) + "\tand other users: " + str(cc_user_list))
+    
+    logger.info("Sending mail to user_email_ids " + str(user_email_ids))
+    
+    #iterating on all unique email_ids to send email
+    for email_id in user_email_ids:
+        context = dict(userName = user_name[email_id], userVMs = user_vms[email_id])
 
-        logger.info("Sending mail to:: " + str(owner_info[1]))
-        send_email(owner_info[1], BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context, cc_user_list)
+    	logger.info("Sending mail to: " + email_id)
+        logger.info("User VMs: " + user_vms[email_id])
+        send_email(email_id, BAADAL_SHUTDOWN_SUBJECT, BAADAL_SHUTDOWN_BODY, context)
+       
         import time
-        time.sleep(30)
-
+  	    time.sleep(30)
+ 
