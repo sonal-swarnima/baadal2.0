@@ -5,16 +5,16 @@ if 0:
     from gluon import *  # @UnusedWildImport
     from gluon import auth, request, session
     from applications.baadal.models import *  # @UnusedWildImport
+    from db import oauth_login
     import gluon
     global auth; auth = gluon.tools.Auth()
 ###################################################################################
-from helper import get_constant
+from auth_user import AUTH_TYPE_OAUTH
+from gluon import current  # @Reimport
+from helper import config, get_constant
 from maintenance import BAADAL_STATUS_UP
-from gluon.contrib.login_methods.oauth20_account import OAuthAccount
-#import iitd_oauth
-from gluon import current
+
 current.auth_type = config.get("AUTH_CONF","auth_type")
-from auth_user import login_callback,login_ldap_callback,AUTH_TYPE_DB
 
 def user():
     """
@@ -30,8 +30,8 @@ def user():
     to decorate functions that need access control
 	"""
     
-    if current.auth_type != AUTH_TYPE_DB:
-           auth.settings.login_form = oauth_login
+    if current.auth_type == AUTH_TYPE_OAUTH:
+        auth.settings.login_form = oauth_login
     return dict(form=auth())
 
 
@@ -52,8 +52,27 @@ def team():
 def faq():
     return dict()
 
+def about():
+    return dict()
+
+def solutions():
+    return dict()
+
+def client():
+    return dict()
+
+def pricing():
+    return dict()
+
+def gallery():
+    return dict()
+
+def infrastructure():
+    return dict()
+
 def error():
     return dict(error=request.vars['error'])
 
 def page_under_construction():
     return dict()
+

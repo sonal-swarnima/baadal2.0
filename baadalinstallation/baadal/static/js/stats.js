@@ -19,17 +19,25 @@ function calculateCPUPercent(stats) {
     }
     return cpuPercent;
 }
+
 var mychart;
 var mycharttype;
 var cpuChart= [];
 var memoryChart =[];
 var readnetworkChart = [];
 var writenetworkChart =[];
+    
+    /*for( i=0;i<15;i++){
+	cpuChart[i]= {y:0,x:new Date().getTime()};
+	memoryChart[i]= {y:0,x:new Date().getTime()};
+	readnetworkChart[i]= {y:0,x:new Date().getTime()};
+	writenetworkChart[i]= {y:0,x:new Date().getTime()};
+}*/
 var networkName;
 var myInterval;
 var difference =true;
 function updateCpuChart(data,mychart) {
-    if(cpuChart.length >15){
+    if(cpuChart.length >=15){
         cpuChart.shift();
     }
     cpuChart.push({y :calculateCPUPercent(data), x:  new Date(data.read).getTime()} );
@@ -38,7 +46,7 @@ function updateCpuChart(data,mychart) {
 }
 
 function updateMemoryChart(data,mychart) {
-    if(memoryChart.length >15){
+    if(memoryChart.length >=15){
         memoryChart.shift();
     }
     memoryChart.push({y :data.memory_stats.usage, x:  new Date(data.read).getTime()});
@@ -47,13 +55,14 @@ function updateMemoryChart(data,mychart) {
 }
 var lastRxBytes = 0, lastTxBytes = 0;
 function updateNetworkChart(data,mychart) {
-
-    if(readnetworkChart.length >15){
+	
+    if(readnetworkChart.length >=15){
         readnetworkChart.shift();
     }
-    if(writenetworkChart.length >15){
+    if(writenetworkChart.length >=15){
         writenetworkChart.shift();
     }
+    
     if (data.networks) {
         networkName = Object.keys(data.networks)[0];
         data.network = data.networks[networkName];
@@ -95,10 +104,7 @@ function updatestats(data){
 function refreshcharts(){
     mychart = null;
      mycharttype = 1;
-     cpuChart= [];
-     memoryChart =[];
-     readnetworkChart = [];
-    writenetworkChart =[];
+ 
      myInterval = null;
 }
 function plotcharts(id,charts,charttype){
@@ -109,12 +115,13 @@ function plotcharts(id,charts,charttype){
             charts[0].options.data[0].dataPoints = cpuChart;
         
             charts[1].options.data[0].dataPoints = memoryChart;
-	     charts[1].options.axisY= {valueFormatString : "#M,,."};
+	     charts[1].options.axisY= {valueFormatString : "#MB,,."};
         
             charts[2].options.data[0].dataPoints = readnetworkChart;
             charts[2].options.data[0].color= "rgba(255,12,32,.5)",
             charts[2].options.data[1] ={};
             charts[2].options.data[1].type ="area";
+            charts[2].options.axisY= {valueFormatString : "#KB,."};
             charts[2].options.data[1].xValueType ="dateTime";
             charts[2].options.data[1].color= "rgba(0,135,147,.3)",
             charts[2].options.data[1].dataPoints = writenetworkChart;
@@ -125,5 +132,5 @@ function plotcharts(id,charts,charttype){
         clearInterval(myInterval);
     }
     getstats(id,updatestats)
-    myInterval = setInterval(function(){getstats(id,updatestats)}, 15000);
+    myInterval = setInterval(function(){getstats(id,updatestats)}, 7000);
 }

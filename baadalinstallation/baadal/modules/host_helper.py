@@ -311,7 +311,7 @@ def add_migrate_task_to_queue(vm_id, dest_host_id=None, live_migration=None):
                          status=1)
 
 # Delete Orphan VM
-def delete_orhan_vm(vm_name, host_id):
+def delete_orphan_vm(vm_name, host_id):
     
     host_details = current.db.host[host_id]
     connection_object = libvirt.open("qemu+ssh://root@" + host_details.host_ip.private_ip + "/system")

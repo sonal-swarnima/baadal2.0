@@ -17,8 +17,30 @@ from log_handler import logger
 from vm_utilization import check_graph_type, check_graph_period, \
     fetch_info_graph
 import os
+import zipfile
+import tarfile
+import datetime
+import calendar
+import time
+from io import BytesIO
 
+def testme():
+	admin_password = 'xxxxx'
 
+#write password to file
+	pw_tarstream = BytesIO()
+	pw_tar = tarfile.TarFile(fileobj=pw_tarstream, mode='w')
+	file_data = admin_password.encode('utf8')
+	tarinfo = tarfile.TarInfo(name='pw.txt')
+	tarinfo.size = len(file_data)
+	tarinfo.mtime = time.time()
+	#tarinfo.mode = 0600
+	pw_tar.addfile(tarinfo, BytesIO(file_data))
+	pw_tar.close()
+	pw_tarstream.seek(0)
+	return pw_tarstream
+	
+	
 def request_object_store():
     form = get_request_object_store_form()
     
@@ -32,6 +54,31 @@ def request_object_store():
         logger.debug('Object Store requested successfully')
         redirect(URL(c='default', f='index'))
     return dict(form=form)
+    
+    
+def zip2tar(zipf):
+    pw_tarstream = BytesIO()
+    tarf = tarfile.TarFile(fileobj=pw_tarstream, mode='w')
+    timeshift = int((datetime.datetime.now() -
+                     datetime.datetime.utcnow()).total_seconds())
+    for zipinfo in zipf.infolist():
+        tarinfo = tarfile.TarInfo()
+        tarinfo.name = zipinfo.filename
+        tarinfo.size = zipinfo.file_size
+        tarinfo.mtime = calendar.timegm(zipinfo.date_time) - timeshift
+        if zipinfo.internal_attr & 1:
+            tarinfo.mode = 0666
+            tarinfo.type = tarfile.REGTYPE
+        else:
+            tarinfo.mode = 0777
+            tarinfo.type = tarfile.DIRTYPE 
+        infile = zipf.read(zipinfo.filename)
+        tarf.addfile(tarinfo, BytesIO(infile))
+    zipf.close()
+    logger.debug(tarf.getmembers())
+    tarf.close()
+    pw_tarstream.seek(0)
+    return pw_tarstream
 
 @auth.requires_login()
 @handle_exception
@@ -206,9 +253,10 @@ def cont_settings():
     if not cont_info:
         redirect(URL(f='list_my_container'))
     
+    cont_users = get_cont_user_list(cont_id)
     cont_operations = get_cont_operations(cont_id)
     
-    return dict(cont_info = cont_info , cont_operations = cont_operations)     
+    return dict(cont_info = cont_info , cont_operations = cont_operations, contusers = cont_users)     
 
 
 def get_vnc_url():
@@ -253,8 +301,12 @@ def container_stats():
 @handle_exception
 def container_top():
     cont_id = request.args[0]
+    if request.env.request_method == "POST":
+		pid_args=request.post_vars.get('ps_opt','aux')
+		cont_top = get_container_top(cont_id,pid_args)
+		return dict(cont_id=cont_id,cont_top = cont_top,pid_args=pid_args)
     cont_top = get_container_top(cont_id)
-    return dict(cont_id = cont_id, cont_top = cont_top)
+    return dict(cont_id = cont_id, cont_top = cont_top,pid_args='aux')
 
 @check_cont_owner
 @handle_exception
@@ -298,6 +350,82 @@ def delete_cont():
 def recreate_cont():
     handle_cont_operation(request.args[0], CONTAINER_RECREATE)
 
+@check_cont_owner
+@handle_exception
+def commit_cont():
+    handle_cont_operation(request.args[0], CONTAINER_COMMIT)
+    
+@check_cont_owner
+@handle_exception
+def download_cont():
+    cont_id = request.args[0]
+    return response.stream(get_container_archive(cont_id), attachment=True,  filename='container.tar');
+
+@check_cont_owner
+@handle_exception
+def container_file_transfer():
+	cont_id = request.args[0]
+	return dict(cont_id = cont_id);
+		
+@check_cont_owner
+@handle_exception
+def container_upload_file():
+	cont_id = request.args[0]
+	if request.env.request_method == "POST":
+		
+		cont_uuid = get_container_uuid(cont_id)
+		file_path = request.post_vars['file_path']
+		file_data = request.post_vars['file_data'].file
+		
+		#if zipfile.is_zipfile(file_data):
+		#	file_data = zip2tar(zipfile.ZipFile(file_data))
+		#	file_data = testme()
+		logger.debug(type(file_data));
+		result = get_container_upload_data(cont_uuid,file_path,file_data);
+		return redirect(URL(r = request, c = 'user', f = 'cont_settings', args = cont_id))
+	else :
+		return response.json({'error':'operation not allowed'});
+		
+@check_cont_owner
+@handle_exception
+def container_download_file():
+	cont_id = request.args[0]
+	if request.env.request_method == "POST":
+		
+		cont_uuid = get_container_uuid(cont_id)
+		file_path = request.post_vars['file_path']
+		
+		
+		return response.stream(get_container_archive(cont_id,file_path), attachment=True,  filename='codebase.tar');
+	else :
+		return response.json({'error':'operation not allowed'});
+    
+@check_cont_owner
+@handle_exception
+def getExecSession_cont():
+    cont_id = request.args[0]
+    cont_uuid = get_container_uuid(cont_id)
+    cont_session = get_container_execsession(cont_uuid);
+    return response.json(dict(cont_id = cont_id, cont_session = cont_session));
+    
+@check_cont_owner
+@handle_exception
+def getExecResize_cont():
+    cont_id = request.args[0]
+    cont_uuid = get_container_uuid(cont_id)
+    cont_session = request.vars['execid'];
+    height = request.vars.get('height','80')
+    width = request.vars.get('width','100')
+    logger.debug(" In container Resize" + height + width );
+    get_container_execresize(cont_uuid,cont_session,height,width);
+    return response.json(dict(cont_id = cont_id));
+    
+@check_cont_owner
+@handle_exception
+def download_wd():
+    cont_id = request.args[0]
+    return response.stream(get_container_archive_wd(cont_id), attachment=True,  filename='codebase.tar');
+    
 @check_vm_owner
 @handle_exception
 def start_vm():
@@ -563,12 +691,7 @@ def mail_admin():
         email_type = form.vars.email_type
         email_subject = form.vars.email_subject
         email_message = form.vars.email_message
-	#Appending user data to email_message
-	user_data = "\nRequester details: \nUsername: " + session.auth.user.username + "\nFirst name: " + session.auth.user.first_name + "\nLast name: " + session.auth.user.last_name + "\nEmail: " + session.auth.user.email
-	email_message = user_data + "\n\nMessage: " + email_message
-	#Taking logs for user data
-    	logger.debug("\nHello! Session data is: " + str(session) + "\nEmail message is :" + email_message)
-	send_email_to_admin(email_subject, email_message, email_type)
+        send_email_to_admin(email_subject, email_message, email_type)
         redirect(URL(c='default', f='index'))
     return dict(form = form)
 
@@ -602,5 +725,3 @@ def configure_snapshot():
     vm_id = int(request.args[0])
     flag = request.vars['snapshot_flag']
     update_snapshot_flag(vm_id, flag)
-
-

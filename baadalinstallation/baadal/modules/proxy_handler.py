@@ -41,6 +41,11 @@ class manageproxy:
 			proxy_pass http://@x;
 			proxy_set_header X-Real-IP $remote_addr;
 			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;   
+			 proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+
+          # VNC connection timeout
+          proxy_read_timeout 61s;
 			 proxy_set_header X-NginX-Proxy true;    
 			 proxy_set_header Host $host;   
 			  proxy_set_header X-Forwarded-Proto $scheme;   
@@ -48,6 +53,67 @@ class manageproxy:
 		}
 	}
 	"""
+	
+	template3 = r"""
+	upstream   @x {
+	     least_conn;
+	     #for @address in @addresses:
+	        server @address ;
+	     #end
+			
+		 
+	 }
+
+	  server {
+		listen 80 ;
+		gzip_types text/plain text/css application/json application/x-javascript
+				   text/xml application/xml application/xml+rss text/javascript;
+		 charset UTF-8;
+		server_name @x;
+
+		location / {
+			proxy_pass http://@x;
+			proxy_set_header X-Real-IP $remote_addr;
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;   
+			 proxy_set_header X-NginX-Proxy true;    
+			 proxy_set_header Host $host;   
+			  proxy_set_header X-Forwarded-Proto $scheme;   
+			 proxy_redirect off; 
+		}
+	}
+	"""
+	
+	template4 = r"""
+	      server {
+	listen 80 ;
+	server_name @x;
+	return 301 https://$server_name$request_uri;
+		}
+		
+		upstream   @x {
+		 server  @y ;
+	 }
+		
+	server{
+	listen 443;
+	server_name @x;
+	ssl on;
+    ssl_certificate /root/certs/server-cert.pem;
+    ssl_certificate_key /root/certs/server-key.pem;
+    ssl_session_cache shared:SSL:10m;
+	location / {
+			proxy_pass https://@x;
+			proxy_set_header X-Real-IP $remote_addr;
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;   
+			 proxy_set_header X-NginX-Proxy true;    
+			 proxy_set_header Host $host;   
+			  proxy_set_header X-Forwarded-Proto $scheme;   
+			 proxy_redirect off; 
+		}
+	
+	}
+	"""
+	
 	@classmethod
 	def settemp(cls,newtemp):
 		cls.template1 = newtemp;
@@ -56,10 +122,10 @@ class manageproxy:
 		temp = Template(manageproxy.template2)
 		return temp.render(dictto)
 	
-	def add(self,string,hostname):
+	def add(self,string):
 		
 		self.delete(string);
-		self.removebyip(hostname)			
+		#self.removebyip(hostname)			
 		self.filedit += string 
 
 	def delete(self,string):

@@ -16,7 +16,7 @@ from log_handler import logger, rrd_logger
 from host_helper import HOST_STATUS_UP
 from load_balancer import find_host_and_guest_list, loadbalance_vm
 from container_create import install_cont, start_cont, stop_cont, suspend_cont,\
-    resume_cont, delete_cont, restart_cont, recreate_cont
+    resume_cont, delete_cont, restart_cont, recreate_cont, backup_cont
 from gluon import current
 current.cache = cache
 
@@ -48,7 +48,8 @@ task = {
         CONTAINER_RESUME            :    resume_cont,
         CONTAINER_DELETE            :    delete_cont,
         CONTAINER_RESTART           :    restart_cont,
-        CONTAINER_RECREATE          :    recreate_cont
+        CONTAINER_RECREATE          :    recreate_cont,
+        CONTAINER_COMMIT            :    backup_cont
        }
 
 
@@ -61,7 +62,7 @@ def _send_task_complete_mail(task_event):
             vm_users.append(user['user_id'])
     else:
         vm_users.append(task_event.requester_id)
-    send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
+#     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
 
 
 def send_object_task_complete_mail(task_event, object_name):
@@ -69,11 +70,10 @@ def send_object_task_complete_mail(task_event, object_name):
     vm_users = []
     vm_id = task_event.parameters['vm_id'] if 'vm_id' in task_event.parameters else None
     if vm_id:
-        for user in db(db.user_object_map.ob_id == vm_id).select(db.user_object_map.user_id):
+        for user in db(db.user_object_map.ob_id == vm_id).select(db.user_vm_map.user_id):
             vm_users.append(user['user_id'])
     else:
         vm_users.append(task_event.requester_id)
-    logger.info("\n %s" %vm_users)
     send_email_to_vm_user(task_event.task_type, object_name, task_event.start_time, vm_users)
 
     

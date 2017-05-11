@@ -1027,6 +1027,10 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
 
         if os.path.exists (diskpath):
             os.remove(current_disk_file)
+            restore_symboltable_path = current_disk_path+"/restore_symboltable" 
+            if os.path.exists (restore_symboltable_path):
+               logger.debug(restore_symboltable_path)
+               os.remove(restore_symboltable_path)            
             os.rmdir(current_disk_path)
         connection_object.close()
 
@@ -1034,7 +1038,7 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
         logger.debug("Task Status: SUCCESS Message: %s " % message)
         return (current.TASK_QUEUE_STATUS_SUCCESS, message)
     except:
-        undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm_directory_path, datastore_id)
+        #undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm_directory_path, datastore_id)
         connection_object.close()
         logger.debug("Task Status: FAILED Error: %s " % log_exception())
         return (current.TASK_QUEUE_STATUS_FAILED, log_exception())
@@ -1047,14 +1051,19 @@ def undo_datastore_migration(vm_details, domain, diskpath, current_disk_file, vm
     # undo databse changes
     vm_details.update_record(datastore_id=datastore_id)
     
+    if domain.isActive: 
+        logger.debug("domain is active")
+        block_info_list = domain.blockJobInfo(current_disk_file,0)
+        if(bool(block_info_list) == True):
+            while(block_info_list['end'] != block_info_list['cur']):
+                logger.debug("time to sleep")
+                time.sleep(60)
+                block_info_list = domain.blockJobInfo(current_disk_file,0)
+            if(block_info_list['end'] == block_info_list['cur']):
+                domain.blockJobAbort(current_disk_file)
+
     block_info_list = domain.blockJobInfo(current_disk_file,0)
-    if(bool(block_info_list) == True):
-        while(block_info_list['end'] != block_info_list['cur']):
-            logger.debug("time to sleep")
-            time.sleep(60)
-            block_info_list = domain.blockJobInfo(current_disk_file,0)
-        if(block_info_list['end'] == block_info_list['cur']):
-            domain.blockJobAbort(current_disk_file)
+
     if os.path.exists (diskpath):
         os.remove(diskpath)
         os.rmdir(vm_directory_path)
@@ -1663,16 +1672,8 @@ def create_new_template(vm_details):
                 logger.debug("copy command running on " + vm_details.host_id.host_ip.private_ip + " host")
                 command_output = execute_remote_cmd(vm_details.host_id.host_ip.private_ip, 'root', copy_command)
                 logger.debug(command_output)
-
-                #if rc != 0:
-                #    logger.error("Copy not successful")
-                #    raise Exception("Copy not successful")
-                #    return (False, template, old_template)
-                #else:
-                #    logger.debug("Copied successfully")
-                #    return (True, template, old_template)
+                
                 return (True, template_location, old_template)
-
     except:
         if not domain.isPersistent():
             domain = connection_object.defineXML(xmlfile)

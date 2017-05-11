@@ -5,19 +5,17 @@ if 0:
     from gluon import *  # @UnusedWildImport
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from simplejson import loads, dumps
 from ast import literal_eval
-from helper import config,get_datetime, IS_MAC_ADDRESS
-from auth_user import login_callback,login_ldap_callback, AUTH_TYPE_LDAP,AUTH_TYPE_DB
+from auth_user import fetch_user_role, create_or_update_user, login_callback, \
+    login_ldap_callback, AUTH_TYPE_OAUTH, AUTH_TYPE_DB
 from datetime import timedelta
-from host_helper import HOST_TYPE_PHYSICAL
+from gluon import current # @Reimport
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
-#import iitd_oauth
-import json,simplejson,requests
-import urllib2
-import urllib
-from urllib import urlencode
-from gluon import current, redirect, HTTP
+from gluon.tools import Auth, Mail
+from helper import config, get_datetime, IS_MAC_ADDRESS
+from host_helper import HOST_TYPE_PHYSICAL
+from simplejson import loads, dumps
+import requests
 
 #### Connection Pooling of Db is also possible
 
@@ -37,10 +35,8 @@ db.define_table('organisation',
     Field('admin_mailid', 'string', length = 50),
     format = '%(details)s')
 
-from gluon.tools import Auth
 auth = Auth(db)
 
-from gluon.tools import Mail
 mail = Mail()
 if config.getboolean("MAIL_CONF","mail_active"):
     mail.settings.server = config.get("MAIL_CONF","mail_server")
@@ -49,7 +45,6 @@ if config.getboolean("MAIL_CONF","mail_active"):
     mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
 
 #added to make auth and db objects available in modules
-from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
 current.auth_type = config.get("AUTH_CONF","auth_type")
@@ -66,48 +61,65 @@ auth.settings.create_user_groups = config.getboolean("AUTH_CONF","create_user_gr
 auth.settings.actions_disabled = config.get("AUTH_CONF",config.get("AUTH_CONF","actions_disabled"))
 auth.settings.remember_me_form = config.getboolean("AUTH_CONF","remember_me_form")
 
-############for oauth  ##############
-from gluon.http import HTTP
-cl_id=config.get("OAUTH_CONF","client_id")
-cl_secret=config.get("OAUTH_CONF","client_secret")
+auth.next = None
+if is_vm_enabled():
+    auth.settings.login_next = URL(r=request, c='user', f='list_my_vm')
+elif is_docker_enabled():
+    auth.settings.login_next = URL(r=request, c='user', f='list_my_container')
+else:
+    auth.settings.login_next = URL(r=request, c='default', f='index')
 
-#Derived class from base class OAuthAccount    
-class IITD_Oauth(OAuthAccount):      
+if current.auth_type == AUTH_TYPE_OAUTH:
+
+    ############for oauth  ##############
+    cl_id=config.get("OAUTH_CONF","client_id")
+    cl_secret=config.get("OAUTH_CONF","client_secret")
+    
+    #Derived class from base class OAuthAccount    
+    class IITD_Oauth(OAuthAccount):      
         auth_url= config.get("OAUTH_CONF","auth_url")
         token_url=config.get("OAUTH_CONF","token_url")
         def __init__(self,g=globals()):
             OAuthAccount.__init__(self,g,client_id=cl_id,client_secret=cl_secret,auth_url=self.auth_url,token_url=self.token_url,state='xyz')
-     
-       
-     
-        def get_user(self):
-            token=self.accessToken()
-            if not token:
-                return None
-            
-            uri=config.get("OAUTH_CONF","resource_url")
-            r=requests.get(uri,params={'access_token':token})
-            userdata=r.json()
-            user_info={}
-            if ' ' in userdata['name']:
-                user_info['first_name'],user_info['middle_name'],user_info['last_name']=userdata['name'].split()
-            else:
-                user_info['first_name']=userdata['name']
-                user_info['last_name']=' '
-            hd=userdata['hd']
-            user_info['user_name'] = userdata['user_id']
-            user_info['email'] = userdata['email']
-
-            user_info['roles'] = fetch_user_role(user_info['user_name'])
-            # If user has super admin rights; it is added to separate organization
-            if current.ADMIN in user_info['roles']:
-               user_info['organisation'] = 'ADMIN'
-            else:
-               user_info['organisation'] = 'IITD'
-            create_or_update_user(user_info, False)
-            return dict(first_name=user_info['first_name'],last_name=user_info['last_name'],email=userdata['email'],username = userdata['user_id'] )
-
-oauth_login = IITD_Oauth(globals())
+         
+           
+         
+            def get_user(self):
+                token=self.accessToken()
+                if not token:
+                    return None
+                
+                uri=config.get("OAUTH_CONF","resource_url")
+                r=requests.get(uri,params={'access_token':token})
+                userdata=r.json()
+                user_info={}
+                if ' ' in userdata['name']:
+                    #user_info['first_name'],user_info['middle_name'],user_info['last_name']=userdata['name'].split()
+                    data=userdata['name'].split()
+                    if len(data) > 2:
+                        user_info['first_name']=data[0]
+                        user_info['middle_name']=data[1]
+                        user_info['last_name']=data[2]
+                    else:
+                        user_info['first_name']=data[0]
+                        user_info['last_name']=data[1]
+                else: 
+                    user_info['first_name']=userdata['name']
+                    user_info['last_name']=' '
+    
+                user_info['user_name'] = userdata['user_id']
+                user_info['email'] = userdata['email']
+    
+                user_info['roles'] = fetch_user_role(user_info['user_name'])
+                # If user has super admin rights; it is added to separate organization
+                if current.ADMIN in user_info['roles']:
+                    user_info['organisation'] = 'ADMIN'
+                else:
+                    user_info['organisation'] = 'IITD'
+                create_or_update_user(user_info, False) 
+                return dict(first_name=user_info['first_name'],last_name=user_info['last_name'],email=userdata['email'],username = userdata['user_id'] )
+    
+    oauth_login = IITD_Oauth(globals())
 
 db.define_table(
     auth.settings.table_user_name,
@@ -151,13 +163,13 @@ auth.settings.table_membership = db.define_table(
 ###############################################################################
 auth.define_tables(username=True)
 ###############################################################################
-#if current.auth_type == AUTH_TYPE_LDAP :
-#   from gluon.contrib.login_methods.pam_auth import pam_auth
-#   auth.settings.login_methods = [pam_auth()]
-#   auth.settings.login_onaccept = [login_ldap_callback]
 if current.auth_type == AUTH_TYPE_DB:
-   auth.settings.login_onaccept = [login_callback]
-   auth.settings.registration_requires_approval = True
+    auth.settings.login_onaccept = [login_callback]
+    auth.settings.registration_requires_approval = True
+else:
+    from gluon.contrib.login_methods.pam_auth import pam_auth
+    auth.settings.login_methods = [pam_auth()]
+    auth.settings.login_onaccept = [login_ldap_callback]
 ###############################################################################
 
 db.define_table('vlan',
@@ -257,6 +269,16 @@ db.define_table('object_store_data',
     Field('s3_access_key', 'string'),
     Field('swift_access_key', 'string'))
 
+
+db.define_table('node_data',
+    Field('node_name', 'string', length = 100, notnull = True),
+    Field('node_ip', 'string', length = 20, notnull = True),
+    Field('node_port', 'integer', notnull = True, label='Size(GB)'),
+    Field('CPUs', 'string', length = 50, notnull = True),
+    Field('memory', 'string', length = 50, notnull = True),
+    Field('version', 'string'))
+
+
 db.define_table('container_data',
     Field('name', 'string', length = 100, notnull = True, unique = True, label='Name'),
     Field('RAM', 'integer', notnull=True, label='RAM(MB)'),
@@ -268,6 +290,7 @@ db.define_table('container_data',
     Field('env_vars', 'text', default={}),
     Field('requester_id',db.user, label='Requester'),
     Field('owner_id', db.user, label='Owner'),
+    Field('current_node', db.node_data),
     Field('purpose', 'string', length = 512),
     Field('creation_time', 'datetime', default = get_datetime()),
     Field('status', 'integer', represent=lambda x, row: get_vm_status(x)),

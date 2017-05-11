@@ -1,0 +1,35 @@
+{{extend 'layout.html'}}
+
+{{for nodes in output:}}
+<h2 class="title"> {{=str(nodes['Name']) + ': ['+ str(nodes['IP']) + ']'}} </h2>
+    <div class="TABLE">
+    <table id="host_{{=str(nodes['Name'])}}">
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Id</th>
+        <th>Image</th>
+        <th>State</th>
+        <th>Status</th>
+        <th>Settings</th>
+      </tr>
+      {{for container in nodes['Containerlist']:}}
+      <tr>
+        <td>{{=str(container['Names'][0])}}</td>
+        <td>-</td>  
+        <td>{{=container['Id']}}</td>
+        <td>{{=container['Image']}}</td>
+        <td>{{=container['State']}}</td>
+        <td>{{=container['Status']}}</td>
+        <td>
+            {{=A(IMG(_src=URL('static','images/settings.png'), _height=18, _width=18),
+	        _href=URL(r=request,c='user' ,f='cont_settings', args=1), _id="cont_"+str(1), 
+            _title="Settings", 
+            _alt="Settings")}}
+        </td>
+      </tr>
+      {{pass}}
+  </table>
+  </div>
+  <br>
+{{pass}}

@@ -14,13 +14,16 @@ if 0:
     from gluon import db
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-import libvirt
-from libvirt import *  # @UnusedWildImport
-from lxml import etree
+from cont_handler import Container
+from container_create import get_node_to_deploy, list_container
 from helper import execute_remote_cmd, log_exception
 from host_helper import HOST_STATUS_UP, get_host_domains
-from nat_mapper import remove_mapping
+from images import getImage
+from libvirt import * # @UnusedWildImport
 from log_handler import logger
+from lxml import etree
+from nat_mapper import remove_mapping
+import libvirt
 
 vm_state_map = {
         VIR_DOMAIN_RUNNING     :    VM_STATUS_RUNNING,
@@ -43,6 +46,13 @@ def vminfo_to_state(vm_state):
 
     return status
 
+
+def cont_state_to_status(cont_state):
+    if (cont_state == 'running') : status = VM_STATUS_RUNNING
+    elif (cont_state == 'exited') : status = VM_STATUS_SHUTDOWN
+    else: status = VM_STATUS_UNKNOWN
+    
+    return status
 
 def get_host_sanity_form():
     _dict = {-1 : 'None', 0 : 'All'}
@@ -169,17 +179,17 @@ def add_orphan_vm(vm_name, host_id):
     # Parse domain XML to get information about VM
     root = etree.fromstring(domain.XMLDesc(0))
 
-    ram_elem = root.xpath('memory')[0]
+    ram_elem = root.findall('memory')[0]
     ram_in_kb = int(ram_elem.text)
     ram_in_mb = int(round(int(ram_in_kb)/(1024),0))
 
-    cpu_elem = root.xpath('vcpu')[0]
+    cpu_elem = root.findall('vcpu')[0]
     cpu = int(cpu_elem.text)
 
-    vnc_elem = root.xpath("devices/graphics[@type='vnc']")[0]
+    vnc_elem = root.findall("devices/graphics[@type='vnc']")[0]
     vnc_port = vnc_elem.attrib['port']
     
-    mac_elem = root.xpath("devices/interface[@type='network']/mac")[0]
+    mac_elem = root.findall("devices/interface[@type='bridge']/mac")[0]
     mac_address = mac_elem.attrib['address']
 
     ip_addr = db.private_ip_pool(mac_addr = mac_address)
@@ -187,7 +197,7 @@ def add_orphan_vm(vm_name, host_id):
     if ip_addr:
         ip_address = ip_addr['id']
     
-    template_elem = root.xpath("devices/disk[@type='file']/source")[0]
+    template_elem = root.findall("devices/disk[@type='file']/source")[0]
     template_file = template_elem.attrib['file']
     
     command = "qemu-img info " + template_file + " | grep 'virtual size'"
@@ -302,3 +312,114 @@ def delete_snapshot_info(snapshot_id):
     logger.debug('Deleting snapshot info for ' + str(snapshot_id))
     del db.snapshot[snapshot_id]
     logger.debug('Snapshot info deleted')
+    
+    
+def check_cont_sanity():
+
+    cont_check= []
+    cont_list = []
+    
+    nodes = get_node_to_deploy()
+    containers = list_container( showall=True);
+
+    for node in nodes:
+        ip_port = node['IP'].split(":")
+        node_data = db(db.node_data.node_ip == str(ip_port[0])).select().first()
+        if not node_data:
+            db.node_data.insert(
+                  node_name = node['Name'],
+                  node_ip = ip_port[0],
+                  node_port = ip_port[1],
+                  CPUs = node['Reserved CPUs'],
+                  memory = node['Reserved Memory'],
+                  version = node['ServerVersion'])
+            
+    try:
+        for container in containers:
+            names = container['Names'][0].split("/")
+            cont_data = db(db.container_data.name == names[2]).select().first()
+            cont_list.append(names[2])
+            if cont_data:
+                updated = False
+                if cont_data.status != cont_state_to_status(container['State']):
+                    cont_data.update_record(status = cont_state_to_status(container['State']))
+                    updated = True
+                node_name = cont_data.current_node.node_name if cont_data.current_node else None
+                if names[1] != node_name:
+                    new_node = db(db.node_data.node_name == names[1]).select().first()
+                    cont_data.update_record(current_node=new_node.id)
+                    
+                message = 'Information updated' if updated else 'As expected'
+                cont_check.append({'cont_id':cont_data.id,
+                                   'cont_uuid':container['Id'],
+                                   'node_name': names[1], 
+                                   'cont_name':names[2],
+                                   'status':container['State'],
+                                   'message':message, 
+                                   'operation':'None'})
+                
+            else:
+                cont_check.append({'cont_id':None,
+                                   'cont_uuid':container['Id'],
+                                   'node_name': names[1], 
+                                   'cont_name':names[2],
+                                   'status':container['State'],
+                                   'message':'Orphan, Container is not in database', 
+                                   'operation':'Orphan'})#Orphan Containers
+
+    except:
+        log_exception()
+        pass
+
+    db(~db.user_container_map.cont_id.belongs(db().select(db.container_data.id))).delete()
+    db.commit()
+    
+    db_conts=db(db.container_data.status.belongs(VM_STATUS_RUNNING, VM_STATUS_SUSPENDED, VM_STATUS_SHUTDOWN)).select()
+    for db_cont in db_conts:
+        if(db_cont.name not in cont_list):
+            cont_check.append({'cont_id'  : db_cont.id,
+                               'cont_uuid': None,
+                               'node_name': "-", 
+                               'cont_name': db_cont.name,
+                               'status'   : "-",
+                               'message'  :'Container not present', 
+                               'operation':'Undefined'})#Orphan Containers
+            
+    return cont_check
+
+
+def delete_orphan_cont(cont_uuid):
+    container = Container(cont_uuid);
+    container.remove()
+    return
+
+def add_orphan_cont(cont_uuid):
+    container = Container(cont_uuid);
+    print("In add_orphan_cont")
+    if container:
+        container.updatedetails()
+        
+        cont_details = container.properties
+        logger.debug(cont_details)
+        image_details = getImage(cont_details['ImageName'])
+
+        db.container_data.insert(
+                  name = cont_details['Name'][1:],
+                  RAM = int(int(cont_details['Memory'])/1024/1024),
+                  vCPU = 1,
+                  UUID = cont_uuid,
+                  image_id = image_details['templateid'],
+                  image_profile = image_details['type'],
+                  restart_policy = None,
+                  requester_id = SYSTEM_USER,
+                  owner_id = SYSTEM_USER,
+                  purpose = 'Added by System',
+                  status = cont_state_to_status(cont_details['State']))
+    return
+
+def delete_cont_info(cont_id):
+    db(db.container_data.id == cont_id).delete()
+    
+    return
+
+    

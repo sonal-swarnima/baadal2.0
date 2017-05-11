@@ -5,6 +5,7 @@ from helper import config, logger
 
 AUTH_TYPE_LDAP = 'ldap'
 AUTH_TYPE_DB = 'db'
+AUTH_TYPE_OAUTH = 'oauth'
 
 def register_callback(form):
     add_membership_db(current.auth.user.id, current.USER, True)

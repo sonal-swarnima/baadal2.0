@@ -484,3 +484,11 @@ a[disabled=disabled] {
   cursor: default !important;
   pointer-events: none;
 }
+
+div.subheading {
+	padding-left:0px;
+	padding-top:10px;
+	padding-bottom:10px;
+	background: url(images/img111.gif) left top no-repeat, url(images/img113.gif) right top no-repeat, url(images/img112.gif);
+}
+

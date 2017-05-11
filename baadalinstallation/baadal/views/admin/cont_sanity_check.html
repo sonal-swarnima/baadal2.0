@@ -1,0 +1,41 @@
+{{extend 'layout.html'}}
+
+<h2 class="subtitle" id="pageHeader">Container Sanity Check</h2>
+{{
+  if not sanity_data:
+}}
+<h3>No Container Present</h3>
+{{else:}}
+  <div class="TABLE" id="sanity_check_table">
+  <table>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Node</th>
+        <th>Message</th>
+        <th>Operations</th>
+      </tr>
+  {{for cont in sanity_data:}}
+      <tr>
+        <td>{{=cont['cont_name']}}</td>
+        <td>{{=cont['status']}}</td>
+        <td>{{=cont['node_name']}}</td>
+        <td>{{=cont['message']}}</td>
+        <td>
+        {{if cont['operation'] == 'Orphan':}}
+        	{{=A('Delete Orphan Container',_href=URL(r=request,f='sync_container',args=['Delete_Orphan_Cont', cont['cont_uuid']]))}}
+        	&nbsp;|&nbsp;
+        	{{=A('Update Container Info',_href=URL(r=request,f='sync_container',args=['Add_Orphan_Cont', cont['cont_uuid']]))}}
+        {{elif cont['operation'] == 'Undefined':}}
+        	{{=A('Delete Container Info',_href=URL(r=request,f='sync_container',args=['Delete_Cont_Info', cont['cont_id']]))}}
+        {{else:}}
+        	-
+        {{pass}}
+        </td>
+      </tr>
+  {{pass}}
+  </table>
+  </div>
+{{pass}}
+
+

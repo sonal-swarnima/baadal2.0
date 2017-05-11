@@ -6,6 +6,11 @@
 }}
 <h3>No top information to display</h3>
 {{else:}}
+<form id="container_ps" method="post">
+		<p> <label for="file_path">Options</label>
+		<input type="text" name="ps_opt" value="{{=pid_args}}" /></p> 
+		<p><button>Submit</button></p>
+</form>
 
 <table>
   <table id="top_table" class="tablesorter">

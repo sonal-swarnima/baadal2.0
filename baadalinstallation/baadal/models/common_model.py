@@ -224,30 +224,37 @@ def get_pending_request_list(vm_requests):
 
 def get_segregated_requests(request_list):
     
-    install_requests = []
-    clone_requests = []
-    disk_requests = []
-    edit_requests = []
+    install_vm_requests = []
+    clone_vm_requests = []
+    vm_disk_requests = []
+    edit_vm_requests = []
     install_object_store_requests = []
     install_container_requests=[]
     for req in request_list:
         if req['request_type'] == VM_TASK_CREATE:
-            install_requests.append(req)
+            install_vm_requests.append(req)
         elif req['request_type'] == VM_TASK_CLONE:
-            clone_requests.append(req)
+            clone_vm_requests.append(req)
         elif req['request_type'] == VM_TASK_ATTACH_DISK:
-            disk_requests.append(req)
+            vm_disk_requests.append(req)
         elif req['request_type'] == VM_TASK_EDIT_CONFIG:
-            edit_requests.append(req)
+            edit_vm_requests.append(req)
         elif req['request_type'] == Object_Store_TASK_CREATE:
             install_object_store_requests.append(req)
         elif req['request_type'] == CONTAINER_TASK_CREATE:
             install_container_requests.append(req)
             
-    if not config.getboolean("GENERAL_CONF","docker_enabled"):
+    if not is_docker_enabled():
         install_container_requests = None
+    if not is_object_store_enabled():
+        install_object_store_requests = None
+    if not is_vm_enabled():
+        install_vm_requests = None
+        clone_vm_requests = None
+        vm_disk_requests = None
+        edit_vm_requests = None
             
-    return (install_requests, clone_requests, disk_requests, edit_requests, install_object_store_requests,install_container_requests)
+    return (install_vm_requests, clone_vm_requests, vm_disk_requests, edit_vm_requests, install_object_store_requests,install_container_requests)
    
 def get_users_with_organisation(pending_users):
     users_with_org=[]
@@ -549,7 +556,11 @@ def get_cont_operations(cont_id):
                      'stop_cont'             : ('user', 'shutdown2.png', 'Stop this Container'),
                      'confirm_deletion()'    : ( None, 'delete.png', 'Delete this container'),
                      'restart_cont'          : ('user', 'on-off.png', 'Restart this Container'),
-                     'confirm_recreate()'    : (None, 'recreate.png', 'Re-create this Container')}
+                     'commit_cont'           : ('user', 'snapshot.png', 'Take container snapshot'),
+                     'download_cont'		 : ('user','download.png', 'Download Container'),
+                     'download_wd'			 : ('user','downloadw.png', 'Download working directory'),
+                     'confirm_recreate()'    : (None, 'recreate.png', 'Re-create this Container'),
+                     'add_container_user'    : ('admin', 'user_add.png', 'Add User to Container')}
 
     valid_operations_list = []
     
@@ -565,7 +576,10 @@ def get_cont_operations(cont_id):
         elif cont_status == VM_STATUS_SHUTDOWN:
                 valid_operations.extend(['start_cont'])
 
-    valid_operations.extend(['confirm_deletion()','confirm_recreate()'])
+    valid_operations.extend(['commit_cont','download_cont','download_wd', 'confirm_deletion()','confirm_recreate()'])
+    if is_moderator():
+        valid_operations.extend(['add_container_user'])
+    
     for valid_operation in valid_operations:
         
         op_data = cont_operations[valid_operation]
@@ -642,3 +656,15 @@ def is_orgadmin():
 
 def is_general_user():
     return not(is_moderator() or is_orgadmin() or is_faculty())
+
+def is_vm_enabled():
+    return config.getboolean("GENERAL_CONF","vm_enabled")
+
+def is_docker_enabled():
+    return config.getboolean("GENERAL_CONF","docker_enabled")
+
+def is_object_store_enabled():
+    return config.getboolean("GENERAL_CONF","object_store_enabled")
+
+def is_nic_setup():
+    return config.getboolean("GENERAL_CONF","nic_setup")

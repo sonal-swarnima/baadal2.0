@@ -232,6 +232,18 @@ def get_nginx_server_address():
     nginx_machine_passwd = config.get("DOCKER_CONF","nginx_machine_passwd");
     return (nginx_machine_ip, nginx_machine_user,nginx_machine_passwd);
 
+def get_mysqldb_machine_address():
+    mysql_machine_ip = config.get("DOCKER_CONF","mysql_machine_ip");
+    mysql_machine_user = config.get("DOCKER_CONF","mysql_machine_user");
+    mysql_machine_passwd = config.get("DOCKER_CONF","mysql_machine_passwd");
+    return (mysql_machine_ip, mysql_machine_user,mysql_machine_passwd);
+ 
+def get_mysqldb_configuration():
+    mysql_host = config.get("DOCKER_CONF","mysql_host");
+    mysql_db_user = config.get("DOCKER_CONF","mysql_db_user");
+    mysql_db_passwd = config.get("DOCKER_CONF","mysql_db_passwd");
+    return (mysql_host, mysql_db_user,mysql_db_passwd); 
+    
 class IS_MAC_ADDRESS(Validator):
     """
     Custom validator to check if string is a valid mac address
@@ -246,4 +258,5 @@ class IS_MAC_ADDRESS(Validator):
             return (value, None)
         else:
             return (value, self.error_message)
+
 

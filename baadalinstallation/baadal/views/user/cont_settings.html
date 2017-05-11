@@ -20,6 +20,23 @@ function confirm_recreate(){
             }
     }
 }
+
+function popitup(url,windowName) {
+		param = 'toolbar=no, location=no, directories=no, status=no, menubar=no, copyhistory=no ,fullscreen=yes height='+screen.height+',width='+screen.width;
+       console.log(param);
+       newwindow=window.open(url,windowName,param);
+       newwindow.moveTo(0,0);
+       if (window.focus) {newwindow.focus()}
+       return false;
+     }
+ 
+function execpop(){
+	url = "{{=URL('container_execute', args=[cont_info['id']])}}";
+	windowname = "Execute {{=cont_info['id']}}"
+	popitup(url,windowname);
+	} 
+	
+
 </script>
 
 {{if cont_info:}}
@@ -65,11 +82,21 @@ function confirm_recreate(){
     {{pass}}
 </td>
 </tr>
+
+
+
 <tr>
 <td><strong>Command:</strong></td>
 <td>{{=cont_info['command']}}</td>
 </tr>
-
+<tr>
+<td><strong>Terminal Sessions:</strong></td>
+{{if cont_info['ExecIds'] :}}
+<td> {{for session in cont_info['ExecIds']:}}
+    {{=session}} <button><a href="{{=URL('container_execute', args=[cont_info['id']])}}?execid={{=session}}">Open</a></button><br/>
+    {{pass}}</td>
+    {{pass}}
+</tr>
 <tr>
 <td><strong>Restart Policy:</strong></td>
 <td>{{=cont_info['restart_policy']}}</td>
@@ -88,7 +115,20 @@ function confirm_recreate(){
 </tr>
 <tr>
 <td><strong>Execute:</strong></td>
-<td><a href="{{=URL('container_execute', args=[cont_info['id']])}}">terminal</a></td>
+<td><button onclick="execpop()">Terminal</button></td>
+</tr>
+<tr>
+<td><strong>File Transfer:</strong></td>
+<td><a href="{{=URL('container_file_transfer', args=[cont_info['id']])}}">File Transfer</a></td>
+</tr>
+<tr>
+<td><strong>Web Support:</strong></td>
+{{if cont_info['template'] == 'matlab' :}}
+<td><a href="http://{{=cont_info['name']}}.apps.iitd.ac.in/vnc.html" target="_blank">Web Url</a></td>
+{{else:}}
+
+<td><a href="http://{{=cont_info['name']}}.apps.iitd.ac.in" target="_blank">Web Url</a></td>
+{{pass}}
 </tr>
 </table>
 
@@ -96,10 +136,30 @@ function confirm_recreate(){
 <br/>
 {{pass}}
 
+{{if contusers:}}
+<div class="post">
+    <h2 class="title">Container Users</h2>
+    <table id="cont_users">
+        <tr>
+      {{for user in contusers:}}
+            <td id="{{=user.id}}">{{=(str(user.first_name) + " " + str(user.last_name))}}</td>
+            <td>
+                {{if not is_general_user():}}
+                <a alt="Remove the user permissions" title="Remove the user permissions" href="{{=URL(request.application, 'admin','delete_user_cont', args=[cont_info['id'], user.id])}}" style="text-decoration:none;color:black;"><b>X<b/>
+                </a>
+                {{pass}}
+            </td>
+      {{pass}}
+        </tr>
+      </table>
+</div>
+{{pass}}
+
+
 {{if (cont_info['status'] != 'Invalid') & (cont_operations != None):}}
 <br/>
 <div class="post">
-    <h2 class="title">VM Operations</h2>
+    <h2 class="title">Container Operations</h2>
     <table id="vm_ops">
         <tr>
       {{for operation in cont_operations:}}

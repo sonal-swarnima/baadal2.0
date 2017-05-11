@@ -10,6 +10,7 @@ if 0:
     from gluon import db, request, session
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
+from container_create import listallcontainerswithnodes
 from dhcp_helper import create_dhcp_entry, remove_dhcp_entry, \
     create_dhcp_bulk_entry
 from helper import IS_MAC_ADDRESS, get_ips_in_range, generate_random_mac
@@ -506,8 +507,23 @@ def delete_user_vm_access(vm_id, user_id) :
     db((db.user_vm_map.vm_id == vm_id) & (db.user_vm_map.user_id == user_id)).delete()  
 
 
+def delete_user_cont_access(cont_id, user_id) :
+
+    cont_data = db.container_data[cont_id]
+    if cont_data.owner_id == user_id:
+        cont_data.update_record(owner_id = -1)
+    if cont_data.requester_id == user_id:
+        cont_data.update_record(requester_id = -1)
+
+    db((db.user_container_map.cont_id == cont_id) & (db.user_container_map.user_id == user_id)).delete()  
+
+
 def add_user_vm_access(vm_id, user_id) :    
     db.user_vm_map.insert(vm_id = vm_id, user_id = user_id)       
+
+
+def add_user_cont_access(cont_id, user_id) :    
+    db.user_container_map.insert(cont_id = cont_id, user_id = user_id)       
 
 
 def update_vm_lock(vminfo,flag) :
@@ -733,17 +749,18 @@ def get_search_user_form():
                 INPUT(_type = 'submit', _value = 'Verify'))
     return form
     
-
-def get_user_form(username, vm_id):
+def get_user_form(username, obj_id, is_obj_vm=True):
 
     user_info = get_user_info(username, [USER,FACULTY,ORGADMIN, ADMIN])
     user_details = db.user[user_info[0]]
+    
+    ret_url = URL(r=request,c='user',f='settings',args=obj_id) if is_obj_vm else URL(r=request,c='user',f='cont_settings',args=obj_id )
     
     form = FORM(TABLE(TR('Username:', INPUT(_name = 'username', _value = user_details.username, _readonly = True)), 
                       TR('First Name:', INPUT(_name = 'first_name',_value = user_details.first_name, _readonly = True)),
                       TR('Last Name:' , INPUT(_name = 'last_name',_value = user_details.last_name, _readonly = True)),
                       TR('Email ID:' , INPUT(_name = 'email',_value = user_details.email, _readonly = True)),
-                      TR(INPUT(_type='button', _value = 'Cancel', _onclick = "window.location='%s';"%URL(r=request,c = 'user', f='settings', args = vm_id )),INPUT(_type = 'submit', _value = 'Confirm Details'))))
+                      TR(INPUT(_type='button', _value = 'Cancel', _onclick = "window.location='%s';"%ret_url),INPUT(_type = 'submit', _value = 'Confirm Details'))))
 
     form.vars.user_id = user_details.id
     form.vars.username = user_details.username
@@ -1204,3 +1221,10 @@ def zoom_info(g_type):
             root_info['name']="HOST DETAILS :" + str(all_host_info) + " :: UTILIZATION  MEM: " + str(round(avg_ram,2)) + "% CPU: " + str(round(avg_cpu,2)) +"%"
     root_info['children']=parent_util
     return root_info
+
+
+def get_node_container_list():
+    
+    
+    return listallcontainerswithnodes()
+    

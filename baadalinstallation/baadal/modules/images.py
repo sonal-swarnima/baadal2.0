@@ -1,7 +1,7 @@
 
 imageprofiles = [
 {
-    'Id' : '10.237.20.236:5000/python' ,
+    'Id' : 'repository:5000/python' ,
     'cmd' : 'bash -c "tail -f /dev/null"',
     #'cmd' : 'bash',
     #'mountdestdir' : '/usr/app/src',
@@ -12,11 +12,12 @@ imageprofiles = [
     'permissiondrop' : [],
     'permissionadd' : [],
     'links' : [],
-    'updatemysql':False
+    'updatemysql':False,
+    'workingdir':'/root'
 },
 {
-    'Id' : '10.237.20.236:5000/djangopythonweb' ,
-    'cmd' : [],
+    'Id' : 'repository:5000/djangogit' ,
+    'cmd' : 'bash -c "tail -f /dev/null"',
     #'cmd' : 'bash',
     #'mountdestdir' : '/usr/src/app',
     'mountdestdir':None,
@@ -26,11 +27,12 @@ imageprofiles = [
     'permissiondrop' : [],
     'permissionadd' : [],
     'links' : [],
-     'updatemysql':False
+     'updatemysql':False,
+     'workingdir':'/usr/src/app'
 },
 {
-    'Id' : '10.237.20.236:5000/apachephusion' ,
-    'cmd' : [],
+    'Id' : 'repository:5000/apachegit' ,
+    'cmd' : 'bash -c "tail -f /dev/null"',
     #'cmd' : 'bash',
     #'mountdestdir' : '/var/www/app',
     'mountdestdir':None,
@@ -40,9 +42,10 @@ imageprofiles = [
     'permissiondrop' : ["SETFCAP","SETPCAP","SYS_CHROOT"],
     'permissionadd' : [],
          'links' : [],
-     'updatemysql':False
+     'updatemysql':False,
+     'workingdir':'/var/www/app'
 },{
-'Id':'10.237.20.236:5000/wordpress',
+'Id':'repository:5000/wordpress',
 'cmd' : 'bash -c "tail -f /dev/null"',
     #'cmd' : 'bash',
     'mountdestdir' : None,
@@ -55,8 +58,9 @@ imageprofiles = [
     'links':[],
     'updatemysql':True,
     
+     'workingdir':'/var/www/html'
 },{
-'Id':'10.237.20.236:5000/ubuntu',
+'Id':'repository:5000/ubuntu',
 'cmd' : 'bash -c "tail -f /dev/null"',
     #'cmd' : 'bash',
     'mountdestdir' : None,
@@ -66,10 +70,11 @@ imageprofiles = [
     'permissiondrop' : [],
     'permissionadd' : [],
     'links' : [],
-     'updatemysql':False
+     'updatemysql':False,
+     'workingdir':'/root'
 },
 {
-    'Id' : '10.237.20.236:5000/apachemysql' ,
+    'Id' : 'repository:5000/apachephpmysqlgit' ,
     'cmd' : 'bash -c "tail -f /dev/null"',
     #'cmd' : 'bash',
     #'mountdestdir' : '/var/www/app',
@@ -80,7 +85,54 @@ imageprofiles = [
     'permissiondrop' : ["SETFCAP","SETPCAP","SYS_CHROOT"],
     'permissionadd' : [],
          'links' : [],
-     'updatemysql':True
+     'updatemysql':True,
+     'workingdir':'/var/www/app'
+},
+{
+    'Id' : 'repository:5000/gcc' ,
+    'cmd' : 'bash -c "tail -f /dev/null"',
+    #'cmd' : 'bash',
+    #'mountdestdir' : '/var/www/app',
+     'mountdestdir' : None,
+    'restartpolicy' : 2    ,
+    'port' : None,
+    'type' : 'gcc',
+    'permissiondrop' : ["SETFCAP","SETPCAP","SYS_CHROOT"],
+    'permissionadd' : [],
+         'links' : [],
+     'updatemysql':False,
+     'workingdir' :'/root'
+},
+{
+'Id' : 'repository:5000/matlab' ,
+    'cmd' : '',
+    #'cmd' : 'bash',
+    #'mountdestdir' : '/var/www/app',
+     'mountdestdir' : None,
+    'restartpolicy' : 2    ,
+    'port' : 8080,
+    'type' : 'matlab',
+    'permissiondrop' : [],
+    'permissionadd' : [],
+         'links' : [],
+     'updatemysql':False,
+     'workingdir' :'/usr/local'
+},{
+'Id' : 'repository:5000/python_ml' ,
+    'cmd' : '',
+    #'cmd' : 'bash',
+    #'mountdestdir' : '/var/www/app',
+     'mountdestdir' : None,
+    'restartpolicy' : 2    ,
+    'port' : None,
+    'type' : 'python+mldev',
+    'permissiondrop' : [],
+    'permissionadd' : [],
+         'links' : [],
+     'updatemysql':False,
+     'workingdir' :'/usr/src/app'
+
+
 }
 ]
 
@@ -89,3 +141,12 @@ def getImageProfile(templateid):
 
 def getImageProfileList():
     return imageprofiles;
+
+def getImage(imageId):
+    print(imageId)
+    for i,imageprofile in enumerate(imageprofiles):
+        if imageprofile['Id'] == imageId:
+            imageprofile['templateid'] = i+1
+            return imageprofile
+    
+    return {'templateid':1,'type':'Unknown'}

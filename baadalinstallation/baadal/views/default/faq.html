@@ -6,12 +6,42 @@
 Here are some of frequently asked questions. For specific queries write to <b>baadalsupport@cse.iitd.ernet.in</b>
 
 <ul type="1">
+{{
+    if not auth.is_logged_in():
+}}
+<li>
+<b>Who can avail BAADAL Cloud Services?</b><br/>
+<p>Baadal provides virtual infrastructure to NMEICT projects and academic institutions for their hosting and research needs.
+</p></li>
 <li>
 <b>How can I register to access Baadal interface?</b><br/>
 <p>Click on Register link at top right corner; fill the details and submit the form.
-You will receive a confirmation mail after admin accepts your request.<br/>
+You will receive a confirmation mail after administrator accepts your request.<br/>
 You can then login to Baadal interface using your credentials.
 </p></li>
+<li>
+<b>Are there any pre-requisites for connecting to BAADAL infrastructure?</b><br/>
+<p>You need to be on NKN, ERNET or NMEICT BSNL network to connect to virtual infrastructure.<br/>
+If required, we can get some of the ports opened on Public Internet on case-to-case basis.
+</p></li>
+<li>
+<b>what is the pricing model?</b><br/>
+<p>Right now, usage is FREE.
+</p></li>
+<li>
+<b>Can we setup private cloud for our organization?</b><br/>
+<p>Yes. Baadal is a open source project. Its code base is publicly available on <a target="_blank" href="https://github.com/sonal-swarnima/baadal2.0">github</a>.<br/>
+Contact support team for more information.
+</p></li>
+{{pass}}
+
+{{
+    if auth.is_logged_in():
+}}
+
+{{
+    if is_vm_enabled():
+}}
 <li>
 <b>Which operating systems are supported by Baadal?</b><br/>
 <p>Currently, Baadal has template for Ubuntu12.04, Ubuntu14.04, Centos6.4 & Windows 2008 R2.<br/>
@@ -70,6 +100,57 @@ User will receive mail with instructions to mount additional disk space.
 User chooses a security domain at time of creation of VM. This is to isolate VM from other untrusted users. Only users within the same security domain need to trust each other.<br/> 
 User should also secure its virtual machine as it would with any other PC.
 </p></li>
+
+{{pass}}
+{{
+    if is_docker_enabled():
+}}
+<li>
+<b>How can I request for a Container?</b><br/>
+<p>After login, goto <i>USER MENU > Request Container</i>.<br/>
+Fill the form according to your requirement. Your container will be created once request is approved by admin.
+</p></li>
+<li>
+<b>After Container is created, how can I access my Container?</b><br/>
+<p>After Container is created, you can access shell of container by going execute option.
+<br><i>USER MENU > My Containers > Settings > Execute</i><br>
+By default Containers are created with private ip access.However , containers with web servers have their 80 port are reverse proxied<br/>
+</p></li>
+<li>
+<b>What types of applications are available as containerized service?</b><br/>
+<p>Currently , php , php+apache ,php+apache+mysql , wordpress ,matlab, gcc, python, ml-toolkit are available.
+</p></li>
+<li>
+<b>Can I commit my container</b><br/>
+<p>You can take atmost one commits per container and cam recreate container on that image<br/> 
+</p></li>
+<li>
+<b>What happens if my container got corrupted</b><br/>
+<p>Click on the recreate button , it will recreate he container in its initial stage.
+</p></li>
+<li>
+<b>How can i check performance/utilization of my container</b><br/>
+<p>Live feed of Memory, CPU and network Utilization of container is available under<br><i>USER MENU > My Containers > Settings > Stats</i>
+</p></li>
+<li>
+<b>Can I change configuration of my containers after it is created?</b><br/>
+<p>Request can be submitted to upgrade RAM and CPU of container. 
+</p></li>
+<li>
+<b>How much storage will be allocated to the container</b>
+<p>Containers are supposed to be light-weight. User is requested not to install any library. Instead, they can request container with these libraries pre-installed.
+</p></li>
+
+<li>
+<b>Is my Container secure?</b><br/>
+<p>Containers are secure by default .User in the container is isolated by namespaces and  have acess restricted to their filesystems only.<br/>
+</p></li>
+<li>
+	<b>How to start an application?</b><
+	<p>Please look into the <a href="{{=URL('static','documentation/steps.pdf')}}">Documentation</a></p>
+</li>
+{{pass}}
+{{pass}}  
 </ul>
 </div>
 

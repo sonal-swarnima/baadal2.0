@@ -1,17 +1,27 @@
 {{extend 'layout.html'}}
 <div id="tabs-task">
 <ul>
+    {{if install_requests != None:}}
     <li><a href="#installTab", onclick="set_tab_cookie(0);">Install VM ({{=len(install_requests)}})</a></li>
+    {{pass}}
+    {{if clone_requests != None:}}
     <li><a href="#cloneTab", onclick="set_tab_cookie(1);">Clone VM ({{=len(clone_requests)}})</a></li>
+    {{pass}}
+    {{if disk_requests != None:}}
     <li><a href="#diskTab", onclick="set_tab_cookie(2);">Attach Disk ({{=len(disk_requests)}})</a></li>
+    {{pass}}
+    {{if edit_requests != None:}}
     <li><a href="#editTab", onclick="set_tab_cookie(3);">Edit Configuration ({{=len(edit_requests)}})</a></li>
+    {{pass}}
+    {{if install_object_store_requests != None:}}
     <li><a href="#objectTab", onclick="set_tab_cookie(4);">Object Store ({{=len(install_object_store_requests)}})</a></li>
+    {{pass}}
     {{if install_container_requests != None:}}
         <li><a href="#containerTab", onclick="set_tab_cookie(5);">Install Container ({{=len(install_container_requests)}})</a></li>
     {{pass}}
 </ul>
 
-
+{{if install_requests != None:}}
 <div id="installTab">
 
 {{if len(install_requests) == 0:}}
@@ -69,6 +79,8 @@
 {{pass}}
 
 </div>
+{{pass}}
+{{if clone_requests != None:}}
 <div id="cloneTab">
 {{if len(clone_requests) == 0:}}
 <h3>No Pending Requests</h3>
@@ -117,6 +129,8 @@
 {{pass}}
 
 </div>
+{{pass}}
+{{if disk_requests != None:}}
 <div id="diskTab">
 {{if len(disk_requests) == 0:}}
 <h3>No Pending Requests</h3>
@@ -167,6 +181,8 @@
 {{pass}}
 
 </div>
+{{pass}}
+{{if edit_requests != None:}}
 <div id="editTab">
 
 {{if len(edit_requests) == 0:}}
@@ -236,6 +252,8 @@
 {{pass}}
 
 </div>
+{{pass}}
+{{if install_object_store_requests != None:}}
 
 <div id="objectTab">
 
@@ -282,7 +300,7 @@
 {{pass}}
 
 </div>
-
+{{pass}}
 {{if install_container_requests != None:}}
 
 <div id="containerTab">
@@ -311,7 +329,7 @@
             <td>{{=pend_request['faculty_name']}}</td>
             <td>{{=pend_request['name']}}</td>
             <td>{{=pend_request['restart_policy']}}</td>
-            <td>{{=pend_request['env_var']}}</td>
+            <td>{{=pend_request['env_vars']}}</td>
             <td>{{=pend_request['RAM']}}</td>
             <td>{{=pend_request['vCPUs']}}</td>
             <td>

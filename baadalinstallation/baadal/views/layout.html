@@ -69,9 +69,12 @@
 <div id="header">
   <div id="logo">
     <h1><a href="{{=URL('default','index')}}"><b>BAADAL</b></a></h1>
-    <h2><b>An Academic Cloud</b></h2>
   </div>
-
+  {{if is_nic_setup():}}
+  <div>
+    {{=IMG(_src=URL('static','images/mhrd.png'), _style="height:44px;width:444px;border:0;margin-left:10px")}}
+  </div>
+  {{pass}}
   <div id="login">
     {{try:}}{{=auth.navbar(prefix=T('Welcome'),action=URL('default','user'))}}{{except:pass}}
   </div>
@@ -137,3 +140,4 @@
 
 </body>
 </html>
+

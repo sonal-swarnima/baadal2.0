@@ -1,0 +1,64 @@
+{{extend 'layout.html'}}
+
+  <div class="container">
+    <h1>tornado WebSocket example</h1>
+    <hr>
+      WebSocket status : <span id="message"></span>
+    <hr>
+    <div id ="testme">
+    <input type="text" id="lol"/>
+    <input type="button" value='Submit' onclick="operate()"/></div>
+    <hr>
+  </div>
+
+  
+  <script>
+    console.log('HERE');
+    var protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+    var socketURL = protocol + location.hostname + ':8888' + '/ws?uid=d643983f37e2f40f77';
+    console.log(socketURL)
+    var socket = new WebSocket(socketURL);
+    console.log(socket)
+    
+    var $message = $('#message');
+    ws.onopen = function(){
+      console.log("open connection");
+      $message.attr("class", 'label label-success');
+      $message.text('open');
+    };
+    ws.onmessage = function(ev){
+      $message.attr("class", 'label label-info');
+      $message.hide();
+      $message.fadeIn("slow");
+      //$message.text('recieved message');
+      console.log("Recieved" + ev.data);
+      $message.innerHTML += ev.data;
+      
+    };
+    ws.onclose = function(ev){
+      console.log("CLOSED");
+      console.log(ev.code);
+      $message.attr("class", 'label label-important');
+      $message.text('closed');
+    };
+    ws.onerror = function(ev){
+      console.log("error occurred");
+      $message.attr("class", 'label label-warning');
+      $message.text('error occurred');
+    };
+    function operate(){
+    console.log('LOL');
+    
+    var inp = document.getElementById("lol");
+    console.log(inp.value);
+    ws.send(inp.value);
+    }
+  </script>
+  
+    <script>
+    jQuery(document).ready(function(){
+
+        //alert('HERE');
+
+    });
+  </script>

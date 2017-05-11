@@ -1,22 +1,16 @@
-    function displayMainMenu(){
+function displayMainMenu(){
 
       if(jQuery('#menu_admin').length != 0){
-          loadMainMenu(jQuery('#menu_admin'), true);
+          loadMainMenu(jQuery('#menu_admin'), false);
           loadSubMenu(jQuery('#configure'), false);
+      }
+      if(jQuery('#menu_orgadmin').length != 0){
           loadMainMenu(jQuery('#menu_orgadmin'), false);
+      }
+      if(jQuery('#menu_faculty').length != 0){
           loadMainMenu(jQuery('#menu_faculty'), false);
-          loadMainMenu(jQuery('#menu_user'), false);
       }
-      else if(jQuery('#menu_orgadmin').length != 0){
-          loadMainMenu(jQuery('#menu_orgadmin'), true);
-          loadMainMenu(jQuery('#menu_faculty'), false);
-          loadMainMenu(jQuery('#menu_user'), false);
-      }
-      else if(jQuery('#menu_faculty').length != 0){
-          loadMainMenu(jQuery('#menu_faculty'), true);
-          loadMainMenu(jQuery('#menu_user'), false);
-      }
-      else if(jQuery('#menu_user').length != 0){
+      if(jQuery('#menu_user').length != 0){
           loadMainMenu(jQuery('#menu_user'), true);
       }else
       {
@@ -87,4 +81,4 @@
             aResult.push(a.snapshotItem(i));
         }
         return aResult;
-    };    
+    };

@@ -1,16 +1,17 @@
-from helper import get_context_path, get_docker_daemon_address, \
-    get_nginx_server_address
-from log_handler import logger
-from proxy_handler import manageproxy
-import docker
 import dockerpty
-import os
-import remote_vm_task as remote_machine
 import traceback
+import docker
+import os
 
+from proxy_handler import manageproxy
+
+
+import remote_vm_task as remote_machine
+from log_handler import logger
+from helper import get_context_path , get_docker_daemon_address , get_nginx_server_address
 
 def proxieddomain (name) :
-    alias = '.baadalgateway.cse.iitd.ac.in'
+    alias = '.apps.iitd.ac.in'
     address = name +alias;
     return address[1:];         # required name contains '/' at start
     
@@ -45,7 +46,7 @@ class Container:
     
 
     def stop(self):
-        response = Container.client.stop(container = self.id);
+        response = Container.client.stop(container = self.id,timeout=3);
         return response;
         # update the db status ...
         
@@ -88,6 +89,7 @@ class Container:
         self.stop();
         #container = Container(containerid);    
         #~ self.deleteipconf();
+        self.updatedetails();
         self.deleteipbyconf();
         #os.system(cmd);    
         response = Container.client.remove_container(self.id,v=v,link=link,force=force);
@@ -140,24 +142,33 @@ class Container:
             self.properties['ImageName'] = response.get('Config')['Image'];    
             self.properties['Memory'] = response.get('HostConfig').get('Memory');
             self.properties['CPUCore'] = response.get('HostConfig').get('CpusetCpus');
+            self.properties['WorkingDir'] = response.get('Config').get("WorkingDir");
             self.properties['ExposedPorts'] =response.get('HostConfig').get('ExposedPorts');
+            self.properties['RestartPolicy']=response.get('HostConfig').get('RestartPolicy');
+            self.properties['ExecIDs'] = response.get('ExecIDs');
             portdict = response['NetworkSettings'].get('Ports');
             if (portdict):
                 for key in portdict:
                     if(portdict[key]):
                         self.properties['ConnectionPath'] = portdict[key][0]["HostIp"] + ":" + portdict[key][0]["HostPort"]
-            if (not self.properties.get('ConnectionPath')):
-					self.properties['ConnectionPath'] = '10.17.50.26:5556'     
+            
         except Exception as e:
-            print(e);
+            logger.debug(e);
             #traceback.print_exc()
 
-    
+    def export(self):
+		strm = Container.client.export(self.id);
+		return strm;
+		
+    def get_archive(self,path):
+		strm,stats = Container.client.get_archive(self.id,path)
+		return strm
     # monitor changes in the filesystem    
     def diff(self):    
         response = Container.client.diff(self.id);
         return response;
-        
+    
+            
     def recreate(self,commited = True,refresh = False):
         if not refresh :
             imageid = self.save_template("container restart","Docker automatic api","","temp","");
@@ -175,16 +186,29 @@ class Container:
         
     def save_template(self,message,author,changes,tag,repository):
         #docker commit will used. Data in volumes will not be saved.Only changes in applications will be reflected.
+        logger.debug(repository);
         if (not repository) :
             repository = self.properties['ImageName'];
         response = Container.client.commit(self.id,tag=tag,message=message,author = author ,changes = changes , repository = repository);
         return response;
-        
+	
+    def backup(self,user):
+        logger.debug(user);
+        self.save_template(message='backup_at',author=user,changes={},tag="backup",repository=self.properties['Name'][1:]);
+        return None
+		
     def execcmdgenerator(self,cmd='bash'):
         # terminal will be opened ... generator will be returned;
         execid = Container.client.exec_create(container=self.id,cmd=cmd,tty=True,stdout=True,stderr=True);
         generator = Container.client.exec_start(exec_id = execid , detach = False , stream =True , tty = True);    
         return generator;
+        
+    def execidgenerator(self,cmd='bash'):
+	execid = Container.client.exec_create(container=self.id,cmd=cmd,tty=True,stdout=True,stderr=True,stdin=True);
+	return execid;
+	
+    def execresize(self,execid,height=80,width=100):
+        Container.client.exec_resize(exec_id = execid,height = height , width = width);
     
     def execcmd(self,cmd):
         execid = Container.client.exec_create(container=self.id,cmd=cmd,tty=False,stdout=True,stderr=True);
@@ -204,37 +228,31 @@ class Container:
         output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
         print(output)
             
-    def deleteipconf(self):    
-        name = self.properties['Name'];
-        domainname = proxieddomain(name);
-        filepath = "/etc/nginx/conf.d/default.conf";
-        testpath = "./test/test.conf" 
-        nginx_server = get_nginx_server_address()
-        cmd ="cat " + filepath;
-        out1=remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-        reverser = manageproxy(out1);
-        reverser.removebyip(domainname);
-        
-        reverser.filedit = reverser.filedit.replace('$' ,'\$');
-        cmd = 'echo -e "' + reverser.filedit  + '" > '+ filepath;
-        out2 = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-        
-       
-        cmd = '/etc/init.d/nginx reload';
-        output =remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-        print(output)
+    def upload(self,path,data):
+		return Container.client.put_archive(container=self.id,path=path,data=data)
         
     def addipbyconf(self,updatetc=False):
         ipaddress = self.properties['IPAddress'];
         
         name = self.properties['Name'];
-        domainname = proxieddomain(name);
+        envvars = self.properties['Environment'];
+        domainname=None;
+        for x in envvars:
+			sstrings = x.split("=");
+			if (sstrings[0] == "HostName") :
+				domainname=sstrings[1];
+        if not domainname :
+            domainname = proxieddomain(name);
         nginx_server = get_nginx_server_address()
-        fulladdress = self.properties['ConnectionPath'];
+        fulladdress = self.properties.get('ConnectionPath');
+        logger.debug("check true");
         logger.debug(fulladdress);
+        if (not fulladdress):
+            return;
+        
         filepath = "/etc/nginx/conf.d/" + self.properties['Name'] +".conf";
         reverser = manageproxy('');
-        reverser.add(reverser.render({'x' : domainname , 'y' : fulladdress}),fulladdress);
+        reverser.add(reverser.render({'x' : domainname , 'y' : fulladdress}));
         print(reverser.filedit);
         reverser.filedit = reverser.filedit.replace('$' ,'\$');
         cmd = 'echo -e "' + reverser.filedit  + '" > '+ filepath;
@@ -247,40 +265,11 @@ class Container:
             hostadd = self.properties['ConnectionPath'].split(':')[0] + ' '  + domainname ; 
             cmd ='echo " ' + hostadd + ' " >> /etc/hosts'; 
             logger.debug('Command=> '+cmd)
-            logger.debug('Host IP=> ' +hostadd)
+            #logger.debug('Host IP=> ' +hostadd)
             output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-            logger.debug(output)
+            #logger.debug(output)
             
-    def addipconf(self,updatetc=False):
-        ipaddress = self.properties['IPAddress'];
-        
-        name = self.properties['Name'];
-        domainname = proxieddomain(name);
-        
-        fulladdress = self.properties['ConnectionPath'];
-        filepath = "/etc/nginx/conf.d/default.conf";
-        testpath = "./test/test.conf" 
-        nginx_server = get_nginx_server_address()
-        cmd ="cat " + filepath;
-        out1=remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-        print(out1);
-        reverser = manageproxy(out1);
-        
-        reverser.add(reverser.render({'x' : domainname , 'y' : fulladdress}),fulladdress);
-        
-        
-        reverser.filedit = reverser.filedit.replace('$' ,'\$');
-        cmd = 'echo -e "' + reverser.filedit  + '" > '+ filepath;
-        out2 = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-        
-        cmd = '/etc/init.d/nginx reload';
-        output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-        
-        if(updatetc):
-            hostadd = self.properties['ConnectionPath'].split(':')[0] + ' '  + domainname ; 
-            cmd ='echo " ' + hostadd + ' " >> /etc/hosts'; 
-            output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
-            
+    
                 
     def execstream(self,cmd='bash',stdout=None,stdin=None,stderr=None):
         self.removeoldexecid();
@@ -288,9 +277,28 @@ class Container:
     
     def removeoldexecid(self):
         print("called");
+        
+	
                 
     @classmethod                         
     def setclient(cls,cli):
         cls.client = cli;
+
+
+def addip(name,uuids):
+    filepath = "/etc/nginx/conf.d/" + name +".conf";
+    addresses=[];
+    nginx_server = get_nginx_server_address()
+    for uuid in uuids:
+        container = Container(uuid);
+        addresses.append(container.properties.get('ConnectionPath'));	
+    reverser = manageproxy('');
+    domainname = proxieddomain("/"+name);
+    reverser.addmultiple(domainname,addresses);
+    reverser.filedit = reverser.filedit.replace('$' ,'\$');
+    cmd = 'echo -e "' + reverser.filedit  + '" > '+ filepath;
+    out2 = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
+    cmd = '/etc/init.d/nginx reload';
+    output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
             
 #some functions raise docker.errors.APIError take them in try catch block.....

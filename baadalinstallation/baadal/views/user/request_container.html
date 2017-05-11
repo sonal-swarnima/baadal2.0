@@ -192,7 +192,11 @@ function remove_env_var(env_var){
 }
 
 jQuery('form').submit(function(){
-    $('#env_var_list').val($('[name="env_var"]').val())
+
+    $('#env_var_list').val($('[name="env_var"]').val());
+    $('#vm_users').val($('[name="vm_users"]').val())    
+
+
 });
 
 </script>

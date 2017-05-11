@@ -7,37 +7,45 @@ if 0:
     from gluon import T,request,response,URL,H2
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
-from helper import get_constant, config
+from helper import get_constant
 from auth_user import is_auth_type_db
 from maintenance import BAADAL_STATUS_UP, BAADAL_STATUS_DOWN, BAADAL_STATUS_UP_IN_PROGRESS, BAADAL_STATUS_DOWN_IN_PROGRESS
 
-docker_enabled = config.getboolean("GENERAL_CONF","docker_enabled")
+vm_enabled = is_vm_enabled()
+docker_enabled = is_docker_enabled()
+object_store_enabled = is_object_store_enabled()
 response.title = request.application
 response.google_analytics_id = None
 
 response.top_menu = [
-    (T('About'), False, URL('default','index')),
+    (T('Why Baadal?'), False, URL('default','about')),
     (T('FAQ'), False, URL('default','faq')),
-    (T('Team Baadal'), False, URL('default','team')),
-    (T('Contact'), False, URL('default','contact'))
+    (T('Solutions'), False, URL('default','solutions')),
+    (T('Pricing'), False, URL('default','pricing')),
+    (T('Contact Us'), False, URL('default','contact'))
     ]
 if auth.is_logged_in():
     response.user_menu = [
         (H2('USER MENU'),False, dict(_href='#', _id='menu_user')),
         (T('Home'), False, URL('default','index')),
-        (T('Request VM'), False, URL('user','request_vm')),
-        (T('Request Object Store'), False, URL('user','request_object_store')),
         (T('Pending Requests'), False, URL('user','list_my_requests')),
-        (T('My VMs'), False, URL('user','list_my_vm')),
-        (T('My Object Stores'), False, URL('user','list_my_object_store')),
         (T('My Tasks'), False, URL('user','list_my_task')),
         (T('VPN'),False, URL('user','vpn')), 
         (T('Mail Admin'), False, URL('user','mail_admin'))
         ]
-    if docker_enabled:
-        response.user_menu.insert(4, (T('Request Container'), False, URL('user','request_container')))
-        response.user_menu.insert(8, (T('My Containers'), False, URL('user','list_my_container')))
     
+    if docker_enabled:
+        response.user_menu.insert(2, (T('Request Container'), False, URL('user','request_container')))
+        response.user_menu.insert(3, (T('My Containers'), False, URL('user','list_my_container')))
+    
+    if object_store_enabled:
+        response.user_menu.insert(2, (T('Request Object Store'), False, URL('user','request_object_store')))
+        response.user_menu.insert(3, (T('My Object Stores'), False, URL('user','list_my_object_store')))
+
+    if vm_enabled:
+        response.user_menu.insert(2, (T('Request VM'), False, URL('user','request_vm')))
+        response.user_menu.insert(3, (T('My VMs'), False, URL('user','list_my_vm')))
+
     if not is_general_user():
         response.faculty_menu = [
             (H2('FACULTY MENU'),False, dict(_href='#', _id='menu_faculty')),
@@ -59,22 +67,30 @@ if auth.is_logged_in():
     if is_moderator():
         response.admin_menu = [
             (H2('ADMIN MENU'),False, dict(_href='#', _id='menu_admin')),
-            (T('All VM''s'), False, URL('admin','list_all_vm')),
-            (T('All Object Store'), False, URL('admin','list_all_object_store')),
             (T('All Pending Requests {'+str(get_all_pending_req_count())+'} '), False, URL('admin','list_all_pending_requests')),
-            (T('VM Utilization'), False, URL('admin','vm_utilization')),
-            (T('Host and VMs'), False, URL('admin','hosts_vms')),
-            (T('Tasks'), False, URL('admin','task_list')),
-            (T('Sanity Check'), False, URL('admin','sanity_check'))]
+            (T('Tasks'), False, URL('admin','task_list'))]
 
+        if object_store_enabled:
+            response.admin_menu.insert(1, (T('All Object Store'), False, URL('admin','list_all_object_store')))
         if docker_enabled:
-            response.admin_menu.insert(3, (T('All Containers'), False, URL('admin','list_all_containers')))
+            response.admin_menu.insert(1, (T('All Containers'), False, URL('admin','list_all_containers')))
+        if vm_enabled:
+            response.admin_menu.insert(1, (T('All VM''s'), False, URL('admin','list_all_vm')))
 
+        if vm_enabled:
+            response.admin_menu.extend([(T('VM Utilization'), False, URL('admin','vm_utilization')),
+                                        (T('VM Sanity Check'), False, URL('admin','sanity_check')),
+                                        (T('Host and VMs'), False, URL('admin','hosts_vms'))])
+        if docker_enabled:
+            response.admin_menu.extend([(T('Nodes and Containers'), False, URL('admin','nodes_containers')),
+                                        (T('Container Sanity Check'), False, URL('admin','cont_sanity_check'))])
+            
         if is_auth_type_db():
-                response.admin_menu.extend([(T('Approve Users'), False, URL('admin','approve_users')),
-                                            (T('Modify User Role'), False, URL('admin','modify_user_role'))])
+            response.admin_menu.extend([(T('Approve Users'), False, URL('admin','approve_users')),
+                                        (T('Modify User Role'), False, URL('admin','modify_user_role'))])
 
-        response.admin_menu.extend([(T('Configure System'), False,dict(_href='#', _id='configure'),[
+        if vm_enabled:
+            response.admin_menu.extend([(T('Configure System'), False,dict(_href='#', _id='configure'),[
                 (T('Configure Host'), False, URL('admin','host_details')),
                 (T('Configure Template'), False, URL('admin','manage_template')),
                 (T('Configure Datastore'), False, URL('admin','manage_datastore')),
@@ -101,3 +117,15 @@ if auth.is_logged_in():
             status_txt = 'Check Baadal Bootup Status'
         if status_txt:
             response.admin_menu.extend([((T(status_txt), False, URL('admin','baadal_status')))])
+
+
+else:
+    response.user_menu = [
+        (H2('KNOW MORE'),False, dict(_href='#')),
+        (T('Services'), False, URL('default','page_under_construction')),
+        (T('Infrastructure'), False, URL('default','infrastructure')),
+        (T('FAQs'), False, URL('default','faq')),
+        (T('Register Organization'), False, URL('default','page_under_construction')),
+        (T('Contact Us'), False, URL('default','contact'))
+        ]
+    
