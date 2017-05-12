@@ -71,7 +71,7 @@ def fetch_ldap_user(username):
                 break
             else:
                 if result_type == ldap.RES_SEARCH_ENTRY:
-                    for name,attrs in result_data:
+                    for name,attrs in result_data:  # @UnusedVariable
                         for k,vals in attrs.items():
                             if k == 'cn':
                                 name_lst = vals[0].split(' ')

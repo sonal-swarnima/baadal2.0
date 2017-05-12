@@ -20,8 +20,8 @@ the respective domain running on the hypervisor. Memory utilization is fetched f
 host, since VMs run as processes on the host.
 
 """
-from gluon import IMG, URL, current
-from helper import get_constant, get_context_path, execute_remote_cmd
+from gluon import current
+from helper import get_constant, execute_remote_cmd
 from log_handler import rrd_logger
 from xml.etree import ElementTree
 import os
@@ -80,7 +80,7 @@ def fetch_rrd_data(rrd_file_name, period=VM_UTIL_24_HOURS, period_no=24):
     nww_data = []
     if os.path.exists(rrd_file):
         rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)
-	
+
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2]
         cpu_idx = fld_info.index('cpu')
@@ -119,13 +119,6 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
     end_time = 'now'
     rrd_file = get_rrd_file(rrd_file_name)
 
-    cpu_data = []
-    mem_data = []
-    dskr_data = []
-    dskw_data = []
-    nwr_data = []
-    nww_data = []
-
     rrd_logger.info("inside compare_rrd_data_with_threshold function rrd file is :"+str(rrd_file_name))
     if os.path.exists(rrd_file):
         rrd_ret =rrdtool.fetch(rrd_file, 'MIN', '--start', start_time, '--end', end_time)
@@ -133,9 +126,6 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
         fld_info = rrd_ret[1]
         data_info = rrd_ret[2]
         cpu_idx = fld_info.index('cpu')
-        mem_idx = fld_info.index('ram')
-        dskr_idx = fld_info.index('dr')
-        dskw_idx = fld_info.index('dw')
         nwr_idx = fld_info.index('tx')
         nww_idx = fld_info.index('rx')
 
@@ -158,7 +148,7 @@ def compare_rrd_data_with_threshold(rrd_file_name,thresholdcontext):
             if (row[nww_idx] != None) : 
                 NWWNoneIdentifier='N'
                 if int(row[nww_idx]) > int(thresholdcontext['WriteThreshold']) : write_threshold='Y'
-		
+
             if (cpu_threshold=='Y' or read_threshold=='Y' or write_threshold=='Y') :
                 rrd_logger.info("Info about the VM:%s,row[cpu_idx]:%s,row[nwr_idx]:%s,row[nww_idx]:%s" %(rrd_file_name,row[cpu_idx],row[nwr_idx],row[nww_idx])) 
                 rrd_logger.info("Threshold is reached once.. VM:"+str(rrd_file_name)+" is in use") 
@@ -213,11 +203,11 @@ def get_dom_mem_usage(dom, host):
     rrd_logger.info("memory stats for VM:%s is %s" %(dom.name(),dom.memoryStats()))
     rrd_logger.warn(dom.memoryStats())
     try:
-      domain_memUsed=(dom.memoryStats()['available']-dom.memoryStats()['unused'])
-      rrd_logger.info("domain_memUsed is : "+str(domain_memUsed))
+        domain_memUsed=(dom.memoryStats()['available']-dom.memoryStats()['unused'])
+        rrd_logger.info("domain_memUsed is : "+str(domain_memUsed))
     except:
-      domain_memUsed=(dom.memoryStats()['rss'])
-      rrd_logger.info("in except and rss value is : "+str(domain_memUsed))
+        domain_memUsed=(dom.memoryStats()['rss'])
+        rrd_logger.info("in except and rss value is : "+str(domain_memUsed))
     return (domain_memUsed*1024)
 
 
@@ -407,8 +397,8 @@ def get_host_temp_usage(host_ip):
         rrd_logger.debug("Entering")
         temp=get_impi_output('ipmitool sdr elist full | grep "Inlet Temp"',host_ip)
     if str(ret).find("Ambient Temp")!=int(-1):
-	rrd_logger.debug("Entering")
-	temp=get_impi_output('ipmitool sdr elist full | grep "Ambient Temp"',host_ip)
+        rrd_logger.debug("Entering")
+        temp=get_impi_output('ipmitool sdr elist full | grep "Ambient Temp"',host_ip)
     rrd_logger.info("temp stats" +str(type(temp)))
     rrd_logger.info("temp stats" +str(temp))
     return temp # returning temperature in degree Celsius
@@ -450,7 +440,7 @@ def get_host_resources_usage(host_ip,m_type=None):
         host_nw_usage = get_host_nw_usage(host_ip)
         host_temp_usage =get_host_temp_usage(host_ip)
         host_power_usage =get_host_power_usage(host_ip)
-	rrd_logger.info("host_cpu_usage"+str(type(host_cpu_usage)))
+        rrd_logger.info("host_cpu_usage"+str(type(host_cpu_usage)))
         rrd_logger.info("host_temp_usage"+str(type(host_temp_usage)))
     else:
 
@@ -458,7 +448,7 @@ def get_host_resources_usage(host_ip,m_type=None):
         host_disk_usage = get_host_disk_usage(host_ip,m_type)
         host_mem_usage = get_host_mem_usage(host_ip,m_type)
         host_nw_usage = get_host_nw_usage(host_ip,m_type)
-	
+
     host_usage = {'cpu' : host_cpu_usage} #percent cpu usage
     host_usage.update({'dr' : host_disk_usage[0]*1024}) #Bytes/s
     host_usage.update({'dw' : host_disk_usage[1]*1024})
@@ -466,7 +456,7 @@ def get_host_resources_usage(host_ip,m_type=None):
     host_usage.update({'rx' : host_nw_usage[0]}) #in Bytes
     host_usage.update({'tx' : host_nw_usage[1]}) #in Bytes
     if m_type is None:
-	host_usage.update({'tmp' : host_temp_usage}) #in Degree Celsius
+        host_usage.update({'tmp' : host_temp_usage}) #in Degree Celsius
         host_usage.update({'pwr' : host_power_usage}) #in Watt
         
     rrd_logger.info("Host %s stats:  %s" % (host_ip, host_usage))
@@ -487,23 +477,22 @@ def update_host_rrd(host_ip,m_type=None):
 
             rrd_logger.warn("RRD file (%s) does not exists" % (rrd_file))
             rrd_logger.warn("Creating new RRD file")
-	    if m_type is None:
+            if m_type is None:
                 create_rrd(rrd_file,"host")
-	    else:
-		create_rrd(rrd_file)
+            else:
+                create_rrd(rrd_file)
        
         else:
             rrd_logger.info("updating  RRD file")
             if m_type is None:
-		rrd_logger.debug("host_ip is"+ str(host_ip))
+                rrd_logger.debug("host_ip is"+ str(host_ip))
                 host_stats = get_host_resources_usage(host_ip)
                 output=rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx'],host_stats['tmp'], host_stats['pwr']))
-		rrd_logger.debug("update status"+str(output))
+                rrd_logger.debug("update status"+str(output))
             else:
                 host_stats = get_host_resources_usage(host_ip,m_type)
                 
                 rrdtool.update(rrd_file, "%s:%s:%s:%s:%s:%s:%s" % (timestamp_now, host_stats['cpu'], host_stats['ram'], host_stats['dr'], host_stats['dw'], host_stats['tx'], host_stats['rx']))
-	    
  
     except Exception, e:
  
@@ -545,7 +534,7 @@ def set_domain_memoryStatsperiod(host_ip):
     finally:
         rrd_logger.info("Ending setting memory stats periods for VM's %s" % host_ip)
         if hypervisor_conn:
-           hypervisor_conn.close()
+            hypervisor_conn.close()
 
 
 def update_rrd(host_ip,m_type=None):
@@ -643,9 +632,9 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
         nwr_idx = fld_info.index('tx')
         nww_idx = fld_info.index('rx')
         if m_type=="host":
-	    tmp_idx = fld_info.index('tmp')
-	    power_idx = fld_info.index('pwr')
-	    rrd_logger.debug("tmp poser")
+            tmp_idx = fld_info.index('tmp')
+            power_idx = fld_info.index('pwr')
+            rrd_logger.debug("tmp poser")
 
         timeinterval=1
         for data in data_info:
@@ -688,13 +677,12 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
                     result3.append(info) 
 
                 if g_type=="power":
-                     if data[power_idx] != None and  data[power_idx]>0: 
-                    
-                         info['y']=data[power_idx]
-                     else:		    
-                         info['y']=float(0)                    
-                     info['x']=time_info
-                     result3.append(info) 
+                    if data[power_idx] != None and  data[power_idx]>0: 
+                        info['y']=data[power_idx]
+                    else:		    
+                        info['y']=float(0)                    
+                    info['x']=time_info
+                    result3.append(info) 
 
             if g_type=="disk":
         
@@ -731,13 +719,13 @@ def fetch_info_graph(vm_identity,graph_period,g_type,vm_ram,m_type,host_cpu):
 
 
     if g_type=='ram' or g_type=='cpu' or g_type=='tmp' or g_type=='power':
-	rrd_logger.debug("result3")
+        rrd_logger.debug("result3")
         return result3
 
     if g_type=='nw' or g_type=='disk':
         result.append(result1) 
         result.append(result2)	
-	rrd_logger.debug("result")
+        rrd_logger.debug("result")
         return result
 
 #check graph period to display time

@@ -552,7 +552,7 @@ def get_container_logs(cont_id):
 def get_container_archive(cont_id,file_path):
     cont_info = db.container_data[cont_id]
     if not cont_info : 
-		return None
+        return None
     
     container = Container(cont_info.UUID,setProp=False);
     return container.get_archive(file_path)
@@ -560,7 +560,7 @@ def get_container_archive(cont_id,file_path):
 def get_container_archive_wd(cont_id):
     cont_info = db.container_data[cont_id]
     if not cont_info : 
-		return None
+        return None
     
     container = Container(cont_info.UUID);
     return container.get_archive(container.properties['WorkingDir'])
@@ -571,13 +571,13 @@ def get_container_stats(cont_uuid):
     return container.stats()
 
 def get_container_execsession(cont_uuid):
-	container = Container(cont_uuid,setProp=False);
-	return container.execidgenerator()
+    container = Container(cont_uuid,setProp=False);
+    return container.execidgenerator()
 
 def get_container_execresize(cont_uuid,cont_session,height,width):
-	container = Container(cont_uuid,setProp=False);
-	container.execresize(cont_session,height,width);
-	
+    container = Container(cont_uuid,setProp=False);
+    container.execresize(cont_session,height,width);
+
 def get_container_top(cont_id,pid_args='aux'):
     cont_info = db.container_data[cont_id]
     if not cont_info : return
@@ -586,10 +586,8 @@ def get_container_top(cont_id,pid_args='aux'):
     return container.top(pid_args)
     
 def get_container_upload_data(cont_uuid,file_path,file_data):
-	container = Container(cont_uuid,setProp=False);
-	return container.upload(file_path,file_data);
-	
-	
+    container = Container(cont_uuid,setProp=False);
+    return container.upload(file_path,file_data);
 
 
 def get_vpn_user_details():
@@ -613,8 +611,6 @@ def request_vpn():
     vpn_ip=config.get("VPN_CONF","vpn_server_ip")
     vpn_key_path=config.get("VPN_CONF","vpn_key_path")
 
-    #passwd=""
-#     password=config.get("VPN_CONF","passwd")
     try:
         var = execute_remote_cmd(vpn_ip, 'root',cmd, ret_list=True)
         filepath=vpn_key_path+str(user_name)+"_baadalVPN.tar"

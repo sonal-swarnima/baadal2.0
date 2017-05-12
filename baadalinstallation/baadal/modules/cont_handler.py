@@ -1,5 +1,4 @@
 import dockerpty
-import traceback
 import docker
 import os
 
@@ -22,8 +21,8 @@ class Container:
             'ipaddress','cmd' ,'entrypoint','bindings','volumes','sysinitpath','state']
     
     
-    def __init__(self,id,setProp = True,**keywords):
-        self.id = id;
+    def __init__(self,_id,setProp = True,**keywords):
+        self.id = _id;
         self.properties = {
         
         }
@@ -157,12 +156,13 @@ class Container:
             #traceback.print_exc()
 
     def export(self):
-		strm = Container.client.export(self.id);
-		return strm;
-		
+        strm = Container.client.export(self.id);
+        return strm;
+
     def get_archive(self,path):
-		strm,stats = Container.client.get_archive(self.id,path)
-		return strm
+        strm,stats = Container.client.get_archive(self.id,path)  # @UnusedVariable
+        return strm
+
     # monitor changes in the filesystem    
     def diff(self):    
         response = Container.client.diff(self.id);
@@ -191,12 +191,12 @@ class Container:
             repository = self.properties['ImageName'];
         response = Container.client.commit(self.id,tag=tag,message=message,author = author ,changes = changes , repository = repository);
         return response;
-	
+
     def backup(self,user):
         logger.debug(user);
         self.save_template(message='backup_at',author=user,changes={},tag="backup",repository=self.properties['Name'][1:]);
         return None
-		
+
     def execcmdgenerator(self,cmd='bash'):
         # terminal will be opened ... generator will be returned;
         execid = Container.client.exec_create(container=self.id,cmd=cmd,tty=True,stdout=True,stderr=True);
@@ -204,9 +204,9 @@ class Container:
         return generator;
         
     def execidgenerator(self,cmd='bash'):
-	execid = Container.client.exec_create(container=self.id,cmd=cmd,tty=True,stdout=True,stderr=True,stdin=True);
-	return execid;
-	
+        execid = Container.client.exec_create(container=self.id,cmd=cmd,tty=True,stdout=True,stderr=True,stdin=True);
+        return execid;
+
     def execresize(self,execid,height=80,width=100):
         Container.client.exec_resize(exec_id = execid,height = height , width = width);
     
@@ -229,18 +229,18 @@ class Container:
         print(output)
             
     def upload(self,path,data):
-		return Container.client.put_archive(container=self.id,path=path,data=data)
+        return Container.client.put_archive(container=self.id,path=path,data=data)
         
     def addipbyconf(self,updatetc=False):
-        ipaddress = self.properties['IPAddress'];
+#         ipaddress = self.properties['IPAddress'];
         
         name = self.properties['Name'];
         envvars = self.properties['Environment'];
         domainname=None;
         for x in envvars:
-			sstrings = x.split("=");
-			if (sstrings[0] == "HostName") :
-				domainname=sstrings[1];
+            sstrings = x.split("=");
+            if (sstrings[0] == "HostName") :
+                domainname=sstrings[1];
         if not domainname :
             domainname = proxieddomain(name);
         nginx_server = get_nginx_server_address()
@@ -277,8 +277,7 @@ class Container:
     
     def removeoldexecid(self):
         print("called");
-        
-	
+
                 
     @classmethod                         
     def setclient(cls,cli):
@@ -297,8 +296,8 @@ def addip(name,uuids):
     reverser.addmultiple(domainname,addresses);
     reverser.filedit = reverser.filedit.replace('$' ,'\$');
     cmd = 'echo -e "' + reverser.filedit  + '" > '+ filepath;
-    out2 = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
+    out2 = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])  # @UnusedVariable
     cmd = '/etc/init.d/nginx reload';
-    output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])
+    output = remote_machine.execute_remote_cmd(nginx_server[0],nginx_server[1],cmd,nginx_server[2])  # @UnusedVariable
             
 #some functions raise docker.errors.APIError take them in try catch block.....

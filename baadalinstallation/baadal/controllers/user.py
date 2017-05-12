@@ -17,30 +17,11 @@ from log_handler import logger
 from vm_utilization import check_graph_type, check_graph_period, \
     fetch_info_graph
 import os
-import zipfile
 import tarfile
 import datetime
 import calendar
-import time
 from io import BytesIO
 
-def testme():
-	admin_password = 'xxxxx'
-
-#write password to file
-	pw_tarstream = BytesIO()
-	pw_tar = tarfile.TarFile(fileobj=pw_tarstream, mode='w')
-	file_data = admin_password.encode('utf8')
-	tarinfo = tarfile.TarInfo(name='pw.txt')
-	tarinfo.size = len(file_data)
-	tarinfo.mtime = time.time()
-	#tarinfo.mode = 0600
-	pw_tar.addfile(tarinfo, BytesIO(file_data))
-	pw_tar.close()
-	pw_tarstream.seek(0)
-	return pw_tarstream
-	
-	
 def request_object_store():
     form = get_request_object_store_form()
     
@@ -302,9 +283,9 @@ def container_stats():
 def container_top():
     cont_id = request.args[0]
     if request.env.request_method == "POST":
-		pid_args=request.post_vars.get('ps_opt','aux')
-		cont_top = get_container_top(cont_id,pid_args)
-		return dict(cont_id=cont_id,cont_top = cont_top,pid_args=pid_args)
+        pid_args=request.post_vars.get('ps_opt','aux')
+        cont_top = get_container_top(cont_id,pid_args)
+        return dict(cont_id=cont_id,cont_top = cont_top,pid_args=pid_args)
     cont_top = get_container_top(cont_id)
     return dict(cont_id = cont_id, cont_top = cont_top,pid_args='aux')
 
@@ -364,41 +345,37 @@ def download_cont():
 @check_cont_owner
 @handle_exception
 def container_file_transfer():
-	cont_id = request.args[0]
-	return dict(cont_id = cont_id);
-		
+    cont_id = request.args[0]
+    return dict(cont_id = cont_id);
+
 @check_cont_owner
 @handle_exception
 def container_upload_file():
-	cont_id = request.args[0]
-	if request.env.request_method == "POST":
-		
-		cont_uuid = get_container_uuid(cont_id)
-		file_path = request.post_vars['file_path']
-		file_data = request.post_vars['file_data'].file
-		
-		#if zipfile.is_zipfile(file_data):
-		#	file_data = zip2tar(zipfile.ZipFile(file_data))
-		#	file_data = testme()
-		logger.debug(type(file_data));
-		result = get_container_upload_data(cont_uuid,file_path,file_data);
-		return redirect(URL(r = request, c = 'user', f = 'cont_settings', args = cont_id))
-	else :
-		return response.json({'error':'operation not allowed'});
-		
+    cont_id = request.args[0]
+    if request.env.request_method == "POST":
+
+        cont_uuid = get_container_uuid(cont_id)
+        file_path = request.post_vars['file_path']
+        file_data = request.post_vars['file_data'].file
+
+        logger.debug(type(file_data));
+        result = get_container_upload_data(cont_uuid,file_path,file_data);  # @UnusedVariable
+        return redirect(URL(r = request, c = 'user', f = 'cont_settings', args = cont_id))
+    else :
+        return response.json({'error':'operation not allowed'});
+
 @check_cont_owner
 @handle_exception
 def container_download_file():
-	cont_id = request.args[0]
-	if request.env.request_method == "POST":
-		
-		cont_uuid = get_container_uuid(cont_id)
-		file_path = request.post_vars['file_path']
-		
-		
-		return response.stream(get_container_archive(cont_id,file_path), attachment=True,  filename='codebase.tar');
-	else :
-		return response.json({'error':'operation not allowed'});
+    cont_id = request.args[0]
+    if request.env.request_method == "POST":
+
+#         cont_uuid = get_container_uuid(cont_id)
+        file_path = request.post_vars['file_path']
+
+        return response.stream(get_container_archive(cont_id,file_path), attachment=True,  filename='codebase.tar');
+    else :
+        return response.json({'error':'operation not allowed'});
     
 @check_cont_owner
 @handle_exception

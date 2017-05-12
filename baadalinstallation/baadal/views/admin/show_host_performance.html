@@ -49,9 +49,9 @@ window.onload = function () {
       
     
 });
-    chart.render();	
+chart.render();	
     
-    function update_graph()
+function update_graph()
 {
    graph_type = jQuery("#tabs-task .ui-tabs-nav .ui-state-active a").attr("href").replace('#','');
    period = $('input[name=graph-period-radio]:radio:checked').val();
@@ -60,25 +60,39 @@ window.onload = function () {
    host_cpu = "{{=host_cpu}}";
    m_type="{{=m_type}}";
    jQuery.ajax({type:"POST",url:"{{=URL('create_graph_for_host')}}", data:{graphType:graph_type, hostIdentity:host_identity,host_RAM:host_ram,host_CPU:host_cpu,
-   graphPeriod:period,mtype:m_type},dataType: "json", success:function(ret) {
-	if (graph_type=='cpu' | graph_type=='ram' | graph_type=='tmp' | graph_type=='power'){
-	    var length=ret['data'].length;}
-	else{var length=ret['data'][0].length;}
+   graphPeriod:period,mtype:m_type},   	
+   	error:function(x,e){
+   		console.log('ERROR');
+   		console.log(e);
+   		console.log(x.status);
+   		console.log(x.responseText); }, 
+   	success:function(ret1) {
+
+       	ret1 = ret1.replace('<html>','');
+       	ret1 = ret1.replace('</html>','');
+       	ret1 = ret1.replace('<body>','');
+       	ret1 = ret1.replace('</body>','');
+       	ret1 = ret1.replace('<p>','');
+       	ret1 = ret1.replace('</p>','');
+       	ret1 = ret1.replace(new RegExp('&quot;','g'),'"');
+
+       	ret = $.parseJSON(ret1);
+
+		if (graph_type=='cpu' | graph_type=='ram' | graph_type=='tmp' | graph_type=='power'){
+	    	var length=ret['data'].length;}
+		else{var length=ret['data'][0].length;}
        
-	
-        if (length==0){
-	    
-	    $("#target").html("<b>RRD IS UNAVAILABLE!!!!!!</b>");}
-        else
-	   { 
-	   chart.options.data[0].dataPoints=[];
-	    chart.options.data[1].dataPoints=[];
+        if (length==0){    
+		    $("#target").html("<b>RRD IS UNAVAILABLE!!!!!!</b>");}
+        else { 
+	   		chart.options.data[0].dataPoints=[];
+	    	chart.options.data[1].dataPoints=[];
 	   
-	   chart.options.data[0].showInLegend=false;
-	   chart.options.data[1].showInLegend=false;
-	   var info = new Array(length); 
-	    var info1 = new Array(length); 
-	    var data2=ret['data'];
+	   		chart.options.data[0].showInLegend=false;
+	   		chart.options.data[1].showInLegend=false;
+	   		var info = new Array(length); 
+	    	var info1 = new Array(length); 
+	    	var data2=ret['data'];
 	    
             for (i =length-1; i >=0; i--) {
                 if (graph_type=='cpu' | graph_type=='ram' | graph_type=='tmp' | graph_type=='power'){

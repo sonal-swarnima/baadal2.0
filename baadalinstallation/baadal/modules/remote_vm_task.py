@@ -51,10 +51,7 @@ def copy_remote_file(machine_ip, user_name, remotepath,localpath, password = Non
     """
     Executes command on remote machine using paramiko SSHClient
     """
-    #logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
-    output = None
     if machine_ip == 'localhost':
-        #output=os.popen(command).readline()
         logger.debug("TODO")
     else:
         #logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
@@ -85,10 +82,7 @@ def paste_remote_file(machine_ip, user_name, remotepath,localpath, password = No
     Executes command on remote machine using paramiko SSHClient
     """
     #logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))
-    output = None
     if machine_ip == 'localhost':
-#         output=os.popen(command).readline()
-        #logger.debug(output)
         logger.debug("TODO")
     else:
         #logger.debug("executing remote command %s on %s with %s:"  %(command, machine_ip, user_name))

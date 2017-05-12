@@ -3,6 +3,7 @@
 # Added to enable code completion in IDE's.
 if 0:
     from gluon import *  # @UnusedWildImport
+    from gluon import request
     from applications.baadal.models import *  # @UnusedWildImport
 ###################################################################################
 from ast import literal_eval

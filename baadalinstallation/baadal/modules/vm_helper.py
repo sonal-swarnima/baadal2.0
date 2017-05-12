@@ -7,7 +7,7 @@ from helper import get_constant, execute_remote_cmd, config, get_datetime, \
 from libvirt import * # @UnusedWildImport
 from log_handler import logger
 from nat_mapper import create_mapping, remove_mapping
-import sys, math, shutil, libvirt, os, time, random
+import math, shutil, libvirt, os, time, random
 import xml.etree.ElementTree as etree
 
 
@@ -578,9 +578,9 @@ def create_object_store(parameters,object_data):
         swift_user= 'Swift_user: ' + object_name + ':swift'
         co.write(swift_user)
         co.close()
-        a,b,key_swift_secret= key_swift_secret.partition(' ')
-        a,b,key_s3_secret= key_s3_secret.partition(' ')
-        a,b,key_s3_access= key_s3_access.partition(' ')
+        a,b,key_swift_secret= key_swift_secret.partition(' ')  # @UnusedVariable
+        a,b,key_s3_secret= key_s3_secret.partition(' ')  # @UnusedVariable
+        a,b,key_s3_access= key_s3_access.partition(' ')  # @UnusedVariable
         #print key_s3_secret, key_s3_access , key_swift_secret
         object_data.update_record(swift_access_key= key_swift_secret.strip() , s3_secret_key= key_s3_secret.strip(), s3_access_key= key_s3_access.strip(), status=3)
         fo.close()
@@ -969,7 +969,7 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
     """
     logger.debug(sys.path)
     vm_details = current.db.vm_data[vmid]
-    datastore_id = vm_details["datastore_id"]
+#     datastore_id = vm_details["datastore_id"]
     logger.debug("Inside live disk migration block")
 
     try:
@@ -1029,8 +1029,8 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
             os.remove(current_disk_file)
             restore_symboltable_path = current_disk_path+"/restore_symboltable" 
             if os.path.exists (restore_symboltable_path):
-               logger.debug(restore_symboltable_path)
-               os.remove(restore_symboltable_path)            
+                logger.debug(restore_symboltable_path)
+                os.remove(restore_symboltable_path)            
             os.rmdir(current_disk_path)
         connection_object.close()
 
