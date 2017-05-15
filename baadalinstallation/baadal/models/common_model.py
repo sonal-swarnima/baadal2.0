@@ -505,6 +505,7 @@ def get_vm_operations(vm_id):
         elif vm_status == VM_STATUS_SHUTDOWN:
             #Start VM option is not valid if edit VM or attach disk option is in queue
             if not (is_request_in_queue(vm_id, VM_TASK_EDIT_CONFIG) | 
+                    is_request_in_queue(vm_id, VM_TASK_CLONE) | 
                     is_request_in_queue(vm_id, VM_TASK_ATTACH_DISK)):
                 valid_operations.extend(['start_vm'])
 
