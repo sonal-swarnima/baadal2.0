@@ -223,7 +223,7 @@ def send_email_to_admin(email_subject, email_message, email_type):
         email_address = config.get("MAIL_CONF","mail_admin_complaint")
     user_email_address = auth.user.email
     logger.info("MAIL ADMIN: type:"+email_type+", subject:"+email_subject+", message:"+email_message+", from:"+user_email_address)
-    push_email(email_address, email_subject, email_message, user_email_address)
+    push_email(email_address, email_subject, email_message, user_email_address, [user_email_address])
 
 def send_email_to_user_manual(email_subject, email_message, vm_id):
     vm_users = []
