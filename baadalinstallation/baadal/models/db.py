@@ -164,13 +164,13 @@ auth.settings.table_membership = db.define_table(
 ###############################################################################
 auth.define_tables(username=True)
 ###############################################################################
+if current.auth_type == AUTH_TYPE_LDAP :
+   from gluon.contrib.login_methods.pam_auth import pam_auth
+   auth.settings.login_methods = [pam_auth()]
+   auth.settings.login_onaccept = [login_ldap_callback]
 if current.auth_type == AUTH_TYPE_DB:
-    auth.settings.login_onaccept = [login_callback]
-    auth.settings.registration_requires_approval = True
-else:
-    from gluon.contrib.login_methods.pam_auth import pam_auth
-    auth.settings.login_methods = [pam_auth()]
-    auth.settings.login_onaccept = [login_ldap_callback]
+   auth.settings.login_onaccept = [login_callback]
+   auth.settings.registration_requires_approval = True
 ###############################################################################
 
 db.define_table('vlan',
