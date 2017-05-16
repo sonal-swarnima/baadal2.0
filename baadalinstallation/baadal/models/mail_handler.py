@@ -52,8 +52,6 @@ OBJECT_CREATION_SUBJECT = "Object Store created successfully"
 OBJECT_CREATION_BODY="Dear {0[userName]},\n\n"\
     "The Object Store {0[obName]} requested on {0[requestTime]} is "\
     "successfully created and is now available for use.\n"\
-    "For other details, Please login to baadal WEB interface."
-
 
 VM_CREATION_BODY="Dear {0[userName]},\n\n"\
     "The VM {0[entityName]} requested on {0[requestTime]} is "\
@@ -62,7 +60,6 @@ VM_CREATION_BODY="Dear {0[userName]},\n\n"\
     "Default credentials for VM is as follows:\nUsername:root/baadalservervm/baadaldesktopvm\nPassword:baadal\n\n"\
     "To access VM using assigned private IP; SSH to baadal gateway machine using your GCL credential.\n"\
     "username@{0[gatewayVM]}\n"\
-    "For other details, Please login to baadal WEB interface."
 
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
 
@@ -76,23 +73,20 @@ VNC_ACCESS_SUBJECT="VNC Access to your VM activated"
 
 VNC_ACCESS_BODY="Dear {0[userName]},\n\n"\
     "VNC Access to your VM {0[entityName]} was activated on {0[requestTime]}. Details follow:\n"\
-    "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
-    "For other details, Please login to baadal WEB interface."
+    "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n"\
 
 DELETE_WARNING_SUBJECT="Delete Warning to the Shutdown VM" 
 
 DELETE_WARNING_BODY="Dear {0[userName]},\n\n"\
     "It has been noticed that your VM {0[entityName]} is being shutdown from {0[vmShutdownDate]}.\n"\
     "Kindly use the VM/delete the VM if not required. \n" \
-    "If no action is taken on the VM, the VM will be automatically deleted on {0[vmActionDate]}. \n\n"\
-    "For other details, Please login to baadal WEB interface." 
+    "If no action is taken on the VM, the VM will be automatically deleted on {0[vmActionDate]}. \n"\
 
 SHUTDOWN_WARNING_SUBJECT="Shutdown Warning to the unused VM"
 SHUTDOWN_WARNING_BODY="Dear {0[userName]},\n\n"\
      "It has been noticed that your VM {0[entityName]} is not in used from a long time.\n"\
      "Kindly use the VM/delete the VM if not required. \n" \
-     "If no action is taken on the VM, the VM will be automatically shutdown on {0[vmActionDate]}. \n\n"\
-     "For other details, Please login to baadal WEB interface."
+     "If no action is taken on the VM, the VM will be automatically shutdown on {0[vmActionDate]}. \n"
 
 
 BAADAL_SHUTDOWN_SUBJECT="VM Shutdown notice"
@@ -102,7 +96,8 @@ BAADAL_SHUTDOWN_BODY="\nDear {0[userName]},\n\n"\
     "We will shutdown your VM(s) - {0[userVMs]} - to avoid any corruption of data.\n"\
     "VM(s) will be brought up as soon as possible."
 
-MAIL_FOOTER = "\n\nRegards,\nBaadal Admin\n\n\n"\
+MAIL_FOOTER = "\nFor further details, please login to baadal at {0[homeAddress]}."\
+    "\n\nRegards,\nBaadal Admin\n\n"\
     "NOTE: Please do not reply to this email. It corresponds to an unmonitored mailbox. "\
     "If you have any queries, send an email to {0[adminEmail]}."
 
@@ -119,6 +114,7 @@ def send_email(to_address, email_subject, email_template, context, cc_addresses=
     if to_address != None:
         email_template += MAIL_FOOTER
         context['adminEmail'] = config.get("MAIL_CONF","mail_admin_request")
+        context['homeAddress'] = config.get("GENERAL_CONF","home_address")
         email_message = email_template.format(context)
         cc_addresses.append(config.get("MAIL_CONF","mail_sender"))
         logger.info("Email message is::"+str(email_message))
@@ -229,7 +225,8 @@ def send_email_to_admin(email_subject, email_message, email_type):
 
 def send_email_to_user_manual(email_subject, email_message, vm_id):
     vm_users = []
-    context = dict(adminEmail = config.get("MAIL_CONF","mail_admin_request"))
+    context = dict(adminEmail = config.get("MAIL_CONF","mail_admin_request"), 
+                   homeAddress = config.get("GENERAL_CONF","home_address"))
 
     for user in db(db.user_vm_map.vm_id == vm_id).select(db.user_vm_map.user_id):
         vm_users.append(user['user_id'])
