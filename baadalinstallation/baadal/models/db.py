@@ -8,7 +8,7 @@ if 0:
 ###################################################################################
 from ast import literal_eval
 from auth_user import fetch_user_role, create_or_update_user, login_callback, \
-    login_ldap_callback, AUTH_TYPE_OAUTH, AUTH_TYPE_DB
+    login_ldap_callback, AUTH_TYPE_OAUTH, AUTH_TYPE_DB, AUTH_TYPE_LDAP
 from datetime import timedelta
 from gluon import current # @Reimport
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
