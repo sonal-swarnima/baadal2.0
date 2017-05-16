@@ -22,7 +22,7 @@ from helper import logger, get_datetime
 def schedule_task(fields, _id):
 
     #Add entry into task_queue_event
-    if fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART, CONTAINER_RECREATE, CONTAINER_COMMIT):
+    if fields['task_type'] in CONTAINER_TASKS:
         cont_id = fields['parameters']['cont_id'] if 'cont_id' in fields['parameters'] else None
         cont_name = db.container_data[cont_id].name if cont_id else ""
         task_event_id = db.task_queue_event.insert(task_id = _id,
@@ -65,7 +65,7 @@ def schedule_task(fields, _id):
             logger.info("\n ENTERING OBJECT_TASK	........")
             sch_task_name = 'object_task'
     
-        elif fields['task_type'] in (CONTAINER_TASK_CREATE, CONTAINER_START, CONTAINER_STOP, CONTAINER_SUSPEND, CONTAINER_RESUME, CONTAINER_DELETE, CONTAINER_RESTART):
+        elif fields['task_type'] in CONTAINER_TASKS:
             logger.info("\n ENTERING CONTAINER_TASK	........")
             sch_task_name = 'container_task'
     

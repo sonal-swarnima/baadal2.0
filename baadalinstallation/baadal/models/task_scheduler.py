@@ -53,7 +53,7 @@ task = {
        }
 
 
-def _send_task_complete_mail(task_event):
+def _send_vm_task_complete_mail(task_event):
     
     vm_users = []
     vm_id = task_event.parameters['vm_id'] if 'vm_id' in task_event.parameters else None
@@ -62,10 +62,21 @@ def _send_task_complete_mail(task_event):
             vm_users.append(user['user_id'])
     else:
         vm_users.append(task_event.requester_id)
-#     send_email_to_vm_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
+    send_email_to_user(task_event.task_type, task_event.vm_name, task_event.start_time, vm_users)
 
 
-def send_object_task_complete_mail(task_event, object_name):
+def _send_cont_task_complete_mail(task_event):
+    
+    cont_users = []
+    cont_id = task_event.parameters['cont_id'] if 'cont_id' in task_event.parameters else None
+    if cont_id:
+        for user in db(db.user_container_map.cont_id == cont_id).select(db.user_container_map.user_id):
+            cont_users.append(user['user_id'])
+    else:
+        cont_users.append(task_event.requester_id)
+    send_email_to_user(task_event.task_type, task_event.vm_name, task_event.start_time, cont_users)
+
+def _send_object_task_complete_mail(task_event, object_name):
 
     vm_users = []
     vm_id = task_event.parameters['vm_id'] if 'vm_id' in task_event.parameters else None
@@ -74,7 +85,7 @@ def send_object_task_complete_mail(task_event, object_name):
             vm_users.append(user['user_id'])
     else:
         vm_users.append(task_event.requester_id)
-    send_email_to_vm_user(task_event.task_type, object_name, task_event.start_time, vm_users)
+    send_email_to_user(task_event.task_type, object_name, task_event.start_time, vm_users)
 
     
 def _log_vm_event(old_vm_data, task_queue_data):
@@ -173,7 +184,7 @@ def process_object_task(task_event_id):
             if 'request_id' in task_queue_data.parameters:
                 del db.request_queue[task_queue_data.parameters['request_id']]
 
-            send_object_task_complete_mail(task_event_data, object_data['object_store_name'])
+            _send_object_task_complete_mail(task_event_data, object_data['object_store_name'])
     except:
         msg = log_exception()
         task_event_data.update_record(status=TASK_QUEUE_STATUS_FAILED, message=msg)
@@ -183,7 +194,7 @@ def process_object_task(task_event_id):
         logger.info("EXITING OBJECT_TASK........\n")
 
 
-def process_task_queue(task_event_id):
+def process_vm_task_queue(task_event_id):
     """
     Invoked when scheduler runs task of type 'vm_task'
     For every task, function calls the corresponding handler
@@ -223,7 +234,7 @@ def process_task_queue(task_event_id):
                 del db.request_queue[task_queue_data.parameters['request_id']]
             
             if task_event_data.task_type not in (VM_TASK_MIGRATE_HOST, VM_TASK_MIGRATE_DS):
-                _send_task_complete_mail(task_event_data)
+                _send_vm_task_complete_mail(task_event_data)
         
     except:
         msg = log_exception()
@@ -274,7 +285,7 @@ def process_container_queue(task_event_id):
                 del db.request_queue[task_queue_data.parameters['request_id']]
             
             if task_event_data.task_type not in (VM_TASK_MIGRATE_HOST, VM_TASK_MIGRATE_DS):
-                _send_task_complete_mail(task_event_data)
+                _send_cont_task_complete_mail(task_event_data)
         
     except:
         msg = log_exception()
@@ -568,13 +579,13 @@ def host_networking():
      
 # Defining scheduler tasks
 from gluon.scheduler import Scheduler
-vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_task_queue, 
+vm_scheduler = Scheduler(db, tasks=dict(vm_task=process_vm_task_queue, 
                                         clone_task=process_clone_task,
                                         snapshot_vm=process_snapshot_vm,
                                         vm_sanity=vm_sanity_check,
                                         vnc_access=check_vnc_access,
                                         host_sanity=host_sanity_check,
-                                         vm_util_rrd=vm_utilization_rrd,
+                                        vm_util_rrd=vm_utilization_rrd,
                                         vm_daily_checks=process_vmdaily_checks,
                                         vm_garbage_collector=process_unusedvm,
                                         memory_overload=overload_memory,

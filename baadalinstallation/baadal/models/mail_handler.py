@@ -26,11 +26,11 @@ REGISTRATION_DENIED_BODY = "Dear {0[userName]},\n\n"\
                             
 VM_REQUEST_SUBJECT = "VM request successful"
 
-OB_REQUEST_SUBJECT = "OBJECT request successful"
+OB_REQUEST_SUBJECT = "Object Store request successful"
 
 
 VM_REQUEST_BODY="Dear {0[userName]},\n\n"\
-    "Your request for VM({0[vmName]}) creation has been successfully registered. "\
+    "Your request for VM({0[entityName]}) creation has been successfully registered. "\
     "Please note that you will be getting a separate email on successful VM creation."
 
 
@@ -56,7 +56,7 @@ OBJECT_CREATION_BODY="Dear {0[userName]},\n\n"\
 
 
 VM_CREATION_BODY="Dear {0[userName]},\n\n"\
-    "The VM {0[vmName]} requested on {0[requestTime]} is "\
+    "The VM {0[entityName]} requested on {0[requestTime]} is "\
     "successfully created and is now available for use. Following operations are allowed on the VM:\n"\
     "1. Start\n2. Stop\n3. Pause\n4. Resume\n5. Destroy\n6. Delete\n\n"\
     "Default credentials for VM is as follows:\nUsername:root/baadalservervm/baadaldesktopvm\nPassword:baadal\n\n"\
@@ -67,26 +67,29 @@ VM_CREATION_BODY="Dear {0[userName]},\n\n"\
 TASK_COMPLETE_SUBJECT="{0[taskType]} task successful"
 
 TASK_COMPLETE_BODY="Dear {0[userName]},\n\n"\
-    "The '{0[taskType]}' task for VM({0[vmName]}) requested on {0[requestTime]} is complete."
+    "The '{0[taskType]}' task for VM({0[entityName]}) requested on {0[requestTime]} is complete."
+
+CONT_TASK_COMPLETE_BODY="Dear {0[userName]},\n\n"\
+    "The '{0[taskType]}' task for Container({0[entityName]}) requested on {0[requestTime]} is complete."
 
 VNC_ACCESS_SUBJECT="VNC Access to your VM activated"
 
 VNC_ACCESS_BODY="Dear {0[userName]},\n\n"\
-    "VNC Access to your VM {0[vmName]} was activated on {0[requestTime]}. Details follow:\n"\
+    "VNC Access to your VM {0[entityName]} was activated on {0[requestTime]}. Details follow:\n"\
     "1. VNC IP : {0[vncIP]}\n2. VNC Port : {0[vncPort]}\n\nVNC Access will be active for 30 minutes only.\n\n"\
     "For other details, Please login to baadal WEB interface."
 
 DELETE_WARNING_SUBJECT="Delete Warning to the Shutdown VM" 
 
 DELETE_WARNING_BODY="Dear {0[userName]},\n\n"\
-    "It has been noticed that your VM {0[vmName]} is being shutdown from {0[vmShutdownDate]}.\n"\
+    "It has been noticed that your VM {0[entityName]} is being shutdown from {0[vmShutdownDate]}.\n"\
     "Kindly use the VM/delete the VM if not required. \n" \
     "If no action is taken on the VM, the VM will be automatically deleted on {0[vmActionDate]}. \n\n"\
     "For other details, Please login to baadal WEB interface." 
 
 SHUTDOWN_WARNING_SUBJECT="Shutdown Warning to the unused VM"
 SHUTDOWN_WARNING_BODY="Dear {0[userName]},\n\n"\
-     "It has been noticed that your VM {0[vmName]} is not in used from a long time.\n"\
+     "It has been noticed that your VM {0[entityName]} is not in used from a long time.\n"\
      "Kindly use the VM/delete the VM if not required. \n" \
      "If no action is taken on the VM, the VM will be automatically shutdown on {0[vmActionDate]}. \n\n"\
      "For other details, Please login to baadal WEB interface."
@@ -138,7 +141,7 @@ def send_email_to_requester(vm_name):
 
     user_info = get_user_details(auth.user.id)
     if user_info[1] != None:
-        context = dict(vmName = vm_name, 
+        context = dict(entityName = vm_name, 
                        userName = user_info[0])
     
         send_email(user_info[1], VM_REQUEST_SUBJECT, VM_REQUEST_BODY, context)
@@ -154,13 +157,13 @@ def send_email_to_object_requester(ob_name):
         send_email(user_info[1], OB_REQUEST_SUBJECT, OB_REQUEST_BODY, context)
 
 
-    
-def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
+"""Function to send mail to users on task completion"""
+def send_email_to_user(task_type, entity_name, request_time, user_list):
 
-    for vm_user in vm_users:
-        user_info = get_user_details(vm_user)
+    for _user in user_list:
+        user_info = get_user_details(_user)
         if user_info[1] != None:
-            context = dict(vmName = vm_name, 
+            context = dict(entityName = entity_name, 
                            userName = user_info[0],
                            taskType = task_type,
                            requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
@@ -168,11 +171,10 @@ def send_email_to_vm_user(task_type, vm_name, request_time, vm_users):
                 context.update({'gatewayVM':config.get("GENERAL_CONF","gateway_vm")})
                 send_email(user_info[1], VM_CREATION_SUBJECT, VM_CREATION_BODY, context)
             elif task_type == Object_Store_TASK_CREATE:
-                context = dict(obName = vm_name,
-                           userName = user_info[0],
-                           taskType = task_type,
-                           requestTime=request_time.strftime("%A %d %B %Y %I:%M:%S %p"))
                 send_email(user_info[1], OBJECT_CREATION_SUBJECT, OBJECT_CREATION_BODY, context)
+            elif task_type in CONTAINER_TASKS:
+                subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
+                send_email(user_info[1], subject, CONT_TASK_COMPLETE_BODY, context)
             else:
                 subject = TASK_COMPLETE_SUBJECT.format(dict(taskType=task_type))
                 send_email(user_info[1], subject, TASK_COMPLETE_BODY, context)
@@ -182,7 +184,7 @@ def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_t
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
         if user_info[1] != None:
-            context = dict(vmName = vm_name, 
+            context = dict(entityName = vm_name, 
                            userName = user_info[0],
                            vncIP = vnc_ip,
                            vncPort = vnc_port,
@@ -190,7 +192,7 @@ def send_email_vnc_access_granted(vm_users, vnc_ip, vnc_port, vm_name, request_t
             send_email(user_info[1], VNC_ACCESS_SUBJECT, VNC_ACCESS_BODY, context)
     
 
-#sendmail function to send warning mails to unused or shutdown vm
+"""Function to send warning mails to unused or shutdown vm"""
 def send_email_vm_warning(task_type,vm_users,vm_name,vm_shutdown_time):
     vm_action_time= get_datetime() + timedelta(days=20)   
     cc_user_list=[]
@@ -199,7 +201,7 @@ def send_email_vm_warning(task_type,vm_users,vm_name,vm_shutdown_time):
     for vm_user in vm_users:
         user_info = get_user_details(vm_user)
         if user_info[1] != None:
-            context = dict(vmName = vm_name, 
+            context = dict(entityName = vm_name, 
                            userName = user_info[0],
                            vmShutdownDate=vm_shutdown_time,
                            vmActionDate=vm_action_time)

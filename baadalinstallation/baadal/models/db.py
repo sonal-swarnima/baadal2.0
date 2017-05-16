@@ -17,9 +17,6 @@ from host_helper import HOST_TYPE_PHYSICAL
 from simplejson import loads, dumps
 import requests
 
-
-# from helper import logger
-
 #### Connection Pooling of Db is also possible
 
 db_type = config.get("GENERAL_CONF","database_type")
@@ -85,8 +82,6 @@ if current.auth_type == AUTH_TYPE_OAUTH:
         token_url=config.get("OAUTH_CONF","token_url")
         def __init__(self,g=globals()):
             OAuthAccount.__init__(self,g,client_id=cl_id,client_secret=cl_secret,auth_url=self.auth_url,token_url=self.token_url,state='xyz')
-         
-           
          
             def get_user(self):
                 token=self.accessToken()
