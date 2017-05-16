@@ -10,13 +10,15 @@ from ast import literal_eval
 from auth_user import fetch_user_role, create_or_update_user, login_callback, \
     login_ldap_callback, AUTH_TYPE_OAUTH, AUTH_TYPE_DB, AUTH_TYPE_LDAP
 from datetime import timedelta
-from gluon import current # @Reimport
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount
 from gluon.tools import Auth, Mail
 from helper import config, get_datetime, IS_MAC_ADDRESS
 from host_helper import HOST_TYPE_PHYSICAL
 from simplejson import loads, dumps
 import requests
+
+
+# from helper import logger
 
 #### Connection Pooling of Db is also possible
 
@@ -46,6 +48,7 @@ if config.getboolean("MAIL_CONF","mail_active"):
     mail.settings.tls = literal_eval(config.get("MAIL_CONF","mail_server_tls"))
 
 #added to make auth and db objects available in modules
+from gluon import current  # @Reimport
 current.auth = auth
 current.db = db
 current.auth_type = config.get("AUTH_CONF","auth_type")
@@ -159,18 +162,16 @@ auth.settings.table_membership = db.define_table(
     Field('group_id', db.user_group),
     primarykey = ['user_id', 'group_id'])
 
-#auth.settings.login_form=oauth_login
-
 ###############################################################################
-auth.define_tables(username=True)
+auth.define_tables(username = True)
 ###############################################################################
 if current.auth_type == AUTH_TYPE_LDAP :
-   from gluon.contrib.login_methods.pam_auth import pam_auth
-   auth.settings.login_methods = [pam_auth()]
-   auth.settings.login_onaccept = [login_ldap_callback]
+    from gluon.contrib.login_methods.pam_auth import pam_auth
+    auth.settings.login_methods = [pam_auth()]
+    auth.settings.login_onaccept = [login_ldap_callback]
 if current.auth_type == AUTH_TYPE_DB:
-   auth.settings.login_onaccept = [login_callback]
-   auth.settings.registration_requires_approval = True
+    auth.settings.login_onaccept = [login_callback]
+    auth.settings.registration_requires_approval = True
 ###############################################################################
 
 db.define_table('vlan',
