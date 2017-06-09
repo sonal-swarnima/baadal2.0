@@ -37,7 +37,9 @@ db.define_table('organisation',
 
 auth = Auth(db)
 
+## configure email
 mail = Mail()
+auth.settings.mailer = mail
 if config.getboolean("MAIL_CONF","mail_active"):
     mail.settings.server = config.get("MAIL_CONF","mail_server")
     mail.settings.sender = config.get("MAIL_CONF","mail_sender")
