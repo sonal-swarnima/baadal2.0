@@ -988,8 +988,9 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
         logger.debug(current_disk_file)
 
         xmlfile = domain.XMLDesc(0)
+        root = etree.fromstring(xmlfile)
 
-        if(live_migration==False):
+        if(live_migration!=True):
             rc = os.system("cp %s %s" % (current_disk_file, diskpath))
 
             if rc != 0:
@@ -1002,7 +1003,6 @@ def migrate_domain_datastore(vmid, destination_datastore_id, live_migration=Fals
             if domain.isActive:
                 domain.undefine()
                 
-                root = etree.fromstring(xmlfile)
                 target_elem = root.find("devices/disk/target")
                 target_disk = target_elem.get('dev')
                 #
